@@ -7,6 +7,10 @@ packages:
 allowBuilds:
   esbuild: false
 
+# Reject packages published less than a day ago. Setting it explicitly makes
+# pnpm enforce it strictly instead of silently excluding young versions.
+minimumReleaseAge: 1440
+
 catalog:
   "@effect/language-service": 0.87.3
   "@effect/platform-node": 4.0.0-rc.118

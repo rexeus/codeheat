@@ -91,7 +91,9 @@ if (failures.length > 0) {
   for (const failure of failures) {
     console.error(`  - ${failure}`);
   }
-  console.error('Run "pnpm install" to restore the pinned reference.');
+  console.error(
+    'Run "pnpm install" to restore the pinned packages and "pnpm prepare:effect-reference" to restore the checkout.',
+  );
   process.exit(1);
 }
 

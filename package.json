@@ -7,12 +7,13 @@
     "verify:effect-reference": "node scripts/verify-effect-reference.mjs",
     "format": "oxfmt",
     "format:check": "oxfmt --check",
-    "lint": "node scripts/check-module-reexports.ts && oxlint --deny-warnings && oxlint -c .oxlint-effect.json --deny-warnings && knip",
+    "lint": "node scripts/check-module-reexports.ts && oxlint --deny-warnings && oxlint -c .oxlint-effect.json --deny-warnings && knip && knip --production",
     "lint:fix": "oxlint --fix && oxfmt",
     "typecheck": "tsc -p tsconfig.json && turbo run typecheck",
     "test": "vitest run && turbo run test:unit",
     "check": "pnpm verify:effect-reference && pnpm format:check && pnpm lint && pnpm typecheck && pnpm test",
-    "changeset": "changeset"
+    "changeset": "changeset",
+    "prepare:effect-reference": "node scripts/prepare-effect.mjs"
   },
   "devDependencies": {
     "@changesets/cli": "3.0.3",

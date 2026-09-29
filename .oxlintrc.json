@@ -147,7 +147,8 @@
         "allow": ["_tag"]
       }
     ],
-    "sonarjs/cognitive-complexity": ["error", 15]
+    "sonarjs/cognitive-complexity": ["error", 15],
+    "unicorn/prefer-node-protocol": "error"
   },
   "ignorePatterns": [
     "**/node_modules/**",
@@ -167,7 +168,12 @@
           {
             "patterns": [
               {
-                "group": ["@codeheat/*", "codeheat", "codeheat/*"],
+                "group": [
+                  "@codeheat/*",
+                  "@codeheat/*/**",
+                  "codeheat",
+                  "codeheat/**"
+                ],
                 "message": "engine is the floor of the dependency graph and imports no workspace package."
               },
               {
@@ -190,15 +196,11 @@
                 "group": [
                   "@codeheat/*",
                   "!@codeheat/engine",
+                  "@codeheat/*/**",
                   "codeheat",
-                  "codeheat/*"
+                  "codeheat/**"
                 ],
                 "message": "viewer renders a Report; it may only use engine types."
-              },
-              {
-                "group": ["@codeheat/engine"],
-                "allowTypeImports": true,
-                "message": "viewer may import engine types only (import type) — the engine runtime never ships to the browser."
               },
               {
                 "group": ["effect", "effect/*"],
@@ -207,6 +209,13 @@
               {
                 "group": ["node:*"],
                 "message": "viewer runs in the browser; Node builtins are unavailable."
+              }
+            ],
+            "paths": [
+              {
+                "name": "@codeheat/engine",
+                "allowTypeImports": true,
+                "message": "viewer may import engine types only (import type) — the engine runtime never ships to the browser."
               }
             ]
           }
@@ -233,7 +242,8 @@
                 "group": [
                   "@codeheat/*",
                   "!@codeheat/engine",
-                  "!@codeheat/viewer"
+                  "!@codeheat/viewer",
+                  "@codeheat/*/**"
                 ],
                 "message": "cli composes engine and viewer through their entry points only."
               }
