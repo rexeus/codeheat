@@ -1,0 +1,23 @@
+{
+  "name": "codeheat",
+  "version": "0.0.0",
+  "description": "Find hotspots and change coupling in a git repository — a treemap for humans, JSON for agents.",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx src/bin.ts",
+    "test:unit": "vitest run --passWithNoTests",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "devDependencies": {
+    "@codeheat/tsconfig": "workspace:*",
+    "@effect/platform-node": "catalog:",
+    "@types/node": "catalog:",
+    "effect": "catalog:",
+    "tsx": "4.23.15",
+    "vitest": "catalog:"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

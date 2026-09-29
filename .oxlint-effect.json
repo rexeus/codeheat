@@ -1,0 +1,37 @@
+{
+  "$schema": "./node_modules/@effect/tsgo/oxlint-schema.json",
+  "extends": ["./node_modules/@effect/tsgo/oxlint-presets/recommended.json"],
+  "categories": {
+    "correctness": "off",
+    "suspicious": "off",
+    "pedantic": "off",
+    "perf": "off",
+    "style": "off",
+    "restriction": "off",
+    "nursery": "off"
+  },
+  "ignorePatterns": [
+    "**/node_modules/**",
+    "**/.turbo/**",
+    "**/coverage/**",
+    "**/dist/**",
+    ".repos/**",
+    ".agents/**",
+    ".claude/**"
+  ],
+  "rules": {
+    "effecttsgo/async-function": "off",
+    "effecttsgo/new-promise": "off",
+    "effecttsgo/node-builtin-import": "off",
+    "effecttsgo/global-console": "off",
+    "effecttsgo/global-date": "off",
+    "effecttsgo/global-fetch": "off",
+    "effecttsgo/global-timers": "off",
+    "effecttsgo/process-env": "off",
+    "effecttsgo/crypto-random-uuid": "off",
+    "effecttsgo/extends-native-error": "off",
+    "effecttsgo/prefer-schema-over-json": "off",
+    "effecttsgo/instance-of-schema": "off",
+    "effecttsgo/effect-succeed-with-void": "off"
+  }
+}

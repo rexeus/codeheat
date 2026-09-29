@@ -1,0 +1,23 @@
+{
+  "$schema": "./node_modules/knip/schema.json",
+  "includeEntryExports": true,
+  "ignoreWorkspaces": ["packages/tsconfig"],
+  "workspaces": {
+    ".": {
+      "entry": ["scripts/*.{ts,mjs}!"],
+      "project": ["scripts/**/*.{ts,mjs}!"],
+      "ignoreDependencies": [
+        "effect",
+        "@effect/platform-node",
+        "@effect/vitest"
+      ]
+    },
+    "packages/*": {
+      "project": ["src/**/*.ts!", "!src/testing/**!"]
+    },
+    "apps/cli": {
+      "entry": ["src/bin.ts!"],
+      "project": ["src/**/*.ts!", "!src/testing/**!"]
+    }
+  }
+}

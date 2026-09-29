@@ -1,0 +1,16 @@
+packages:
+  - apps/*
+  - packages/*
+
+# tsx pulls esbuild's platform binary as an optional dependency; esbuild's own
+# install script only re-verifies that binary.
+allowBuilds:
+  esbuild: false
+
+catalog:
+  "@effect/language-service": 0.87.3
+  "@effect/platform-node": 4.0.0-rc.118
+  "@effect/vitest": 4.0.0-rc.118
+  "@types/node": 24.19.0
+  effect: 4.0.0-rc.118
+  vitest: 5.0.2

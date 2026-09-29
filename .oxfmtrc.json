@@ -1,0 +1,16 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "printWidth": 80,
+  "sortImports": true,
+  "sortPackageJson": true,
+  "overrides": [
+    { "files": ["**/*.md"], "options": { "proseWrap": "preserve" } }
+  ],
+  "ignorePatterns": [
+    ".agents/**",
+    ".claude/**",
+    ".repos/**",
+    "**/dist/**",
+    ".changeset/*.md"
+  ]
+}
