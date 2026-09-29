@@ -32,7 +32,7 @@ Before writing any Effect code, read `.repos/effect/.agents/AGENTS.md` completel
 
 Known traps in the pinned release: the CLI modules live at `effect/cli` (`Command`, `Flag`, `Argument`), constructors are PascalCase (`Flag.String`, `Flag.Boolean`), and `ChildProcessSpawner.string`/`lines` do not fail on a non-zero exit code — use `spawn` and check `exitCode`.
 
-`.repos/effect` is a partial clone pinned to the tag and commit in `scripts/effect-reference.mjs`. `pnpm install` creates and repairs it; `pnpm verify:effect-reference` asserts it is intact and is the first step of `pnpm check`. It is not tracked by git.
+`.repos/effect` is a partial clone pinned to the tag and commit in `scripts/effect-reference.mjs`. `pnpm install` creates it and `pnpm prepare:effect-reference` repairs it; `pnpm verify:effect-reference` asserts it is intact and is the first step of `pnpm check`. It is not tracked by git.
 
 ## Commands
 
@@ -44,7 +44,7 @@ pnpm lint            # barrel check + oxlint (strict + Effect preset) + knip
 pnpm typecheck       # tsc over scripts/, then every package via turbo
 pnpm test            # scripts/ tests, then every package's vitest suite via turbo
 pnpm --filter <pkg> exec vitest run src/<file>.test.ts   # one file
-pnpm --filter codeheat dev -- <args>                     # run the CLI from source
+pnpm --filter codeheat dev <args>                     # run the CLI from source
 ```
 
 ## Architecture rules
