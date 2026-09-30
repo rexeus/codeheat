@@ -87,8 +87,18 @@ const expectBundledArtifact = (tarball) => {
       !expected.has(file) &&
       !/^package\/(README|LICENSE|CHANGELOG)/u.test(file),
   );
-  if (!files.includes("package/dist/codeheat.js") || unexpected.length > 0) {
+  const required = ["package/dist/codeheat.js", "package/LICENSE"];
+  if (required.some((file) => !files.includes(file)) || unexpected.length > 0) {
     throw new Error(`Unexpected package contents:\n${files.join("\n")}`);
+  }
+  // apps/cli/LICENSE is a copy npm can pack; it must not drift from the root one.
+  const packedLicense = execFileSync(
+    "tar",
+    ["-xOzf", tarball, "package/LICENSE"],
+    { encoding: "utf8" },
+  );
+  if (packedLicense !== readFileSync(join(repository, "LICENSE"), "utf8")) {
+    throw new Error("The packed LICENSE differs from the repository LICENSE.");
   }
   const packed = execFileSync(
     "tar",

@@ -8,11 +8,14 @@
 2. On every push to `main`, the release workflow opens or updates a **Version Packages** pull request that bumps `apps/cli/package.json` and writes the changelog.
 3. Merging that pull request runs `pnpm check` — including building, packing, and installing the package with npm and pnpm — and then publishes through npm trusted publishing (OIDC) with provenance.
 
-## One-time setup (repository owner)
+## First release (repository owner, once)
 
-These steps need an npm account with rights to the package and cannot be automated:
+npm trusted publishing can only be configured for a package that already exists, so `0.1.0` is published by hand:
 
-1. **Claim the name.** `codeheat` was unclaimed on 2026-09-29. Publish once manually to own it, or create it on npmjs.com; fall back to `@rexeus/codeheat` if it is taken.
-2. **Add the trusted publisher** on npmjs.com → package settings → Trusted publishing: repository `rexeus/codeheat`, workflow `release.yml`.
-3. **Decide the repository visibility.** npm provenance requires a public source repository. While `rexeus/codeheat` is private, set `"provenance": false` in `apps/cli/package.json` `publishConfig`; OIDC publishing still works.
-4. **Add a `LICENSE` file** matching the `license` field in `apps/cli/package.json` (currently `MIT`), and keep the two in sync.
+1. Merge the **Version Packages** pull request that the release workflow opens (it bumps `codeheat` to `0.1.0`); its publish job fails until step 3 is done.
+2. On the merged `main`, run `pnpm install && pnpm check`, then publish from `apps/cli` with `npm publish --access public --provenance=false` (provenance needs the CI's OIDC token, which a local publish does not have).
+3. On npmjs.com → `codeheat` → Settings → Trusted publishing, add repository `rexeus/codeheat` with workflow `release.yml`.
+
+From then on, every merged Version Packages pull request publishes through the workflow with provenance. npm provenance requires a public source repository; while `rexeus/codeheat` is private, set `"provenance": false` in `apps/cli/package.json` `publishConfig`.
+
+`LICENSE` (MIT) exists twice: at the repository root and as `apps/cli/LICENSE`, the copy npm packs. `scripts/check-cli-package.mjs` fails when they differ.
