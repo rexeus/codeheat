@@ -1,9 +1,10 @@
 /**
- * Writes the npm page's `README.md` from the repository README. npm packs only
- * files inside `apps/cli`, and it resolves relative links against the package
- * directory, so every repository-relative link becomes an absolute GitHub URL.
+ * Writes the files npm shows and ships next to the bundle. npm packs only
+ * `apps/cli`, so the repository's LICENSE is copied in, and the README is
+ * rewritten with absolute GitHub URLs because npm resolves relative links
+ * against the package directory, where the repository's docs do not exist.
  */
-import { readFile, writeFile } from "node:fs/promises";
+import { copyFile, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 const packageRoot = path.resolve(import.meta.dirname, "..");
@@ -13,10 +14,15 @@ const blobBase = "https://github.com/rexeus/codeheat/blob/main/";
 /** A markdown link target that is not absolute, an anchor, or a mail link. */
 const RELATIVE_LINK = /\]\((?!https?:|#|mailto:)([^)\s]+)\)/gu;
 
+await copyFile(
+  path.join(repositoryRoot, "LICENSE"),
+  path.join(packageRoot, "LICENSE"),
+);
+
 const source = await readFile(path.join(repositoryRoot, "README.md"), "utf8");
 const readme = source.replaceAll(
   RELATIVE_LINK,
   (_, target: string) => `](${new URL(target, blobBase).href})`,
 );
 await writeFile(path.join(packageRoot, "README.md"), readme);
-console.log("Wrote README.md for the npm page.");
+console.log("Wrote LICENSE and README.md for the npm package.");

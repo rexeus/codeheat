@@ -13,3 +13,4 @@ tmp/
 codeheat-report.html
 .claude/worktrees/
 apps/cli/README.md
+apps/cli/LICENSE

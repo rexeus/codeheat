@@ -110,7 +110,7 @@ const expectBundledArtifact = (tarball) => {
       `The packed README has relative links: ${relativeLinks.join(", ")}`,
     );
   }
-  // apps/cli/LICENSE is a copy npm can pack; it must not drift from the root one.
+  // The build copies the repository LICENSE into apps/cli; the packed copy must match it.
   const packedLicense = execFileSync(
     "tar",
     ["-xOzf", tarball, "package/LICENSE"],
