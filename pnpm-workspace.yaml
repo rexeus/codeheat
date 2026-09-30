@@ -16,5 +16,7 @@ catalog:
   "@effect/platform-node": 4.0.0-rc.118
   "@effect/vitest": 4.0.0-rc.118
   "@types/node": 24.19.0
+  "@types/picomatch": 4.0.3
   effect: 4.0.0-rc.118
+  picomatch: 4.0.7
   vitest: 5.0.2
