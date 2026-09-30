@@ -48,7 +48,12 @@ const couplingLines = (
   const revisions = new Map(files.map((file) => [file.path, file.revisions]));
   const coChange = (coupling: Coupling, from: string): string => {
     const total = revisions.get(from);
-    return total === undefined ? "-" : percent(coupling.sharedCommits / total);
+    if (total === undefined) {
+      throw new Error(
+        `Coupled file ${escapeForTerminal(from)} is missing from the report's files; render an untruncated report.`,
+      );
+    }
+    return percent(coupling.sharedCommits / total);
   };
   return renderTable(
     [
@@ -81,7 +86,8 @@ const couplingLines = (
  * the five strongest couplings that are not test pairs, each with the
  * co-change probability in both directions (`shared / revisions(side)`). The
  * report must not be cut to `--limit`: test pairs could crowd out every other
- * coupling, and a coupled file missing from `files` has no probability.
+ * coupling, and every coupled file must appear in `files`: rendering throws
+ * otherwise.
  * The result has no trailing newline.
  */
 export const renderAnalysis = (report: Report, style: Style): string => {

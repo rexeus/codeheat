@@ -69,6 +69,13 @@ describe("renderAnalysis", () => {
     );
   });
 
+  it("refuses a report that was cut before its coupled files", () => {
+    const report = sampleReport();
+    const cut = { ...report, files: report.files.slice(0, 1) };
+
+    expect(() => plainView(cut)).toThrow(/missing from the report's files/u);
+  });
+
   it("ends with one hint about the other output modes", () => {
     expect(plainView().split("\n").at(-1)).toBe(
       "Use --html for the treemap or --json for the full report.",
@@ -90,12 +97,19 @@ describe("renderAnalysis styling and safety", () => {
 
   it("escapes control characters and ANSI sequences in paths", () => {
     const report = sampleReport();
+    const original = "packages/billing/src/invoice.ts";
+    const path = "src/a\u001B[31m\nb.ts";
+    const rename = (name: string): string => (name === original ? path : name);
     const hostile = {
       ...report,
       files: report.files.map((file) =>
-        file.rank === 1
-          ? Object.assign({}, file, { path: "src/a\u001B[31m\nb.ts" })
-          : file,
+        Object.assign({}, file, { path: rename(file.path) }),
+      ),
+      couplings: report.couplings.map((coupling) =>
+        Object.assign({}, coupling, {
+          a: rename(coupling.a),
+          b: rename(coupling.b),
+        }),
       ),
     };
 

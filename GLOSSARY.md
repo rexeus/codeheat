@@ -18,6 +18,6 @@
 
 **Coupling degree** — `shared commits / mean(revisions of both files)`, 0..1. Symmetric; ranks coupled pairs.
 
-**Co-change probability** — `shared commits / revisions of the focused file`. Directional: how likely a change to this file also changes the partner.
+**Co-change probability** — `shared commits / revisions of one file of the pair`. Directional: how likely a change to that file also changes the other. `inspect` shows it for the focused file, `analyze` for both files of a pair.
 
 **Test pair** — a coupled pair where one file is the other's test (`a.ts` and `a.test.ts`). Expected coupling, never a modularization smell.
