@@ -19,7 +19,7 @@ const exceedsLimit = (size: ByteSize.ByteSize): boolean =>
 
 /**
  * The complexity of `<root>/<file>`, or undefined when the file cannot be
- * analyzed: unreadable (missing, a directory, a submodule), binary, or minified.
+ * analyzed: unreadable (missing) or not a regular file (a directory, a device), binary, or minified.
  */
 export const measureSourceFile = (
   root: string,
@@ -33,8 +33,8 @@ export const measureSourceFile = (
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
     const location = path.join(root, file);
-    const { size } = yield* fs.stat(location);
-    if (exceedsLimit(size)) {
+    const info = yield* fs.stat(location);
+    if (info.type !== "File" || exceedsLimit(info.size)) {
       return undefined;
     }
     const bytes = yield* fs.readFile(location);

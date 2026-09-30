@@ -1,6 +1,6 @@
 import { NodeServices } from "@effect/platform-node";
 import { assert, layer } from "@effect/vitest";
-import { Effect } from "effect";
+import { Effect, FileSystem, Path } from "effect";
 
 import { Git } from "../git/git.js";
 import { makeTempRepository } from "../testing/temp-repository.js";
@@ -72,6 +72,38 @@ layer(NodeServices.layer)("inventory git rules", (it) => {
         "d-plain.ts",
       ]);
     }),
+  );
+});
+
+layer(NodeServices.layer)("inventory links", (it) => {
+  it.effect(
+    "leaves out tracked symlinks, whether they lead outside the repository or to a device",
+    () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const repo = yield* makeTempRepository;
+        const outside = yield* fs.makeTempDirectoryScoped({
+          prefix: "codeheat-outside-",
+        });
+        yield* fs.writeFileString(path.join(outside, "secret.txt"), "secret\n");
+        yield* fs.makeDirectory(path.join(repo.directory, "src"));
+        yield* fs.symlink(
+          path.join(outside, "secret.txt"),
+          path.join(repo.directory, "src/secret.ts"),
+        );
+        yield* fs.symlink(
+          "/dev/zero",
+          path.join(repo.directory, "src/zero.ts"),
+        );
+        yield* repo.commit(DATE, { "src/real.ts": "a\n" });
+
+        assert.include(
+          yield* repo.git("ls-files", "--stage", "src/secret.ts"),
+          "120000",
+        );
+        assert.deepStrictEqual(yield* pathsOf(repo), ["src/real.ts"]);
+      }),
   );
 });
 
