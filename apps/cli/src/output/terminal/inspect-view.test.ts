@@ -11,6 +11,7 @@ const entry: InspectResult["matches"][number] = {
   revisions: 48,
   linesAdded: 384,
   linesDeleted: 672,
+  breadth: 14,
   loc: 964,
   complexity: { total: 1900, mean: 1.97, max: 9 },
   reasons: ["changed in 48 commits (#1 of 36)"],

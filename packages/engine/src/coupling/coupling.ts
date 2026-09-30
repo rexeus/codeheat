@@ -46,6 +46,21 @@ const countSharedCommits = (
   return shared;
 };
 
+/** Counts, per file id, the distinct files it shares at least one commit with. */
+const breadthById = (
+  shared: SharedCommits,
+  fileCount: number,
+): ReadonlyArray<number> => {
+  const breadth = Array.from({ length: fileCount }, () => 0);
+  for (const [low, partners] of shared) {
+    breadth[low] = (breadth[low] ?? 0) + partners.size;
+    for (const high of partners.keys()) {
+      breadth[high] = (breadth[high] ?? 0) + 1;
+    }
+  }
+  return breadth;
+};
+
 /**
  * Finds the coupled pairs among `commits`, each the distinct ids of the files
  * one commit touched; an id is an index into `paths`. `revisions` counts every
@@ -53,6 +68,8 @@ const countSharedCommits = (
  *
  * `couplingCommits` is the number of commits small enough to count. Pairs
  * are sorted by their reported (rounded) degree, then shared commits, then path.
+ * `breadth` maps every path in `paths` to the number of distinct other files it
+ * shares a counted commit with, whatever the pair's strength.
  */
 export const findCouplings = (
   commits: ReadonlyArray<Uint32Array>,
@@ -61,11 +78,13 @@ export const findCouplings = (
 ): {
   readonly couplingCommits: number;
   readonly couplings: ReadonlyArray<Coupling>;
+  readonly breadth: ReadonlyMap<string, number>;
 } => {
   const counted = commits.filter((commit) => commit.length <= MAX_COMMIT_FILES);
   const revisionsById = paths.map((path) => revisions.get(path) ?? 0);
   const couplings: Array<Coupling> = [];
-  for (const [low, partners] of countSharedCommits(counted)) {
+  const shared = countSharedCommits(counted);
+  for (const [low, partners] of shared) {
     for (const [high, sharedCommits] of partners) {
       const lowPath = paths[low] ?? "";
       const highPath = paths[high] ?? "";
@@ -91,5 +110,11 @@ export const findCouplings = (
   return {
     couplingCommits: counted.length,
     couplings: couplings.toSorted(byStrength),
+    breadth: new Map(
+      breadthById(shared, paths.length).map((count, id) => [
+        paths[id] ?? "",
+        count,
+      ]),
+    ),
   };
 };

@@ -19,6 +19,8 @@
   },
   "thresholds": {
     "maxCommitFiles": 50,
+    "hubMinBreadth": 10,
+    "hubTopShare": 0.05,
     "minSharedCommits": 3,
     "minDegree": 0.3,
     "maxMeanLineLength": 300,
@@ -36,6 +38,7 @@
       "revisions": 48,
       "linesAdded": 384,
       "linesDeleted": 672,
+      "breadth": 14,
       "loc": 964,
       "complexity": {
         "total": 1900,
@@ -44,7 +47,8 @@
       },
       "reasons": [
         "changed in 48 commits (#1 of 36)",
-        "indentation complexity 1900 (#2 of 36)"
+        "indentation complexity 1900 (#2 of 36)",
+        "changes together with 14 different files"
       ]
     },
     {
@@ -54,6 +58,7 @@
       "revisions": 31,
       "linesAdded": 217,
       "linesDeleted": 248,
+      "breadth": 6,
       "loc": 492,
       "complexity": {
         "total": 1100,
@@ -72,6 +77,7 @@
       "revisions": 36,
       "linesAdded": 324,
       "linesDeleted": 108,
+      "breadth": 5,
       "loc": 270,
       "complexity": {
         "total": 700,
@@ -90,6 +96,7 @@
       "revisions": 19,
       "linesAdded": 646,
       "linesDeleted": 95,
+      "breadth": 5,
       "loc": 604,
       "complexity": {
         "total": 1300,
@@ -108,6 +115,7 @@
       "revisions": 26,
       "linesAdded": 598,
       "linesDeleted": 104,
+      "breadth": 5,
       "loc": 377,
       "complexity": {
         "total": 640,
@@ -126,6 +134,7 @@
       "revisions": 22,
       "linesAdded": 396,
       "linesDeleted": 220,
+      "breadth": 6,
       "loc": 314,
       "complexity": {
         "total": 820,
@@ -144,6 +153,7 @@
       "revisions": 22,
       "linesAdded": 198,
       "linesDeleted": 330,
+      "breadth": 5,
       "loc": 193,
       "complexity": {
         "total": 420,
@@ -162,6 +172,7 @@
       "revisions": 17,
       "linesAdded": 527,
       "linesDeleted": 255,
+      "breadth": 5,
       "loc": 150,
       "complexity": {
         "total": 300,
@@ -180,6 +191,7 @@
       "revisions": 14,
       "linesAdded": 434,
       "linesDeleted": 210,
+      "breadth": 5,
       "loc": 186,
       "complexity": {
         "total": 380,
@@ -198,6 +210,7 @@
       "revisions": 12,
       "linesAdded": 324,
       "linesDeleted": 72,
+      "breadth": 5,
       "loc": 94,
       "complexity": {
         "total": 160,
@@ -216,6 +229,7 @@
       "revisions": 7,
       "linesAdded": 35,
       "linesDeleted": 35,
+      "breadth": 2,
       "loc": 371,
       "complexity": {
         "total": 478,
@@ -234,6 +248,7 @@
       "revisions": 9,
       "linesAdded": 63,
       "linesDeleted": 18,
+      "breadth": 3,
       "loc": 105,
       "complexity": {
         "total": 238,
@@ -252,6 +267,7 @@
       "revisions": 7,
       "linesAdded": 161,
       "linesDeleted": 35,
+      "breadth": 2,
       "loc": 207,
       "complexity": {
         "total": 417,
@@ -270,6 +286,7 @@
       "revisions": 6,
       "linesAdded": 162,
       "linesDeleted": 54,
+      "breadth": 2,
       "loc": 254,
       "complexity": {
         "total": 502,
@@ -288,6 +305,7 @@
       "revisions": 6,
       "linesAdded": 150,
       "linesDeleted": 30,
+      "breadth": 2,
       "loc": 147,
       "complexity": {
         "total": 357,
@@ -306,6 +324,7 @@
       "revisions": 5,
       "linesAdded": 155,
       "linesDeleted": 25,
+      "breadth": 1,
       "loc": 193,
       "complexity": {
         "total": 495,
@@ -324,6 +343,7 @@
       "revisions": 5,
       "linesAdded": 80,
       "linesDeleted": 75,
+      "breadth": 1,
       "loc": 130,
       "complexity": {
         "total": 292,
@@ -342,6 +362,7 @@
       "revisions": 4,
       "linesAdded": 32,
       "linesDeleted": 36,
+      "breadth": 1,
       "loc": 207,
       "complexity": {
         "total": 501,
@@ -360,6 +381,7 @@
       "revisions": 4,
       "linesAdded": 20,
       "linesDeleted": 60,
+      "breadth": 1,
       "loc": 218,
       "complexity": {
         "total": 471,
@@ -378,6 +400,7 @@
       "revisions": 6,
       "linesAdded": 144,
       "linesDeleted": 90,
+      "breadth": 2,
       "loc": 60,
       "complexity": {
         "total": 156,
@@ -396,6 +419,7 @@
       "revisions": 3,
       "linesAdded": 15,
       "linesDeleted": 45,
+      "breadth": 1,
       "loc": 173,
       "complexity": {
         "total": 437,
@@ -414,6 +438,7 @@
       "revisions": 6,
       "linesAdded": 60,
       "linesDeleted": 96,
+      "breadth": 2,
       "loc": 29,
       "complexity": {
         "total": 66,
@@ -432,6 +457,7 @@
       "revisions": 4,
       "linesAdded": 84,
       "linesDeleted": 48,
+      "breadth": 1,
       "loc": 53,
       "complexity": {
         "total": 136,
@@ -450,6 +476,7 @@
       "revisions": 9,
       "linesAdded": 108,
       "linesDeleted": 45,
+      "breadth": 4,
       "loc": 21,
       "complexity": {
         "total": 30,
@@ -468,6 +495,7 @@
       "revisions": 3,
       "linesAdded": 33,
       "linesDeleted": 30,
+      "breadth": 1,
       "loc": 147,
       "complexity": {
         "total": 251,
@@ -486,6 +514,7 @@
       "revisions": 3,
       "linesAdded": 18,
       "linesDeleted": 39,
+      "breadth": 1,
       "loc": 84,
       "complexity": {
         "total": 207,
@@ -504,6 +533,7 @@
       "revisions": 7,
       "linesAdded": 182,
       "linesDeleted": 84,
+      "breadth": 3,
       "loc": 14,
       "complexity": {
         "total": 24,
@@ -522,6 +552,7 @@
       "revisions": 3,
       "linesAdded": 57,
       "linesDeleted": 6,
+      "breadth": 1,
       "loc": 70,
       "complexity": {
         "total": 116,
@@ -540,6 +571,7 @@
       "revisions": 2,
       "linesAdded": 16,
       "linesDeleted": 30,
+      "breadth": 0,
       "loc": 202,
       "complexity": {
         "total": 404,
@@ -558,6 +590,7 @@
       "revisions": 2,
       "linesAdded": 16,
       "linesDeleted": 24,
+      "breadth": 0,
       "loc": 192,
       "complexity": {
         "total": 333,
@@ -576,6 +609,7 @@
       "revisions": 2,
       "linesAdded": 62,
       "linesDeleted": 4,
+      "breadth": 0,
       "loc": 162,
       "complexity": {
         "total": 320,
@@ -594,6 +628,7 @@
       "revisions": 2,
       "linesAdded": 62,
       "linesDeleted": 28,
+      "breadth": 0,
       "loc": 100,
       "complexity": {
         "total": 227,
@@ -612,6 +647,7 @@
       "revisions": 1,
       "linesAdded": 34,
       "linesDeleted": 16,
+      "breadth": 0,
       "loc": 148,
       "complexity": {
         "total": 242,
@@ -630,6 +666,7 @@
       "revisions": 0,
       "linesAdded": 0,
       "linesDeleted": 0,
+      "breadth": 0,
       "loc": 306,
       "complexity": {
         "total": 500,
@@ -645,6 +682,7 @@
       "revisions": 0,
       "linesAdded": 0,
       "linesDeleted": 0,
+      "breadth": 0,
       "loc": 129,
       "complexity": {
         "total": 222,
@@ -660,6 +698,7 @@
       "revisions": 0,
       "linesAdded": 0,
       "linesDeleted": 0,
+      "breadth": 0,
       "loc": 1302,
       "complexity": {
         "total": 2400,

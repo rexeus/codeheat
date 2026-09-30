@@ -11,6 +11,7 @@ export const fileStats = (
   revisions: 10,
   linesAdded: 100,
   linesDeleted: 20,
+  breadth: 3,
   loc: 100,
   complexity: { total: 200, mean: 2, max: 5 },
   reasons: [],
@@ -48,6 +49,8 @@ export const reportOf = (
   },
   thresholds: {
     maxCommitFiles: 50,
+    hubMinBreadth: 10,
+    hubTopShare: 0.05,
     minSharedCommits: 3,
     minDegree: 0.3,
     maxMeanLineLength: 300,

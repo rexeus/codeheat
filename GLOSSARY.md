@@ -21,3 +21,5 @@
 **Co-change probability** — `shared commits / revisions of one file of the pair`. Directional: how likely a change to that file also changes the other. `inspect` shows it for the focused file, `analyze` for both files of a pair.
 
 **Test pair** — a coupled pair where one file is the other's test (`a.ts` and `a.test.ts`). Expected coupling, never a modularization smell.
+
+**Co-change breadth** — the number of distinct other universe files a file changed together with in counted commits (at most `maxCommitFiles` files each), however rarely. A **hub** is a file whose breadth is at least `hubMinBreadth` and among the widest `hubTopShare` of the universe; it is explained with a reason line, even though no single pair is coupled strongly enough to report.

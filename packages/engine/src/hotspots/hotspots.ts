@@ -14,6 +14,8 @@ export type FileMeasure = {
   readonly linesAdded: number;
   readonly linesDeleted: number;
   readonly complexity: Complexity;
+  /** Distinct other universe files changed together with this one. */
+  readonly breadth: number;
 };
 
 /** `log(1 + value) / log(1 + max)`: 0..1, compressing outliers so one giant file does not flatten the rest. */
@@ -60,6 +62,7 @@ export const rankFiles = (
   const complexityRanks = competitionRanks(
     measures.map((m) => m.complexity.total),
   );
+  const breadthRanks = competitionRanks(measures.map((m) => m.breadth));
   const normalizeRevisions = logNormalizer(
     maximum(measures.map((m) => m.revisions)),
   );
@@ -80,7 +83,7 @@ export const rankFiles = (
         b.score - a.score || Order.String(a.measure.path, b.measure.path),
     )
     .map(({ measure, score }, index): FileStats => {
-      const { path, revisions, complexity } = measure;
+      const { path, revisions, complexity, breadth } = measure;
       return {
         path,
         rank: index + 1,
@@ -89,6 +92,7 @@ export const rankFiles = (
         linesAdded: measure.linesAdded,
         linesDeleted: measure.linesDeleted,
         loc: complexity.loc,
+        breadth,
         complexity: {
           total: complexity.total,
           mean: roundReported(complexity.mean),
@@ -102,6 +106,8 @@ export const rankFiles = (
             complexityRanks.get(complexity.total) ?? measures.length,
           of: measures.length,
           partners: partnersOf(path, revisions, coupled.get(path) ?? []),
+          breadth,
+          breadthRank: breadthRanks.get(breadth) ?? measures.length,
         }),
       };
     });

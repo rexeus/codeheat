@@ -95,7 +95,8 @@ describe("findCouplings commit size", () => {
 
     const result = findCouplings(repeat(3, files), revisions);
 
-    expect(result).toStrictEqual({ couplingCommits: 0, couplings: [] });
+    expect(result).toMatchObject({ couplingCommits: 0, couplings: [] });
+    expect(new Set(result.breadth.values())).toStrictEqual(new Set([0]));
   });
 
   it("counts commits touching exactly 50 files", () => {
@@ -153,5 +154,41 @@ describe("findCouplings pair facts", () => {
       "a.ts b.ts",
       "e.ts f.ts",
     ]);
+  });
+});
+
+describe("findCouplings breadth", () => {
+  it("counts the distinct files a file changed with, however rarely", () => {
+    // index.ts joins each of f0..f11 in one commit: 12 partners, no coupling
+    const files = Array.from({ length: 12 }, (_, index) => `f${index}.ts`);
+    const commits = files.map((file) => ["index.ts", file]);
+
+    const { breadth, couplings } = findCouplings(commits, new Map());
+
+    expect(couplings).toStrictEqual([]);
+    expect(breadth.get("index.ts")).toBe(12);
+    expect(breadth.get("f0.ts")).toBe(1);
+  });
+
+  it("counts a repeated partner once", () => {
+    const commits = [
+      ["a.ts", "b.ts"],
+      ["a.ts", "b.ts"],
+      ["a.ts", "b.ts", "c.ts"],
+    ];
+
+    const { breadth } = findCouplings(commits, new Map());
+
+    expect([...breadth]).toStrictEqual([
+      ["a.ts", 2],
+      ["b.ts", 2],
+      ["c.ts", 2],
+    ]);
+  });
+
+  it("gives a file that only changed alone a breadth of zero", () => {
+    const { breadth } = findCouplings([["a.ts"], ["b.ts", "c.ts"]], new Map());
+
+    expect(breadth.get("a.ts")).toBe(0);
   });
 });

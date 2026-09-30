@@ -22,6 +22,10 @@ export const AnalysisWindow = Schema.Struct({
 /** The noise limits an analysis applied, reported so consumers see them. */
 const Thresholds = Schema.Struct({
   maxCommitFiles: Count,
+  /** Fewest distinct co-changed files (`FileStats.breadth`) that make a file a hub. */
+  hubMinBreadth: Count,
+  /** Share of the universe, widest files first, that may be hubs. */
+  hubTopShare: UnitInterval,
   minSharedCommits: Count,
   minDegree: UnitInterval,
   maxMeanLineLength: Count,
@@ -39,6 +43,11 @@ export const FileStats = Schema.Struct({
   revisions: Count,
   linesAdded: Count,
   linesDeleted: Count,
+  /**
+   * Distinct other universe files this file changed together with in counted
+   * commits (at most `Thresholds.maxCommitFiles` files), however rarely.
+   */
+  breadth: Count,
   /** Non-blank lines. */
   loc: Count,
   complexity: Schema.Struct({

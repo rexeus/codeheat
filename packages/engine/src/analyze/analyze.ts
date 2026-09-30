@@ -23,6 +23,7 @@ import { readHistory } from "../history/history.js";
 import type { History } from "../history/history.js";
 import { rankFiles } from "../hotspots/hotspots.js";
 import type { FileMeasure } from "../hotspots/hotspots.js";
+import { HUB_MIN_BREADTH, HUB_TOP_SHARE } from "../hotspots/reasons.js";
 import type { Report } from "../report/report.js";
 import { inventory } from "../universe/inventory.js";
 import type { InventoryFile } from "../universe/inventory.js";
@@ -62,6 +63,8 @@ const NO_HISTORY: History = {
 
 const THRESHOLDS = {
   maxCommitFiles: MAX_COMMIT_FILES,
+  hubMinBreadth: HUB_MIN_BREADTH,
+  hubTopShare: HUB_TOP_SHARE,
   minSharedCommits: MIN_SHARED_COMMITS,
   minDegree: MIN_DEGREE,
   maxMeanLineLength: MAX_MEAN_LINE_LENGTH,
@@ -72,6 +75,7 @@ const THRESHOLDS = {
 const measureFiles = (
   files: ReadonlyArray<InventoryFile>,
   history: History,
+  breadth: ReadonlyMap<string, number>,
 ): ReadonlyArray<FileMeasure> =>
   files.map(({ path, complexity }) => {
     const activity = history.files.get(path);
@@ -80,6 +84,7 @@ const measureFiles = (
       revisions: activity?.revisions ?? 0,
       linesAdded: activity?.linesAdded ?? 0,
       linesDeleted: activity?.linesDeleted ?? 0,
+      breadth: breadth.get(path) ?? 0,
       complexity,
     };
   });
@@ -108,13 +113,17 @@ const analyzeRepository = (
             skipCommits: shallowBoundary ?? new Set(),
             universe: new Set(files.map((file) => file.path)),
           });
-    const measures = measureFiles(files, history);
-    const { couplingCommits, couplings } = findCouplings(
+    const { couplingCommits, couplings, breadth } = findCouplings(
       history.commits,
       history.paths,
-      new Map(measures.map((measure) => [measure.path, measure.revisions])),
+      new Map(
+        [...history.files].map(([file, activity]) => [
+          file,
+          activity.revisions,
+        ]),
+      ),
     );
-    const ranked = rankFiles(measures, couplings);
+    const ranked = rankFiles(measureFiles(files, history, breadth), couplings);
     return {
       schemaVersion: 1,
       tool: { name: "codeheat", version: options.toolVersion },

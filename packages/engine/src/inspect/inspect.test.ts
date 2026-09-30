@@ -10,6 +10,7 @@ const stats = (path: string, rank: number, revisions: number): FileStats => ({
   revisions,
   linesAdded: 0,
   linesDeleted: 0,
+  breadth: 0,
   loc: 10,
   complexity: { total: 5, mean: 0.5, max: 2 },
   reasons: [],
@@ -38,6 +39,8 @@ const reportOf = (
   },
   thresholds: {
     maxCommitFiles: 50,
+    hubMinBreadth: 10,
+    hubTopShare: 0.05,
     minSharedCommits: 3,
     minDegree: 0.3,
     maxMeanLineLength: 300,
