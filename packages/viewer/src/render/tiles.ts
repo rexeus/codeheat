@@ -1,4 +1,4 @@
-import { scoreStep } from "../color/score-step.js";
+import type { HeatScale } from "../color/heat-scale.js";
 import { fitLabel } from "../layout/label.js";
 import { GROUP_HEADER_HEIGHT } from "../layout/treemap.js";
 import type { PlacedGroup, PlacedLeaf } from "../layout/treemap.js";
@@ -47,13 +47,14 @@ export const drawLeaf = (
   create: SvgFactory,
   leaf: PlacedLeaf,
   index: number,
+  heat: HeatScale,
 ): SVGElement => {
   const { x0, y0, x1, y1 } = leaf.rect;
   const [width, height] = [x1 - x0, y1 - y0];
   const tile = create("g", {
     class: "tile",
     "data-index": index,
-    "data-step": scoreStep(leafScore(leaf)),
+    "data-step": heat(leafScore(leaf)),
   });
   tile.append(create("rect", { x: x0, y: y0, width, height }));
   const title =

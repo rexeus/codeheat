@@ -1,6 +1,6 @@
 import type { FileStats } from "@codeheat/engine";
 
-import { scoreStep } from "../color/score-step.js";
+import type { HeatScale } from "../color/heat-scale.js";
 import type { Partner } from "../selection/partners.js";
 import { h } from "./dom.js";
 import {
@@ -20,6 +20,7 @@ export type PanelData = {
   readonly files: ReadonlyMap<string, FileStats>;
   /** Hottest first. */
   readonly hotspots: readonly FileStats[];
+  readonly heat: HeatScale;
   readonly thresholds: {
     readonly minSharedCommits: number;
     readonly minDegree: number;
@@ -35,9 +36,9 @@ const OVERVIEW_HOTSPOTS = 10;
 
 type Context = PanelData & Pick<PanelHandlers, "select">;
 
-const swatch = (score: number): HTMLElement => {
+const swatch = (heat: HeatScale, score: number): HTMLElement => {
   const element = h("span", "swatch");
-  element.dataset["step"] = String(scoreStep(score));
+  element.dataset["step"] = String(heat(score));
   return element;
 };
 
@@ -66,14 +67,14 @@ const distanceLabel = (distance: number): string => {
 
 /** A button that selects `path`, keyed by the heat swatch of that file. */
 const fileButton = (
-  { files, select }: Context,
+  { files, heat, select }: Context,
   path: string,
   ...content: readonly Node[]
 ): HTMLButtonElement => {
   const button = h(
     "button",
     "file-button",
-    swatch(files.get(path)?.score ?? 0),
+    swatch(heat, files.get(path)?.score ?? 0),
     ...content,
   );
   button.type = "button";
@@ -128,11 +129,14 @@ const partnersSection = (
   );
 };
 
-const fileSections = ({ files }: Context, file: FileStats): HTMLElement[] => [
+const fileSections = (
+  { files, heat }: Context,
+  file: FileStats,
+): HTMLElement[] => [
   h(
     "div",
     "score-line",
-    swatch(file.score),
+    swatch(heat, file.score),
     h("strong", "score", formatScore(file.score)),
     h(
       "span",

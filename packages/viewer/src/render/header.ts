@@ -1,6 +1,6 @@
 import type { Report } from "@codeheat/engine";
 
-import { HEAT_STEP_COUNT } from "../color/score-step.js";
+import { HEAT_STEP_COUNT } from "../color/heat-scale.js";
 import { h } from "./dom.js";
 import { formatCount } from "./format.js";
 
@@ -37,9 +37,9 @@ const heatRamp = (): HTMLElement => {
   return h(
     "span",
     "ramp",
-    h("span", "muted", "0"),
+    h("span", "muted", "none"),
     ...steps,
-    h("span", "muted", "1"),
+    h("span", "muted", "top 2%"),
   );
 };
 
@@ -56,7 +56,7 @@ export const renderLegend = (legend: HTMLElement): void => {
       "div",
       "legend-item",
       h("span", "muted", "Color"),
-      h("strong", "", "hotspot score"),
+      h("strong", "", "hotspot rank"),
       heatRamp(),
     ),
   );

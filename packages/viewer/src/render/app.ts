@@ -1,5 +1,6 @@
 import type { FileStats, Report } from "@codeheat/engine";
 
+import { makeHeatScale } from "../color/heat-scale.js";
 import { buildTree } from "../layout/hierarchy.js";
 import { layoutTreemap } from "../layout/treemap.js";
 import { createPathMatcher } from "../selection/filter.js";
@@ -33,11 +34,13 @@ const createParts = (
   select: (path: string | null) => void,
 ) => {
   const tooltip = createTooltip(page.tooltip, page.stage, report.files.length);
+  const heat = makeHeatScale(report.files.map(({ score }) => score));
   const panel = createPanel(
     page.panel,
     {
       files: new Map(report.files.map((file) => [file.path, file])),
       hotspots: report.files,
+      heat,
       thresholds: report.thresholds,
     },
     {
@@ -47,7 +50,7 @@ const createParts = (
       },
     },
   );
-  const view = createTreemapView(page.treemap, {
+  const view = createTreemapView(page.treemap, heat, {
     hover: (leaf, event) => {
       if (leaf === null) {
         tooltip.hide();
