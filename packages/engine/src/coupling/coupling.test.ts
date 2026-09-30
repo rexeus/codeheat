@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { findCouplings as findCouplingsByFileId } from "./coupling.js";
 
-/** Numbers the paths in order of first appearance, as history does for its universe. */
+/** Numbers the paths in order of first appearance; any numbering works, since findCouplings orders each pair by path. */
 const findCouplings = (
   commits: ReadonlyArray<ReadonlyArray<string>>,
   revisions: ReadonlyMap<string, number>,
