@@ -11,3 +11,4 @@ coverage/
 .cache/
 tmp/
 codeheat-report.html
+.claude/worktrees/
