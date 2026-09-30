@@ -2,6 +2,9 @@ const counts = new Intl.NumberFormat("en");
 
 export const formatCount = (value: number): string => counts.format(value);
 
+/** The calendar day of an ISO timestamp, as `YYYY-MM-DD`. */
+export const formatDay = (timestamp: string): string => timestamp.slice(0, 10);
+
 export const formatScore = (score: number): string => score.toFixed(2);
 
 export const formatPercent = (share: number): string =>

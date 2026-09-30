@@ -2,14 +2,12 @@ import type { Report } from "@codeheat/engine";
 
 import { HEAT_STEP_COUNT } from "../color/heat-scale.js";
 import { h } from "./dom.js";
-import { formatCount } from "./format.js";
+import { formatCount, formatDay } from "./format.js";
 
 const SHORT_SHA_LENGTH = 7;
 
-const day = (timestamp: string): string => timestamp.slice(0, 10);
-
 const summaryParts = ({ repository, window, files }: Report): string[] => [
-  `${day(window.since)} → ${day(window.until)}`,
+  `${formatDay(window.since)} → ${formatDay(window.until)}`,
   `${formatCount(window.commits)} commits`,
   `${formatCount(files.length)} files`,
   ...(repository.head === null

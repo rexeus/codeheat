@@ -9,6 +9,7 @@ import { highlightOf, selectionOf } from "../selection/highlight.js";
 import type { Selection } from "../selection/highlight.js";
 import { indexPartners } from "../selection/partners.js";
 import { byId } from "./dom.js";
+import { showEmptyNotice } from "./empty-report.js";
 import { formatCount } from "./format.js";
 import { renderHeader, renderLegend } from "./header.js";
 import { OVERVIEW_HOTSPOTS, createPanel } from "./panel.js";
@@ -125,6 +126,7 @@ export const mountViewer = (report: Report): void => {
     byId("summary", HTMLElement),
   );
   renderLegend(byId("legend", HTMLElement));
+  showEmptyNotice(report, page.stage);
   panel.showOverview();
   draw();
 
