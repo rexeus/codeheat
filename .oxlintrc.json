@@ -148,7 +148,8 @@
       }
     ],
     "sonarjs/cognitive-complexity": ["error", 15],
-    "unicorn/prefer-node-protocol": "error"
+    "unicorn/prefer-node-protocol": "error",
+    "no-redeclare": "off"
   },
   "ignorePatterns": [
     "**/node_modules/**",

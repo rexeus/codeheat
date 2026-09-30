@@ -28,6 +28,8 @@ Why each tool is here, how the pieces depend on each other, and how to upgrade t
 
 `.oxlintrc.json` turns on the correctness, suspicious, pedantic, and perf categories as errors plus explicit size, complexity, type-safety, and import-graph rules. `.oxlint-effect.json` extends the `@effect/tsgo` recommended preset with every native category off. Keeping them apart stops the preset from changing the native defaults. The Effect config disables the preset's host-wide bans (`global-console`, `node-builtin-import`, …) that do not fit a CLI; `--deny-warnings` turns its remaining warnings into failures.
 
+`no-redeclare` is off: it flags the schema-and-type pair (`export const Report = Schema.Struct(…)` plus `export type Report = typeof Report.Type`), and TypeScript already rejects real redeclarations.
+
 `scripts/lint-regressions.test.ts` proves the important rules still fire, so an upgrade cannot silently weaken the gate.
 
 ## Upgrading
