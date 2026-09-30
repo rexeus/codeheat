@@ -22,6 +22,22 @@ export const makeCoupledProject = Effect.map(makeGitRepository, (repo) => {
   return repo;
 });
 
+/**
+ * `a.ts` and its test change together most often, so they are the strongest
+ * coupling; `b.ts` and `c.ts` change together just as often, as a weaker pair.
+ */
+export const makeTestPairProject = Effect.map(makeGitRepository, (repo) => {
+  for (const day of [30, 20, 10, 5]) {
+    repo.commit(day, {
+      "src/a.ts": source(3, day),
+      "src/a.test.ts": source(2, day),
+      "src/b.ts": source(1, day),
+      "src/c.ts": source(2, day),
+    });
+  }
+  return repo;
+});
+
 /** Empties PATH for the scope, so spawning git fails as on a machine without it. */
 export const withoutGitOnPath = Effect.acquireRelease(
   Effect.sync(() => {

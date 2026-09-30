@@ -7,7 +7,10 @@ import {
   makeTempDirectory,
 } from "../testing/git-repository.js";
 import { journey } from "../testing/journey-harness.js";
-import { makeCoupledProject } from "../testing/projects.js";
+import {
+  makeCoupledProject,
+  makeTestPairProject,
+} from "../testing/projects.js";
 
 // Real clock: the analysis window is resolved against now, and the commits are dated relative to it.
 describe("codeheat analyze against a git repository", () => {
@@ -74,6 +77,24 @@ describe("codeheat analyze against a git repository", () => {
       expect(report.repository.scope).toBe(".");
       expect(report.totals.files).toBe(3);
     }).pipe(Effect.scoped),
+  );
+
+  it.live(
+    "picks the terminal's couplings from the whole report, whatever --limit says",
+    () =>
+      Effect.gen(function* () {
+        const repo = yield* makeTestPairProject;
+
+        const result = yield* journey({
+          args: ["analyze", "--limit", "1"],
+          cwd: repo.root,
+        });
+
+        expect(result.stdout).toContain("src/b.ts <-> src/c.ts");
+        expect(result.stdout).not.toContain("No change coupling");
+        // the hotspot table is not cut to one row either
+        expect(result.stdout).toContain("src/a.test.ts");
+      }).pipe(Effect.scoped),
   );
 
   it.live("analyzes a single file given as the path", () =>

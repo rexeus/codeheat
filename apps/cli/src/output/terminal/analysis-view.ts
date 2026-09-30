@@ -66,9 +66,10 @@ const couplingLines = (
   );
 
 /**
- * Renders the terminal view of an `analyze` report, already cut to
- * `--limit`: the ten hottest files and the five strongest couplings that are
- * not test pairs. The result has no trailing newline.
+ * Renders the terminal view of an `analyze` report: the ten hottest files and
+ * the five strongest couplings that are not test pairs. The report must not
+ * be cut to `--limit`, or the test pairs could crowd out every other coupling.
+ * The result has no trailing newline.
  */
 export const renderAnalysis = (report: Report, style: Style): string => {
   const summary = `${escapeForTerminal(report.repository.name)}  ${day(report.window.since)} to ${day(report.window.until)}  ${report.window.commits} commits, ${report.totals.files} files`;

@@ -57,8 +57,12 @@ export const analyzeCommand = Command.make(
       toolVersion: version,
     });
     yield* warnIfShallow(report);
-    const shown = limitReport(report, limit);
-    return yield* printResult(shown, json, renderAnalysis);
+    // --limit bounds the JSON document; the terminal view picks its own top entries.
+    return yield* printResult(
+      json ? limitReport(report, limit) : report,
+      json,
+      renderAnalysis,
+    );
   }),
 ).pipe(
   Command.withDescription(
