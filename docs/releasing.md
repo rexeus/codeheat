@@ -1,6 +1,6 @@
 # Releasing
 
-`codeheat` is published to npm by `.github/workflows/release.yml`; nobody publishes from a laptop (`scripts/release.mjs` refuses).
+`codeheat` is published to npm by `.github/workflows/release.yml`. Apart from the one manual first release below, nobody publishes from a laptop (`pnpm release` refuses outside the workflow).
 
 ## How a release happens
 
@@ -16,6 +16,6 @@ npm trusted publishing can only be configured for a package that already exists,
 2. On the merged `main`, run `pnpm install && pnpm check`, then publish from `apps/cli` with `npm publish --access public --provenance=false` (provenance needs the CI's OIDC token, which a local publish does not have).
 3. On npmjs.com → `codeheat` → Settings → Trusted publishing, add repository `rexeus/codeheat` with workflow `release.yml`.
 
-From then on, every merged Version Packages pull request publishes through the workflow with provenance. npm provenance requires a public source repository; while `rexeus/codeheat` is private, set `"provenance": false` in `apps/cli/package.json` `publishConfig`.
+From then on, every merged Version Packages pull request publishes through the workflow with provenance, which npm only issues for a public source repository — `rexeus/codeheat` must be public before that first automated release (and before `0.1.0`, so the README's links work on the npm page).
 
 `LICENSE` (MIT) exists twice: at the repository root and as `apps/cli/LICENSE`, the copy npm packs. `scripts/check-cli-package.mjs` fails when they differ.
