@@ -1,4 +1,4 @@
-import { analyze, inspect } from "@codeheat/engine";
+import { analyze, inspectFrom } from "@codeheat/engine";
 import { Console, Effect } from "effect";
 import { Argument, Command } from "effect/cli";
 
@@ -9,7 +9,6 @@ import { warnIfShallow } from "../output/shallow-warning.js";
 import { renderInspect } from "../output/terminal/inspect-view.js";
 import { version } from "../version.js";
 import { WorkingDirectory } from "../working-directory.js";
-import { resolveFocusPatterns } from "./focus-patterns.js";
 import { jsonFlag, sinceFlag } from "./shared-flags.js";
 
 export const inspectCommand = Command.make(
@@ -34,10 +33,7 @@ export const inspectCommand = Command.make(
       toolVersion: version,
     });
     yield* warnIfShallow(report);
-    const result = inspect(
-      report,
-      yield* resolveFocusPatterns(cwd, report, patterns),
-    );
+    const result = yield* inspectFrom({ cwd, report, patterns });
     if (result.matches.length === 0) {
       return yield* new NothingMatched({ patterns: result.unmatched });
     }

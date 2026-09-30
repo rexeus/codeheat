@@ -2,7 +2,10 @@ import { InspectResult } from "@codeheat/engine";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Schema } from "effect";
 
-import { makeTempDirectory } from "../testing/git-repository.js";
+import {
+  makeGitRepository,
+  makeTempDirectory,
+} from "../testing/git-repository.js";
 import { journey } from "../testing/journey-harness.js";
 import { makeCoupledProject } from "../testing/projects.js";
 
@@ -119,5 +122,52 @@ describe("codeheat inspect with exact paths", () => {
       expect(result.stdout).toBe("");
       expect(result.stderr).toContain(outside);
     }).pipe(Effect.scoped),
+  );
+});
+
+// `index.ts` exists at the root and in `pkg/`, where it is generated and so outside the universe.
+const makeShadowedProject = Effect.map(makeGitRepository, (repo) => {
+  repo.commit(5, {
+    "index.ts": "run();\n",
+    "src/b.ts": "run();\n",
+    "pkg/index.ts": "run();\n",
+    "pkg/lib.ts": "run();\n",
+    ".gitattributes": "pkg/index.ts linguist-generated\n",
+  });
+  return repo;
+});
+
+describe("codeheat inspect when a path could name two files", () => {
+  it.live(
+    "does not answer with the root file for a generated file in the working directory",
+    () =>
+      Effect.gen(function* () {
+        const repo = yield* makeShadowedProject;
+
+        const result = yield* journey({
+          args: ["inspect", "index.ts", "--json"],
+          cwd: `${repo.root}/pkg`,
+        });
+
+        expect(result.exitCode).toBe(4);
+        expect(result.stdout).toBe("");
+        expect(result.stderr).toContain('"index.ts"');
+      }).pipe(Effect.scoped),
+  );
+
+  it.live(
+    "reads a path starting with ./ only against the working directory",
+    () =>
+      Effect.gen(function* () {
+        const repo = yield* makeShadowedProject;
+
+        const result = yield* journey({
+          args: ["inspect", "./src/b.ts", "--json"],
+          cwd: `${repo.root}/pkg`,
+        });
+
+        expect(result.exitCode).toBe(4);
+        expect(result.stderr).toContain('"./src/b.ts"');
+      }).pipe(Effect.scoped),
   );
 });

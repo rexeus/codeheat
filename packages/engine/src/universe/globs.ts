@@ -20,3 +20,7 @@ export const matchesAny = (
   const glob = picomatch(normalized, { dot: true });
   return (path) => exact.has(path) || glob(path);
 };
+
+/** Whether `pattern` has glob metacharacters; any other pattern names one path. */
+export const isGlob = (pattern: string): boolean =>
+  picomatch.scan(pattern).isGlob;
