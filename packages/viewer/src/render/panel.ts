@@ -151,6 +151,7 @@ const fileSections = (
     "div",
     "stats",
     stat(formatCount(file.revisions), "revisions"),
+    stat(formatCount(file.breadth), "co-changed files"),
     stat(formatCount(file.loc), "lines of code"),
     stat(formatCount(file.complexity.total), "complexity"),
     stat(
