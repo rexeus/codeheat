@@ -11,7 +11,7 @@ import { indexPartners } from "../selection/partners.js";
 import { byId } from "./dom.js";
 import { formatCount } from "./format.js";
 import { renderHeader, renderLegend } from "./header.js";
-import { createPanel } from "./panel.js";
+import { OVERVIEW_HOTSPOTS, createPanel } from "./panel.js";
 import { createTooltip } from "./tooltip.js";
 import { createTreemapView } from "./treemap-view.js";
 
@@ -78,7 +78,14 @@ const matchSummary = (
 export const mountViewer = (report: Report): void => {
   const page = findPage();
   const partnerIndex = indexPartners(report.couplings);
-  const tree = buildTree(report.files, new Set(partnerIndex.keys()));
+  // Coupled files and the panel's hotspots stay selectable tiles when small files merge.
+  const tree = buildTree(
+    report.files,
+    new Set([
+      ...partnerIndex.keys(),
+      ...report.files.slice(0, OVERVIEW_HOTSPOTS).map(({ path }) => path),
+    ]),
+  );
   let selection: Selection | null = null;
   let matcher: PathMatcher | null = null;
 
@@ -88,8 +95,8 @@ export const mountViewer = (report: Report): void => {
 
   const paint = (): void => {
     view.paint(({ node }) => {
-      const path = node.kind === "file" ? node.path : null;
-      return highlightOf(path, selection, matcher);
+      const paths = node.kind === "file" ? [node.path] : node.paths;
+      return highlightOf(paths, selection, matcher);
     }, selection);
   };
 

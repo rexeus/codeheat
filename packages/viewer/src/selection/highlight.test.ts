@@ -17,33 +17,38 @@ describe("highlightOf", () => {
   const nothing = null;
 
   it("lights the selected file and its partners and dims everything else", () => {
-    expect(highlightOf("src/tax.ts", selection, nothing)).toBe("selected");
-    expect(highlightOf("web/cart.ts", selection, nothing)).toBe("partner");
-    expect(highlightOf("web/other.ts", selection, nothing)).toBe("dimmed");
+    expect(highlightOf(["src/tax.ts"], selection, nothing)).toBe("selected");
+    expect(highlightOf(["web/cart.ts"], selection, nothing)).toBe("partner");
+    expect(highlightOf(["web/other.ts"], selection, nothing)).toBe("dimmed");
   });
 
-  it("dims a tile that stands for several files while a file is selected", () => {
-    expect(highlightOf(null, selection, nothing)).toBe("dimmed");
+  it("lights a tile of merged files when one of them is a partner", () => {
+    expect(
+      highlightOf(["web/other.ts", "web/cart.ts"], selection, nothing),
+    ).toBe("partner");
+    expect(highlightOf(["web/a.ts", "web/b.ts"], selection, nothing)).toBe(
+      "dimmed",
+    );
   });
 
   it("lets a selection outrank the filter", () => {
-    expect(highlightOf("web/other.ts", selection, () => true)).toBe("dimmed");
+    expect(highlightOf(["web/other.ts"], selection, () => true)).toBe("dimmed");
   });
 
   it("highlights filter matches and dims the rest when nothing is selected", () => {
-    expect(highlightOf("a.ts", nothing, endsWithTs)).toBe("match");
-    expect(highlightOf("a.css", nothing, endsWithTs)).toBe("dimmed");
-    expect(highlightOf(null, nothing, endsWithTs)).toBe("dimmed");
+    expect(highlightOf(["a.ts"], nothing, endsWithTs)).toBe("match");
+    expect(highlightOf(["a.css"], nothing, endsWithTs)).toBe("dimmed");
+    expect(highlightOf(["a.css", "b.ts"], nothing, endsWithTs)).toBe("match");
   });
 
   it("leaves every tile alone without a selection or a filter", () => {
-    expect(highlightOf("a.ts", nothing, nothing)).toBe("none");
+    expect(highlightOf(["a.ts"], nothing, nothing)).toBe("none");
   });
 
   it("selects a file with no partners without lighting anything else", () => {
     const lonely = selectionOf("src/other.ts", index);
 
-    expect(highlightOf("src/other.ts", lonely, nothing)).toBe("selected");
-    expect(highlightOf("src/tax.ts", lonely, nothing)).toBe("dimmed");
+    expect(highlightOf(["src/other.ts"], lonely, nothing)).toBe("selected");
+    expect(highlightOf(["src/tax.ts"], lonely, nothing)).toBe("dimmed");
   });
 });

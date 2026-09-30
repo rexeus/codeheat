@@ -14,6 +14,8 @@ export type AggregateNode = {
   readonly name: string;
   readonly directory: string;
   readonly count: number;
+  /** The merged files, so filter and selection can still find them. */
+  readonly paths: readonly string[];
   readonly loc: number;
   /** The hottest score among the merged files, so no hotspot hides in the tile. */
   readonly score: number;
@@ -73,8 +75,10 @@ const aggregate = (
   name: `${files.length} small files`,
   directory,
   count: files.length,
+  paths: files.map(({ path }) => path),
   loc: files.reduce((sum, { file }) => sum + file.loc, 0),
-  score: Math.max(...files.map(({ file }) => file.score)),
+  // A reduce, not Math.max(...scores): spreading 125k+ arguments overflows the stack.
+  score: files.reduce((hottest, { file }) => Math.max(hottest, file.score), 0),
 });
 
 type Aggregation = {

@@ -19,23 +19,25 @@ export const selectionOf = (path: string, index: PartnerIndex): Selection => ({
 export type Highlight = "selected" | "partner" | "match" | "dimmed" | "none";
 
 /**
- * Decides a tile's highlight. A selection outranks the filter: while a file is
- * selected, only it and its partners stay lit. `path` is `null` for tiles that
- * stand for several files and can be neither selected nor partners.
+ * Decides a tile's highlight from the paths it stands for: one for a file,
+ * every member for a tile of merged small files. A selection outranks the
+ * filter: while a file is selected, only it and its partners stay lit.
  */
 export const highlightOf = (
-  path: string | null,
+  paths: readonly string[],
   selection: Selection | null,
   matcher: PathMatcher | null,
 ): Highlight => {
   if (selection !== null) {
-    if (path === selection.path) {
+    if (paths.includes(selection.path)) {
       return "selected";
     }
-    return path !== null && selection.partners.has(path) ? "partner" : "dimmed";
+    return paths.some((path) => selection.partners.has(path))
+      ? "partner"
+      : "dimmed";
   }
   if (matcher === null) {
     return "none";
   }
-  return path !== null && matcher(path) ? "match" : "dimmed";
+  return paths.some((path) => matcher(path)) ? "match" : "dimmed";
 };

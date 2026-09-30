@@ -89,6 +89,10 @@ describe("buildTree above 8,000 files", () => {
         name: "8000 small files",
         directory: "src",
         count: 8000,
+        paths: Array.from(
+          { length: 8000 },
+          (_, index) => `src/small-${index}.ts`,
+        ),
         loc: 8000,
         score: 0.4,
       },
@@ -102,5 +106,23 @@ describe("buildTree above 8,000 files", () => {
     expect(
       src.kind === "directory" && src.children.map((node) => node.name),
     ).toEqual(["big.ts", "small-3.ts", "7999 small files"]);
+  });
+
+  it("merges a directory of more small files than a call can take as arguments", () => {
+    const files = [
+      fileStats("src/big.ts", { loc: 1_000_000_000 }),
+      ...Array.from({ length: 130_000 }, (_, index) =>
+        fileStats(`gen/file-${index}.ts`, {
+          loc: 1,
+          score: index === 7 ? 0.9 : 0.1,
+        }),
+      ),
+    ];
+
+    const gen = childNamed(buildTree(files, noKeep), "gen");
+
+    expect(gen.kind === "directory" && gen.children).toMatchObject([
+      { kind: "aggregate", count: 130_000, score: 0.9 },
+    ]);
   });
 });

@@ -32,7 +32,8 @@ export type PanelHandlers = {
   readonly clear: () => void;
 };
 
-const OVERVIEW_HOTSPOTS = 10;
+/** Hotspots the overview lists; they always stay individual tiles. */
+export const OVERVIEW_HOTSPOTS = 10;
 
 type Context = PanelData & Pick<PanelHandlers, "select">;
 
