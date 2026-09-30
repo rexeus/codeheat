@@ -1,0 +1,217 @@
+// Proves the packed `codeheat` package works the way `npx codeheat` will run it:
+// one bundled file, no runtime dependencies, installable with npm and pnpm, and
+// able to analyze a real git repository. Run after `pnpm --filter codeheat build`.
+import { execFileSync, spawnSync } from "node:child_process";
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
+import { tmpdir } from "node:os";
+import { join, resolve } from "node:path";
+
+const repository = resolve(import.meta.dirname, "..");
+
+/**
+ * Reads one field of a JSON object without trusting its shape.
+ * @param {string} json
+ * @param {string} field
+ * @returns {unknown}
+ */
+const fieldOf = (json, field) => {
+  /** @type {unknown} */
+  const value = JSON.parse(json);
+  return typeof value === "object" && value !== null && field in value
+    ? Object.getOwnPropertyDescriptor(value, field)?.value
+    : undefined;
+};
+
+const expectedVersion = fieldOf(
+  readFileSync(join(repository, "apps/cli/package.json"), "utf8"),
+  "version",
+);
+if (typeof expectedVersion !== "string") {
+  throw new TypeError("apps/cli/package.json does not declare a version.");
+}
+const pnpm = process.platform === "win32" ? "pnpm.cmd" : "pnpm";
+const npm = process.platform === "win32" ? "npm.cmd" : "npm";
+const binName = process.platform === "win32" ? "codeheat.cmd" : "codeheat";
+const temporary = mkdtempSync(join(tmpdir(), "codeheat-package-"));
+
+/**
+ * @param {string} command
+ * @param {ReadonlyArray<string>} args
+ * @param {string} [cwd]
+ */
+const run = (command, args, cwd = repository) => {
+  const result = spawnSync(command, args, { cwd, stdio: "inherit" });
+  if (result.status !== 0) {
+    throw new Error(`Command failed: ${command} ${args.join(" ")}`);
+  }
+};
+
+/** Packs the CLI and returns the tarball path. */
+const pack = () => {
+  const destination = join(temporary, "pack");
+  mkdirSync(destination);
+  run(pnpm, [
+    "--filter",
+    "codeheat",
+    "pack",
+    "--pack-destination",
+    destination,
+  ]);
+  const tarballs = readdirSync(destination).filter((name) =>
+    name.endsWith(".tgz"),
+  );
+  if (tarballs.length !== 1 || tarballs[0] === undefined) {
+    throw new Error(`Expected one package tarball, found ${tarballs.length}.`);
+  }
+  return join(destination, tarballs[0]);
+};
+
+/** @param {string} tarball */
+const expectBundledArtifact = (tarball) => {
+  const listing = execFileSync("tar", ["-tzf", tarball], { encoding: "utf8" });
+  const files = listing.trim().split("\n").toSorted();
+  const expected = new Set([
+    "package/dist/codeheat.js",
+    "package/package.json",
+  ]);
+  const unexpected = files.filter(
+    (file) =>
+      !expected.has(file) &&
+      !/^package\/(README|LICENSE|CHANGELOG)/u.test(file),
+  );
+  const required = ["package/dist/codeheat.js", "package/LICENSE"];
+  if (required.some((file) => !files.includes(file)) || unexpected.length > 0) {
+    throw new Error(`Unexpected package contents:\n${files.join("\n")}`);
+  }
+  // apps/cli/LICENSE is a copy npm can pack; it must not drift from the root one.
+  const packedLicense = execFileSync(
+    "tar",
+    ["-xOzf", tarball, "package/LICENSE"],
+    { encoding: "utf8" },
+  );
+  if (packedLicense !== readFileSync(join(repository, "LICENSE"), "utf8")) {
+    throw new Error("The packed LICENSE differs from the repository LICENSE.");
+  }
+  const packed = execFileSync(
+    "tar",
+    ["-xOzf", tarball, "package/package.json"],
+    { encoding: "utf8" },
+  );
+  if (fieldOf(packed, "dependencies") !== undefined) {
+    throw new Error(
+      "The packed manifest declares runtime dependencies; the CLI must stay bundled.",
+    );
+  }
+};
+
+/** A tiny repository with two files that always change together. */
+const makeRepository = () => {
+  const root = join(temporary, "repository");
+  mkdirSync(root);
+  const env = {
+    ...process.env,
+    GIT_CONFIG_GLOBAL: "/dev/null",
+    GIT_CONFIG_NOSYSTEM: "1",
+  };
+  /** @param {string[]} args */
+  const git = (...args) =>
+    execFileSync("git", ["-C", root, ...args], { env, stdio: "ignore" });
+  git("init", "--quiet");
+  for (const round of [1, 2, 3]) {
+    writeFileSync(join(root, "a.ts"), `if (a) {\n  run(${round});\n}\n`);
+    writeFileSync(join(root, "b.ts"), `b(${round});\n`);
+    git("add", "--all");
+    git(
+      "-c",
+      "user.name=Pack",
+      "-c",
+      "user.email=pack@example.invalid",
+      "commit",
+      "--quiet",
+      "-m",
+      `round ${round}`,
+    );
+  }
+  return root;
+};
+
+/**
+ * @param {string} applicationRoot
+ * @param {string} installer
+ * @param {string} repositoryRoot
+ */
+const expectWorkingInstall = (applicationRoot, installer, repositoryRoot) => {
+  const bin = join(applicationRoot, "node_modules", ".bin", binName);
+  if (!existsSync(bin)) {
+    throw new Error(
+      `The package installed with ${installer} exposes no codeheat executable.`,
+    );
+  }
+  const version = spawnSync(bin, ["--version"], { encoding: "utf8" });
+  if (version.stdout.trim() !== `codeheat v${expectedVersion}`) {
+    throw new Error(
+      `codeheat from ${installer} reports:\n${version.stdout}${version.stderr}`,
+    );
+  }
+  const analysis = spawnSync(bin, ["analyze", "--json"], {
+    cwd: repositoryRoot,
+    encoding: "utf8",
+  });
+  const json = analysis.status === 0 ? analysis.stdout : "{}";
+  const couplings = fieldOf(json, "couplings");
+  if (
+    fieldOf(json, "schemaVersion") !== 1 ||
+    !Array.isArray(couplings) ||
+    couplings.length !== 1
+  ) {
+    throw new Error(
+      `codeheat from ${installer} did not analyze the repository:\n${analysis.stdout}${analysis.stderr}`,
+    );
+  }
+};
+
+try {
+  const tarball = pack();
+  expectBundledArtifact(tarball);
+  const repositoryRoot = makeRepository();
+
+  const pnpmApplication = join(temporary, "application-pnpm");
+  mkdirSync(pnpmApplication);
+  writeFileSync(
+    join(pnpmApplication, "package.json"),
+    JSON.stringify({ name: "consumer", private: true }),
+  );
+  run(pnpm, ["add", "--ignore-scripts", tarball], pnpmApplication);
+  expectWorkingInstall(pnpmApplication, "pnpm", repositoryRoot);
+
+  // npm (and therefore npx) resolves dependencies differently from pnpm.
+  const npmApplication = join(temporary, "application-npm");
+  mkdirSync(npmApplication);
+  writeFileSync(
+    join(npmApplication, "package.json"),
+    JSON.stringify({ name: "consumer", private: true }),
+  );
+  run(
+    npm,
+    ["install", "--ignore-scripts", "--no-audit", "--no-fund", tarball],
+    npmApplication,
+  );
+  if (existsSync(join(npmApplication, "node_modules", "effect"))) {
+    throw new Error("npm installed effect; the bundle must not need it.");
+  }
+  expectWorkingInstall(npmApplication, "npm", repositoryRoot);
+
+  console.log(
+    `Package verified: codeheat v${expectedVersion} installs and runs with pnpm and npm.`,
+  );
+} finally {
+  rmSync(temporary, { recursive: true, force: true });
+}

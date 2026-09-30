@@ -1,0 +1,313 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": [
+    "eslint",
+    "typescript",
+    "unicorn",
+    "oxc",
+    "import",
+    "promise",
+    "node"
+  ],
+  "jsPlugins": ["eslint-plugin-sonarjs"],
+  "categories": {
+    "correctness": "error",
+    "suspicious": "error",
+    "pedantic": "error",
+    "perf": "error",
+    "style": "off",
+    "restriction": "off",
+    "nursery": "off"
+  },
+  "options": {
+    "typeAware": true,
+    "typeCheck": false,
+    "reportUnusedDisableDirectives": "error",
+    "respectEslintDisableDirectives": false
+  },
+  "env": {
+    "builtin": true,
+    "node": true
+  },
+  "rules": {
+    "max-lines": [
+      "error",
+      {
+        "max": 250,
+        "skipBlankLines": true,
+        "skipComments": false
+      }
+    ],
+    "max-lines-per-function": [
+      "error",
+      {
+        "max": 60,
+        "skipBlankLines": true,
+        "skipComments": false,
+        "IIFEs": true
+      }
+    ],
+    "complexity": [
+      "error",
+      {
+        "max": 12,
+        "variant": "classic"
+      }
+    ],
+    "max-depth": [
+      "error",
+      {
+        "max": 3
+      }
+    ],
+    "max-params": [
+      "error",
+      {
+        "max": 4,
+        "countThis": "except-void"
+      }
+    ],
+    "max-statements": [
+      "error",
+      {
+        "max": 30
+      }
+    ],
+    "max-nested-callbacks": [
+      "error",
+      {
+        "max": 3
+      }
+    ],
+    "eqeqeq": ["error", "always"],
+    "curly": ["error", "all"],
+    "no-eval": "error",
+    "no-implied-eval": "error",
+    "no-new-func": "error",
+    "no-nested-ternary": "error",
+    "no-negated-condition": "off",
+    "unicorn/no-negated-condition": "off",
+    "unicorn/no-useless-undefined": "off",
+    "no-unused-vars": [
+      "error",
+      {
+        "args": "all",
+        "argsIgnorePattern": "^_",
+        "caughtErrors": "all",
+        "caughtErrorsIgnorePattern": "^_",
+        "ignoreRestSiblings": false,
+        "varsIgnorePattern": "^_"
+      }
+    ],
+    "typescript/consistent-type-assertions": [
+      "error",
+      {
+        "arrayLiteralTypeAssertions": "never",
+        "assertionStyle": "as",
+        "objectLiteralTypeAssertions": "never"
+      }
+    ],
+    "typescript/consistent-type-definitions": ["error", "type"],
+    "typescript/consistent-type-imports": [
+      "error",
+      {
+        "disallowTypeAnnotations": true,
+        "fixStyle": "separate-type-imports",
+        "prefer": "type-imports"
+      }
+    ],
+    "typescript/no-explicit-any": "error",
+    "typescript/no-floating-promises": "error",
+    "typescript/no-misused-promises": "error",
+    "typescript/no-non-null-assertion": "error",
+    "typescript/no-unsafe-argument": "error",
+    "typescript/no-unsafe-assignment": "error",
+    "typescript/no-unsafe-call": "error",
+    "typescript/no-unsafe-member-access": "error",
+    "typescript/no-unsafe-return": "error",
+    "typescript/require-await": "off",
+    "typescript/switch-exhaustiveness-check": "error",
+    "import/max-dependencies": [
+      "error",
+      {
+        "max": 16,
+        "ignoreTypeImports": false
+      }
+    ],
+    "import/no-cycle": "error",
+    "import/no-duplicates": "error",
+    "import/no-self-import": "error",
+    "import/no-unassigned-import": "error",
+    "typescript/prefer-readonly-parameter-types": "off",
+    "typescript/prefer-nullish-coalescing": "off",
+    "max-classes-per-file": "off",
+    "no-underscore-dangle": [
+      "error",
+      {
+        "allow": ["_tag"]
+      }
+    ],
+    "sonarjs/cognitive-complexity": ["error", 15],
+    "unicorn/prefer-node-protocol": "error",
+    "no-redeclare": "off"
+  },
+  "ignorePatterns": [
+    "**/node_modules/**",
+    "**/.turbo/**",
+    "**/coverage/**",
+    "**/dist/**",
+    ".repos/**",
+    ".agents/**",
+    ".claude/**"
+  ],
+  "overrides": [
+    {
+      "files": ["packages/engine/src/**/*.ts"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "@codeheat/*",
+                  "@codeheat/*/**",
+                  "codeheat",
+                  "codeheat/**"
+                ],
+                "message": "engine is the floor of the dependency graph and imports no workspace package."
+              },
+              {
+                "group": ["node:*"],
+                "message": "engine reaches the platform through Effect services (FileSystem, Path, ChildProcessSpawner), never node: builtins directly."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["packages/viewer/src/**/*.ts"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "@codeheat/*",
+                  "!@codeheat/engine",
+                  "@codeheat/*/**",
+                  "codeheat",
+                  "codeheat/**"
+                ],
+                "message": "viewer renders a Report; it may only use engine types."
+              },
+              {
+                "group": ["effect", "effect/*"],
+                "message": "viewer is plain browser code: the Effect runtime would multiply the embedded asset size."
+              },
+              {
+                "group": ["node:*"],
+                "message": "viewer runs in the browser; Node builtins are unavailable."
+              }
+            ],
+            "paths": [
+              {
+                "name": "@codeheat/engine",
+                "allowTypeImports": true,
+                "message": "viewer may import engine types only (import type) — the engine runtime never ships to the browser."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": [
+        "packages/viewer/src/main.ts",
+        "packages/viewer/src/render/**/*.ts"
+      ],
+      "env": {
+        "browser": true
+      }
+    },
+    {
+      "files": ["apps/cli/src/**/*.ts"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "@codeheat/*",
+                  "!@codeheat/engine",
+                  "!@codeheat/viewer",
+                  "@codeheat/*/**"
+                ],
+                "message": "cli composes engine and viewer through their entry points only."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["**/*.test.ts"],
+      "plugins": [
+        "eslint",
+        "typescript",
+        "unicorn",
+        "oxc",
+        "import",
+        "promise",
+        "node",
+        "vitest"
+      ],
+      "env": {
+        "vitest": true
+      },
+      "rules": {
+        "import/max-dependencies": [
+          "error",
+          {
+            "max": 20,
+            "ignoreTypeImports": false
+          }
+        ],
+        "max-lines": [
+          "error",
+          {
+            "max": 350,
+            "skipBlankLines": true,
+            "skipComments": false
+          }
+        ],
+        "vitest/expect-expect": [
+          "error",
+          {
+            "assertFunctionNames": ["expect", "expectTypeOf", "assert*"]
+          }
+        ],
+        "vitest/no-disabled-tests": "error",
+        "vitest/no-focused-tests": "error",
+        "vitest/no-identical-title": "error",
+        "vitest/valid-expect": [
+          "error",
+          {
+            "maxArgs": 2
+          }
+        ],
+        "max-nested-callbacks": "off"
+      }
+    },
+    {
+      "files": ["scripts/**/*.mjs", "scripts/**/*.ts"],
+      "rules": {
+        "no-console": "off",
+        "unicorn/no-process-exit": "off"
+      }
+    }
+  ]
+}

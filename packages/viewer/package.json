@@ -1,0 +1,27 @@
+{
+  "name": "@codeheat/viewer",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsx scripts/build.ts",
+    "dev": "tsx scripts/build.ts && tsx scripts/dev.ts",
+    "test:unit": "vitest run --passWithNoTests",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "devDependencies": {
+    "@codeheat/engine": "workspace:*",
+    "@codeheat/tsconfig": "workspace:*",
+    "@types/d3-hierarchy": "catalog:",
+    "@types/node": "catalog:",
+    "@types/picomatch": "catalog:",
+    "d3-hierarchy": "catalog:",
+    "picomatch": "catalog:",
+    "rolldown": "catalog:",
+    "tsx": "4.23.15",
+    "vitest": "catalog:"
+  }
+}

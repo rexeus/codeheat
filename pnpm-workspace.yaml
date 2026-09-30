@@ -1,0 +1,25 @@
+packages:
+  - apps/*
+  - packages/*
+
+# tsx pulls esbuild's platform binary as an optional dependency; esbuild's own
+# install script only re-verifies that binary.
+allowBuilds:
+  esbuild: false
+
+# Reject packages published less than a day ago. Setting it explicitly makes
+# pnpm enforce it strictly instead of silently excluding young versions.
+minimumReleaseAge: 1440
+
+catalog:
+  "@effect/language-service": 0.87.3
+  "@effect/platform-node": 4.0.0-rc.118
+  "@effect/vitest": 4.0.0-rc.118
+  "@types/d3-hierarchy": 3.1.7
+  "@types/node": 24.19.0
+  "@types/picomatch": 4.0.3
+  d3-hierarchy: 3.1.2
+  effect: 4.0.0-rc.118
+  picomatch: 4.0.7
+  rolldown: 1.2.11
+  vitest: 5.0.2

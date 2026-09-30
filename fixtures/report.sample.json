@@ -1,0 +1,738 @@
+{
+  "schemaVersion": 1,
+  "tool": {
+    "name": "codeheat",
+    "version": "0.0.0"
+  },
+  "generatedAt": "2026-09-29T12:00:00.000Z",
+  "repository": {
+    "name": "acme-shop",
+    "head": "4b825dc642cb6eb9a060e54bf8d69288fbee4904",
+    "scope": ".",
+    "shallow": false
+  },
+  "window": {
+    "since": "2025-09-29T12:00:00.000Z",
+    "until": "2026-09-29T12:00:00.000Z",
+    "commits": 212,
+    "couplingCommits": 198
+  },
+  "thresholds": {
+    "maxCommitFiles": 50,
+    "minSharedCommits": 3,
+    "minDegree": 0.3,
+    "maxMeanLineLength": 300,
+    "maxFileBytes": 1048576
+  },
+  "totals": {
+    "files": 36,
+    "couplings": 8
+  },
+  "files": [
+    {
+      "path": "packages/billing/src/invoice.ts",
+      "rank": 1,
+      "score": 0.97,
+      "revisions": 48,
+      "linesAdded": 384,
+      "linesDeleted": 672,
+      "loc": 964,
+      "complexity": {
+        "total": 1900,
+        "mean": 1.97,
+        "max": 9
+      },
+      "reasons": [
+        "changed in 48 commits (#1 of 36)",
+        "indentation complexity 1900 (#2 of 36)"
+      ]
+    },
+    {
+      "path": "packages/billing/src/tax.ts",
+      "rank": 2,
+      "score": 0.8013,
+      "revisions": 31,
+      "linesAdded": 217,
+      "linesDeleted": 248,
+      "loc": 492,
+      "complexity": {
+        "total": 1100,
+        "mean": 2.24,
+        "max": 6
+      },
+      "reasons": [
+        "changed in 31 commits (#3 of 36)",
+        "indentation complexity 1100 (#4 of 36)"
+      ]
+    },
+    {
+      "path": "packages/billing/src/invoice.test.ts",
+      "rank": 3,
+      "score": 0.7811,
+      "revisions": 36,
+      "linesAdded": 324,
+      "linesDeleted": 108,
+      "loc": 270,
+      "complexity": {
+        "total": 700,
+        "mean": 2.59,
+        "max": 4
+      },
+      "reasons": [
+        "changed in 36 commits (#2 of 36)",
+        "indentation complexity 700 (#6 of 36)"
+      ]
+    },
+    {
+      "path": "packages/web/src/routes/invoices.tsx",
+      "rank": 4,
+      "score": 0.7092,
+      "revisions": 19,
+      "linesAdded": 646,
+      "linesDeleted": 95,
+      "loc": 604,
+      "complexity": {
+        "total": 1300,
+        "mean": 2.15,
+        "max": 7
+      },
+      "reasons": [
+        "changed in 19 commits (#7 of 36)",
+        "indentation complexity 1300 (#3 of 36)"
+      ]
+    },
+    {
+      "path": "apps/cli/src/commands/analyze.ts",
+      "rank": 5,
+      "score": 0.7032,
+      "revisions": 26,
+      "linesAdded": 598,
+      "linesDeleted": 104,
+      "loc": 377,
+      "complexity": {
+        "total": 640,
+        "mean": 1.7,
+        "max": 4
+      },
+      "reasons": [
+        "changed in 26 commits (#4 of 36)",
+        "indentation complexity 640 (#7 of 36)"
+      ]
+    },
+    {
+      "path": "packages/auth/src/session.ts",
+      "rank": 6,
+      "score": 0.6946,
+      "revisions": 22,
+      "linesAdded": 396,
+      "linesDeleted": 220,
+      "loc": 314,
+      "complexity": {
+        "total": 820,
+        "mean": 2.61,
+        "max": 5
+      },
+      "reasons": [
+        "changed in 22 commits (#5 of 36)",
+        "indentation complexity 820 (#5 of 36)"
+      ]
+    },
+    {
+      "path": "packages/billing/src/tax.test.ts",
+      "rank": 7,
+      "score": 0.6255,
+      "revisions": 22,
+      "linesAdded": 198,
+      "linesDeleted": 330,
+      "loc": 193,
+      "complexity": {
+        "total": 420,
+        "mean": 2.18,
+        "max": 3
+      },
+      "reasons": [
+        "changed in 22 commits (#6 of 36)",
+        "indentation complexity 420 (#15 of 36)"
+      ]
+    },
+    {
+      "path": "packages/shared/src/config.ts",
+      "rank": 8,
+      "score": 0.5445,
+      "revisions": 17,
+      "linesAdded": 527,
+      "linesDeleted": 255,
+      "loc": 150,
+      "complexity": {
+        "total": 300,
+        "mean": 2,
+        "max": 3
+      },
+      "reasons": [
+        "changed in 17 commits (#8 of 36)",
+        "indentation complexity 300 (#22 of 36)"
+      ]
+    },
+    {
+      "path": "packages/auth/src/session.test.ts",
+      "rank": 9,
+      "score": 0.5313,
+      "revisions": 14,
+      "linesAdded": 434,
+      "linesDeleted": 210,
+      "loc": 186,
+      "complexity": {
+        "total": 380,
+        "mean": 2.04,
+        "max": 3
+      },
+      "reasons": [
+        "changed in 14 commits (#9 of 36)",
+        "indentation complexity 380 (#18 of 36)"
+      ]
+    },
+    {
+      "path": "packages/web/src/hooks/use-session.ts",
+      "rank": 10,
+      "score": 0.4303,
+      "revisions": 12,
+      "linesAdded": 324,
+      "linesDeleted": 72,
+      "loc": 94,
+      "complexity": {
+        "total": 160,
+        "mean": 1.7,
+        "max": 2
+      },
+      "reasons": [
+        "changed in 12 commits (#10 of 36)",
+        "indentation complexity 160 (#30 of 36)"
+      ]
+    },
+    {
+      "path": "packages/auth/src/tokens.ts",
+      "rank": 11,
+      "score": 0.4237,
+      "revisions": 7,
+      "linesAdded": 35,
+      "linesDeleted": 35,
+      "loc": 371,
+      "complexity": {
+        "total": 478,
+        "mean": 1.29,
+        "max": 3
+      },
+      "reasons": [
+        "changed in 7 commits (#15 of 36)",
+        "indentation complexity 478 (#12 of 36)"
+      ]
+    },
+    {
+      "path": "packages/web/src/components/table.tsx",
+      "rank": 12,
+      "score": 0.4163,
+      "revisions": 9,
+      "linesAdded": 63,
+      "linesDeleted": 18,
+      "loc": 105,
+      "complexity": {
+        "total": 238,
+        "mean": 2.27,
+        "max": 2
+      },
+      "reasons": [
+        "changed in 9 commits (#12 of 36)",
+        "indentation complexity 238 (#26 of 36)"
+      ]
+    },
+    {
+      "path": "apps/cli/src/commands/inspect.ts",
+      "rank": 13,
+      "score": 0.4143,
+      "revisions": 7,
+      "linesAdded": 161,
+      "linesDeleted": 35,
+      "loc": 207,
+      "complexity": {
+        "total": 417,
+        "mean": 2.01,
+        "max": 3
+      },
+      "reasons": [
+        "changed in 7 commits (#13 of 36)",
+        "indentation complexity 417 (#16 of 36)"
+      ]
+    },
+    {
+      "path": "packages/shared/src/index.ts",
+      "rank": 14,
+      "score": 0.3996,
+      "revisions": 6,
+      "linesAdded": 162,
+      "linesDeleted": 54,
+      "loc": 254,
+      "complexity": {
+        "total": 502,
+        "mean": 1.98,
+        "max": 4
+      },
+      "reasons": [
+        "changed in 6 commits (#18 of 36)",
+        "indentation complexity 502 (#8 of 36)"
+      ]
+    },
+    {
+      "path": "apps/cli/src/output/terminal.ts",
+      "rank": 15,
+      "score": 0.3777,
+      "revisions": 6,
+      "linesAdded": 150,
+      "linesDeleted": 30,
+      "loc": 147,
+      "complexity": {
+        "total": 357,
+        "mean": 2.43,
+        "max": 3
+      },
+      "reasons": [
+        "changed in 6 commits (#17 of 36)",
+        "indentation complexity 357 (#19 of 36)"
+      ]
+    },
+    {
+      "path": "packages/billing/src/discounts.ts",
+      "rank": 16,
+      "score": 0.3671,
+      "revisions": 5,
+      "linesAdded": 155,
+      "linesDeleted": 25,
+      "loc": 193,
+      "complexity": {
+        "total": 495,
+        "mean": 2.56,
+        "max": 3
+      },
+      "reasons": [
+        "changed in 5 commits (#20 of 36)",
+        "indentation complexity 495 (#11 of 36)"
+      ]
+    },
+    {
+      "path": "packages/web/src/routes/login.tsx",
+      "rank": 17,
+      "score": 0.336,
+      "revisions": 5,
+      "linesAdded": 80,
+      "linesDeleted": 75,
+      "loc": 130,
+      "complexity": {
+        "total": 292,
+        "mean": 2.25,
+        "max": 3
+      },
+      "reasons": [
+        "changed in 5 commits (#21 of 36)",
+        "indentation complexity 292 (#23 of 36)"
+      ]
+    },
+    {
+      "path": "apps/cli/src/commands/analyze.test.ts",
+      "rank": 18,
+      "score": 0.3304,
+      "revisions": 4,
+      "linesAdded": 32,
+      "linesDeleted": 36,
+      "loc": 207,
+      "complexity": {
+        "total": 501,
+        "mean": 2.42,
+        "max": 4
+      },
+      "reasons": [
+        "changed in 4 commits (#22 of 36)",
+        "indentation complexity 501 (#9 of 36)"
+      ]
+    },
+    {
+      "path": "packages/web/src/app.tsx",
+      "rank": 19,
+      "score": 0.3271,
+      "revisions": 4,
+      "linesAdded": 20,
+      "linesDeleted": 60,
+      "loc": 218,
+      "complexity": {
+        "total": 471,
+        "mean": 2.16,
+        "max": 3
+      },
+      "reasons": [
+        "changed in 4 commits (#24 of 36)",
+        "indentation complexity 471 (#13 of 36)"
+      ]
+    },
+    {
+      "path": "packages/shared/src/logger.ts",
+      "rank": 20,
+      "score": 0.3248,
+      "revisions": 6,
+      "linesAdded": 144,
+      "linesDeleted": 90,
+      "loc": 60,
+      "complexity": {
+        "total": 156,
+        "mean": 2.6,
+        "max": 2
+      },
+      "reasons": [
+        "changed in 6 commits (#19 of 36)",
+        "indentation complexity 156 (#31 of 36)"
+      ]
+    },
+    {
+      "path": "packages/web/src/styles.css",
+      "rank": 21,
+      "score": 0.2783,
+      "revisions": 3,
+      "linesAdded": 15,
+      "linesDeleted": 45,
+      "loc": 173,
+      "complexity": {
+        "total": 437,
+        "mean": 2.53,
+        "max": 3
+      },
+      "reasons": [
+        "changed in 3 commits (#28 of 36)",
+        "indentation complexity 437 (#14 of 36)"
+      ]
+    },
+    {
+      "path": "apps/cli/src/output/html.ts",
+      "rank": 22,
+      "score": 0.2701,
+      "revisions": 6,
+      "linesAdded": 60,
+      "linesDeleted": 96,
+      "loc": 29,
+      "complexity": {
+        "total": 66,
+        "mean": 2.28,
+        "max": 2
+      },
+      "reasons": [
+        "changed in 6 commits (#16 of 36)",
+        "indentation complexity 66 (#34 of 36)"
+      ]
+    },
+    {
+      "path": "packages/auth/src/oauth/github.ts",
+      "rank": 23,
+      "score": 0.2614,
+      "revisions": 4,
+      "linesAdded": 84,
+      "linesDeleted": 48,
+      "loc": 53,
+      "complexity": {
+        "total": 136,
+        "mean": 2.57,
+        "max": 2
+      },
+      "reasons": [
+        "changed in 4 commits (#23 of 36)",
+        "indentation complexity 136 (#32 of 36)"
+      ]
+    },
+    {
+      "path": "packages/billing/src/index.ts",
+      "rank": 24,
+      "score": 0.261,
+      "revisions": 9,
+      "linesAdded": 108,
+      "linesDeleted": 45,
+      "loc": 21,
+      "complexity": {
+        "total": 30,
+        "mean": 1.43,
+        "max": 2
+      },
+      "reasons": [
+        "changed in 9 commits (#11 of 36)",
+        "indentation complexity 30 (#35 of 36)"
+      ]
+    },
+    {
+      "path": "packages/shared/src/money.ts",
+      "rank": 25,
+      "score": 0.253,
+      "revisions": 3,
+      "linesAdded": 33,
+      "linesDeleted": 30,
+      "loc": 147,
+      "complexity": {
+        "total": 251,
+        "mean": 1.71,
+        "max": 3
+      },
+      "reasons": [
+        "changed in 3 commits (#27 of 36)",
+        "indentation complexity 251 (#24 of 36)"
+      ]
+    },
+    {
+      "path": "packages/billing/src/currency.ts",
+      "rank": 26,
+      "score": 0.2443,
+      "revisions": 3,
+      "linesAdded": 18,
+      "linesDeleted": 39,
+      "loc": 84,
+      "complexity": {
+        "total": 207,
+        "mean": 2.46,
+        "max": 2
+      },
+      "reasons": [
+        "changed in 3 commits (#25 of 36)",
+        "indentation complexity 207 (#29 of 36)"
+      ]
+    },
+    {
+      "path": "packages/auth/src/index.ts",
+      "rank": 27,
+      "score": 0.221,
+      "revisions": 7,
+      "linesAdded": 182,
+      "linesDeleted": 84,
+      "loc": 14,
+      "complexity": {
+        "total": 24,
+        "mean": 1.71,
+        "max": 2
+      },
+      "reasons": [
+        "changed in 7 commits (#14 of 36)",
+        "indentation complexity 24 (#36 of 36)"
+      ]
+    },
+    {
+      "path": "packages/billing/src/legacy/export-csv.ts",
+      "rank": 28,
+      "score": 0.2179,
+      "revisions": 3,
+      "linesAdded": 57,
+      "linesDeleted": 6,
+      "loc": 70,
+      "complexity": {
+        "total": 116,
+        "mean": 1.66,
+        "max": 2
+      },
+      "reasons": [
+        "changed in 3 commits (#26 of 36)",
+        "indentation complexity 116 (#33 of 36)"
+      ]
+    },
+    {
+      "path": "apps/cli/src/cli.ts",
+      "rank": 29,
+      "score": 0.2177,
+      "revisions": 2,
+      "linesAdded": 16,
+      "linesDeleted": 30,
+      "loc": 202,
+      "complexity": {
+        "total": 404,
+        "mean": 2,
+        "max": 3
+      },
+      "reasons": [
+        "changed in 2 commits (#29 of 36)",
+        "indentation complexity 404 (#17 of 36)"
+      ]
+    },
+    {
+      "path": "packages/web/src/components/modal.tsx",
+      "rank": 30,
+      "score": 0.2108,
+      "revisions": 2,
+      "linesAdded": 16,
+      "linesDeleted": 24,
+      "loc": 192,
+      "complexity": {
+        "total": 333,
+        "mean": 1.73,
+        "max": 3
+      },
+      "reasons": [
+        "changed in 2 commits (#32 of 36)",
+        "indentation complexity 333 (#20 of 36)"
+      ]
+    },
+    {
+      "path": "packages/auth/src/permissions.ts",
+      "rank": 31,
+      "score": 0.2093,
+      "revisions": 2,
+      "linesAdded": 62,
+      "linesDeleted": 4,
+      "loc": 162,
+      "complexity": {
+        "total": 320,
+        "mean": 1.98,
+        "max": 3
+      },
+      "reasons": [
+        "changed in 2 commits (#31 of 36)",
+        "indentation complexity 320 (#21 of 36)"
+      ]
+    },
+    {
+      "path": "apps/cli/src/output/json.ts",
+      "rank": 32,
+      "score": 0.1969,
+      "revisions": 2,
+      "linesAdded": 62,
+      "linesDeleted": 28,
+      "loc": 100,
+      "complexity": {
+        "total": 227,
+        "mean": 2.27,
+        "max": 2
+      },
+      "reasons": [
+        "changed in 2 commits (#30 of 36)",
+        "indentation complexity 227 (#27 of 36)"
+      ]
+    },
+    {
+      "path": "packages/shared/src/dates.ts",
+      "rank": 33,
+      "score": 0.1257,
+      "revisions": 1,
+      "linesAdded": 34,
+      "linesDeleted": 16,
+      "loc": 148,
+      "complexity": {
+        "total": 242,
+        "mean": 1.64,
+        "max": 2
+      },
+      "reasons": [
+        "changed in 1 commits (#33 of 36)",
+        "indentation complexity 242 (#25 of 36)"
+      ]
+    },
+    {
+      "path": "apps/cli/src/bin.ts",
+      "rank": 34,
+      "score": 0,
+      "revisions": 0,
+      "linesAdded": 0,
+      "linesDeleted": 0,
+      "loc": 306,
+      "complexity": {
+        "total": 500,
+        "mean": 1.63,
+        "max": 4
+      },
+      "reasons": ["no changes in the analysis window"]
+    },
+    {
+      "path": "packages/auth/src/oauth/google.ts",
+      "rank": 35,
+      "score": 0,
+      "revisions": 0,
+      "linesAdded": 0,
+      "linesDeleted": 0,
+      "loc": 129,
+      "complexity": {
+        "total": 222,
+        "mean": 1.72,
+        "max": 2
+      },
+      "reasons": ["no changes in the analysis window"]
+    },
+    {
+      "path": "packages/billing/src/legacy/import-sap.ts",
+      "rank": 36,
+      "score": 0,
+      "revisions": 0,
+      "linesAdded": 0,
+      "linesDeleted": 0,
+      "loc": 1302,
+      "complexity": {
+        "total": 2400,
+        "mean": 1.84,
+        "max": 9
+      },
+      "reasons": ["no changes in the analysis window"]
+    }
+  ],
+  "couplings": [
+    {
+      "a": "packages/billing/src/index.ts",
+      "b": "packages/auth/src/index.ts",
+      "sharedCommits": 6,
+      "degree": 0.75,
+      "distance": 4,
+      "testPair": false
+    },
+    {
+      "a": "packages/billing/src/invoice.ts",
+      "b": "packages/billing/src/invoice.test.ts",
+      "sharedCommits": 31,
+      "degree": 0.738,
+      "distance": 0,
+      "testPair": true
+    },
+    {
+      "a": "packages/billing/src/tax.ts",
+      "b": "packages/billing/src/tax.test.ts",
+      "sharedCommits": 18,
+      "degree": 0.679,
+      "distance": 0,
+      "testPair": true
+    },
+    {
+      "a": "packages/auth/src/session.ts",
+      "b": "packages/auth/src/session.test.ts",
+      "sharedCommits": 12,
+      "degree": 0.667,
+      "distance": 0,
+      "testPair": true
+    },
+    {
+      "a": "packages/billing/src/invoice.ts",
+      "b": "packages/billing/src/tax.ts",
+      "sharedCommits": 24,
+      "degree": 0.608,
+      "distance": 0,
+      "testPair": false
+    },
+    {
+      "a": "packages/auth/src/session.ts",
+      "b": "packages/web/src/hooks/use-session.ts",
+      "sharedCommits": 9,
+      "degree": 0.529,
+      "distance": 5,
+      "testPair": false
+    },
+    {
+      "a": "packages/shared/src/config.ts",
+      "b": "apps/cli/src/commands/analyze.ts",
+      "sharedCommits": 9,
+      "degree": 0.419,
+      "distance": 7,
+      "testPair": false
+    },
+    {
+      "a": "packages/billing/src/invoice.ts",
+      "b": "packages/web/src/routes/invoices.tsx",
+      "sharedCommits": 14,
+      "degree": 0.418,
+      "distance": 5,
+      "testPair": false
+    }
+  ]
+}

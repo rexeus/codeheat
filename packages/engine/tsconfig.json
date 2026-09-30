@@ -1,0 +1,4 @@
+{
+  "extends": "@codeheat/tsconfig/node.json",
+  "include": ["src/**/*.ts"]
+}

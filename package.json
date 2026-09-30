@@ -1,0 +1,42 @@
+{
+  "name": "codeheat-workspace",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "postinstall": "node scripts/prepare-effect.mjs && effect-tsgo patch --typescript --oxlint",
+    "verify:effect-reference": "node scripts/verify-effect-reference.mjs",
+    "format": "oxfmt",
+    "format:check": "oxfmt --check",
+    "lint": "node scripts/check-module-reexports.ts && oxlint --deny-warnings && oxlint -c .oxlint-effect.json --deny-warnings && knip && knip --production",
+    "lint:fix": "oxlint --fix && oxfmt",
+    "typecheck": "tsc -p tsconfig.json && turbo run typecheck",
+    "test": "vitest run && turbo run test:unit",
+    "check": "pnpm verify:effect-reference && pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm check:package",
+    "changeset": "changeset",
+    "prepare:effect-reference": "node scripts/prepare-effect.mjs",
+    "build": "turbo run build",
+    "check:package": "pnpm build && node scripts/verify-bundle-externals.mjs apps/cli/dist/codeheat.js && node scripts/check-cli-package.mjs",
+    "release": "node scripts/release.mjs"
+  },
+  "devDependencies": {
+    "@changesets/cli": "3.0.3",
+    "@effect/language-service": "catalog:",
+    "@effect/platform-node": "catalog:",
+    "@effect/tsgo": "0.46.1",
+    "@effect/vitest": "catalog:",
+    "@types/node": "catalog:",
+    "effect": "catalog:",
+    "eslint-plugin-sonarjs": "4.2.2",
+    "knip": "6.38.0",
+    "oxfmt": "0.70.0",
+    "oxlint": "1.85.0",
+    "oxlint-tsgolint": "7.0.2003",
+    "turbo": "2.11.5",
+    "typescript": "7.0.2",
+    "vitest": "catalog:"
+  },
+  "engines": {
+    "node": ">=24.11.0 <25"
+  },
+  "packageManager": "pnpm@12.6.0"
+}

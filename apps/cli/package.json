@@ -1,0 +1,53 @@
+{
+  "name": "codeheat",
+  "version": "0.0.0",
+  "description": "Find hotspots and change coupling in a git repository — a treemap for humans, JSON for agents.",
+  "keywords": [
+    "ai-agents",
+    "change-coupling",
+    "cli",
+    "code-analysis",
+    "git",
+    "hotspots",
+    "technical-debt",
+    "treemap"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rexeus/codeheat.git",
+    "directory": "apps/cli"
+  },
+  "bin": {
+    "codeheat": "dist/codeheat.js"
+  },
+  "files": [
+    "dist/codeheat.js"
+  ],
+  "type": "module",
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "scripts": {
+    "build": "tsx scripts/build.ts",
+    "dev": "turbo run build --filter=@codeheat/viewer --output-logs=errors-only && tsx src/bin.ts",
+    "test:unit": "vitest run --passWithNoTests",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "devDependencies": {
+    "@codeheat/engine": "workspace:*",
+    "@codeheat/tsconfig": "workspace:*",
+    "@codeheat/viewer": "workspace:*",
+    "@effect/platform-node": "catalog:",
+    "@effect/vitest": "catalog:",
+    "@types/node": "catalog:",
+    "effect": "catalog:",
+    "rolldown": "catalog:",
+    "tsx": "4.23.15",
+    "vitest": "catalog:"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
