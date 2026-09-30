@@ -39,7 +39,7 @@ export const reportOf = (
   schemaVersion: 1,
   tool: { name: "codeheat", version: "0.0.0" },
   generatedAt: "2026-09-29T12:00:00.000Z",
-  repository: { name: "acme", head: null, scope: "." },
+  repository: { name: "acme", head: null, scope: ".", shallow: false },
   window: {
     since: "2025-09-29T12:00:00.000Z",
     until: "2026-09-29T12:00:00.000Z",
