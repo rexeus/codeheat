@@ -4,19 +4,20 @@ Why each tool is here, how the pieces depend on each other, and how to upgrade t
 
 ## The stack
 
-| Tool                      | Role                                                                                                                             |
-| ------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| Node 24 (`.nvmrc`)        | Development runtime. The published bundle targets Node ≥ 20.                                                                     |
-| pnpm 12                   | Workspace and catalog. `minimumReleaseAge: 1440` (strict because set explicitly) rejects packages published less than a day ago. |
-| turbo                     | Runs `typecheck` and `test:unit` per package in dependency order.                                                                |
-| TypeScript 7              | The native compiler, patched by `@effect/tsgo` with Effect diagnostics.                                                          |
-| oxlint + oxlint-tsgolint  | Strict, type-aware lint (`.oxlintrc.json`) and the Effect preset (`.oxlint-effect.json`).                                        |
-| eslint-plugin-sonarjs     | Cognitive complexity, loaded by oxlint as a JS plugin.                                                                           |
-| oxfmt                     | Formatting, import sorting, `package.json` sorting.                                                                              |
-| knip                      | Unused files, exports, dependencies, and catalog entries. `includeEntryExports` keeps public APIs honest.                        |
-| vitest + `@effect/vitest` | Tests; `it.effect` for Effect code.                                                                                              |
-| tsx                       | Runs the CLI from source (`pnpm --filter codeheat dev`), since Node does not strip types inside `node_modules` workspace links.  |
-| changesets                | Versioning and changelog for the published `codeheat` package.                                                                   |
+| Tool                      | Role                                                                                                                                                                                                                      |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Node 24 (`.nvmrc`)        | Development runtime. The published bundle targets Node ≥ 20.                                                                                                                                                              |
+| pnpm 12                   | Workspace and catalog. `minimumReleaseAge: 1440` (strict because set explicitly) rejects packages published less than a day ago.                                                                                          |
+| turbo                     | Runs `build`, `typecheck` and `test:unit` per package in dependency order. The viewer's `build` writes `dist/assets.js`, which its own `typecheck` and `test:unit` (and later the CLI) need, so those tasks depend on it. |
+| TypeScript 7              | The native compiler, patched by `@effect/tsgo` with Effect diagnostics.                                                                                                                                                   |
+| oxlint + oxlint-tsgolint  | Strict, type-aware lint (`.oxlintrc.json`) and the Effect preset (`.oxlint-effect.json`).                                                                                                                                 |
+| eslint-plugin-sonarjs     | Cognitive complexity, loaded by oxlint as a JS plugin.                                                                                                                                                                    |
+| oxfmt                     | Formatting, import sorting, `package.json` sorting.                                                                                                                                                                       |
+| knip                      | Unused files, exports, dependencies, and catalog entries. `includeEntryExports` keeps public APIs honest.                                                                                                                 |
+| vitest + `@effect/vitest` | Tests; `it.effect` for Effect code.                                                                                                                                                                                       |
+| rolldown                  | Bundles the viewer's browser entry into one minified script that `renderReportHtml` inlines (`pnpm --filter @codeheat/viewer build`).                                                                                     |
+| tsx                       | Runs the viewer's build and dev scripts and the CLI from source (`pnpm --filter codeheat dev`, `pnpm --filter @codeheat/viewer dev`), since Node does not strip types inside `node_modules` workspace links.              |
+| changesets                | Versioning and changelog for the published `codeheat` package.                                                                                                                                                            |
 
 ## Coupled versions
 

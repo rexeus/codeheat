@@ -3,8 +3,13 @@
   "agentGuidance": false,
   "globalDependencies": ["packages/tsconfig/*.json"],
   "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", "!**/*.md", "!**/*.test.ts"],
+      "outputs": ["dist/**"]
+    },
     "typecheck": {
-      "dependsOn": ["^typecheck"],
+      "dependsOn": ["^typecheck", "^build"],
       "inputs": ["$TURBO_DEFAULT$", "!**/*.md"],
       "outputs": []
     },
@@ -12,7 +17,7 @@
       "dependsOn": ["^transit"]
     },
     "test:unit": {
-      "dependsOn": ["transit"],
+      "dependsOn": ["transit", "^build"],
       "inputs": ["$TURBO_DEFAULT$", "!**/*.md"],
       "outputs": []
     }

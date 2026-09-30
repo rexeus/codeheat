@@ -1,0 +1,7 @@
+{
+  "extends": "@codeheat/tsconfig/dom.json",
+  "compilerOptions": {
+    "types": ["node"]
+  },
+  "include": ["src/**/*.ts", "scripts/**/*.ts"]
+}
