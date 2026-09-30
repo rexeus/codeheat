@@ -8,18 +8,26 @@ import { escapeForTerminal } from "../escape.js";
 import { HtmlWriteFailed } from "./html-write-failed.js";
 import { openCommand } from "./open-command.js";
 
+/**
+ * Starts the platform's opener and lets it go: codeheat neither waits for it
+ * (some launchers run the browser in the foreground) nor kills its process
+ * group on exit, which an awaited, still-referenced child would get.
+ */
 const openInBrowser = (file: string) =>
   Effect.gen(function* () {
     const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
     const { command, args } = openCommand(process.platform, file);
-    yield* spawner.exitCode(
+    const handle = yield* spawner.spawn(
       ChildProcess.make(command, args, {
         stdin: "ignore",
         stdout: "ignore",
         stderr: "ignore",
       }),
     );
+    // The returned re-ref effect is dropped: the opener stays unreferenced.
+    yield* Effect.asVoid(handle.unref);
   }).pipe(
+    Effect.scoped,
     // Headless machines have no browser; the printed path is the fallback.
     Effect.ignore,
   );

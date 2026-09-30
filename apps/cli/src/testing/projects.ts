@@ -38,15 +38,19 @@ export const makeTestPairProject = Effect.map(makeGitRepository, (repo) => {
   return repo;
 });
 
-/** Empties PATH for the scope, so spawning git fails as on a machine without it. */
-export const withoutGitOnPath = Effect.acquireRelease(
-  Effect.sync(() => {
-    const saved = process.env["PATH"];
-    process.env["PATH"] = "";
-    return saved;
-  }),
-  (saved) =>
+/** Sets PATH for the scope and restores it afterwards; spawned programs resolve against it. */
+export const withPath = (value: string) =>
+  Effect.acquireRelease(
     Effect.sync(() => {
-      process.env["PATH"] = saved;
+      const saved = process.env["PATH"];
+      process.env["PATH"] = value;
+      return saved;
     }),
-);
+    (saved) =>
+      Effect.sync(() => {
+        process.env["PATH"] = saved;
+      }),
+  );
+
+/** Empties PATH for the scope, so spawning git fails as on a machine without it. */
+export const withoutGitOnPath = withPath("");
