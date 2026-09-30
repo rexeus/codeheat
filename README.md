@@ -129,4 +129,4 @@ The report states every threshold under `thresholds`, and the JSON contract is v
 
 ## Contributing
 
-See [AGENTS.md](AGENTS.md) for the workflow and rules (`CLAUDE.md` is a symlink to it, so Claude Code and other agents read the same file), [TESTING.md](TESTING.md) for tests, and [docs/](docs/README.md) for everything else. `pnpm install && pnpm check` is the gate.
+See [AGENTS.md](AGENTS.md) for the workflow and rules, [TESTING.md](TESTING.md) for tests, and [docs/](docs/README.md) for everything else. `pnpm install && pnpm check` is the gate.
