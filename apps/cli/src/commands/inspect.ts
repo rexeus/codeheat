@@ -17,7 +17,7 @@ export const inspectCommand = Command.make(
   {
     patterns: Argument.String("file-or-glob").pipe(
       Argument.withDescription(
-        "Path (absolute or relative to the working directory) or repository-relative glob, quoted so the shell leaves it alone",
+        "Path (absolute, relative to the working directory, or repository-relative) or repository-relative glob, quoted so the shell leaves it alone",
       ),
       Argument.variadic({ min: 1 }),
     ),
@@ -34,7 +34,10 @@ export const inspectCommand = Command.make(
       toolVersion: version,
     });
     yield* warnIfShallow(report);
-    const result = inspect(report, yield* resolveFocusPatterns(cwd, patterns));
+    const result = inspect(
+      report,
+      yield* resolveFocusPatterns(cwd, report, patterns),
+    );
     if (result.matches.length === 0) {
       return yield* new NothingMatched({ patterns: result.unmatched });
     }

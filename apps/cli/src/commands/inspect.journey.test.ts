@@ -39,7 +39,7 @@ describe("codeheat inspect against a git repository", () => {
       const repo = yield* makeCoupledProject;
 
       const result = yield* journey({
-        args: ["inspect", "a.ts", "--json"],
+        args: ["inspect", "src/a.ts", "--json"],
         cwd: `${repo.root}/src`,
       });
 
