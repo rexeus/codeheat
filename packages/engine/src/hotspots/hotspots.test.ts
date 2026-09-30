@@ -49,20 +49,6 @@ describe("rankFiles", () => {
     ]);
   });
 
-  it("rounds the reported complexity mean to four decimals", () => {
-    const [ranked] = rankFiles(
-      [
-        {
-          ...measure("a.ts", 1, 3, 1),
-          complexity: { loc: 3, total: 1, mean: 1 / 3, max: 1 },
-        },
-      ],
-      [],
-    );
-
-    expect(ranked?.complexity.mean).toBe(0.3333);
-  });
-
   it("breaks ties on path", () => {
     const ranked = rankFiles(
       [
@@ -103,7 +89,7 @@ describe("rankFiles", () => {
   });
 });
 
-describe("rankFiles weighting", () => {
+describe("rankFiles weighting and precision", () => {
   it("scores a flat file by its lines, so a barrel that keeps changing stays visible", () => {
     // weighted lines 40 (40 + 0) against 120 (60 + 60), both 7 revisions
     const ranked = rankFiles(
@@ -116,6 +102,20 @@ describe("rankFiles weighting", () => {
       // ln(41) / ln(121) = 0.77434
       0.7743,
     ]);
+  });
+
+  it("rounds the reported complexity mean to four decimals", () => {
+    const [ranked] = rankFiles(
+      [
+        {
+          ...measure("a.ts", 1, 3, 1),
+          complexity: { loc: 3, total: 1, mean: 1 / 3, max: 1 },
+        },
+      ],
+      [],
+    );
+
+    expect(ranked?.complexity.mean).toBe(0.3333);
   });
 });
 

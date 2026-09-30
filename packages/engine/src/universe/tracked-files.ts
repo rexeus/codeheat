@@ -53,8 +53,8 @@ export const listTrackedFiles = (
     ]);
     const ignoredPaths = new Set(splitNul(ignored));
     const paths = splitNul(tracked)
-      .map(parseStagedEntry)
-      .filter(isBlob)
+      .map((entry) => parseStagedEntry(entry))
+      .filter((entry) => isBlob(entry))
       .map(({ path }) => path);
     return [...new Set(paths)].filter((path) => !ignoredPaths.has(path));
   });

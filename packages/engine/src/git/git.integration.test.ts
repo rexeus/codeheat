@@ -58,7 +58,9 @@ layer(NodeServices.layer)("Git", (it) => {
         );
       }),
   );
+});
 
+layer(NodeServices.layer)("Git failures to start", (it) => {
   it.effect("fails with GitNotFound when git is not on PATH", () =>
     Effect.gen(function* () {
       const repo = yield* makeTempRepository;

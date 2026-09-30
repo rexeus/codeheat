@@ -270,7 +270,9 @@ layer(NodeServices.layer)("analyze scope", (it) => {
       assert.strictEqual(report.repository.scope, "src");
     }),
   );
+});
 
+layer(NodeServices.layer)("analyze scope and history", (it) => {
   it.effect("keeps the history from before a move into the scope", () =>
     Effect.gen(function* () {
       yield* setNow;

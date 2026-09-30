@@ -68,7 +68,9 @@ describe("codeheat exit codes", () => {
       expect(result.exitCode).toBe(2);
     }).pipe(Effect.scoped),
   );
+});
 
+describe("codeheat exit codes on a broken host", () => {
   it.live("exits 3 without git on PATH", () =>
     Effect.gen(function* () {
       const repo = yield* makeCoupledProject;
