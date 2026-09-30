@@ -26,11 +26,10 @@
   ],
   "type": "module",
   "publishConfig": {
-    "access": "public",
-    "provenance": true
+    "access": "public"
   },
   "scripts": {
-    "build": "tsx scripts/build.ts",
+    "build": "tsx scripts/build.ts && tsx scripts/package-readme.ts",
     "dev": "turbo run build --filter=@codeheat/viewer --output-logs=errors-only && tsx src/bin.ts",
     "test:unit": "vitest run --passWithNoTests",
     "typecheck": "tsc -p tsconfig.json"

@@ -87,9 +87,28 @@ const expectBundledArtifact = (tarball) => {
       !expected.has(file) &&
       !/^package\/(README|LICENSE|CHANGELOG)/u.test(file),
   );
-  const required = ["package/dist/codeheat.js", "package/LICENSE"];
+  const required = [
+    "package/dist/codeheat.js",
+    "package/LICENSE",
+    "package/README.md",
+  ];
   if (required.some((file) => !files.includes(file)) || unexpected.length > 0) {
     throw new Error(`Unexpected package contents:\n${files.join("\n")}`);
+  }
+  // npm resolves relative links against the package directory, where the
+  // repository's docs do not exist; the packed README must link absolutely.
+  const packedReadme = execFileSync(
+    "tar",
+    ["-xOzf", tarball, "package/README.md"],
+    { encoding: "utf8" },
+  );
+  const relativeLinks = packedReadme.match(
+    /\]\((?!https?:|#|mailto:)[^)\s]+\)/gu,
+  );
+  if (relativeLinks !== null) {
+    throw new Error(
+      `The packed README has relative links: ${relativeLinks.join(", ")}`,
+    );
   }
   // apps/cli/LICENSE is a copy npm can pack; it must not drift from the root one.
   const packedLicense = execFileSync(

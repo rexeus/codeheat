@@ -76,5 +76,8 @@ jobs:
       - run: pnpm check
       - name: Publish packages and create releases
         uses: changesets/action/publish@ae32849d5ba541f9ae29e40e22a623bc13562f51 # v2.1.2
+        env:
+          # Provenance is set here, not in publishConfig, so a local publish needs no flags.
+          NPM_CONFIG_PROVENANCE: "true"
         with:
           script: pnpm release
