@@ -52,6 +52,23 @@ describe("codeheat exit codes", () => {
     }).pipe(Effect.scoped),
   );
 
+  it.live("exits 2 when the path to analyze does not exist", () =>
+    Effect.gen(function* () {
+      const repo = yield* makeCoupledProject;
+
+      const result = yield* journey({
+        args: ["analyze", "src/missing.ts"],
+        cwd: repo.root,
+      });
+
+      expect(result.stdout).toBe("");
+      expect(result.stderr).toBe(
+        `codeheat: no such file or directory: ${repo.root}/src/missing.ts`,
+      );
+      expect(result.exitCode).toBe(2);
+    }).pipe(Effect.scoped),
+  );
+
   it.live("exits 3 without git on PATH", () =>
     Effect.gen(function* () {
       const repo = yield* makeCoupledProject;

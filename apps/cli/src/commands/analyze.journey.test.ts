@@ -76,6 +76,25 @@ describe("codeheat analyze against a git repository", () => {
     }).pipe(Effect.scoped),
   );
 
+  it.live("analyzes a single file given as the path", () =>
+    Effect.gen(function* () {
+      const repo = yield* makeCoupledProject;
+
+      const result = yield* journey({
+        args: ["analyze", "src/a.ts", "--json"],
+        cwd: repo.root,
+      });
+
+      expect(result.exitCode).toBe(0);
+      const report = yield* Schema.decodeUnknownEffect(Report)(
+        JSON.parse(result.stdout),
+      );
+      expect(report.repository.scope).toBe("src/a.ts");
+      expect(report.files.map(({ path }) => path)).toStrictEqual(["src/a.ts"]);
+      expect(report.files[0]?.revisions).toBe(4);
+    }).pipe(Effect.scoped),
+  );
+
   it.live(
     "warns once on stderr about a shallow clone and keeps stdout to the JSON",
     () =>

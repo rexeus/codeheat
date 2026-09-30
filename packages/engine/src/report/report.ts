@@ -79,7 +79,7 @@ export const Report = Schema.Struct({
     name: Schema.String,
     /** HEAD commit, or null for a repository without commits. */
     head: Schema.NullOr(Schema.String),
-    /** Repository-relative directory the universe is limited to; "." for all. */
+    /** Repository-relative directory or file the universe is limited to; "." for all. */
     scope: Schema.String,
     /**
      * A shallow clone: history before its oldest fetched commit is missing, so

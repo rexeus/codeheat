@@ -1,5 +1,5 @@
 import { analyze } from "@codeheat/engine";
-import { Effect, Option, Path } from "effect";
+import { Effect } from "effect";
 import { Argument, Command, Flag } from "effect/cli";
 
 import { limitReport } from "../output/limit-report.js";
@@ -8,6 +8,7 @@ import { warnIfShallow } from "../output/shallow-warning.js";
 import { renderAnalysis } from "../output/terminal/analysis-view.js";
 import { version } from "../version.js";
 import { WorkingDirectory } from "../working-directory.js";
+import { resolveAnalysisTarget } from "./analysis-target.js";
 import { jsonFlag, sinceFlag } from "./shared-flags.js";
 
 const DEFAULT_LIMIT = 25;
@@ -17,7 +18,7 @@ export const analyzeCommand = Command.make(
   {
     path: Argument.String("path").pipe(
       Argument.withDescription(
-        "Directory inside the repository; only files under it are analyzed (default: the whole repository)",
+        "Directory or file inside the repository; only files under it are analyzed (default: the whole repository)",
       ),
       Argument.optional,
     ),
@@ -45,14 +46,11 @@ export const analyzeCommand = Command.make(
     ),
   },
   Effect.fn(function* ({ path, json, since, include, exclude, limit }) {
-    const cwd = yield* WorkingDirectory;
-    const paths = yield* Path.Path;
     // A path argument both locates the repository and narrows the universe,
     // so `codeheat analyze ../other-repo` works from anywhere.
-    const scope = Option.map(path, (relative) => paths.resolve(cwd, relative));
+    const target = yield* resolveAnalysisTarget(yield* WorkingDirectory, path);
     const report = yield* analyze({
-      cwd: Option.getOrElse(scope, () => cwd),
-      scope: Option.getOrUndefined(scope),
+      ...target,
       since,
       include,
       exclude,

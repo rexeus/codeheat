@@ -40,7 +40,7 @@ export type AnalyzeOptions = {
   /** A directory inside the repository; git locates the work tree from here. */
   readonly cwd: string;
   /**
-   * A directory, absolute or relative to `cwd`, that limits the universe to
+   * A directory or file, absolute or relative to `cwd`, that limits the universe to
    * files under it. Absent, the universe is the whole repository.
    */
   readonly scope?: string | undefined;
