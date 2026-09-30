@@ -26,7 +26,8 @@
   ],
   "type": "module",
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "provenance": true
   },
   "scripts": {
     "build": "tsx scripts/build.ts && tsx scripts/package-readme.ts",
