@@ -1,12 +1,12 @@
 # Glossary
 
-**Universe** — the set of files an analysis considers code: tracked by git, not ignored, not marked `linguist-generated` or `linguist-vendored`, not binary or minified, and matching the language allow-list or the `--include` globs. Scores and coupling are relative to the universe.
+**Universe** — the set of files an analysis considers code: a regular file tracked by git (no symlink or submodule), not ignored, not marked `linguist-generated` or `linguist-vendored`, not binary or minified, and matching the language allow-list or the `--include` globs. Scores and coupling are relative to the universe.
 
 **Focus** — the files a question is about (`inspect <file-or-glob...>`). Focus narrows what is reported, never the universe.
 
 **Analysis window** — the time range of history considered (`--since`, default 12 months), resolved to absolute dates in the report.
 
-**Revisions** — the number of non-merge commits in the analysis window that touched a file, following renames. The churn signal.
+**Revisions** — the number of non-merge commits in the analysis window that touched a file, following renames. The churn signal. A shallow clone lacks the history before its oldest commit, so its revisions undercount.
 
 **Indentation complexity** — the sum of logical indentation levels over a file's non-blank lines. A language-agnostic proxy for structural complexity.
 
