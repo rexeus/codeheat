@@ -1,7 +1,7 @@
 // Owns turning `--since` input into the absolute analysis window.
 import { DateTime, Effect, Option, Schema } from "effect";
 
-/** `since` is neither `<n>d|w|m|y` nor an ISO date (`YYYY-MM-DD`). */
+/** `since` is neither `<n>d|w|m|y` nor an ISO date (`YYYY-MM-DD`), or it is not a representable date in the past. */
 export class InvalidSince extends Schema.TaggedError<InvalidSince>()(
   "InvalidSince",
   { input: Schema.String },
@@ -41,19 +41,26 @@ const parseIsoDate = (since: string): Option.Option<DateTime.Utc> =>
       )
     : Option.none();
 
+// Counting back far enough leaves the range of JavaScript dates, which yields an invalid date.
+const isUsableStart = (start: DateTime.Utc, now: DateTime.Utc): boolean =>
+  Number.isFinite(DateTime.toEpochMillis(start)) &&
+  !DateTime.isGreaterThan(start, now);
+
 /**
  * Resolves `since` to a range ending at the current `Clock` time.
  *
  * `<n>d|w|m|y` counts back n days, weeks, calendar months, or calendar years
- * from now; an ISO date starts at midnight UTC of that day.
+ * from now; an ISO date starts at midnight UTC of that day. A start after now
+ * or beyond the dates JavaScript can represent is invalid.
  */
 export const resolveTimeRange = (
   since: string,
 ): Effect.Effect<TimeRange, InvalidSince> =>
   Effect.gen(function* () {
     const now = yield* DateTime.now;
-    const start = Option.orElse(parseRelative(since, now), () =>
-      parseIsoDate(since),
+    const start = Option.filter(
+      Option.orElse(parseRelative(since, now), () => parseIsoDate(since)),
+      (date) => isUsableStart(date, now),
     );
     if (Option.isNone(start)) {
       return yield* new InvalidSince({ input: since });

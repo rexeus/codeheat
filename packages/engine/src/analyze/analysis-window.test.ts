@@ -36,6 +36,12 @@ describe("resolveTimeRange", () => {
     "2026-02-30",
     "2026-1-1",
     "yesterday",
+    // after the clock's now of 2026-06-15
+    "2026-06-16",
+    "2030-01-01",
+    // before the earliest date JavaScript can represent
+    "999999999y",
+    "999999999m",
   ])("rejects %j", (since) =>
     Effect.gen(function* () {
       yield* setNow;
