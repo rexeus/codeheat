@@ -35,6 +35,8 @@ const EXCLUDED_DIRECTORIES = new Set([
   "node_modules",
   "dist",
   "build",
+  "generated",
+  "__generated__",
 ]);
 const MINIFIED_NAME = /\.min\.[^/]+$/u;
 

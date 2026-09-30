@@ -77,7 +77,7 @@ layer(NodeServices.layer)("inventory git rules", (it) => {
 
 layer(NodeServices.layer)("inventory name rules", (it) => {
   it.effect(
-    "drops vendored, dependency, and build output directories and minified names",
+    "drops vendored, dependency, build output, and generated directories and minified names",
     () =>
       Effect.gen(function* () {
         const repo = yield* makeTempRepository;
@@ -87,6 +87,8 @@ layer(NodeServices.layer)("inventory name rules", (it) => {
           "web/node_modules/pkg/index.js": "a\n",
           "dist/out.js": "a\n",
           "packages/x/build/out.js": "a\n",
+          "packages/contracts/generated/spec.js": "a\n",
+          "src/__generated__/schema.ts": "a\n",
           "src/app.min.js": "a\n",
           "src/build.ts": "a\n",
         });
