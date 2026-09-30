@@ -125,7 +125,7 @@ Paths or globs. A path without glob characters is absolute or relative to the wo
 - **Score** — `norm(revisions) × norm(weighted lines)`, where weighted lines are lines plus indentation levels and `norm(x) = ln(1+x) / ln(1+max)` over the repository. 0..1, relative to this repository: a 0.8 here says nothing about a 0.8 elsewhere.
 - **Coupling degree** — `shared commits / mean(revisions of both)`. Pairs need 3 shared commits and a degree of 0.3. Commits touching more than 50 files (formatting runs, mass renames) are ignored for coupling.
 - **Co-change probability** — `shared commits / revisions of one file`: how likely a change to that file also changes its partner. The `analyze` terminal table shows it in both directions (`a → b`, `b → a`); `inspect` shows it for the focused file.
-- **Test pairs** — `a.ts` with `a.test.ts` is expected coupling; it is marked, never counted as a smell.
+- **Test pairs** — `a.ts` with its test (`a.test.ts`, `a.spec.ts`, `a_test.go`, `a_spec.rb`) is expected coupling; it is marked, never counted as a smell.
 - **Breadth and hubs** — breadth is the number of co-changed files: distinct other files that shared a counted commit (at most 50 files) with this one, however rarely. A hub is a file changed at least 5 times, not a test, with a breadth of at least 10 among the widest 5% of such files (ties included); it gets a reason line even when no single pair is coupled strongly enough to report, as with barrels.
 
 The report states every threshold under `thresholds`, and the JSON contract is versioned by `schemaVersion`: new fields may appear, but a field is never renamed or removed without a new version.

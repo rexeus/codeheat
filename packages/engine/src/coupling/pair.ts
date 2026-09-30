@@ -1,7 +1,7 @@
 // Owns the path-only facts about files and coupled pairs: how far apart a pair
 // is and whether a file is a test or one file is the other's test.
 
-const TEST_SUFFIXES = [".test", ".spec", "_test"];
+const TEST_SUFFIXES = [".test", ".spec", "_test", "_spec"];
 
 const directoriesOf = (path: string): ReadonlyArray<string> =>
   path.split("/").slice(0, -1);
