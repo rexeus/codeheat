@@ -22,4 +22,4 @@
 
 **Test pair** — a coupled pair where one file is the other's test (`a.ts` and `a.test.ts`). Expected coupling, never a modularization smell.
 
-**Co-change breadth** — the number of distinct other universe files a file changed together with in counted commits (at most `maxCommitFiles` files each), however rarely. A **hub** is a file whose breadth is at least `hubMinBreadth` and among the widest `hubTopShare` of the universe; it is explained with a reason line, even though no single pair is coupled strongly enough to report.
+**Co-change breadth** — the number of distinct other universe files a file changed together with in counted commits (at most `maxCommitFiles` files each), however rarely. A **hub** is a hub candidate (at least `hubMinRevisions` revisions, not a test file) whose breadth is at least `hubMinBreadth` and among the widest `hubTopShare` of the candidates, ties at the cut-off included; it is explained with a reason line, even when no single pair is coupled strongly enough to report.
