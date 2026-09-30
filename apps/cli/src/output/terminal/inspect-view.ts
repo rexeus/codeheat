@@ -31,7 +31,7 @@ const partnerLines = (entry: Entry, style: Style): ReadonlyArray<string> =>
 const entryLines = (entry: Entry, style: Style): ReadonlyArray<string> => [
   style.bold(escapeForTerminal(entry.path)),
   `rank #${entry.rank} of ${entry.of}, score ${entry.score.toFixed(2)}`,
-  `${entry.revisions} revisions, +${entry.linesAdded} -${entry.linesDeleted} lines, ${entry.loc} loc`,
+  `${entry.revisions} revisions, ${entry.breadth} co-changed files, +${entry.linesAdded} -${entry.linesDeleted} lines, ${entry.loc} loc`,
   `indentation complexity ${entry.complexity.total} (mean ${twoDecimals(entry.complexity.mean)}, max ${entry.complexity.max})`,
   ...entry.reasons.map((reason) => `- ${escapeForTerminal(reason)}`),
   "",

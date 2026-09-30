@@ -52,7 +52,7 @@ describe("renderInspect", () => {
         "",
         "packages/billing/src/invoice.ts",
         "rank #1 of 36, score 0.97",
-        "48 revisions, +384 -672 lines, 964 loc",
+        "48 revisions, 14 co-changed files, +384 -672 lines, 964 loc",
         "indentation complexity 1900 (mean 1.97, max 9)",
         "- changed in 48 commits (#1 of 36)",
         "",
