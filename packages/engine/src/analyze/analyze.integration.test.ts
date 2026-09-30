@@ -160,7 +160,7 @@ layer(NodeServices.layer)("analyze coupling", (it) => {
           ],
           ["a.ts", "b.ts", 3, 0, false],
         );
-        assert.approximately(coupling?.degree ?? 0, 6 / 7, 1e-9);
+        assert.strictEqual(coupling?.degree, 0.8571);
         assert.strictEqual(report.totals.couplings, 1);
         assert.deepStrictEqual(
           report.files[0]?.reasons.at(-1),

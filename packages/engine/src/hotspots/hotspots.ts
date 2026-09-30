@@ -3,6 +3,7 @@ import { Order } from "effect";
 
 import { groupByPath, partnersOf } from "../coupling/partners.js";
 import type { Complexity } from "../metrics/complexity.js";
+import { roundReported } from "../report/precision.js";
 import type { Coupling, FileStats } from "../report/report.js";
 import { describeFile } from "./reasons.js";
 
@@ -83,14 +84,14 @@ export const rankFiles = (
       return {
         path,
         rank: index + 1,
-        score,
+        score: roundReported(score),
         revisions,
         linesAdded: measure.linesAdded,
         linesDeleted: measure.linesDeleted,
         loc: complexity.loc,
         complexity: {
           total: complexity.total,
-          mean: complexity.mean,
+          mean: roundReported(complexity.mean),
           max: complexity.max,
         },
         reasons: describeFile({

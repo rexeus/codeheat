@@ -132,6 +132,18 @@ describe("inspect partners", () => {
     });
   });
 
+  it("rounds the co-change probability to four decimals", () => {
+    const report = reportOf(
+      [stats("a.ts", 1, 7), stats("b.ts", 2, 3)],
+      [coupling("a.ts", "b.ts", 3)],
+    );
+
+    const [a] = inspect(report, ["a.ts"]).matches;
+
+    // 3 shared commits / 7 revisions = 0.42857
+    expect(a?.partners[0]?.probability).toBe(0.4286);
+  });
+
   it("finds partners on either side of a coupling with the probability of the focused file", () => {
     const report = reportOf(
       [stats("a.ts", 1, 10), stats("b.ts", 2, 4)],

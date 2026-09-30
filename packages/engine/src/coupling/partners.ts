@@ -2,6 +2,7 @@
 import { Order } from "effect";
 
 import type { InspectResult } from "../report/inspect-result.js";
+import { roundReported } from "../report/precision.js";
 import type { Coupling } from "../report/report.js";
 
 /** A file that changes together with another. */
@@ -38,7 +39,7 @@ export const partnersOf = (
     .map((coupling) => ({
       path: coupling.a === path ? coupling.b : coupling.a,
       sharedCommits: coupling.sharedCommits,
-      probability: coupling.sharedCommits / revisions,
+      probability: roundReported(coupling.sharedCommits / revisions),
       testPair: coupling.testPair,
     }))
     .toSorted(

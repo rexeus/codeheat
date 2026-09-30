@@ -1,6 +1,7 @@
 // Owns change coupling: which pairs of files repeatedly change in the same commits.
 import { Order } from "effect";
 
+import { roundReported } from "../report/precision.js";
 import type { Coupling } from "../report/report.js";
 import { directoryDistance, isTestPair } from "./pair.js";
 
@@ -39,7 +40,7 @@ const countSharedCommits = (
  * ignored here for being too large.
  *
  * `couplingCommits` is the number of commits small enough to count. Pairs
- * are sorted by degree, then shared commits, then path.
+ * are sorted by their reported (rounded) degree, then shared commits, then path.
  */
 export const findCouplings = (
   commits: ReadonlyArray<ReadonlyArray<string>>,
@@ -60,7 +61,7 @@ export const findCouplings = (
         a,
         b,
         sharedCommits,
-        degree,
+        degree: roundReported(degree),
         distance: directoryDistance(a, b),
         testPair: isTestPair(a, b),
       });

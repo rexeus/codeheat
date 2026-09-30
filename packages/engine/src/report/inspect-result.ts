@@ -9,7 +9,7 @@ import { AnalysisWindow, Count, FileStats, UnitInterval } from "./report.js";
 const Partner = Schema.Struct({
   path: Schema.String,
   sharedCommits: Count,
-  /** `sharedCommits / revisions(inspected file)`: how likely a change here also changes the partner. */
+  /** `sharedCommits / revisions(inspected file)`: how likely a change here also changes the partner; rounded to 4 decimals. */
   probability: UnitInterval,
   testPair: Schema.Boolean,
 });

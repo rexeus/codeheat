@@ -34,7 +34,7 @@ export const FileStats = Schema.Struct({
   path: Schema.String,
   /** 1 is the hottest file; ties break on path. */
   rank: Rank,
-  /** Normalized revisions × normalized weighted lines (`loc + complexity.total`). */
+  /** Normalized revisions × normalized weighted lines (`loc + complexity.total`); rounded to 4 decimals. */
   score: UnitInterval,
   revisions: Count,
   linesAdded: Count,
@@ -43,6 +43,7 @@ export const FileStats = Schema.Struct({
   loc: Count,
   complexity: Schema.Struct({
     total: Count,
+    /** Rounded to 4 decimals. */
     mean: Schema.Finite,
     max: Count,
   }),
@@ -56,7 +57,7 @@ export const Coupling = Schema.Struct({
   a: Schema.String,
   b: Schema.String,
   sharedCommits: Count,
-  /** `sharedCommits / mean(revisions(a), revisions(b))`. */
+  /** `sharedCommits / mean(revisions(a), revisions(b))`, rounded to 4 decimals. */
   degree: UnitInterval,
   /** Directory hops between the parent directories; 0 means same directory. */
   distance: Count,

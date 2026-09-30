@@ -45,11 +45,22 @@ describe("rankFiles", () => {
       ["d.ts", 4],
     ]);
     expect(ranked.map(({ score }) => score)).toStrictEqual([
-      expect.closeTo(2 / 3, 10),
-      expect.closeTo(1 / 2, 10),
-      expect.closeTo(1 / 3, 10),
-      0,
+      0.6667, 0.5, 0.3333, 0,
     ]);
+  });
+
+  it("rounds the reported complexity mean to four decimals", () => {
+    const [ranked] = rankFiles(
+      [
+        {
+          ...measure("a.ts", 1, 3, 1),
+          complexity: { loc: 3, total: 1, mean: 1 / 3, max: 1 },
+        },
+      ],
+      [],
+    );
+
+    expect(ranked?.complexity.mean).toBe(0.3333);
   });
 
   it("breaks ties on path", () => {
@@ -102,7 +113,8 @@ describe("rankFiles weighting", () => {
 
     expect(ranked.map(({ score }) => score)).toStrictEqual([
       1,
-      expect.closeTo(Math.log(41) / Math.log(121), 10),
+      // ln(41) / ln(121) = 0.77434
+      0.7743,
     ]);
   });
 });

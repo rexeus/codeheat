@@ -29,16 +29,16 @@ describe("findCouplings", () => {
       distance: 0,
       testPair: false,
     });
-    // 4 shared commits / mean(8, 4) revisions
-    expect(couplings[0]?.degree).toBeCloseTo(2 / 3, 10);
+    // 4 shared commits / mean(8, 4) revisions = 0.66667
+    expect(couplings[0]?.degree).toBe(0.6667);
     expect(couplings[1]).toMatchObject({
       a: "lib/deep/c.ts",
       b: "src/a.ts",
       sharedCommits: 3,
       distance: 3,
     });
-    // 3 shared commits / mean(3, 8) revisions
-    expect(couplings[1]?.degree).toBeCloseTo(3 / 5.5, 10);
+    // 3 shared commits / mean(3, 8) revisions = 0.54545
+    expect(couplings[1]?.degree).toBe(0.5455);
   });
 });
 
