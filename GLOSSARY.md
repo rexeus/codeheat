@@ -10,7 +10,9 @@
 
 **Indentation complexity** — the sum of logical indentation levels over a file's non-blank lines. A language-agnostic proxy for structural complexity.
 
-**Hotspot** — a file that is both complex and frequently changed. Its **score** (0..1) is the product of its log-max-normalized revisions and indentation complexity.
+**Weighted lines** — a file's size as the score sees it: every non-blank line counts 1 plus its indentation level, so flat files (barrels) keep their weight and nesting adds to it.
+
+**Hotspot** — a file that is both large or complex and frequently changed. Its **score** (0..1) is the product of its log-max-normalized revisions and weighted lines.
 
 **Change coupling** — two files that repeatedly change in the same commits. Coupling across distant directories signals a missing or misplaced module boundary.
 

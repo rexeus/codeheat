@@ -24,6 +24,14 @@ const logNormalizer =
 const maximum = (values: ReadonlyArray<number>): number =>
   values.reduce((largest, value) => Math.max(largest, value), 0);
 
+/**
+ * The size a file's score weighs: every non-blank line counts 1 plus its
+ * nesting depth. Indentation alone would score flat files such as barrels 0,
+ * however often they change; lines alone would ignore nesting.
+ */
+const weightedLines = (complexity: Complexity): number =>
+  complexity.loc + complexity.total;
+
 /** Maps each value to 1 + the number of larger values, so equal values share a rank. */
 const competitionRanks = (
   values: ReadonlyArray<number>,
@@ -38,8 +46,8 @@ const competitionRanks = (
 };
 
 /**
- * Scores every file as normalized revisions × normalized indentation
- * complexity, and returns them best first; equal scores order by path.
+ * Scores every file as normalized revisions × normalized weighted lines, and
+ * returns them best first; equal scores order by path.
  *
  * `couplings` feeds each file's co-change reason.
  */
@@ -54,8 +62,8 @@ export const rankFiles = (
   const normalizeRevisions = logNormalizer(
     maximum(measures.map((m) => m.revisions)),
   );
-  const normalizeComplexity = logNormalizer(
-    maximum(measures.map((m) => m.complexity.total)),
+  const normalizeWeight = logNormalizer(
+    maximum(measures.map((m) => weightedLines(m.complexity))),
   );
   const coupled = groupByPath(couplings);
 
@@ -64,7 +72,7 @@ export const rankFiles = (
       measure,
       score:
         normalizeRevisions(measure.revisions) *
-        normalizeComplexity(measure.complexity.total),
+        normalizeWeight(weightedLines(measure.complexity)),
     }))
     .toSorted(
       (a, b) =>

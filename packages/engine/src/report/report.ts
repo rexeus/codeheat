@@ -34,7 +34,7 @@ export const FileStats = Schema.Struct({
   path: Schema.String,
   /** 1 is the hottest file; ties break on path. */
   rank: Rank,
-  /** Normalized revisions × normalized indentation complexity. */
+  /** Normalized revisions × normalized weighted lines (`loc + complexity.total`). */
   score: UnitInterval,
   revisions: Count,
   linesAdded: Count,

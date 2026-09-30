@@ -37,7 +37,7 @@ const filesAtVersion = (
   );
 
 layer(NodeServices.layer)("analyze ranking", (it) => {
-  it.effect("ranks files by revisions times indentation complexity", () =>
+  it.effect("ranks files by revisions times weighted lines", () =>
     Effect.gen(function* () {
       yield* setNow;
       const repo = yield* makeTempRepository;
@@ -57,8 +57,9 @@ layer(NodeServices.layer)("analyze ranking", (it) => {
 
       const report = yield* analyze(analyzeOptionsFor(repo));
 
-      // revisions 4/1/4/4 and complexity 9/9/1/0, each log-max normalized:
-      // hot 1 * 1, calm log(2)/log(5) * 1, mid 1 * log(2)/log(10), flat 1 * 0
+      // revisions 4/4/4/1; weighted lines (loc + indentation) 10+9, 6+1, 5+0, 7+9.
+      // Each log-max normalized: hot 1 * 1, mid 1 * log(8)/log(20),
+      // flat 1 * log(6)/log(20), calm log(2)/log(5) * log(17)/log(20).
       assert.deepStrictEqual(
         report.files.map(({ path, rank, revisions }) => [
           path,
@@ -67,15 +68,15 @@ layer(NodeServices.layer)("analyze ranking", (it) => {
         ]),
         [
           ["src/hot.ts", 1, 4],
-          ["src/calm.ts", 2, 1],
-          ["src/mid.ts", 3, 4],
-          ["src/flat.ts", 4, 4],
+          ["src/mid.ts", 2, 4],
+          ["src/flat.ts", 3, 4],
+          ["src/calm.ts", 4, 1],
         ],
       );
       assert.strictEqual(report.files[0]?.score, 1);
-      assert.approximately(report.files[1]?.score ?? 0, 0.4307, 0.0001);
-      assert.approximately(report.files[2]?.score ?? 0, 0.301, 0.0001);
-      assert.strictEqual(report.files[3]?.score, 0);
+      assert.approximately(report.files[1]?.score ?? 0, 0.6941, 0.0001);
+      assert.approximately(report.files[2]?.score ?? 0, 0.5981, 0.0001);
+      assert.approximately(report.files[3]?.score ?? 0, 0.4073, 0.0001);
       assert.strictEqual(report.files[0]?.complexity.total, 9);
       assert.strictEqual(report.totals.files, 4);
     }),

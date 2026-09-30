@@ -4,16 +4,18 @@ import type { Coupling } from "../report/report.js";
 import { rankFiles } from "./hotspots.js";
 import type { FileMeasure } from "./hotspots.js";
 
+/** A file whose weighted lines are `loc + complexityTotal`. */
 const measure = (
   path: string,
   revisions: number,
+  loc: number,
   complexityTotal: number,
 ): FileMeasure => ({
   path,
   revisions,
   linesAdded: revisions * 10,
   linesDeleted: revisions,
-  complexity: { loc: 100, total: complexityTotal, mean: 1.5, max: 4 },
+  complexity: { loc, total: complexityTotal, mean: 1.5, max: 4 },
 });
 
 const coupling = (
@@ -25,15 +27,15 @@ const coupling = (
 
 describe("rankFiles", () => {
   // log-max normalization: revisions max 7 gives log(1+r)/log(8) = 1, 2/3, 1/3, 0
-  // for 7, 3, 1, 0; complexity max 15 gives log(1+c)/log(16) = 1/2 for 3 and 1 for 15
+  // for 7, 3, 1, 0; weighted lines max 15 gives log(1+w)/log(16) = 1/2 for 3 and 1 for 15
   const files = [
-    measure("a.ts", 7, 3),
-    measure("b.ts", 3, 15),
-    measure("c.ts", 1, 15),
-    measure("d.ts", 0, 15),
+    measure("a.ts", 7, 2, 1),
+    measure("b.ts", 3, 10, 5),
+    measure("c.ts", 1, 10, 5),
+    measure("d.ts", 0, 10, 5),
   ];
 
-  it("orders files by normalized revisions times normalized complexity", () => {
+  it("orders files by normalized revisions times normalized weighted lines", () => {
     const ranked = rankFiles(files, []);
 
     expect(ranked.map(({ path, rank }) => [path, rank])).toStrictEqual([
@@ -52,7 +54,11 @@ describe("rankFiles", () => {
 
   it("breaks ties on path", () => {
     const ranked = rankFiles(
-      [measure("b.ts", 3, 15), measure("a.ts", 3, 15), measure("c.ts", 0, 0)],
+      [
+        measure("b.ts", 3, 10, 5),
+        measure("a.ts", 3, 10, 5),
+        measure("c.ts", 0, 0, 0),
+      ],
       [],
     );
 
@@ -63,13 +69,13 @@ describe("rankFiles", () => {
     ]);
   });
 
-  it("scores zero when nothing changed or nothing is complex", () => {
+  it("scores zero for a file without revisions", () => {
     const ranked = rankFiles(
-      [measure("a.ts", 0, 0), measure("b.ts", 0, 5)],
+      [measure("a.ts", 0, 5, 5), measure("b.ts", 4, 5, 5)],
       [],
     );
 
-    expect(ranked.map(({ score }) => score)).toStrictEqual([0, 0]);
+    expect(ranked.at(-1)).toMatchObject({ path: "a.ts", score: 0 });
   });
 
   it("carries the measured facts into the stats", () => {
@@ -80,18 +86,33 @@ describe("rankFiles", () => {
       revisions: 3,
       linesAdded: 30,
       linesDeleted: 3,
-      loc: 100,
-      complexity: { total: 15, mean: 1.5, max: 4 },
+      loc: 10,
+      complexity: { total: 5, mean: 1.5, max: 4 },
     });
+  });
+});
+
+describe("rankFiles weighting", () => {
+  it("scores a flat file by its lines, so a barrel that keeps changing stays visible", () => {
+    // weighted lines 40 (40 + 0) against 120 (60 + 60), both 7 revisions
+    const ranked = rankFiles(
+      [measure("index.ts", 7, 40, 0), measure("deep.ts", 7, 60, 60)],
+      [],
+    );
+
+    expect(ranked.map(({ score }) => score)).toStrictEqual([
+      1,
+      expect.closeTo(Math.log(41) / Math.log(121), 10),
+    ]);
   });
 });
 
 describe("rankFiles reasons", () => {
   const files = [
-    measure("a.ts", 7, 3),
-    measure("b.ts", 3, 15),
-    measure("c.ts", 1, 15),
-    measure("d.ts", 0, 15),
+    measure("a.ts", 7, 100, 3),
+    measure("b.ts", 3, 100, 15),
+    measure("c.ts", 1, 100, 15),
+    measure("d.ts", 0, 100, 15),
   ];
 
   it("explains a file by its revision and complexity ranks", () => {
