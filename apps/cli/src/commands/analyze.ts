@@ -1,5 +1,5 @@
 import { analyze } from "@codeheat/engine";
-import { Effect, Path } from "effect";
+import { Effect, Option, Path } from "effect";
 import { Argument, Command, Flag } from "effect/cli";
 
 import { limitReport } from "../output/limit-report.js";
@@ -16,9 +16,9 @@ export const analyzeCommand = Command.make(
   {
     path: Argument.String("path").pipe(
       Argument.withDescription(
-        "Directory inside the repository; only files under it are analyzed",
+        "Directory inside the repository; only files under it are analyzed (default: the whole repository)",
       ),
-      Argument.withDefault("."),
+      Argument.optional,
     ),
     json: jsonFlag,
     since: sinceFlag,
@@ -46,8 +46,12 @@ export const analyzeCommand = Command.make(
   Effect.fn(function* ({ path, json, since, include, exclude, limit }) {
     const cwd = yield* WorkingDirectory;
     const paths = yield* Path.Path;
+    // A path argument both locates the repository and narrows the universe,
+    // so `codeheat analyze ../other-repo` works from anywhere.
+    const scope = Option.map(path, (relative) => paths.resolve(cwd, relative));
     const report = yield* analyze({
-      path: paths.resolve(cwd, path),
+      cwd: Option.getOrElse(scope, () => cwd),
+      scope: Option.getOrUndefined(scope),
       since,
       include,
       exclude,

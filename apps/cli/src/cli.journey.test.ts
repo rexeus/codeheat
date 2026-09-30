@@ -69,18 +69,3 @@ describe("codeheat usage errors", () => {
       }),
   );
 });
-
-describe("codeheat against a git repository", () => {
-  // These need the engine's analyze and inspect (plan steps 2.2-2.5) and a
-  // temporary git repository built by the engine's testing helper.
-  it.todo(
-    "prints one JSON document to stdout that decodes with the Report schema",
-  );
-  it.todo(
-    "truncates files and couplings to --limit and leaves totals untouched",
-  );
-  it.todo("returns several entries when inspect is given a glob");
-  it.todo("exits 3 outside a git repository");
-  it.todo("exits 4 when no inspect pattern matches");
-  it.todo("exits 2 on an invalid --since");
-});

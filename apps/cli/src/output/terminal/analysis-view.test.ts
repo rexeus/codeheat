@@ -51,7 +51,7 @@ describe("renderAnalysis", () => {
 
   it("ends with one hint about the other output modes", () => {
     expect(plainView().split("\n").at(-1)).toBe(
-      "Use --html for the treemap or --json for the full report.",
+      "Use --json for the full report.",
     );
   });
 });

@@ -24,7 +24,7 @@ export const inspectCommand = Command.make(
   },
   Effect.fn(function* ({ patterns, json, since }) {
     const report = yield* analyze({
-      path: yield* WorkingDirectory,
+      cwd: yield* WorkingDirectory,
       since,
       include: [],
       exclude: [],

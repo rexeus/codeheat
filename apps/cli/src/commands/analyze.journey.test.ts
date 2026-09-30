@@ -1,0 +1,75 @@
+import { Report } from "@codeheat/engine";
+import { describe, expect, it } from "@effect/vitest";
+import { Effect, Schema } from "effect";
+
+import { makeTempDirectory } from "../testing/git-repository.js";
+import { journey } from "../testing/journey-harness.js";
+import { makeCoupledProject } from "../testing/projects.js";
+
+// Real clock: the analysis window is resolved against now, and the commits are dated relative to it.
+describe("codeheat analyze against a git repository", () => {
+  it.live(
+    "prints one JSON document to stdout that decodes with the Report schema",
+    () =>
+      Effect.gen(function* () {
+        const repo = yield* makeCoupledProject;
+
+        const result = yield* journey({
+          args: ["analyze", "--json"],
+          cwd: repo.root,
+        });
+
+        expect(result.exitCode).toBe(0);
+        const report = yield* Schema.decodeUnknownEffect(Report)(
+          JSON.parse(result.stdout),
+        );
+        expect(report.files.map(({ path }) => path)).toStrictEqual([
+          "src/a.ts",
+          "src/b.ts",
+          "src/c.ts",
+        ]);
+        expect(report.couplings).toMatchObject([
+          { a: "src/a.ts", b: "src/b.ts", sharedCommits: 4 },
+        ]);
+      }).pipe(Effect.scoped),
+  );
+
+  it.live(
+    "truncates files and couplings to --limit and leaves totals untouched",
+    () =>
+      Effect.gen(function* () {
+        const repo = yield* makeCoupledProject;
+
+        const result = yield* journey({
+          args: ["analyze", "--json", "--limit", "1"],
+          cwd: repo.root,
+        });
+
+        const report = yield* Schema.decodeUnknownEffect(Report)(
+          JSON.parse(result.stdout),
+        );
+        expect(report.files.map(({ path }) => path)).toStrictEqual([
+          "src/a.ts",
+        ]);
+        expect(report.totals).toStrictEqual({ files: 3, couplings: 1 });
+      }).pipe(Effect.scoped),
+  );
+  it.live("analyzes a repository given as a path from outside it", () =>
+    Effect.gen(function* () {
+      const repo = yield* makeCoupledProject;
+      const elsewhere = yield* makeTempDirectory;
+
+      const result = yield* journey({
+        args: ["analyze", repo.root, "--json"],
+        cwd: elsewhere,
+      });
+
+      expect(result.exitCode).toBe(0);
+      const report = yield* Schema.decodeUnknownEffect(Report)(
+        JSON.parse(result.stdout),
+      );
+      expect(report.repository.scope).toBe(".");
+      expect(report.totals.files).toBe(3);
+    }).pipe(Effect.scoped),
+  );
+});
