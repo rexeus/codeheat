@@ -24,7 +24,9 @@ const Thresholds = Schema.Struct({
   maxCommitFiles: Count,
   /** Fewest distinct co-changed files (`FileStats.breadth`) that make a file a hub. */
   hubMinBreadth: Count,
-  /** Share of the universe, widest files first, that may be hubs. */
+  /** Fewest revisions a file needs to be a hub candidate; test files are never candidates. */
+  hubMinRevisions: Count,
+  /** Share of the hub candidates that may be hubs: widest candidate files first, ties included. */
   hubTopShare: UnitInterval,
   minSharedCommits: Count,
   minDegree: UnitInterval,

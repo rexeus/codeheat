@@ -23,7 +23,11 @@ import { readHistory } from "../history/history.js";
 import type { History } from "../history/history.js";
 import { rankFiles } from "../hotspots/hotspots.js";
 import type { FileMeasure } from "../hotspots/hotspots.js";
-import { HUB_MIN_BREADTH, HUB_TOP_SHARE } from "../hotspots/reasons.js";
+import {
+  HUB_MIN_BREADTH,
+  HUB_MIN_REVISIONS,
+  HUB_TOP_SHARE,
+} from "../hotspots/reasons.js";
 import type { Report } from "../report/report.js";
 import { inventory } from "../universe/inventory.js";
 import type { InventoryFile } from "../universe/inventory.js";
@@ -64,6 +68,7 @@ const NO_HISTORY: History = {
 const THRESHOLDS = {
   maxCommitFiles: MAX_COMMIT_FILES,
   hubMinBreadth: HUB_MIN_BREADTH,
+  hubMinRevisions: HUB_MIN_REVISIONS,
   hubTopShare: HUB_TOP_SHARE,
   minSharedCommits: MIN_SHARED_COMMITS,
   minDegree: MIN_DEGREE,

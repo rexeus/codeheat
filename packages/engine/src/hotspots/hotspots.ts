@@ -5,7 +5,7 @@ import { groupByPath, partnersOf } from "../coupling/partners.js";
 import type { Complexity } from "../metrics/complexity.js";
 import { roundReported } from "../report/precision.js";
 import type { Coupling, FileStats } from "../report/report.js";
-import { describeFile } from "./reasons.js";
+import { describeFile, isHubCandidate } from "./reasons.js";
 
 /** What is known about one universe file before it is scored. */
 export type FileMeasure = {
@@ -48,6 +48,19 @@ const competitionRanks = (
   return ranks;
 };
 
+/** Ranks hub candidates by breadth; a file that is no candidate has no rank. */
+const hubRanking = (measures: ReadonlyArray<FileMeasure>) => {
+  const candidates = measures.filter((m) =>
+    isHubCandidate(m.path, m.revisions),
+  );
+  const ranks = competitionRanks(candidates.map((m) => m.breadth));
+  return {
+    candidates: candidates.length,
+    rankOf: ({ path, revisions, breadth }: FileMeasure): number | undefined =>
+      isHubCandidate(path, revisions) ? ranks.get(breadth) : undefined,
+  };
+};
+
 /**
  * Scores every file as normalized revisions × normalized weighted lines, and
  * returns them best first; equal scores order by path.
@@ -62,7 +75,7 @@ export const rankFiles = (
   const complexityRanks = competitionRanks(
     measures.map((m) => m.complexity.total),
   );
-  const breadthRanks = competitionRanks(measures.map((m) => m.breadth));
+  const hubs = hubRanking(measures);
   const normalizeRevisions = logNormalizer(
     maximum(measures.map((m) => m.revisions)),
   );
@@ -107,7 +120,8 @@ export const rankFiles = (
           of: measures.length,
           partners: partnersOf(path, revisions, coupled.get(path) ?? []),
           breadth,
-          breadthRank: breadthRanks.get(breadth) ?? measures.length,
+          breadthRank: hubs.rankOf(measure),
+          candidates: hubs.candidates,
         }),
       };
     });

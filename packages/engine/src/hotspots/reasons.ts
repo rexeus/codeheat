@@ -1,10 +1,17 @@
 // Owns the explanations attached to a scored file, for humans and agents alike.
+import { isTestFile } from "../coupling/pair.js";
 import type { Partner } from "../coupling/partners.js";
 
 /** Fewest distinct co-changed files that make a file a hub. */
 export const HUB_MIN_BREADTH = 10;
-/** Share of the universe, widest first, that may be hubs. */
+/** Fewest revisions a file needs to be a hub candidate, so one big commit cannot make a hub. */
+export const HUB_MIN_REVISIONS = 5;
+/** Share of the hub candidates, widest first, that may be hubs; ties at the cut-off are included. */
 export const HUB_TOP_SHARE = 0.05;
+
+/** Only frequently changed files that are not tests can be hubs and are ranked by breadth. */
+export const isHubCandidate = (path: string, revisions: number): boolean =>
+  revisions >= HUB_MIN_REVISIONS && !isTestFile(path);
 
 export type ReasonFacts = {
   readonly revisions: number;
@@ -17,14 +24,20 @@ export type ReasonFacts = {
   readonly partners: ReadonlyArray<Partner>;
   /** Distinct other files changed together with this one. */
   readonly breadth: number;
-  /** 1 for the widest file; equal breadths share a rank. */
-  readonly breadthRank: number;
+  /**
+   * 1 for the widest hub candidate; equal breadths share a rank. Undefined
+   * for a file that is not a candidate (see `isHubCandidate`).
+   */
+  readonly breadthRank: number | undefined;
+  /** How many files are hub candidates. */
+  readonly candidates: number;
 };
 
-/** Wide enough and among the widest `HUB_TOP_SHARE` of the universe, at least one file. */
+/** A wide candidate among the widest `HUB_TOP_SHARE` of the candidates, at least one; ties at the cut-off all count. */
 const isHub = (facts: ReasonFacts): boolean =>
+  facts.breadthRank !== undefined &&
   facts.breadth >= HUB_MIN_BREADTH &&
-  facts.breadthRank <= Math.ceil(facts.of * HUB_TOP_SHARE);
+  facts.breadthRank <= Math.ceil(facts.candidates * HUB_TOP_SHARE);
 
 /**
  * Reasons in a fixed order: churn, complexity, then the strongest non-test

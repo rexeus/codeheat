@@ -1,5 +1,5 @@
-// Owns the path-only facts about a coupled pair: how far apart it is and
-// whether one file is the other's test.
+// Owns the path-only facts about files and coupled pairs: how far apart a pair
+// is and whether a file is a test or one file is the other's test.
 
 const TEST_SUFFIXES = [".test", ".spec", "_test"];
 
@@ -26,6 +26,12 @@ export const directoryDistance = (a: string, b: string): number => {
     shared += 1;
   }
   return from.length - shared + (to.length - shared);
+};
+
+/** The stem ends in `.test`, `.spec`, or `_test`. */
+export const isTestFile = (path: string): boolean => {
+  const stem = stemOf(path);
+  return TEST_SUFFIXES.some((suffix) => stem.endsWith(suffix));
 };
 
 /** One path's stem equals the other's stem plus `.test`, `.spec`, or `_test`. */

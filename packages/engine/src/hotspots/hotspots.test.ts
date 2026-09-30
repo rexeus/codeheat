@@ -165,7 +165,7 @@ describe("rankFiles reasons", () => {
   });
 });
 
-/** A file of 4 flat lines changed once, together with `breadth` other files. */
+/** A file of 4 flat lines changed `revisions` times, together with `breadth` other files. */
 const wide = (
   path: string,
   revisions: number,
@@ -187,7 +187,7 @@ const reasonsOf = (
 
 describe("rankFiles hub reason", () => {
   it("names the breadth of a file that is wide enough and among the widest 5% of the universe", () => {
-    // 20 files: the top 5% is ceil(20 * 0.05) = 1 file
+    // the only candidate: the top 5% is ceil(1 * 0.05) = 1 file
     const files = [wide("hub.ts", 5, 10), ...narrowFiles(19)];
 
     expect(reasonsOf(files, "hub.ts")?.at(-1)).toBe(
@@ -206,8 +206,8 @@ describe("rankFiles hub reason", () => {
     ]);
   });
 
-  it("stays silent for a wide file outside the widest 5% of the universe", () => {
-    // breadth ranks 1 and 2 of 20 files; the top 5% is 1 file
+  it("stays silent for a wide candidate outside the widest 5% of the candidates", () => {
+    // breadth ranks 1 and 2 of 2 candidates; the top 5% is ceil(2 * 0.05) = 1 file
     const files = [
       wide("wide.ts", 5, 12),
       wide("next.ts", 5, 11),
@@ -218,6 +218,51 @@ describe("rankFiles hub reason", () => {
       "changes together with 12 different files",
     );
     expect(reasonsOf(files, "next.ts")).toStrictEqual([
+      "changed in 5 commits (#1 of 20)",
+    ]);
+  });
+});
+
+describe("rankFiles hub candidates", () => {
+  it("stays silent for a file changed once, however many files its one commit touched", () => {
+    const files = [wide("once.ts", 1, 49), ...narrowFiles(19)];
+
+    expect(reasonsOf(files, "once.ts")).toStrictEqual([
+      "changed in 1 commit (#1 of 20)",
+    ]);
+  });
+
+  it("neither ranks nor names a test file, however wide", () => {
+    // the test file would take breadth rank 1 and push hub.ts out of the top 5%
+    const files = [
+      wide("hub.test.ts", 5, 30),
+      wide("hub.ts", 5, 10),
+      ...narrowFiles(18),
+    ];
+
+    expect(reasonsOf(files, "hub.test.ts")).toStrictEqual([
+      "changed in 5 commits (#1 of 20)",
+    ]);
+    expect(reasonsOf(files, "hub.ts")?.at(-1)).toBe(
+      "changes together with 10 different files",
+    );
+  });
+
+  it("includes every candidate tied at the cut-off", () => {
+    // 20 candidates: the top 5% is 1 file, and both widest files share rank 1
+    const files = [
+      wide("a.ts", 5, 12),
+      wide("b.ts", 5, 12),
+      ...Array.from({ length: 18 }, (_, index) => wide(`f${index}.ts`, 5, 1)),
+    ];
+
+    expect(reasonsOf(files, "a.ts")?.at(-1)).toBe(
+      "changes together with 12 different files",
+    );
+    expect(reasonsOf(files, "b.ts")?.at(-1)).toBe(
+      "changes together with 12 different files",
+    );
+    expect(reasonsOf(files, "f0.ts")).toStrictEqual([
       "changed in 5 commits (#1 of 20)",
     ]);
   });

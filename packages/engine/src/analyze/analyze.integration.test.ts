@@ -114,6 +114,7 @@ layer(NodeServices.layer)("analyze report", (it) => {
         assert.deepStrictEqual(report.thresholds, {
           maxCommitFiles: 50,
           hubMinBreadth: 10,
+          hubMinRevisions: 5,
           hubTopShare: 0.05,
           minSharedCommits: 3,
           minDegree: 0.3,
