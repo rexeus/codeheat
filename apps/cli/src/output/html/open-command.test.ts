@@ -10,10 +10,12 @@ describe("openCommand", () => {
     });
   });
 
-  it("uses cmd start with an empty title on Windows", () => {
-    expect(openCommand("win32", "C:\\r\\heat.html")).toStrictEqual({
-      command: "cmd",
-      args: ["/c", "start", '""', "C:\\r\\heat.html"],
+  it("hands the path to rundll32 on Windows, never through cmd", () => {
+    const file = "C:\\R&D\\%TEMP%\\heat.html";
+
+    expect(openCommand("win32", file)).toStrictEqual({
+      command: "rundll32.exe",
+      args: ["url.dll,FileProtocolHandler", file],
     });
   });
 

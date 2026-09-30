@@ -9,8 +9,12 @@ export const openCommand = (
     return { command: "open", args: [file] };
   }
   if (platform === "win32") {
-    // `start` is a cmd builtin; its first quoted argument is the window title.
-    return { command: "cmd", args: ["/c", "start", '""', file] };
+    // Not `cmd /c start`: cmd reparses the path, so `&` or `%VAR%` in a
+    // directory name would run commands. rundll32 takes the path verbatim.
+    return {
+      command: "rundll32.exe",
+      args: ["url.dll,FileProtocolHandler", file],
+    };
   }
   return { command: "xdg-open", args: [file] };
 };
