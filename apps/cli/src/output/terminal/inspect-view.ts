@@ -2,7 +2,7 @@
 import type { InspectResult } from "@codeheat/engine";
 
 import { escapeForTerminal } from "../escape.js";
-import { day, percent } from "./format.js";
+import { day, percent, twoDecimals } from "./format.js";
 import type { Style } from "./style.js";
 import { plain, renderTable } from "./table.js";
 
@@ -32,7 +32,7 @@ const entryLines = (entry: Entry, style: Style): ReadonlyArray<string> => [
   style.bold(escapeForTerminal(entry.path)),
   `rank #${entry.rank} of ${entry.of}, score ${entry.score.toFixed(2)}`,
   `${entry.revisions} revisions, +${entry.linesAdded} -${entry.linesDeleted} lines, ${entry.loc} loc`,
-  `indentation complexity ${entry.complexity.total} (mean ${entry.complexity.mean}, max ${entry.complexity.max})`,
+  `indentation complexity ${entry.complexity.total} (mean ${twoDecimals(entry.complexity.mean)}, max ${entry.complexity.max})`,
   ...entry.reasons.map((reason) => `- ${escapeForTerminal(reason)}`),
   "",
   style.bold("Changes together with"),

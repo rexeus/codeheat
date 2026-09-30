@@ -63,6 +63,17 @@ describe("renderInspect", () => {
     );
   });
 
+  it("shows the complexity mean with at most two decimals", () => {
+    const precise = {
+      ...entry,
+      complexity: { total: 261, mean: 1.1809, max: 6 },
+    };
+
+    expect(renderInspect(result([precise]), makeStyle(false))).toContain(
+      "indentation complexity 261 (mean 1.18, max 6)",
+    );
+  });
+
   it("separates several matches and says when a file has no partners", () => {
     const lonely = { ...entry, path: "lonely.ts", partners: [] };
 
