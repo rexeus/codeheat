@@ -51,14 +51,14 @@ const runLint = (
 };
 
 /**
- * Lints `source` as a file inside `packages/engine/src`, where the
- * override-scoped import rules apply. The probe lives in the real package
- * directory under a unique name and is removed in `afterEach`.
+ * Lints `source` as a file inside `<directory>` (e.g. `packages/engine/src`),
+ * where the override-scoped import rules apply. The probe lives in the real
+ * package directory under a unique name and is removed in `afterEach`.
  */
-const runEngineLint = (source: string) => {
+const runPackageLint = (directory: string, source: string) => {
   const probe = join(
     repositoryRoot,
-    "packages/engine/src",
+    directory,
     `lint-probe-${randomUUID()}.ts`,
   );
   probeFiles.push(probe);
@@ -79,11 +79,11 @@ const runEngineLint = (source: string) => {
 };
 
 afterEach(() => {
-  for (const fixtureRoot of fixtureRoots.splice(0)) {
-    rmSync(fixtureRoot, { force: true, recursive: true });
-  }
   for (const probe of probeFiles.splice(0)) {
     rmSync(probe, { force: true });
+  }
+  for (const fixtureRoot of fixtureRoots.splice(0)) {
+    rmSync(fixtureRoot, { force: true, recursive: true });
   }
 });
 
@@ -161,7 +161,8 @@ describe("lint regression probes", () => {
 
 describe("engine import boundary probes", () => {
   it("keeps node: builtins out of the engine", () => {
-    const result = runEngineLint(
+    const result = runPackageLint(
+      "packages/engine/src",
       'import { readFileSync } from "node:fs";\nexport const read = readFileSync;\n',
     );
 
@@ -173,7 +174,8 @@ describe("engine import boundary probes", () => {
   });
 
   it("keeps bare builtin imports out of the engine", () => {
-    const result = runEngineLint(
+    const result = runPackageLint(
+      "packages/engine/src",
       'import { readFileSync } from "fs";\nexport const read = readFileSync;\n',
     );
 
@@ -182,7 +184,8 @@ describe("engine import boundary probes", () => {
   });
 
   it("keeps workspace packages out of the engine", () => {
-    const result = runEngineLint(
+    const result = runPackageLint(
+      "packages/engine/src",
       'import { renderReportHtml } from "@codeheat/viewer";\nexport const render = renderReportHtml;\n',
     );
 
@@ -191,5 +194,47 @@ describe("engine import boundary probes", () => {
     expect(result.stdout).toContain(
       "engine is the floor of the dependency graph",
     );
+  });
+});
+
+describe("viewer import boundaries", () => {
+  it("rejects an Effect import", () => {
+    const result = runPackageLint(
+      "packages/viewer/src",
+      'import { Effect } from "effect";\nexport const probe = Effect;\n',
+    );
+
+    expect(result.status).not.toBe(0);
+    expect(result.stdout).toContain("viewer is plain browser code");
+  });
+
+  it("rejects a runtime import of the engine", () => {
+    const result = runPackageLint(
+      "packages/viewer/src",
+      'import { analyze } from "@codeheat/engine";\nexport const probe = analyze;\n',
+    );
+
+    expect(result.status).not.toBe(0);
+    expect(result.stdout).toContain("viewer may import engine types only");
+  });
+
+  it("rejects an import of the CLI", () => {
+    const result = runPackageLint(
+      "packages/viewer/src",
+      'import { cli } from "@codeheat/cli";\nexport const probe = cli;\n',
+    );
+
+    expect(result.status).not.toBe(0);
+    expect(result.stdout).toContain("viewer renders a Report");
+  });
+
+  it("allows a type import from the engine", () => {
+    const result = runPackageLint(
+      "packages/viewer/src",
+      'import type { Report } from "@codeheat/engine";\nexport type Probe = Report;\n',
+    );
+
+    expect(result.stdout).not.toContain("no-restricted-imports");
+    expect(result.status).toBe(0);
   });
 });
