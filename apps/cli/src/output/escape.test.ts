@@ -19,7 +19,17 @@ describe("escapeForTerminal", () => {
     expect(escapeForTerminal("a\u2028b\u202Ec")).toBe("a\\u2028b\\u202ec");
   });
 
-  it("doubles backslashes so escapes stay unambiguous", () => {
-    expect(escapeForTerminal("a\\u001b")).toBe("a\\\\u001b");
+  it("leaves Windows paths untouched so they stay pasteable", () => {
+    expect(escapeForTerminal("C:\\Users\\me\\codeheat-report.html")).toBe(
+      "C:\\Users\\me\\codeheat-report.html",
+    );
+    expect(escapeForTerminal("\\\\server\\share\\x.ts")).toBe(
+      "\\\\server\\share\\x.ts",
+    );
+  });
+
+  it("doubles a backslash that could be read as one of our escapes", () => {
+    expect(escapeForTerminal("a\\u001b.ts")).toBe("a\\\\u001b.ts");
+    expect(escapeForTerminal("a\\\u001B")).toBe("a\\\\\\u001b");
   });
 });
