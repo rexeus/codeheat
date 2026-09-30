@@ -54,7 +54,11 @@ export type AnalyzeOptions = {
   readonly toolVersion: string;
 };
 
-const NO_HISTORY: History = { commits: [], files: new Map() };
+const NO_HISTORY: History = {
+  paths: [],
+  commits: [],
+  files: new Map(),
+};
 
 const THRESHOLDS = {
   maxCommitFiles: MAX_COMMIT_FILES,
@@ -107,6 +111,7 @@ const analyzeRepository = (
     const measures = measureFiles(files, history);
     const { couplingCommits, couplings } = findCouplings(
       history.commits,
+      history.paths,
       new Map(measures.map((measure) => [measure.path, measure.revisions])),
     );
     const ranked = rankFiles(measures, couplings);

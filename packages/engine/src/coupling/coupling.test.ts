@@ -1,6 +1,18 @@
 import { describe, expect, it } from "vitest";
 
-import { findCouplings } from "./coupling.js";
+import { findCouplings as findCouplingsByFileId } from "./coupling.js";
+
+/** Numbers the paths in order of first appearance, as history does for its universe. */
+const findCouplings = (
+  commits: ReadonlyArray<ReadonlyArray<string>>,
+  revisions: ReadonlyMap<string, number>,
+) => {
+  const paths = [...new Set(commits.flat())];
+  const indexed = commits.map((commit) =>
+    Uint32Array.from(commit, (path) => paths.indexOf(path)),
+  );
+  return findCouplingsByFileId(indexed, paths, revisions);
+};
 
 const repeat = <T>(count: number, value: T): Array<T> =>
   Array.from({ length: count }, () => value);

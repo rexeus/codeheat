@@ -16,8 +16,10 @@ type FileHistory = {
 };
 
 export type History = {
-  /** Per commit that touched the universe, the distinct universe paths it touched. */
-  readonly commits: ReadonlyArray<ReadonlyArray<string>>;
+  /** The universe paths; a file id is an index into this list. */
+  readonly paths: ReadonlyArray<string>;
+  /** Per commit that touched the universe, the distinct file ids it touched. */
+  readonly commits: ReadonlyArray<Uint32Array>;
   /** Only files with at least one revision. */
   readonly files: ReadonlyMap<string, FileHistory>;
 };
@@ -40,22 +42,23 @@ const addLines = (total: Lines | undefined, more: Lines): Lines => ({
 });
 
 /**
- * The lines the commit changed per current universe path. Records the
- * commit's renames in `renamedTo`, which maps old paths to current ones.
+ * The lines the commit changed per file id. Records the commit's renames in
+ * `renamedTo`, which maps old paths to current ones.
  */
-const linesByUniversePath = (
+const linesByFileId = (
   commit: Commit,
   renamedTo: Map<string, string>,
-  universe: ReadonlySet<string>,
-): ReadonlyMap<string, Lines> => {
-  const lines = new Map<string, Lines>();
+  fileIds: ReadonlyMap<string, number>,
+): ReadonlyMap<number, Lines> => {
+  const lines = new Map<number, Lines>();
   for (const change of commit.changes) {
     const path = renamedTo.get(change.path) ?? change.path;
     if (change.renamedFrom !== undefined) {
       renamedTo.set(change.renamedFrom, path);
     }
-    if (universe.has(path)) {
-      lines.set(path, addLines(lines.get(path), change));
+    const id = fileIds.get(path);
+    if (id !== undefined) {
+      lines.set(id, addLines(lines.get(id), change));
     }
   }
   return lines;
@@ -77,24 +80,26 @@ export const readHistory = (
   Effect.gen(function* () {
     const git = yield* Git;
     const renamedTo = new Map<string, string>();
-    const commits: Array<ReadonlyArray<string>> = [];
-    const files = new Map<string, FileHistory>();
+    const paths = [...options.universe];
+    const fileIds = new Map(paths.map((path, id) => [path, id]));
+    const commits: Array<Uint32Array> = [];
+    const fileHistories = new Map<number, FileHistory>();
 
     const absorb = (commit: Commit): void => {
       if (options.skipCommits.has(commit.sha)) {
         return;
       }
-      const touched = linesByUniversePath(commit, renamedTo, options.universe);
-      for (const [path, lines] of touched) {
-        const before = files.get(path);
-        files.set(path, {
+      const touched = linesByFileId(commit, renamedTo, fileIds);
+      for (const [id, lines] of touched) {
+        const before = fileHistories.get(id);
+        fileHistories.set(id, {
           revisions: (before?.revisions ?? 0) + 1,
           linesAdded: (before?.linesAdded ?? 0) + lines.added,
           linesDeleted: (before?.linesDeleted ?? 0) + lines.deleted,
         });
       }
       if (touched.size > 0) {
-        commits.push([...touched.keys()]);
+        commits.push(Uint32Array.from(touched.keys()));
       }
     };
 
@@ -118,5 +123,12 @@ export const readHistory = (
         ),
       );
 
-    return { commits, files };
+    const files = new Map<string, FileHistory>();
+    for (const [id, path] of paths.entries()) {
+      const fileHistory = fileHistories.get(id);
+      if (fileHistory !== undefined) {
+        files.set(path, fileHistory);
+      }
+    }
+    return { paths, commits, files };
   });
