@@ -58,6 +58,7 @@ pnpm --filter codeheat dev <args>                     # run the CLI from source
 - The engine imports no workspace package and no `node:` builtin; it reaches the platform through Effect services (`FileSystem`, `Path`, `ChildProcessSpawner`).
 - The viewer is plain browser code: no Effect, no `node:`, and engine **types** only (`import type`).
 - The CLI composes engine and viewer through their entry points only.
+- Inside a package, group code in one folder per responsibility (`git/`, `history/`, `report/`, …). Types and errors live with the module that owns them; there is no shared `errors.ts` or `types.ts`. A folder whose files serve different responsibilities is two folders.
 - A package's only barrel is its `src/index.ts`. Every export there has a production caller; knip rejects the rest. Inside a package, import the module that owns a symbol.
 
 `no-restricted-imports` in `.oxlintrc.json`, `scripts/check-module-reexports.ts`, and knip enforce these rules. If a rule blocks an import, the import is wrong, not the rule.
@@ -74,14 +75,3 @@ pnpm --filter codeheat dev <args>                     # run the CLI from source
 - Chat is German; everything in the repo (docs, code, comments, commits) is English.
 - Commits follow Conventional Commits; branches are named `<type>/<topic>`.
 - Follow-ups belong in GitHub issues, not source TODOs.
-
-<!-- BEGIN:turborepo-agent-rules -->
-
-# This is NOT the Turborepo you know
-
-Turborepo configuration, task behavior, and CLI commands can vary between installed versions and may differ from your training data. Resolve the `turbo` package from this file's directory or relevant workspace; in monorepos, it may not be visible from the repository root. For example, run `node -p "require.resolve('turbo/package.json')"` from a workspace that depends on `turbo`.
-
-Read `docs/README.md` inside that installed package first, then read the relevant pages from its `docs/` directory before changing Turborepo configuration or commands. Heed deprecation notices. These bundled docs match the installed package version and are available without network access.
-
-This block is written and re-added by `turbo` before repository-scoped commands when an AI agent is detected. In the Turborepo source repository, its template is defined in `crates/turborepo-cli/src/cli/agent_guidance.rs`. Removing the managed block while updates are enabled means a later qualifying invocation will add it again. Set `"agentGuidance": false` in the root `turbo.json` or `turbo.jsonc` to opt out; this does not remove an existing block. Keep the block committed with your work to avoid an uncommitted change on the next agent invocation.
-<!-- END:turborepo-agent-rules -->
