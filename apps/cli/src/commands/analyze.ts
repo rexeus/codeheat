@@ -1,7 +1,8 @@
 import { analyze } from "@codeheat/engine";
-import { Effect } from "effect";
+import { Effect, Option } from "effect";
 import { Argument, Command, Flag } from "effect/cli";
 
+import { writeHtmlReport } from "../output/html/write-html-report.js";
 import { limitReport } from "../output/limit-report.js";
 import { printResult } from "../output/print-result.js";
 import { warnIfShallow } from "../output/shallow-warning.js";
@@ -12,6 +13,7 @@ import { resolveAnalysisTarget } from "./analysis-target.js";
 import { jsonFlag, sinceFlag } from "./shared-flags.js";
 
 const DEFAULT_LIMIT = 25;
+const DEFAULT_HTML_FILE = "codeheat-report.html";
 
 export const analyzeCommand = Command.make(
   "analyze",
@@ -34,6 +36,24 @@ export const analyzeCommand = Command.make(
       Flag.withDescription("Glob of files to leave out; repeatable"),
       Flag.atLeast(0),
     ),
+    html: Flag.Boolean("html").pipe(
+      Flag.withDescription(
+        "Also write the treemap as a self-contained HTML file and open it",
+      ),
+      Flag.withDefault(false),
+    ),
+    out: Flag.String("out").pipe(
+      Flag.withDescription(
+        `Where --html writes the treemap (default ${DEFAULT_HTML_FILE}); implies --html`,
+      ),
+      Flag.optional,
+    ),
+    open: Flag.Boolean("open").pipe(
+      Flag.withDescription(
+        "Open the treemap in the browser; --no-open skips it",
+      ),
+      Flag.withDefault(true),
+    ),
     limit: Flag.Int("limit").pipe(
       Flag.withDescription(
         `Files and couplings to report, each; 0 for no limit (default ${DEFAULT_LIMIT})`,
@@ -45,10 +65,12 @@ export const analyzeCommand = Command.make(
       ),
     ),
   },
-  Effect.fn(function* ({ path, json, since, include, exclude, limit }) {
+  Effect.fn(function* (flags) {
+    const { path, json, since, include, exclude, limit } = flags;
+    const cwd = yield* WorkingDirectory;
     // A path argument both locates the repository and narrows the universe,
     // so `codeheat analyze ../other-repo` works from anywhere.
-    const target = yield* resolveAnalysisTarget(yield* WorkingDirectory, path);
+    const target = yield* resolveAnalysisTarget(cwd, path);
     const report = yield* analyze({
       ...target,
       since,
@@ -57,6 +79,14 @@ export const analyzeCommand = Command.make(
       toolVersion: version,
     });
     yield* warnIfShallow(report);
+    if (flags.html || Option.isSome(flags.out)) {
+      yield* writeHtmlReport({
+        report,
+        file: Option.getOrElse(flags.out, () => DEFAULT_HTML_FILE),
+        cwd,
+        open: flags.open,
+      });
+    }
     // --limit bounds the JSON document; the terminal view picks its own top entries.
     return yield* printResult(
       json ? limitReport(report, limit) : report,
@@ -72,6 +102,10 @@ export const analyzeCommand = Command.make(
     {
       command: "codeheat analyze",
       description: "Top hotspots and couplings of the current repository",
+    },
+    {
+      command: "codeheat analyze --html",
+      description: "Open the treemap of the current repository in the browser",
     },
     {
       command:

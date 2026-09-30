@@ -89,6 +89,6 @@ export const renderAnalysis = (report: Report, style: Style): string => {
       ? couplings
       : ["No change coupling above the thresholds."]),
     "",
-    style.dim("Use --json for the full report."),
+    style.dim("Use --html for the treemap or --json for the full report."),
   ].join("\n");
 };

@@ -4,6 +4,7 @@ import { Runtime, Schema } from "effect";
 import { CliError } from "effect/cli";
 
 import { escapeForTerminal } from "../output/escape.js";
+import type { HtmlWriteFailed } from "../output/html/html-write-failed.js";
 import type { NothingMatched } from "./nothing-matched.js";
 import type { PathNotFound } from "./path-not-found.js";
 
@@ -33,6 +34,7 @@ export type KnownFailure =
   | AnalyzeError
   | NothingMatched
   | PathNotFound
+  | HtmlWriteFailed
   | CliError.CliError;
 
 type Failure = { readonly message: string; readonly exitCode: number };
@@ -51,7 +53,7 @@ const cliFailure = (error: CliError.CliError): Failure => {
 };
 
 const engineFailure = (
-  error: AnalyzeError | NothingMatched | PathNotFound,
+  error: AnalyzeError | NothingMatched | PathNotFound | HtmlWriteFailed,
 ): Failure => {
   if (error._tag === "InvalidSince") {
     return {
@@ -75,6 +77,12 @@ const engineFailure = (
     return {
       message: "git was not found on PATH; codeheat needs git",
       exitCode: NOT_A_REPOSITORY,
+    };
+  }
+  if (error._tag === "HtmlWriteFailed") {
+    return {
+      message: `cannot write ${error.path}: ${error.reason}`,
+      exitCode: UNEXPECTED,
     };
   }
   if (error._tag === "GitCommandFailed") {

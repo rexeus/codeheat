@@ -12,6 +12,7 @@
   "devDependencies": {
     "@codeheat/engine": "workspace:*",
     "@codeheat/tsconfig": "workspace:*",
+    "@codeheat/viewer": "workspace:*",
     "@effect/platform-node": "catalog:",
     "@effect/vitest": "catalog:",
     "@types/node": "catalog:",
