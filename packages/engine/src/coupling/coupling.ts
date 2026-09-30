@@ -16,32 +16,32 @@ const byStrength = (a: Coupling, b: Coupling): number =>
   Order.String(a.a, b.a) ||
   Order.String(a.b, b.b);
 
-const countPairs = (
-  commit: Uint32Array,
-  fileCount: number,
-  shared: Map<number, number>,
-): void => {
+/**
+ * Shared commits per pair of file ids, nested as `low -> high -> count`.
+ * One map over all pairs would hit V8's limit of about 16.7M entries on a
+ * large repository; every inner map stays far below it.
+ */
+type SharedCommits = Map<number, Map<number, number>>;
+
+const countPairs = (commit: Uint32Array, shared: SharedCommits): void => {
   for (const low of commit) {
     for (const high of commit) {
       if (low < high) {
-        const pair = low * fileCount + high;
-        shared.set(pair, (shared.get(pair) ?? 0) + 1);
+        const partners = shared.get(low) ?? new Map<number, number>();
+        partners.set(high, (partners.get(high) ?? 0) + 1);
+        shared.set(low, partners);
       }
     }
   }
 };
 
-/**
- * Counts the commits each pair of file ids shares, keyed `low * fileCount + high`.
- * Ids within one commit are distinct.
- */
+/** Counts the commits each pair of file ids shares. Ids within one commit are distinct. */
 const countSharedCommits = (
   commits: ReadonlyArray<Uint32Array>,
-  fileCount: number,
-): ReadonlyMap<number, number> => {
-  const shared = new Map<number, number>();
+): SharedCommits => {
+  const shared: SharedCommits = new Map();
   for (const commit of commits) {
-    countPairs(commit, fileCount, shared);
+    countPairs(commit, shared);
   }
   return shared;
 };
@@ -65,30 +65,27 @@ export const findCouplings = (
   const counted = commits.filter((commit) => commit.length <= MAX_COMMIT_FILES);
   const revisionsById = paths.map((path) => revisions.get(path) ?? 0);
   const couplings: Array<Coupling> = [];
-  for (const [pair, sharedCommits] of countSharedCommits(
-    counted,
-    paths.length,
-  )) {
-    const high = pair % paths.length;
-    const low = (pair - high) / paths.length;
-    const lowPath = paths[low] ?? "";
-    const highPath = paths[high] ?? "";
-    const [a, b] =
-      Order.String(lowPath, highPath) <= 0
-        ? [lowPath, highPath]
-        : [highPath, lowPath];
-    const meanRevisions =
-      ((revisionsById[low] ?? 0) + (revisionsById[high] ?? 0)) / 2;
-    const degree = sharedCommits / meanRevisions;
-    if (sharedCommits >= MIN_SHARED_COMMITS && degree >= MIN_DEGREE) {
-      couplings.push({
-        a,
-        b,
-        sharedCommits,
-        degree: roundReported(degree),
-        distance: directoryDistance(a, b),
-        testPair: isTestPair(a, b),
-      });
+  for (const [low, partners] of countSharedCommits(counted)) {
+    for (const [high, sharedCommits] of partners) {
+      const lowPath = paths[low] ?? "";
+      const highPath = paths[high] ?? "";
+      const [a, b] =
+        Order.String(lowPath, highPath) <= 0
+          ? [lowPath, highPath]
+          : [highPath, lowPath];
+      const meanRevisions =
+        ((revisionsById[low] ?? 0) + (revisionsById[high] ?? 0)) / 2;
+      const degree = sharedCommits / meanRevisions;
+      if (sharedCommits >= MIN_SHARED_COMMITS && degree >= MIN_DEGREE) {
+        couplings.push({
+          a,
+          b,
+          sharedCommits,
+          degree: roundReported(degree),
+          distance: directoryDistance(a, b),
+          testPair: isTestPair(a, b),
+        });
+      }
     }
   }
   return {
