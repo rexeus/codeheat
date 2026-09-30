@@ -2,8 +2,9 @@ import { NodeServices } from "@effect/platform-node";
 import { assert, layer } from "@effect/vitest";
 import { Effect, FileSystem, Path } from "effect";
 
+import { setScopedEnv } from "../testing/scoped-env.js";
 import { makeTempRepository } from "../testing/temp-repository.js";
-import { NotAGitRepository } from "./git-errors.js";
+import { GitCommandFailed, NotAGitRepository } from "./git-errors.js";
 import { Git } from "./git.js";
 import {
   readHead,
@@ -60,6 +61,63 @@ layer(NodeServices.layer)("repositoryRoot", (it) => {
       }),
   );
 });
+
+layer(NodeServices.layer)(
+  "repositoryRoot failures other than absence",
+  (it) => {
+    it.effect(
+      "fails with NotAGitRepository inside a bare repository, which has no work tree",
+      () =>
+        Effect.gen(function* () {
+          const path = yield* Path.Path;
+          const repo = yield* makeTempRepository;
+          const bare = path.join(repo.directory, "bare.git");
+          yield* repo.git("init", "--quiet", "--bare", bare);
+
+          const failure = yield* Effect.flip(repositoryRoot(bare));
+
+          assert.deepStrictEqual(
+            failure,
+            new NotAGitRepository({ path: bare }),
+          );
+        }),
+    );
+
+    it.effect(
+      "fails with GitCommandFailed for a repository git refuses to trust",
+      () =>
+        Effect.gen(function* () {
+          const repo = yield* makeTempRepository;
+          yield* setScopedEnv({ GIT_TEST_ASSUME_DIFFERENT_OWNER: "1" });
+
+          const failure = yield* Effect.flip(repositoryRoot(repo.directory));
+
+          assert.instanceOf(failure, GitCommandFailed);
+          assert.include(failure.stderr, "dubious ownership");
+        }),
+    );
+
+    it.effect(
+      "fails with GitCommandFailed carrying stderr for a fatal error that is not about the repository's absence",
+      () =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const repo = yield* makeTempRepository;
+          yield* fs.writeFileString(
+            path.join(repo.directory, ".git", "config"),
+            "[broken\n",
+          );
+
+          const failure = yield* Effect.flip(repositoryRoot(repo.directory));
+
+          assert.instanceOf(failure, GitCommandFailed);
+          assert.strictEqual(failure.exitCode, 128);
+          assert.include(failure.stderr, "bad config");
+        }),
+    );
+  },
+);
 
 layer(NodeServices.layer)("repositoryScope", (it) => {
   it.effect("resolves a relative scope against cwd to a POSIX path", () =>

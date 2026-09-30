@@ -6,8 +6,13 @@ import { GitCommandFailed, NotAGitRepository } from "./git-errors.js";
 import type { GitError } from "./git-errors.js";
 import { Git } from "./git.js";
 
-/** Git's exit code for "not a git repository" and other fatal usage errors. */
+/** Git's exit code for "not a git repository" and other fatal errors. */
 const FATAL_EXIT_CODE = 128;
+/**
+ * The parts of git's message that say the directory is outside any work tree:
+ * no repository at all, or a bare repository or `.git` directory.
+ */
+const NOT_A_REPOSITORY = /not a git repository|must be run in a work tree/iu;
 /** Exit code of `rev-parse --verify --quiet` for a ref that does not resolve. */
 const UNRESOLVED_EXIT_CODE = 1;
 
@@ -15,7 +20,7 @@ const notARepository = (
   directory: string,
   failure: GitCommandFailed,
 ): GitError =>
-  failure.exitCode === FATAL_EXIT_CODE
+  failure.exitCode === FATAL_EXIT_CODE && NOT_A_REPOSITORY.test(failure.stderr)
     ? new NotAGitRepository({ path: directory })
     : failure;
 
