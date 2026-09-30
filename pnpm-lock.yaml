@@ -268,9 +268,15 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 24.19.0
+      '@types/picomatch':
+        specifier: 'catalog:'
+        version: 4.0.3
       effect:
         specifier: 'catalog:'
         version: 4.0.0-rc.118
+      picomatch:
+        specifier: 'catalog:'
+        version: 4.0.7
       rolldown:
         specifier: 'catalog:'
         version: 1.2.11

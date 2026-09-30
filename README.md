@@ -105,7 +105,7 @@ The example shows an illustrative shop repository (the one in `fixtures/report.s
 
 ### `codeheat inspect <file-or-glob...>`
 
-Repository-relative paths or globs (quote globs so the shell leaves them alone). The whole repository is analyzed, so ranks and partners stay relative to all files. Takes `--json` and `--since`.
+Paths or globs. A path without glob characters is absolute or relative to the working directory, so `codeheat inspect b.ts` works inside `src/`; a glob is repository-relative (quote globs so the shell leaves them alone). A path outside the repository matches nothing. The whole repository is analyzed, so ranks and partners stay relative to all files. Takes `--json` and `--since`.
 
 ### Exit codes
 

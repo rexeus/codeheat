@@ -9,6 +9,7 @@ import { warnIfShallow } from "../output/shallow-warning.js";
 import { renderInspect } from "../output/terminal/inspect-view.js";
 import { version } from "../version.js";
 import { WorkingDirectory } from "../working-directory.js";
+import { resolveFocusPatterns } from "./focus-patterns.js";
 import { jsonFlag, sinceFlag } from "./shared-flags.js";
 
 export const inspectCommand = Command.make(
@@ -16,7 +17,7 @@ export const inspectCommand = Command.make(
   {
     patterns: Argument.String("file-or-glob").pipe(
       Argument.withDescription(
-        "Repository-relative path or glob, quoted so the shell leaves it alone",
+        "Path (absolute or relative to the working directory) or repository-relative glob, quoted so the shell leaves it alone",
       ),
       Argument.variadic({ min: 1 }),
     ),
@@ -24,15 +25,16 @@ export const inspectCommand = Command.make(
     since: sinceFlag,
   },
   Effect.fn(function* ({ patterns, json, since }) {
+    const cwd = yield* WorkingDirectory;
     const report = yield* analyze({
-      cwd: yield* WorkingDirectory,
+      cwd,
       since,
       include: [],
       exclude: [],
       toolVersion: version,
     });
     yield* warnIfShallow(report);
-    const result = inspect(report, patterns);
+    const result = inspect(report, yield* resolveFocusPatterns(cwd, patterns));
     if (result.matches.length === 0) {
       return yield* new NothingMatched({ patterns: result.unmatched });
     }
