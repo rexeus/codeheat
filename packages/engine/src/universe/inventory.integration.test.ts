@@ -99,7 +99,9 @@ layer(NodeServices.layer)("inventory name rules", (it) => {
         ]);
       }),
   );
+});
 
+layer(NodeServices.layer)("inventory globs", (it) => {
   it.effect("replaces the allow-list with include globs", () =>
     Effect.gen(function* () {
       const repo = yield* makeTempRepository;
