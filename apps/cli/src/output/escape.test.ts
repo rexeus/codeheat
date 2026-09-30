@@ -28,8 +28,22 @@ describe("escapeForTerminal", () => {
     );
   });
 
-  it("doubles a backslash that could be read as one of our escapes", () => {
+  it("leaves backslashes before ordinary letters untouched", () => {
+    expect(escapeForTerminal("C:\\Users\\me\\src\\utils\\x.ts")).toBe(
+      "C:\\Users\\me\\src\\utils\\x.ts",
+    );
+  });
+
+  it("doubles a backslash run before something that reads as an escape", () => {
     expect(escapeForTerminal("a\\u001b.ts")).toBe("a\\\\u001b.ts");
-    expect(escapeForTerminal("a\\\u001B")).toBe("a\\\\\\u001b");
+    expect(escapeForTerminal("a\\\\u001b.ts")).toBe("a\\\\\\\\u001b.ts");
+  });
+
+  it("prints a literal backslash before ESC differently from a literal escape text", () => {
+    const literalEscapeText = escapeForTerminal("a\\\\u001b.ts");
+    const backslashThenEsc = escapeForTerminal("a\\\u001B.ts");
+
+    expect(backslashThenEsc).toBe("a\\\\\\u001b.ts");
+    expect(literalEscapeText).not.toBe(backslashThenEsc);
   });
 });
