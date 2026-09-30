@@ -1,7 +1,7 @@
 import type { Report } from "@codeheat/engine";
 
 import { h } from "./dom.js";
-import { emptyNotice } from "./empty-notice.js";
+import { EMPTY_NOTICE } from "./empty-notice.js";
 
 /** Keeps a flag such as `--since` on one line; the text splits before each flag. */
 const withFlags = (text: string): (Node | string)[] =>
@@ -14,13 +14,12 @@ export const showEmptyNotice = (report: Report, stage: HTMLElement): void => {
   if (report.files.length > 0) {
     return;
   }
-  const { title, detail } = emptyNotice(report.window);
   stage.append(
     h(
       "div",
       "empty",
-      h("strong", "empty-title", title),
-      h("p", "empty-detail", ...withFlags(detail)),
+      h("strong", "empty-title", EMPTY_NOTICE.title),
+      h("p", "empty-detail", ...withFlags(EMPTY_NOTICE.detail)),
     ),
   );
 };

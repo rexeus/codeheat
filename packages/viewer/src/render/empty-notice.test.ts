@@ -1,16 +1,14 @@
 import { describe, expect, it } from "vitest";
 
-import { reportOf } from "../testing/reports.js";
-import { emptyNotice } from "./empty-notice.js";
+import { EMPTY_NOTICE } from "./empty-notice.js";
 
-describe("emptyNotice", () => {
-  it("names the analysis window and the flags that widen it", () => {
-    const { window } = reportOf([]);
-
-    expect(emptyNotice(window)).toEqual({
-      title: "No files to show",
+describe("EMPTY_NOTICE", () => {
+  it("points at the path argument and the file selection flags, not the time window", () => {
+    expect(EMPTY_NOTICE).toEqual({
+      title: "No files in the analysis universe",
       detail:
-        "No files were analyzed between 2025-09-29 and 2026-09-29. Widen the window with --since, or select files with --include.",
+        "No code files were selected, so there is nothing to map. Check the path argument, or choose files with --include and --exclude.",
     });
+    expect(EMPTY_NOTICE.detail).not.toContain("--since");
   });
 });
