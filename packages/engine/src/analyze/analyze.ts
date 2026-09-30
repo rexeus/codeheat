@@ -16,6 +16,7 @@ import { Git } from "../git/git.js";
 import {
   locateRepository,
   readHead,
+  readShallowBoundary,
   repositoryScope,
 } from "../git/repository.js";
 import { readHistory } from "../history/history.js";
@@ -88,6 +89,7 @@ const analyzeRepository = (
   Effect.gen(function* () {
     const path = yield* Path.Path;
     const head = yield* readHead;
+    const shallowBoundary = yield* readShallowBoundary(root);
     const files = yield* inventory({
       root,
       scope,
@@ -99,6 +101,7 @@ const analyzeRepository = (
         ? NO_HISTORY
         : yield* readHistory({
             ...range,
+            skipCommits: shallowBoundary ?? new Set(),
             universe: new Set(files.map((file) => file.path)),
           });
     const measures = measureFiles(files, history);
@@ -111,7 +114,12 @@ const analyzeRepository = (
       schemaVersion: 1,
       tool: { name: "codeheat", version: options.toolVersion },
       generatedAt: range.until,
-      repository: { name: path.basename(root), head, scope },
+      repository: {
+        name: path.basename(root),
+        head,
+        scope,
+        shallow: shallowBoundary !== undefined,
+      },
       window: { ...range, commits: history.commits.length, couplingCommits },
       thresholds: THRESHOLDS,
       totals: { files: ranked.length, couplings: couplings.length },

@@ -1,8 +1,8 @@
 // Owns locating the repository an analysis belongs to and the part of it in scope.
 import { Effect, FileSystem, Path } from "effect";
 
-import { NotAGitRepository } from "./git-errors.js";
-import type { GitCommandFailed, GitError } from "./git-errors.js";
+import { GitCommandFailed, NotAGitRepository } from "./git-errors.js";
+import type { GitError } from "./git-errors.js";
 import { Git } from "./git.js";
 
 /** Git's exit code for "not a git repository" and other fatal usage errors. */
@@ -94,3 +94,44 @@ export const readHead: Effect.Effect<string | null, GitError, Git> = Effect.gen(
     return output.trim() === "" ? null : output.trim();
   },
 );
+
+const SHALLOW_FILE_ARGS = ["rev-parse", "--git-path", "shallow"];
+
+/**
+ * The commits a shallow clone was cut at, or undefined for a complete
+ * repository. Git records such a commit as if it had added the whole tree, so
+ * its changes say nothing about the files.
+ *
+ * Runs git inside `root`, so the `Git` service must be built for it.
+ */
+export const readShallowBoundary = (
+  root: string,
+): Effect.Effect<
+  ReadonlySet<string> | undefined,
+  GitError,
+  Git | FileSystem.FileSystem | Path.Path
+> =>
+  Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+    const git = yield* Git;
+    const shallow = yield* git.text(["rev-parse", "--is-shallow-repository"]);
+    if (shallow.trim() !== "true") {
+      return undefined;
+    }
+    const file = path.resolve(
+      root,
+      (yield* git.text(SHALLOW_FILE_ARGS)).trim(),
+    );
+    const content = yield* fs.readFileString(file).pipe(
+      Effect.mapError(
+        (error) =>
+          new GitCommandFailed({
+            args: SHALLOW_FILE_ARGS,
+            exitCode: -1,
+            stderr: error.message,
+          }),
+      ),
+    );
+    return new Set(content.split("\n").filter((line) => line !== ""));
+  });

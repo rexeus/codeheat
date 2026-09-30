@@ -22,6 +22,7 @@ const history = (
   readHistory({
     since: "2026-01-01T00:00:00.000Z",
     until: "2026-12-31T00:00:00.000Z",
+    skipCommits: new Set(),
     ...options,
   }).pipe(Effect.provide(Git.layer(repo.directory)));
 
@@ -123,6 +124,25 @@ layer(NodeServices.layer)("readHistory universe and window", (it) => {
       // the rename is in the window but the edit of c.ts on 03-06 is not
       assert.strictEqual(result.files.get("c.ts")?.revisions, 2);
       assert.strictEqual(result.commits.length, 2);
+    }),
+  );
+});
+
+layer(NodeServices.layer)("readHistory skipped commits", (it) => {
+  it.effect("ignores the changes of the commits it is told to skip", () =>
+    Effect.gen(function* () {
+      const repo = yield* makeTempRepository;
+      yield* repo.commit("2026-03-01T12:00:00Z", { "a.ts": "a\n" });
+      yield* repo.commit("2026-03-02T12:00:00Z", { "a.ts": "a\nb\n" });
+      const first = (yield* repo.git("rev-parse", "HEAD~1")).trim();
+
+      const result = yield* history(repo, {
+        universe: new Set(["a.ts"]),
+        skipCommits: new Set([first]),
+      });
+
+      assert.strictEqual(result.files.get("a.ts")?.revisions, 1);
+      assert.strictEqual(result.commits.length, 1);
     }),
   );
 });

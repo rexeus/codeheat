@@ -2,7 +2,10 @@ import { Report } from "@codeheat/engine";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Schema } from "effect";
 
-import { makeTempDirectory } from "../testing/git-repository.js";
+import {
+  makeShallowClone,
+  makeTempDirectory,
+} from "../testing/git-repository.js";
 import { journey } from "../testing/journey-harness.js";
 import { makeCoupledProject } from "../testing/projects.js";
 
@@ -70,6 +73,39 @@ describe("codeheat analyze against a git repository", () => {
       );
       expect(report.repository.scope).toBe(".");
       expect(report.totals.files).toBe(3);
+    }).pipe(Effect.scoped),
+  );
+
+  it.live(
+    "warns once on stderr about a shallow clone and keeps stdout to the JSON",
+    () =>
+      Effect.gen(function* () {
+        const repo = yield* makeCoupledProject;
+        const clone = yield* makeShallowClone(repo, 2);
+
+        const result = yield* journey({
+          args: ["analyze", "--json"],
+          cwd: clone,
+        });
+
+        expect(result.exitCode).toBe(0);
+        expect(result.stderr).toBe(
+          "codeheat: shallow clone: history before its oldest fetched commit is missing; run git fetch --unshallow for full results",
+        );
+        const report = yield* Schema.decodeUnknownEffect(Report)(
+          JSON.parse(result.stdout),
+        );
+        expect(report.repository.shallow).toBe(true);
+      }).pipe(Effect.scoped),
+  );
+
+  it.live("stays silent on stderr for a complete repository", () =>
+    Effect.gen(function* () {
+      const repo = yield* makeCoupledProject;
+
+      const result = yield* journey({ args: ["analyze"], cwd: repo.root });
+
+      expect(result.stderr).toBe("");
     }).pipe(Effect.scoped),
   );
 });

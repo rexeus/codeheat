@@ -4,6 +4,7 @@ import { Argument, Command, Flag } from "effect/cli";
 
 import { limitReport } from "../output/limit-report.js";
 import { printResult } from "../output/print-result.js";
+import { warnIfShallow } from "../output/shallow-warning.js";
 import { renderAnalysis } from "../output/terminal/analysis-view.js";
 import { version } from "../version.js";
 import { WorkingDirectory } from "../working-directory.js";
@@ -57,6 +58,7 @@ export const analyzeCommand = Command.make(
       exclude,
       toolVersion: version,
     });
+    yield* warnIfShallow(report);
     const shown = limitReport(report, limit);
     return yield* printResult(shown, json, renderAnalysis);
   }),

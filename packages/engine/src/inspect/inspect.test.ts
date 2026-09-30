@@ -29,7 +29,7 @@ const reportOf = (
   schemaVersion: 1,
   tool: { name: "codeheat", version: "0.0.0-test" },
   generatedAt: "2026-06-01T12:00:00.000Z",
-  repository: { name: "repo", head: null, scope: "." },
+  repository: { name: "repo", head: null, scope: ".", shallow: false },
   window: {
     since: "2025-06-01T12:00:00.000Z",
     until: "2026-06-01T12:00:00.000Z",

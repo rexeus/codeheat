@@ -81,6 +81,11 @@ export const Report = Schema.Struct({
     head: Schema.NullOr(Schema.String),
     /** Repository-relative directory the universe is limited to; "." for all. */
     scope: Schema.String,
+    /**
+     * A shallow clone: history before its oldest fetched commit is missing, so
+     * revisions and couplings undercount. `git fetch --unshallow` completes it.
+     */
+    shallow: Schema.Boolean,
   }),
   window: AnalysisWindow,
   thresholds: Thresholds,

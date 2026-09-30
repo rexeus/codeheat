@@ -56,3 +56,22 @@ export const makeGitRepository = Effect.map(
     };
   },
 );
+
+/** A clone of `source` cut to its newest `depth` commits, in a temporary directory removed when the scope closes. */
+export const makeShallowClone = (source: GitRepository, depth: number) =>
+  Effect.map(makeTempDirectory, (directory) => {
+    const root = join(directory, "clone");
+    execFileSync(
+      "git",
+      [
+        "clone",
+        "--quiet",
+        "--depth",
+        String(depth),
+        `file://${source.root}`,
+        root,
+      ],
+      { env: isolatedEnv(new Date().toISOString()), stdio: "ignore" },
+    );
+    return root;
+  });

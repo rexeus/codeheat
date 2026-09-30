@@ -5,6 +5,7 @@ import { Argument, Command } from "effect/cli";
 import { NothingMatched } from "../errors/nothing-matched.js";
 import { escapeForTerminal } from "../output/escape.js";
 import { printResult } from "../output/print-result.js";
+import { warnIfShallow } from "../output/shallow-warning.js";
 import { renderInspect } from "../output/terminal/inspect-view.js";
 import { version } from "../version.js";
 import { WorkingDirectory } from "../working-directory.js";
@@ -30,6 +31,7 @@ export const inspectCommand = Command.make(
       exclude: [],
       toolVersion: version,
     });
+    yield* warnIfShallow(report);
     const result = inspect(report, patterns);
     if (result.matches.length === 0) {
       return yield* new NothingMatched({ patterns: result.unmatched });

@@ -5,7 +5,12 @@ import { Effect, FileSystem, Path } from "effect";
 import { makeTempRepository } from "../testing/temp-repository.js";
 import { NotAGitRepository } from "./git-errors.js";
 import { Git } from "./git.js";
-import { locateRepository, readHead, repositoryScope } from "./repository.js";
+import {
+  locateRepository,
+  readHead,
+  readShallowBoundary,
+  repositoryScope,
+} from "./repository.js";
 
 layer(NodeServices.layer)("locateRepository", (it) => {
   it.effect("finds the work tree root from a subdirectory", () =>
@@ -142,6 +147,47 @@ layer(NodeServices.layer)("readHead", (it) => {
       );
 
       assert.strictEqual(head, expected);
+    }),
+  );
+});
+
+layer(NodeServices.layer)("readShallowBoundary", (it) => {
+  it.effect("is undefined for a complete repository", () =>
+    Effect.gen(function* () {
+      const repo = yield* makeTempRepository;
+      yield* repo.commit("2026-03-01T12:00:00Z", { "a.ts": "a\n" });
+
+      const boundary = yield* readShallowBoundary(repo.directory).pipe(
+        Effect.provide(Git.layer(repo.directory)),
+      );
+
+      assert.isUndefined(boundary);
+    }),
+  );
+
+  it.effect("names the oldest commit a shallow clone fetched", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const repo = yield* makeTempRepository;
+      yield* repo.commit("2026-03-01T12:00:00Z", { "a.ts": "1\n" });
+      yield* repo.commit("2026-03-02T12:00:00Z", { "a.ts": "2\n" });
+      yield* repo.commit("2026-03-03T12:00:00Z", { "a.ts": "3\n" });
+      const oldestFetched = (yield* repo.git("rev-parse", "HEAD~1")).trim();
+      const clone = `${yield* fs.makeTempDirectoryScoped()}/clone`;
+      yield* repo.git(
+        "clone",
+        "--quiet",
+        "--depth",
+        "2",
+        `file://${repo.directory}`,
+        clone,
+      );
+
+      const boundary = yield* readShallowBoundary(clone).pipe(
+        Effect.provide(Git.layer(clone)),
+      );
+
+      assert.deepStrictEqual(boundary, new Set([oldestFetched]));
     }),
   );
 });

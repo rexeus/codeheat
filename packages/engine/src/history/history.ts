@@ -26,6 +26,8 @@ export type HistoryOptions = {
   /** ISO timestamps bounding the window. */
   readonly since: string;
   readonly until: string;
+  /** Commits whose changes are ignored, such as the boundary of a shallow clone. */
+  readonly skipCommits: ReadonlySet<string>;
   /** Current paths that count; changes to any other path are dropped. */
   readonly universe: ReadonlySet<string>;
 };
@@ -79,6 +81,9 @@ export const readHistory = (
     const files = new Map<string, FileHistory>();
 
     const absorb = (commit: Commit): void => {
+      if (options.skipCommits.has(commit.sha)) {
+        return;
+      }
       const touched = linesByUniversePath(commit, renamedTo, options.universe);
       for (const [path, lines] of touched) {
         const before = files.get(path);
