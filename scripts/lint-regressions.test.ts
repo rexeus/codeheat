@@ -1,4 +1,5 @@
 import { spawnSync } from "node:child_process";
+import { randomUUID } from "node:crypto";
 import { mkdtempSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -8,6 +9,7 @@ import { afterEach, describe, expect, it } from "vitest";
 const repositoryRoot = new URL("..", import.meta.url).pathname;
 const oxlint = join(repositoryRoot, "node_modules/oxlint/bin/oxlint");
 const fixtureRoots: string[] = [];
+const probeFiles: string[] = [];
 
 const runLint = (
   config: string,
@@ -47,9 +49,39 @@ const runLint = (
   );
 };
 
+/**
+ * Lints `source` as a file inside `packages/engine/src`, where the
+ * override-scoped import rules apply. The probe lives in the real package
+ * directory under a unique name and is removed in `afterEach`.
+ */
+const runEngineLint = (source: string) => {
+  const probe = join(
+    repositoryRoot,
+    "packages/engine/src",
+    `lint-probe-${randomUUID()}.ts`,
+  );
+  probeFiles.push(probe);
+  writeFileSync(probe, source);
+
+  return spawnSync(
+    process.execPath,
+    [
+      oxlint,
+      "--config",
+      join(repositoryRoot, ".oxlintrc.json"),
+      "--deny-warnings",
+      probe,
+    ],
+    { cwd: repositoryRoot, encoding: "utf8" },
+  );
+};
+
 afterEach(() => {
   for (const fixtureRoot of fixtureRoots.splice(0)) {
     rmSync(fixtureRoot, { force: true, recursive: true });
+  }
+  for (const probe of probeFiles.splice(0)) {
+    rmSync(probe, { force: true });
   }
 });
 
@@ -122,5 +154,40 @@ describe("lint regression probes", () => {
     expect(result.status).not.toBe(0);
     expect(result.stdout).toContain("sonarjs(cognitive-complexity)");
     expect(result.stdout).toContain("15 allowed");
+  });
+});
+
+describe("engine import boundary probes", () => {
+  it("keeps node: builtins out of the engine", () => {
+    const result = runEngineLint(
+      'import { readFileSync } from "node:fs";\nexport const read = readFileSync;\n',
+    );
+
+    expect(result.status).not.toBe(0);
+    expect(result.stdout).toContain("eslint(no-restricted-imports)");
+    expect(result.stdout).toContain(
+      "engine reaches the platform through Effect services",
+    );
+  });
+
+  it("keeps bare builtin imports out of the engine", () => {
+    const result = runEngineLint(
+      'import { readFileSync } from "fs";\nexport const read = readFileSync;\n',
+    );
+
+    expect(result.status).not.toBe(0);
+    expect(result.stdout).toContain("unicorn(prefer-node-protocol)");
+  });
+
+  it("keeps workspace packages out of the engine", () => {
+    const result = runEngineLint(
+      'import { renderReportHtml } from "@codeheat/viewer";\nexport const render = renderReportHtml;\n',
+    );
+
+    expect(result.status).not.toBe(0);
+    expect(result.stdout).toContain("eslint(no-restricted-imports)");
+    expect(result.stdout).toContain(
+      "engine is the floor of the dependency graph",
+    );
   });
 });
