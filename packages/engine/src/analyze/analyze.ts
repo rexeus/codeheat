@@ -99,7 +99,6 @@ const analyzeRepository = (
         ? NO_HISTORY
         : yield* readHistory({
             ...range,
-            scope,
             universe: new Set(files.map((file) => file.path)),
           });
     const measures = measureFiles(files, history);

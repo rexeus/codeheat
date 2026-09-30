@@ -26,8 +26,6 @@ export type HistoryOptions = {
   /** ISO timestamps bounding the window. */
   readonly since: string;
   readonly until: string;
-  /** Repository-relative directory to read history for; "." for all. */
-  readonly scope: string;
   /** Current paths that count; changes to any other path are dropped. */
   readonly universe: ReadonlySet<string>;
 };
@@ -66,6 +64,9 @@ const linesByUniversePath = (
  * makes every older commit that touched the old path count for the new one,
  * so a file keeps its history under its current name.
  *
+ * The whole repository's log is read, never a path-limited one: a file moved
+ * into the universe from outside keeps the history it had before the move.
+ *
  * Git must run in the repository root, and the repository needs a `HEAD`.
  */
 export const readHistory = (
@@ -92,15 +93,12 @@ export const readHistory = (
       }
     };
 
-    const scope = options.scope === "." ? [] : [`:(literal)${options.scope}`];
     yield* git
       .stream([
         "log",
         ...LOG_FORMAT_ARGS,
         `--since=${options.since}`,
         `--until=${options.until}`,
-        "--",
-        ...scope,
       ])
       .pipe(
         Stream.mapAccum(

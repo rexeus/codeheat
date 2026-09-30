@@ -22,7 +22,6 @@ const history = (
   readHistory({
     since: "2026-01-01T00:00:00.000Z",
     until: "2026-12-31T00:00:00.000Z",
-    scope: ".",
     ...options,
   }).pipe(Effect.provide(Git.layer(repo.directory)));
 
@@ -128,24 +127,7 @@ layer(NodeServices.layer)("readHistory universe and window", (it) => {
   );
 });
 
-layer(NodeServices.layer)("readHistory scope", (it) => {
-  it.effect("reads only the history under the scope", () =>
-    Effect.gen(function* () {
-      const repo = yield* makeTempRepository;
-      yield* repo.commit("2026-03-01T12:00:00Z", {
-        "src/a.ts": "a\n",
-        "lib/b.ts": "b\n",
-      });
-
-      const result = yield* history(repo, {
-        scope: "src",
-        universe: new Set(["src/a.ts", "lib/b.ts"]),
-      });
-
-      assert.deepStrictEqual([...result.files.keys()], ["src/a.ts"]);
-    }),
-  );
-
+layer(NodeServices.layer)("readHistory content", (it) => {
   it.effect("counts binary files as changes of zero lines", () =>
     Effect.gen(function* () {
       const repo = yield* makeTempRepository;

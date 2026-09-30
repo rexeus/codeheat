@@ -271,6 +271,35 @@ layer(NodeServices.layer)("analyze scope", (it) => {
     }),
   );
 
+  it.effect("keeps the history from before a move into the scope", () =>
+    Effect.gen(function* () {
+      yield* setNow;
+      const repo = yield* makeTempRepository;
+      const content = Array.from({ length: 10 }, (_, i) => `line ${i}\n`).join(
+        "",
+      );
+      yield* repo.commit("2026-04-01T12:00:00Z", { "old/a.ts": content });
+      yield* repo.commit("2026-04-02T12:00:00Z", {
+        "old/a.ts": `${content}two\n`,
+      });
+      // identical content at the new path lets git detect the move
+      yield* repo.git("rm", "--quiet", "old/a.ts");
+      yield* repo.commit("2026-04-03T12:00:00Z", {
+        "pkg/a.ts": `${content}two\n`,
+      });
+      yield* repo.commit("2026-04-04T12:00:00Z", {
+        "pkg/a.ts": `${content}two\nthree\n`,
+      });
+
+      const scoped = yield* analyze(analyzeOptionsFor(repo, { scope: "pkg" }));
+      const whole = yield* analyze(analyzeOptionsFor(repo));
+
+      // creation, edit, move, and edit after the move
+      assert.strictEqual(scoped.files[0]?.revisions, 4);
+      assert.strictEqual(whole.files[0]?.revisions, 4);
+    }),
+  );
+
   it.effect(
     "analyzes the whole repository from a subdirectory cwd without scope",
     () =>
