@@ -57,9 +57,20 @@ const runStreaming = (
             ? "ignore"
             : Stream.encodeText(Stream.make(stdin)),
       });
-      const handle = yield* spawner
-        .spawn(command)
-        .pipe(Effect.mapError((error) => spawnFailure(args, error)));
+      const handle = yield* spawner.spawn(command).pipe(
+        Effect.mapError((error) => spawnFailure(args, error)),
+        // Node throws some spawn errors (ENOTDIR for a working directory that
+        // is a file) instead of emitting them, and the spawner reports a throw as a defect.
+        Effect.catchDefect((defect) =>
+          Effect.fail(
+            new GitCommandFailed({
+              args,
+              exitCode: -1,
+              stderr: defect instanceof Error ? defect.message : String(defect),
+            }),
+          ),
+        ),
+      );
       // Drained concurrently so a chatty stderr cannot stall stdout.
       const stderr = yield* Stream.mkString(
         Stream.decodeText(handle.stderr),

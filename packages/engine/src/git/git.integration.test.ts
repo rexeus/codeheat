@@ -1,6 +1,6 @@
 import { NodeServices } from "@effect/platform-node";
 import { assert, layer } from "@effect/vitest";
-import { Effect, Stream } from "effect";
+import { Effect, FileSystem, Stream } from "effect";
 
 import { setScopedEnv } from "../testing/scoped-env.js";
 import { makeTempRepository } from "../testing/temp-repository.js";
@@ -68,6 +68,27 @@ layer(NodeServices.layer)("Git", (it) => {
       const failure = yield* Effect.flip(git.text(["--version"]));
 
       assert.deepStrictEqual(failure, new GitNotFound());
+    }),
+  );
+
+  it.effect("fails with a GitCommandFailed when its directory is a file", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const directory = yield* fs.makeTempDirectoryScoped();
+      const file = `${directory}/not-a-directory`;
+      yield* fs.writeFileString(file, "x\n");
+      const git = yield* Git.make(file);
+
+      const failure = yield* Effect.flip(git.text(["--version"]));
+
+      assert.deepStrictEqual(
+        failure,
+        new GitCommandFailed({
+          args: ["--version"],
+          exitCode: -1,
+          stderr: "spawn ENOTDIR",
+        }),
+      );
     }),
   );
 });
