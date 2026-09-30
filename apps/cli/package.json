@@ -5,7 +5,7 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "dev": "tsx src/bin.ts",
+    "dev": "turbo run build --filter=@codeheat/viewer --output-logs=errors-only && tsx src/bin.ts",
     "test:unit": "vitest run --passWithNoTests",
     "typecheck": "tsc -p tsconfig.json"
   },

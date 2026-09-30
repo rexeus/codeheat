@@ -44,8 +44,10 @@ pnpm lint            # barrel check + oxlint (strict + Effect preset) + knip
 pnpm typecheck       # tsc over scripts/, then every package via turbo
 pnpm test            # scripts/ tests, then every package's vitest suite via turbo
 pnpm --filter <pkg> exec vitest run src/<file>.test.ts   # one file
-pnpm --filter codeheat dev <args>                     # run the CLI from source
+pnpm --filter codeheat dev <args>                     # run the CLI from source (builds the viewer assets first)
 ```
+
+The CLI embeds the viewer from `packages/viewer/dist/assets.js`, which only `pnpm --filter @codeheat/viewer build` (or turbo's `build`) produces. Rebuild it after editing viewer code before running a single CLI test file directly.
 
 ## Architecture rules
 
