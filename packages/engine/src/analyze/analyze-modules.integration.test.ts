@@ -82,6 +82,7 @@ const expectedModules: Report["modules"] = [
     implementationCommits: 6,
     leakage: null,
     leakyInterface: false,
+    trend: null,
   },
   {
     path: "packages/b",
@@ -100,6 +101,7 @@ const expectedModules: Report["modules"] = [
     implementationCommits: 4,
     leakage: null,
     leakyInterface: false,
+    trend: null,
   },
   {
     path: "packages/c",
@@ -118,6 +120,7 @@ const expectedModules: Report["modules"] = [
     implementationCommits: 3,
     leakage: null,
     leakyInterface: false,
+    trend: null,
   },
   {
     path: "packages/d",
@@ -133,6 +136,7 @@ const expectedModules: Report["modules"] = [
     implementationCommits: 0,
     leakage: null,
     leakyInterface: false,
+    trend: null,
   },
 ];
 

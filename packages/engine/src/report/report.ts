@@ -4,7 +4,7 @@
 import { Schema } from "effect";
 
 import { Module } from "./module.js";
-import { Count, UnitInterval } from "./scalars.js";
+import { Count, UnitDelta, UnitInterval } from "./scalars.js";
 
 const Rank = Schema.Int.check(Schema.isGreaterThanOrEqualTo(1));
 
@@ -16,6 +16,27 @@ export const AnalysisWindow = Schema.Struct({
   commits: Count,
   /** Commits small enough to count for coupling (see `Thresholds.maxCommitFiles`). */
   couplingCommits: Count,
+});
+
+/** The window before the analysis window that `analyze --compare` measured, adjacent to it. */
+const Comparison = Schema.Struct({
+  previousSince: Schema.String,
+  /** Equals `window.since`; no commit is in both windows. */
+  previousUntil: Schema.String,
+});
+
+/** How a file's score changed against the window before (`analyze --compare`). */
+const FileTrend = Schema.Struct({
+  /** The score the file had in the previous window, normalized within that window; rounded to 4 decimals. */
+  previousScore: UnitInterval,
+  /** `score - previousScore`, rounded to 4 decimals; positive means the file got hotter relative to its window's hottest. */
+  scoreDelta: UnitDelta,
+  /**
+   * The file had no revision in the previous window but has in the latest one.
+   * Its `scoreDelta` is then just its score, not a file warming up; rank
+   * warming only among files where this is false.
+   */
+  newlyActive: Schema.Boolean,
 });
 
 /** The noise limits an analysis applied, reported so consumers see them. */
@@ -70,6 +91,8 @@ export const FileStats = Schema.Struct({
   }),
   /** Human- and agent-readable explanations, most significant first. */
   reasons: Schema.Array(Schema.String),
+  /** Null without `--compare`, and when either window has no commit touching the universe. */
+  trend: Schema.NullOr(FileTrend),
 });
 export type FileStats = typeof FileStats.Type;
 
@@ -110,7 +133,10 @@ export const Report = Schema.Struct({
      */
     shallow: Schema.Boolean,
   }),
+  /** The current window; with `--compare`, every field of the report describes it. */
   window: AnalysisWindow,
+  /** Null without `--compare`. */
+  comparison: Schema.NullOr(Comparison),
   thresholds: Thresholds,
   /** Sizes before any output limit, so truncated reports keep their context. */
   totals: Schema.Struct({ files: Count, couplings: Count, modules: Count }),

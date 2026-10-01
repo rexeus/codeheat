@@ -195,6 +195,34 @@ describe("codeheat analyze terminal view", () => {
   );
 });
 
+describe("codeheat analyze --compare", () => {
+  // Commits 30, 20, 10, and 5 days ago: the latest 2 weeks hold the last two, the 2 weeks before hold the one at 20 days.
+  it.live("adds the previous window and per-file trends to the JSON", () =>
+    Effect.gen(function* () {
+      const repo = yield* makeCoupledProject;
+
+      const result = yield* journey({
+        args: ["analyze", "--compare", "2w", "--json"],
+        cwd: repo.root,
+      });
+
+      expect(result.exitCode).toBe(0);
+      const report = yield* Schema.decodeUnknownEffect(Report)(
+        JSON.parse(result.stdout),
+      );
+      expect(report.comparison?.previousUntil).toBe(report.window.since);
+      expect(report.window.commits).toBe(2);
+      expect(
+        report.files.map(({ path, trend }) => [path, trend !== null]),
+      ).toStrictEqual([
+        ["src/a.ts", true],
+        ["src/b.ts", true],
+        ["src/c.ts", true],
+      ]);
+    }).pipe(Effect.scoped),
+  );
+});
+
 describe("codeheat analyze a shallow clone", () => {
   it.live(
     "warns once on stderr about a shallow clone and keeps stdout to the JSON",

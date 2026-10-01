@@ -16,6 +16,7 @@ export const fileStats = (
   loc: 100,
   complexity: { total: 200, mean: 2, max: 5 },
   reasons: [],
+  trend: null,
   ...overrides,
 });
 
@@ -52,14 +53,16 @@ export const moduleStats = (
   implementationCommits: 10,
   leakage: null,
   leakyInterface: false,
+  trend: null,
   ...overrides,
 });
 
-/** A minimal valid report around the given files and couplings. */
+/** A minimal valid report around the given files and couplings; `comparison` is null unless given. */
 export const reportOf = (
   files: readonly FileStats[],
   couplings: readonly Coupling[] = [],
   modules: readonly Module[] = [],
+  comparison: Report["comparison"] = null,
 ): Report => ({
   schemaVersion: 1,
   tool: { name: "codeheat", version: "0.0.0" },
@@ -71,6 +74,7 @@ export const reportOf = (
     commits: 12,
     couplingCommits: 10,
   },
+  comparison,
   thresholds: {
     maxCommitFiles: 50,
     hubMinBreadth: 10,

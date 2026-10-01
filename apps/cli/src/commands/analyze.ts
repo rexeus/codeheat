@@ -2,6 +2,7 @@ import { analyze } from "@codeheat/engine";
 import { Effect, Option } from "effect";
 import { Argument, Command, Flag } from "effect/cli";
 
+import { FlagsConflict } from "../errors/flags-conflict.js";
 import { warnIfEntryMatchedNothing } from "../output/entry-warning.js";
 import { writeHtmlReport } from "../output/html/write-html-report.js";
 import { limitReport } from "../output/limit-report.js";
@@ -11,7 +12,12 @@ import { renderAnalysis } from "../output/terminal/analysis-view.js";
 import { version } from "../version.js";
 import { WorkingDirectory } from "../working-directory.js";
 import { resolveAnalysisTarget } from "./analysis-target.js";
-import { entryFlag, jsonFlag, sinceFlag } from "./shared-flags.js";
+import {
+  DEFAULT_SINCE,
+  entryFlag,
+  explicitSinceFlag,
+  jsonFlag,
+} from "./shared-flags.js";
 
 const DEFAULT_LIMIT = 25;
 const DEFAULT_HTML_FILE = "codeheat-report.html";
@@ -26,7 +32,13 @@ export const analyzeCommand = Command.make(
       Argument.optional,
     ),
     json: jsonFlag,
-    since: sinceFlag,
+    since: explicitSinceFlag,
+    compare: Flag.String("compare").pipe(
+      Flag.withDescription(
+        "Also compare with the window of the same length before: <n>d, <n>w, <n>m, or <n>y; replaces --since",
+      ),
+      Flag.optional,
+    ),
     include: Flag.String("include").pipe(
       Flag.withDescription(
         "Glob of files to analyze instead of the language list; repeatable",
@@ -68,14 +80,19 @@ export const analyzeCommand = Command.make(
     ),
   },
   Effect.fn(function* (flags) {
-    const { path, json, since, include, exclude, entry, limit } = flags;
+    const { path, json, since, compare, include, exclude, entry, limit } =
+      flags;
+    if (Option.isSome(since) && Option.isSome(compare)) {
+      return yield* new FlagsConflict({ flags: ["--compare", "--since"] });
+    }
     const cwd = yield* WorkingDirectory;
     // A path argument both locates the repository and narrows the universe,
     // so `codeheat analyze ../other-repo` works from anywhere.
     const target = yield* resolveAnalysisTarget(cwd, path);
     const report = yield* analyze({
       ...target,
-      since,
+      since: Option.getOrElse(since, () => DEFAULT_SINCE),
+      compare: Option.getOrUndefined(compare),
       include,
       exclude,
       entry,
@@ -110,6 +127,11 @@ export const analyzeCommand = Command.make(
     {
       command: "codeheat analyze --html",
       description: "Open the treemap of the current repository in the browser",
+    },
+    {
+      command: "codeheat analyze --compare 3m",
+      description:
+        "The last three months, and how hotspots and cohesion moved since the three before",
     },
     {
       command:

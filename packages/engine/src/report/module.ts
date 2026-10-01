@@ -4,7 +4,7 @@
 // Additive fields keep schemaVersion 1; renaming or removing a field bumps it.
 import { Schema } from "effect";
 
-import { Count, UnitInterval } from "./scalars.js";
+import { Count, UnitDelta, UnitInterval } from "./scalars.js";
 
 /** Another module that changes in the same commits. */
 const ModulePartner = Schema.Struct({
@@ -12,6 +12,14 @@ const ModulePartner = Schema.Struct({
   path: Schema.String,
   /** Counted commits that touched both modules. */
   sharedCommits: Count,
+});
+
+/** How a module's cohesion changed against the window before (`analyze --compare`). */
+const ModuleTrend = Schema.Struct({
+  /** Cohesion over the previous window, rounded to 4 decimals. */
+  previousCohesion: UnitInterval,
+  /** `cohesion - previousCohesion`, rounded to 4 decimals; positive means the module became more self-contained. */
+  cohesionDelta: UnitDelta,
 });
 
 /** A unit of the codebase and how self-contained its changes are. */
@@ -59,5 +67,7 @@ export const Module = Schema.Struct({
    * cohesion order, so look for this flag rather than for the first entries.
    */
   leakyInterface: Schema.Boolean,
+  /** Null without `--compare`, and when the module has no counted commit in either window. */
+  trend: Schema.NullOr(ModuleTrend),
 });
 export type Module = typeof Module.Type;

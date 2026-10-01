@@ -15,6 +15,7 @@ const stats = (path: string, rank: number, revisions: number): FileStats => ({
   loc: 10,
   complexity: { total: 5, mean: 0.5, max: 2 },
   reasons: [],
+  trend: null,
 });
 
 const coupling = (
@@ -49,6 +50,7 @@ const modules: Report["modules"] = [
     implementationCommits: 4,
     leakage: null,
     leakyInterface: false,
+    trend: null,
   },
   {
     path: "src",
@@ -64,6 +66,7 @@ const modules: Report["modules"] = [
     implementationCommits: 20,
     leakage: 0.2,
     leakyInterface: false,
+    trend: null,
   },
 ];
 
@@ -81,6 +84,7 @@ const reportOf = (
     commits: 40,
     couplingCommits: 38,
   },
+  comparison: null,
   thresholds: {
     maxCommitFiles: 50,
     hubMinBreadth: 10,

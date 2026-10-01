@@ -70,3 +70,49 @@ export const resolveTimeRange = (
       until: DateTime.formatIso(now),
     };
   });
+
+/** `compare` is not a `<n>d|w|m|y` duration, or counting it back twice leaves the dates JavaScript can represent. */
+export class InvalidCompare extends Schema.TaggedError<InvalidCompare>()(
+  "InvalidCompare",
+  { input: Schema.String },
+) {}
+
+/** The latest window and the window of the same length right before it. */
+export type ComparisonRanges = {
+  readonly current: TimeRange;
+  /** Ends where `current` starts. */
+  readonly previous: TimeRange;
+};
+
+/**
+ * Resolves `compare`, a `<n>d|w|m|y` duration, to the window ending now and
+ * the one before it. The previous window counts back from the start of the
+ * current one, so calendar months and years stay whole in both.
+ */
+export const resolveComparisonRanges = (
+  compare: string,
+): Effect.Effect<ComparisonRanges, InvalidCompare> =>
+  Effect.gen(function* () {
+    const now = yield* DateTime.now;
+    const current = Option.filter(parseRelative(compare, now), (start) =>
+      isUsableStart(start, now),
+    );
+    const previous = Option.flatMap(current, (start) =>
+      Option.filter(parseRelative(compare, start), (previousStart) =>
+        isUsableStart(previousStart, start),
+      ),
+    );
+    if (Option.isNone(current) || Option.isNone(previous)) {
+      return yield* new InvalidCompare({ input: compare });
+    }
+    return {
+      current: {
+        since: DateTime.formatIso(current.value),
+        until: DateTime.formatIso(now),
+      },
+      previous: {
+        since: DateTime.formatIso(previous.value),
+        until: DateTime.formatIso(current.value),
+      },
+    };
+  });

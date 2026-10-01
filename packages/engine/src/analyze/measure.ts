@@ -1,4 +1,5 @@
-// Owns the pure part of an analysis: scoring files, coupling them, and measuring modules.
+// Owns the pure part of an analysis: scoring files, coupling them, and measuring modules,
+// in the latest window and, when comparing, against the window before it.
 import { findCouplings } from "../coupling/coupling.js";
 import type { History } from "../history/history.js";
 import { rankFiles } from "../hotspots/hotspots.js";
@@ -9,8 +10,10 @@ import {
   leakingEntryPoints,
   measureInterfaces,
 } from "../modules/interface-churn.js";
+import { withTrends } from "../trends/trends.js";
 import type { InventoryFile } from "../universe/inventory.js";
 import { thresholdsFor } from "./thresholds.js";
+import type { WindowHistories } from "./windows.js";
 
 /** What `measureFiles` looks up per file: co-change breadth, module, and the leakage of the interface it belongs to. */
 type FileLookups = {
@@ -40,7 +43,7 @@ const measureFiles = (
   });
 
 /** Scores the files, couples them, and measures the modules; the pure part of an analysis. */
-export const measure = (
+const measure = (
   files: ReadonlyArray<InventoryFile>,
   history: History,
   modules: ReadonlyMap<string, ModuleRef>,
@@ -63,6 +66,7 @@ export const measure = (
     interfaces.byModule,
   );
   return {
+    commits: history.commits.length,
     couplingCommits,
     thresholds,
     files: rankFiles(
@@ -79,4 +83,23 @@ export const measure = (
     couplings,
     modules: measuredModules,
   };
+};
+
+/**
+ * Measures the latest window; with a previous one, also its files and modules
+ * with the trend against it. `commits`, `couplingCommits`, and `thresholds`
+ * describe the latest window.
+ */
+export const measureWindows = (
+  files: ReadonlyArray<InventoryFile>,
+  histories: WindowHistories,
+  modules: ReadonlyMap<string, ModuleRef>,
+  entryPoints: ReadonlyMap<string, ReadonlyArray<string>>,
+) => {
+  const current = measure(files, histories.current, modules, entryPoints);
+  if (histories.previous === null) {
+    return current;
+  }
+  const previous = measure(files, histories.previous, modules, entryPoints);
+  return { ...current, ...withTrends(current, previous) };
 };

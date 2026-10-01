@@ -65,6 +65,19 @@ const hubRanking = (measures: ReadonlyArray<FileMeasure>) => {
   };
 };
 
+/** Normalized revisions × normalized weighted lines, each against the largest among `measures`. */
+const scorer = (measures: ReadonlyArray<FileMeasure>) => {
+  const normalizeRevisions = logNormalizer(
+    maximum(measures.map((m) => m.revisions)),
+  );
+  const normalizeWeight = logNormalizer(
+    maximum(measures.map((m) => weightedLines(m.complexity))),
+  );
+  return (measure: FileMeasure): number =>
+    normalizeRevisions(measure.revisions) *
+    normalizeWeight(weightedLines(measure.complexity));
+};
+
 /**
  * Scores every file as normalized revisions × normalized weighted lines, and
  * returns them best first; equal scores order by path.
@@ -80,21 +93,11 @@ export const rankFiles = (
     measures.map((m) => m.complexity.total),
   );
   const hubs = hubRanking(measures);
-  const normalizeRevisions = logNormalizer(
-    maximum(measures.map((m) => m.revisions)),
-  );
-  const normalizeWeight = logNormalizer(
-    maximum(measures.map((m) => weightedLines(m.complexity))),
-  );
+  const scoreOf = scorer(measures);
   const coupled = groupByPath(couplings);
 
   return measures
-    .map((measure) => ({
-      measure,
-      score:
-        normalizeRevisions(measure.revisions) *
-        normalizeWeight(weightedLines(measure.complexity)),
-    }))
+    .map((measure) => ({ measure, score: scoreOf(measure) }))
     .toSorted(
       (a, b) =>
         b.score - a.score || Order.String(a.measure.path, b.measure.path),
@@ -129,6 +132,7 @@ export const rankFiles = (
           candidates: hubs.candidates,
           interfaceLeakage: measure.interfaceLeakage,
         }),
+        trend: null,
       };
     });
 };

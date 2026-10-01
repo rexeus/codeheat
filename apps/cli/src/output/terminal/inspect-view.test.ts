@@ -16,6 +16,7 @@ const entry: InspectResult["matches"][number] = {
   loc: 964,
   complexity: { total: 1900, mean: 1.97, max: 9 },
   reasons: ["changed in 48 commits (#1 of 36)"],
+  trend: null,
   of: 36,
   partners: [
     {
@@ -59,6 +60,7 @@ const billing: Module = {
   implementationCommits: 71,
   leakage: 0.1268,
   leakyInterface: false,
+  trend: null,
 };
 
 const result = (

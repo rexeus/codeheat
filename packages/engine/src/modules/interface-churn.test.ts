@@ -118,6 +118,7 @@ const module = (path: string, overrides: Partial<Module>): Module => ({
   implementationCommits: 10,
   leakage: 0.6,
   leakyInterface: true,
+  trend: null,
   ...overrides,
 });
 

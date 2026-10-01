@@ -6,3 +6,7 @@ export const Count = Schema.Natural;
 export const UnitInterval = Schema.Finite.check(
   Schema.isBetween({ minimum: 0, maximum: 1 }),
 );
+/** A difference of two unit-interval values. */
+export const UnitDelta = Schema.Finite.check(
+  Schema.isBetween({ minimum: -1, maximum: 1 }),
+);

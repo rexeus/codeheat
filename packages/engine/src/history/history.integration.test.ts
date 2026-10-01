@@ -5,7 +5,7 @@ import { Effect } from "effect";
 import { Git } from "../git/git.js";
 import { makeTempRepository } from "../testing/temp-repository.js";
 import type { TempRepository } from "../testing/temp-repository.js";
-import { readHistory } from "./history.js";
+import { readHistory, readHistoryHalves } from "./history.js";
 import type { History, HistoryOptions } from "./history.js";
 
 // Ten distinct lines keep a file similar enough for git to detect a rename
@@ -166,5 +166,46 @@ layer(NodeServices.layer)("readHistory content", (it) => {
         linesDeleted: 0,
       });
     }),
+  );
+});
+
+layer(NodeServices.layer)("readHistoryHalves", (it) => {
+  it.effect(
+    "splits commits at the time and follows a rename across the split",
+    () =>
+      Effect.gen(function* () {
+        const repo = yield* makeTempRepository;
+        yield* commitRenamedTwice(repo);
+
+        const { recent, earlier } = yield* readHistoryHalves(
+          {
+            since: "2026-01-01T00:00:00.000Z",
+            until: "2026-12-31T00:00:00.000Z",
+            skipCommits: new Set(),
+            universe: new Set(["c.ts", "other.ts"]),
+          },
+          // the commit at exactly this time belongs to the recent half
+          Date.parse("2026-03-04T12:00:00Z") / 1000,
+        ).pipe(Effect.provide(Git.layer(repo.directory)));
+
+        // recent: the edit, the second rename, the last edit; earlier: creation, edit, first rename
+        assert.deepStrictEqual(recent.files.get("c.ts"), {
+          revisions: 3,
+          linesAdded: 2,
+          linesDeleted: 0,
+        });
+        assert.deepStrictEqual(earlier.files.get("c.ts"), {
+          revisions: 3,
+          linesAdded: 11,
+          linesDeleted: 0,
+        });
+        assert.isFalse(recent.files.has("other.ts"));
+        assert.strictEqual(earlier.files.get("other.ts")?.revisions, 1);
+        assert.deepStrictEqual(pathsOfCommits(recent), [
+          ["c.ts"],
+          ["c.ts"],
+          ["c.ts"],
+        ]);
+      }),
   );
 });

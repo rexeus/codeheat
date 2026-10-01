@@ -5,6 +5,7 @@ import { CliError } from "effect/cli";
 
 import { escapeForTerminal } from "../output/escape.js";
 import type { HtmlWriteFailed } from "../output/html/html-write-failed.js";
+import type { FlagsConflict } from "./flags-conflict.js";
 import type { NothingMatched } from "./nothing-matched.js";
 import type { PathNotFound } from "./path-not-found.js";
 
@@ -32,6 +33,7 @@ export class CliReportedError extends Schema.TaggedError<CliReportedError>()(
 /** Every expected failure a command can end with, except a help request. */
 export type KnownFailure =
   | AnalyzeError
+  | FlagsConflict
   | NothingMatched
   | PathNotFound
   | HtmlWriteFailed
@@ -52,20 +54,45 @@ const cliFailure = (error: CliError.CliError): Failure => {
   };
 };
 
-const engineFailure = (
-  error: AnalyzeError | NothingMatched | PathNotFound | HtmlWriteFailed,
-): Failure => {
+const usageMessage = (
+  error: Extract<
+    KnownFailure,
+    {
+      _tag:
+        | "InvalidSince"
+        | "InvalidCompare"
+        | "FlagsConflict"
+        | "PathNotFound";
+    }
+  >,
+): string => {
   if (error._tag === "InvalidSince") {
-    return {
-      message: `invalid --since "${error.input}": use <n>d, <n>w, <n>m, <n>y or YYYY-MM-DD`,
-      exitCode: USAGE,
-    };
+    return `invalid --since "${error.input}": use <n>d, <n>w, <n>m, <n>y or YYYY-MM-DD`;
   }
-  if (error._tag === "PathNotFound") {
-    return {
-      message: `no such file or directory: ${error.path}`,
-      exitCode: USAGE,
-    };
+  if (error._tag === "InvalidCompare") {
+    return `invalid --compare "${error.input}": use <n>d, <n>w, <n>m or <n>y`;
+  }
+  if (error._tag === "FlagsConflict") {
+    return `${error.flags.join(" and ")} cannot be combined`;
+  }
+  return `no such file or directory: ${error.path}`;
+};
+
+const engineFailure = (
+  error:
+    | AnalyzeError
+    | FlagsConflict
+    | NothingMatched
+    | PathNotFound
+    | HtmlWriteFailed,
+): Failure => {
+  if (
+    error._tag === "InvalidSince" ||
+    error._tag === "InvalidCompare" ||
+    error._tag === "FlagsConflict" ||
+    error._tag === "PathNotFound"
+  ) {
+    return { message: usageMessage(error), exitCode: USAGE };
   }
   if (error._tag === "NotAGitRepository") {
     return {
@@ -105,8 +132,9 @@ const reported = ({ message, exitCode }: Failure): CliReportedError =>
 
 /**
  * Words an expected failure and assigns its exit code: 2 for usage errors
- * (an invalid `--since`, a path that does not exist), 3 for no git repository or no git,
- * 4 when `inspect` matched nothing, 1 for the rest.
+ * (an invalid `--since` or `--compare`, flags that cannot be combined, a path
+ * that does not exist), 3 for no git repository or no git, 4 when `inspect`
+ * matched nothing, 1 for the rest.
  */
 export const toReportedError = (error: KnownFailure): CliReportedError =>
   reported(describe(error));

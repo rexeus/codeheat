@@ -70,6 +70,42 @@ describe("codeheat exit codes", () => {
   );
 });
 
+describe("codeheat exit codes on conflicting or invalid comparison flags", () => {
+  it.live("exits 2 when --compare and --since are combined", () =>
+    Effect.gen(function* () {
+      const repo = yield* makeCoupledProject;
+
+      const result = yield* journey({
+        args: ["analyze", "--compare", "3m", "--since", "6m", "--json"],
+        cwd: repo.root,
+      });
+
+      expect(result.stdout).toBe("");
+      expect(result.stderr).toBe(
+        "codeheat: --compare and --since cannot be combined",
+      );
+      expect(result.exitCode).toBe(2);
+    }).pipe(Effect.scoped),
+  );
+
+  it.live("exits 2 on an invalid --compare", () =>
+    Effect.gen(function* () {
+      const repo = yield* makeCoupledProject;
+
+      const result = yield* journey({
+        args: ["analyze", "--compare", "2026-01-01"],
+        cwd: repo.root,
+      });
+
+      expect(result.stdout).toBe("");
+      expect(result.stderr).toBe(
+        'codeheat: invalid --compare "2026-01-01": use <n>d, <n>w, <n>m or <n>y',
+      );
+      expect(result.exitCode).toBe(2);
+    }).pipe(Effect.scoped),
+  );
+});
+
 describe("codeheat exit codes on a broken host", () => {
   it.live("exits 3 without git on PATH", () =>
     Effect.gen(function* () {

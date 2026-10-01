@@ -7,11 +7,12 @@ export const jsonFlag = Flag.Boolean("json").pipe(
   Flag.withDefault(false),
 );
 
-export const sinceFlag = Flag.String("since").pipe(
+export const DEFAULT_SINCE = "12m";
+
+const since = Flag.String("since").pipe(
   Flag.withDescription(
-    "How far back to look: <n>d, <n>w, <n>m, <n>y, or an ISO date (YYYY-MM-DD)",
+    `How far back to look: <n>d, <n>w, <n>m, <n>y, or an ISO date (YYYY-MM-DD); default ${DEFAULT_SINCE}`,
   ),
-  Flag.withDefault("12m"),
 );
 
 export const entryFlag = Flag.String("entry").pipe(
@@ -20,3 +21,7 @@ export const entryFlag = Flag.String("entry").pipe(
   ),
   Flag.atLeast(0),
 );
+export const sinceFlag = since.pipe(Flag.withDefault(DEFAULT_SINCE));
+
+/** `--since` without a default, for commands that must tell whether it was given. */
+export const explicitSinceFlag = since.pipe(Flag.optional);

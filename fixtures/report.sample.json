@@ -17,6 +17,10 @@
     "commits": 212,
     "couplingCommits": 198
   },
+  "comparison": {
+    "previousSince": "2024-09-29T12:00:00.000Z",
+    "previousUntil": "2025-09-29T12:00:00.000Z"
+  },
   "thresholds": {
     "maxCommitFiles": 50,
     "hubMinBreadth": 10,
@@ -55,7 +59,12 @@
         "changed in 48 commits (#1 of 36)",
         "indentation complexity 1900 (#2 of 36)",
         "changes together with 14 different files"
-      ]
+      ],
+      "trend": {
+        "previousScore": 0.66,
+        "scoreDelta": 0.31,
+        "newlyActive": false
+      }
     },
     {
       "path": "packages/billing/src/tax.ts",
@@ -75,7 +84,12 @@
       "reasons": [
         "changed in 31 commits (#3 of 36)",
         "indentation complexity 1100 (#4 of 36)"
-      ]
+      ],
+      "trend": {
+        "previousScore": 0.9213,
+        "scoreDelta": -0.12,
+        "newlyActive": false
+      }
     },
     {
       "path": "packages/billing/src/invoice.test.ts",
@@ -95,7 +109,12 @@
       "reasons": [
         "changed in 36 commits (#2 of 36)",
         "indentation complexity 700 (#6 of 36)"
-      ]
+      ],
+      "trend": {
+        "previousScore": 0.7311,
+        "scoreDelta": 0.05,
+        "newlyActive": false
+      }
     },
     {
       "path": "packages/web/src/routes/invoices.tsx",
@@ -115,7 +134,12 @@
       "reasons": [
         "changed in 19 commits (#7 of 36)",
         "indentation complexity 1300 (#3 of 36)"
-      ]
+      ],
+      "trend": {
+        "previousScore": 0.9092,
+        "scoreDelta": -0.2,
+        "newlyActive": false
+      }
     },
     {
       "path": "apps/cli/src/commands/analyze.ts",
@@ -135,7 +159,12 @@
       "reasons": [
         "changed in 26 commits (#4 of 36)",
         "indentation complexity 640 (#7 of 36)"
-      ]
+      ],
+      "trend": {
+        "previousScore": 0.5632,
+        "scoreDelta": 0.14,
+        "newlyActive": false
+      }
     },
     {
       "path": "packages/auth/src/session.ts",
@@ -155,7 +184,12 @@
       "reasons": [
         "changed in 22 commits (#5 of 36)",
         "indentation complexity 820 (#5 of 36)"
-      ]
+      ],
+      "trend": {
+        "previousScore": 0.6946,
+        "scoreDelta": 0.0,
+        "newlyActive": false
+      }
     },
     {
       "path": "packages/billing/src/tax.test.ts",
@@ -175,7 +209,12 @@
       "reasons": [
         "changed in 22 commits (#6 of 36)",
         "indentation complexity 420 (#15 of 36)"
-      ]
+      ],
+      "trend": {
+        "previousScore": 0.7055,
+        "scoreDelta": -0.08,
+        "newlyActive": false
+      }
     },
     {
       "path": "packages/shared/src/config.ts",
@@ -195,7 +234,12 @@
       "reasons": [
         "changed in 17 commits (#8 of 36)",
         "indentation complexity 300 (#22 of 36)"
-      ]
+      ],
+      "trend": {
+        "previousScore": 0.3245,
+        "scoreDelta": 0.22,
+        "newlyActive": false
+      }
     },
     {
       "path": "packages/auth/src/session.test.ts",
@@ -215,7 +259,12 @@
       "reasons": [
         "changed in 14 commits (#9 of 36)",
         "indentation complexity 380 (#18 of 36)"
-      ]
+      ],
+      "trend": {
+        "previousScore": 0.6813,
+        "scoreDelta": -0.15,
+        "newlyActive": false
+      }
     },
     {
       "path": "packages/web/src/hooks/use-session.ts",
@@ -235,7 +284,12 @@
       "reasons": [
         "changed in 12 commits (#10 of 36)",
         "indentation complexity 160 (#30 of 36)"
-      ]
+      ],
+      "trend": {
+        "previousScore": 0.4103,
+        "scoreDelta": 0.02,
+        "newlyActive": false
+      }
     },
     {
       "path": "packages/auth/src/tokens.ts",
@@ -255,7 +309,12 @@
       "reasons": [
         "changed in 7 commits (#15 of 36)",
         "indentation complexity 478 (#12 of 36)"
-      ]
+      ],
+      "trend": {
+        "previousScore": 0.1137,
+        "scoreDelta": 0.31,
+        "newlyActive": false
+      }
     },
     {
       "path": "packages/web/src/components/table.tsx",
@@ -275,7 +334,12 @@
       "reasons": [
         "changed in 9 commits (#12 of 36)",
         "indentation complexity 238 (#26 of 36)"
-      ]
+      ],
+      "trend": {
+        "previousScore": 0.5363,
+        "scoreDelta": -0.12,
+        "newlyActive": false
+      }
     },
     {
       "path": "apps/cli/src/commands/inspect.ts",
@@ -295,7 +359,12 @@
       "reasons": [
         "changed in 7 commits (#13 of 36)",
         "indentation complexity 417 (#16 of 36)"
-      ]
+      ],
+      "trend": {
+        "previousScore": 0.3643,
+        "scoreDelta": 0.05,
+        "newlyActive": false
+      }
     },
     {
       "path": "packages/shared/src/index.ts",
@@ -315,7 +384,12 @@
       "reasons": [
         "changed in 6 commits (#18 of 36)",
         "indentation complexity 502 (#8 of 36)"
-      ]
+      ],
+      "trend": {
+        "previousScore": 0.5996,
+        "scoreDelta": -0.2,
+        "newlyActive": false
+      }
     },
     {
       "path": "apps/cli/src/output/terminal.ts",
@@ -335,7 +409,12 @@
       "reasons": [
         "changed in 6 commits (#17 of 36)",
         "indentation complexity 357 (#19 of 36)"
-      ]
+      ],
+      "trend": {
+        "previousScore": 0.2377,
+        "scoreDelta": 0.14,
+        "newlyActive": false
+      }
     },
     {
       "path": "packages/billing/src/discounts.ts",
@@ -355,7 +434,12 @@
       "reasons": [
         "changed in 5 commits (#20 of 36)",
         "indentation complexity 495 (#11 of 36)"
-      ]
+      ],
+      "trend": {
+        "previousScore": 0.3671,
+        "scoreDelta": 0.0,
+        "newlyActive": false
+      }
     },
     {
       "path": "packages/web/src/routes/login.tsx",
@@ -375,7 +459,12 @@
       "reasons": [
         "changed in 5 commits (#21 of 36)",
         "indentation complexity 292 (#23 of 36)"
-      ]
+      ],
+      "trend": {
+        "previousScore": 0.416,
+        "scoreDelta": -0.08,
+        "newlyActive": false
+      }
     },
     {
       "path": "apps/cli/src/commands/analyze.test.ts",
@@ -395,7 +484,12 @@
       "reasons": [
         "changed in 4 commits (#22 of 36)",
         "indentation complexity 501 (#9 of 36)"
-      ]
+      ],
+      "trend": {
+        "previousScore": 0.1104,
+        "scoreDelta": 0.22,
+        "newlyActive": false
+      }
     },
     {
       "path": "packages/web/src/app.tsx",
@@ -415,7 +509,12 @@
       "reasons": [
         "changed in 4 commits (#24 of 36)",
         "indentation complexity 471 (#13 of 36)"
-      ]
+      ],
+      "trend": {
+        "previousScore": 0.4771,
+        "scoreDelta": -0.15,
+        "newlyActive": false
+      }
     },
     {
       "path": "packages/shared/src/logger.ts",
@@ -435,7 +534,12 @@
       "reasons": [
         "changed in 6 commits (#19 of 36)",
         "indentation complexity 156 (#31 of 36)"
-      ]
+      ],
+      "trend": {
+        "previousScore": 0.3048,
+        "scoreDelta": 0.02,
+        "newlyActive": false
+      }
     },
     {
       "path": "packages/web/src/styles.css",
@@ -455,7 +559,12 @@
       "reasons": [
         "changed in 3 commits (#28 of 36)",
         "indentation complexity 437 (#14 of 36)"
-      ]
+      ],
+      "trend": {
+        "previousScore": 0,
+        "scoreDelta": 0.2783,
+        "newlyActive": true
+      }
     },
     {
       "path": "apps/cli/src/output/html.ts",
@@ -475,7 +584,12 @@
       "reasons": [
         "changed in 6 commits (#16 of 36)",
         "indentation complexity 66 (#34 of 36)"
-      ]
+      ],
+      "trend": {
+        "previousScore": 0.3901,
+        "scoreDelta": -0.12,
+        "newlyActive": false
+      }
     },
     {
       "path": "packages/auth/src/oauth/github.ts",
@@ -495,7 +609,12 @@
       "reasons": [
         "changed in 4 commits (#23 of 36)",
         "indentation complexity 136 (#32 of 36)"
-      ]
+      ],
+      "trend": {
+        "previousScore": 0.2114,
+        "scoreDelta": 0.05,
+        "newlyActive": false
+      }
     },
     {
       "path": "packages/billing/src/index.ts",
@@ -515,7 +634,12 @@
       "reasons": [
         "changed in 9 commits (#11 of 36)",
         "indentation complexity 30 (#35 of 36)"
-      ]
+      ],
+      "trend": {
+        "previousScore": 0.461,
+        "scoreDelta": -0.2,
+        "newlyActive": false
+      }
     },
     {
       "path": "packages/shared/src/money.ts",
@@ -535,7 +659,12 @@
       "reasons": [
         "changed in 3 commits (#27 of 36)",
         "indentation complexity 251 (#24 of 36)"
-      ]
+      ],
+      "trend": {
+        "previousScore": 0.113,
+        "scoreDelta": 0.14,
+        "newlyActive": false
+      }
     },
     {
       "path": "packages/billing/src/currency.ts",
@@ -555,7 +684,12 @@
       "reasons": [
         "changed in 3 commits (#25 of 36)",
         "indentation complexity 207 (#29 of 36)"
-      ]
+      ],
+      "trend": {
+        "previousScore": 0.2443,
+        "scoreDelta": 0.0,
+        "newlyActive": false
+      }
     },
     {
       "path": "packages/auth/src/index.ts",
@@ -575,7 +709,12 @@
       "reasons": [
         "changed in 7 commits (#14 of 36)",
         "indentation complexity 24 (#36 of 36)"
-      ]
+      ],
+      "trend": {
+        "previousScore": 0.301,
+        "scoreDelta": -0.08,
+        "newlyActive": false
+      }
     },
     {
       "path": "packages/billing/src/legacy/export-csv.ts",
@@ -595,7 +734,12 @@
       "reasons": [
         "changed in 3 commits (#26 of 36)",
         "indentation complexity 116 (#33 of 36)"
-      ]
+      ],
+      "trend": {
+        "previousScore": 0,
+        "scoreDelta": 0.2179,
+        "newlyActive": true
+      }
     },
     {
       "path": "apps/cli/src/cli.ts",
@@ -615,7 +759,12 @@
       "reasons": [
         "changed in 2 commits (#29 of 36)",
         "indentation complexity 404 (#17 of 36)"
-      ]
+      ],
+      "trend": {
+        "previousScore": 0.3677,
+        "scoreDelta": -0.15,
+        "newlyActive": false
+      }
     },
     {
       "path": "packages/web/src/components/modal.tsx",
@@ -635,7 +784,12 @@
       "reasons": [
         "changed in 2 commits (#32 of 36)",
         "indentation complexity 333 (#20 of 36)"
-      ]
+      ],
+      "trend": {
+        "previousScore": 0.1908,
+        "scoreDelta": 0.02,
+        "newlyActive": false
+      }
     },
     {
       "path": "packages/auth/src/permissions.ts",
@@ -655,7 +809,12 @@
       "reasons": [
         "changed in 2 commits (#31 of 36)",
         "indentation complexity 320 (#21 of 36)"
-      ]
+      ],
+      "trend": {
+        "previousScore": 0,
+        "scoreDelta": 0.2093,
+        "newlyActive": true
+      }
     },
     {
       "path": "apps/cli/src/output/json.ts",
@@ -675,7 +834,12 @@
       "reasons": [
         "changed in 2 commits (#30 of 36)",
         "indentation complexity 227 (#27 of 36)"
-      ]
+      ],
+      "trend": {
+        "previousScore": 0.3169,
+        "scoreDelta": -0.12,
+        "newlyActive": false
+      }
     },
     {
       "path": "packages/shared/src/dates.ts",
@@ -695,7 +859,12 @@
       "reasons": [
         "changed in 1 commits (#33 of 36)",
         "indentation complexity 242 (#25 of 36)"
-      ]
+      ],
+      "trend": {
+        "previousScore": 0.0757,
+        "scoreDelta": 0.05,
+        "newlyActive": false
+      }
     },
     {
       "path": "apps/cli/src/bin.ts",
@@ -712,7 +881,12 @@
         "mean": 1.63,
         "max": 4
       },
-      "reasons": ["no changes in the analysis window"]
+      "reasons": ["no changes in the analysis window"],
+      "trend": {
+        "previousScore": 0,
+        "scoreDelta": 0,
+        "newlyActive": false
+      }
     },
     {
       "path": "packages/auth/src/oauth/google.ts",
@@ -729,7 +903,12 @@
         "mean": 1.72,
         "max": 2
       },
-      "reasons": ["no changes in the analysis window"]
+      "reasons": ["no changes in the analysis window"],
+      "trend": {
+        "previousScore": 0,
+        "scoreDelta": 0,
+        "newlyActive": false
+      }
     },
     {
       "path": "packages/billing/src/legacy/import-sap.ts",
@@ -746,7 +925,12 @@
         "mean": 1.84,
         "max": 9
       },
-      "reasons": ["no changes in the analysis window"]
+      "reasons": ["no changes in the analysis window"],
+      "trend": {
+        "previousScore": 0,
+        "scoreDelta": 0,
+        "newlyActive": false
+      }
     }
   ],
   "couplings": [
@@ -854,7 +1038,11 @@
       "interfaceCommits": 6,
       "implementationCommits": 29,
       "leakage": 0.2069,
-      "leakyInterface": false
+      "leakyInterface": false,
+      "trend": {
+        "previousCohesion": 0.28,
+        "cohesionDelta": 0.12
+      }
     },
     {
       "path": "apps/cli",
@@ -878,7 +1066,11 @@
       "interfaceCommits": 0,
       "implementationCommits": 24,
       "leakage": null,
-      "leakyInterface": false
+      "leakyInterface": false,
+      "trend": {
+        "previousCohesion": 0.58,
+        "cohesionDelta": -0.08
+      }
     },
     {
       "path": "packages/web",
@@ -906,7 +1098,11 @@
       "interfaceCommits": 0,
       "implementationCommits": 58,
       "leakage": null,
-      "leakyInterface": false
+      "leakyInterface": false,
+      "trend": {
+        "previousCohesion": 0.7345,
+        "cohesionDelta": -0.2
+      }
     },
     {
       "path": "packages/billing",
@@ -938,7 +1134,11 @@
       "interfaceCommits": 9,
       "implementationCommits": 71,
       "leakage": 0.1268,
-      "leakyInterface": false
+      "leakyInterface": false,
+      "trend": {
+        "previousCohesion": 0.5241,
+        "cohesionDelta": 0.03
+      }
     },
     {
       "path": "packages/auth",
@@ -966,7 +1166,11 @@
       "interfaceCommits": 7,
       "implementationCommits": 43,
       "leakage": 0.1395,
-      "leakyInterface": false
+      "leakyInterface": false,
+      "trend": {
+        "previousCohesion": 0.6636,
+        "cohesionDelta": -0.05
+      }
     }
   ]
 }
