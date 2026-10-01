@@ -2,6 +2,8 @@ import { execFileSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { join, resolve } from "node:path";
 
+import { isolatedGitEnv } from "./git-environment.mjs";
+
 export const projectRoot = resolve(
   process.env["EFFECT_REFERENCE_ROOT"] ?? process.cwd(),
 );
@@ -24,6 +26,7 @@ export const tag = `effect@${reference.version}`;
 const git = (...args) =>
   execFileSync("git", args, {
     encoding: "utf8",
+    env: isolatedGitEnv(),
     stdio: ["ignore", "pipe", "pipe"],
   }).trim();
 
@@ -33,7 +36,7 @@ export const gitInReference = (...args) =>
 
 /** @param {...string} args */
 export const gitVerbose = (...args) => {
-  execFileSync("git", args, { stdio: "inherit" });
+  execFileSync("git", args, { env: isolatedGitEnv(), stdio: "inherit" });
 };
 
 /** @returns {boolean} */

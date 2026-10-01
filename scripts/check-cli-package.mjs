@@ -14,6 +14,8 @@ import {
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
+import { isolatedGitEnv } from "./git-environment.mjs";
+
 const repository = resolve(import.meta.dirname, "..");
 
 /**
@@ -135,11 +137,10 @@ const expectBundledArtifact = (tarball) => {
 const makeRepository = () => {
   const root = join(temporary, "repository");
   mkdirSync(root);
-  const env = {
-    ...process.env,
+  const env = isolatedGitEnv({
     GIT_CONFIG_GLOBAL: "/dev/null",
     GIT_CONFIG_NOSYSTEM: "1",
-  };
+  });
   /** @param {string[]} args */
   const git = (...args) =>
     execFileSync("git", ["-C", root, ...args], { env, stdio: "ignore" });

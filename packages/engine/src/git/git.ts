@@ -11,6 +11,35 @@ import type { GitError } from "./git-errors.js";
 type Spawner = ChildProcessSpawner.ChildProcessSpawner["Service"];
 type Handle = ChildProcessSpawner.ChildProcessHandle;
 
+/**
+ * Repository-local variables as listed by `git rev-parse --local-env-vars`.
+ * Git hooks and `git rebase -x` export them, and they beat `cwd`, so a
+ * process that inherits them works on the caller's repository instead of the
+ * requested one.
+ */
+const repositoryLocalVariables = [
+  "GIT_ALTERNATE_OBJECT_DIRECTORIES",
+  "GIT_CONFIG",
+  "GIT_CONFIG_PARAMETERS",
+  "GIT_CONFIG_COUNT",
+  "GIT_OBJECT_DIRECTORY",
+  "GIT_DIR",
+  "GIT_WORK_TREE",
+  "GIT_IMPLICIT_WORK_TREE",
+  "GIT_GRAFT_FILE",
+  "GIT_INDEX_FILE",
+  "GIT_NO_REPLACE_OBJECTS",
+  "GIT_REPLACE_REF_BASE",
+  "GIT_PREFIX",
+  "GIT_SHALLOW_FILE",
+  "GIT_COMMON_DIR",
+] as const;
+
+/** Unsets each variable in the child; the rest of the parent environment is kept. */
+const withoutRepositoryLocalVariables = Object.fromEntries(
+  repositoryLocalVariables.map((name) => [name, undefined]),
+);
+
 const spawnFailure = (
   args: ReadonlyArray<string>,
   error: PlatformError.PlatformError,
@@ -52,6 +81,8 @@ const runStreaming = (
     Effect.gen(function* () {
       const command = ChildProcess.make("git", args, {
         cwd: directory,
+        env: withoutRepositoryLocalVariables,
+        extendEnv: true,
         stdin:
           stdin === undefined
             ? "ignore"
