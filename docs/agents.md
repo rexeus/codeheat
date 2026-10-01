@@ -12,6 +12,7 @@ Paste this into the repository's agent instructions:
 Run `npx codeheat inspect <file> --json` (quote globs) before changing a file and read the result:
 
 - `partners` with `probability` ≥ 0.5 usually change together with this file. Read them, and update them in the same change or state why not. A partner in a distant folder (not a `testPair`) is a hidden dependency: prefer fixing the boundary over copying the coupling.
+- A partner with `imports: "none"` is hidden coupling: no import links the two files, so the compiler will not tell you when one side breaks the other. Check both files before changing either.
 - A low `rank` (1 is hottest) means the file is large or nested and changes often. Keep the change small, add tests first, and prefer extracting over adding more code to it.
 - `reasons` explains the rank in plain words; quote it when you explain your plan.
 - `modules` describes the module the file lives in (see below): a low `cohesion` means changes there usually reach into other modules.
@@ -62,6 +63,16 @@ The files of a repository are grouped into modules: workspace packages (a direct
 - A coupling with `crossesModule: true` joins files of different modules. That is neutral information: an app changes with the library it uses. It is worth a look when the modules should not know each other.
 
 `codeheat analyze --json` lists every module in `modules`, bounded by `--limit` like `files` and `couplings`; `totals.modules` is the full count. The order is the ranking: first the modules with at least `thresholds.minModuleCommits` commits that are not `testOnly`, then the other modules with commits (each group least cohesive first, ties by more `commits`, then `path`), last the modules with `cohesion: null`. The first entries are therefore the ones worth reading, also under a small `--limit`.
+
+## Reading hidden coupling
+
+A coupling or partner carries `imports`, and a file gets a reason ("changes with X in 70% of its commits without an import between them") when its strongest partner is hidden:
+
+- `imports: "none"` in a coupling (`a`, `b`) means neither file imports the other, directly or through a barrel it imports. The files change together for another reason: duplicated logic, a wire protocol, a schema, or configuration read in two places. **Check both files before changing either**, and say in your plan what ties them.
+- In an `inspect` partner, `imports` is seen from the inspected file: `file→partner` (it imports the partner), `partner→file`, `both`, `none`. In a coupling it is `a→b`, `b→a`, `both`, `none`, where `a` is the lexicographically smaller path.
+- `imports: null` means unknown, never "none": the file is not TypeScript or JavaScript, does not parse, or no parser was available (stderr says so). Do not treat it as hidden coupling.
+- `none` can overstate hidden coupling where imports go through tsconfig `paths` or other aliases, which codeheat does not resolve. If a pair is full of alias imports, trust the code over the flag.
+- `thresholds.minHiddenProbability` is the co-change probability from which a hidden partner gets its reason line.
 
 ## Contract
 

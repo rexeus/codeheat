@@ -4,6 +4,7 @@ See where a codebase hurts. codeheat reads your git history and shows two things
 
 - **Hotspots** — files that are big or deeply nested _and_ change all the time. That is where bugs, merge conflicts, and slow reviews concentrate.
 - **Change coupling** — files that keep changing in the same commits. When they sit in different modules, a boundary is in the wrong place, and anyone (human or agent) who edits one file without the other ships a half-done change.
+- **Hidden coupling** — coupled files with no import between them (TypeScript and JavaScript). Nothing in the code points at the dependency, so duplicated logic, a wire protocol, or configuration read in two places goes unnoticed until one side changes alone.
 
 Humans get a treemap. Agents get ranked, explained JSON.
 
@@ -14,7 +15,7 @@ npx codeheat analyze --json      # ranked, bounded report for agents and scripts
 npx codeheat inspect src/billing/invoice.ts   # what to know before editing a file
 ```
 
-Requires Node.js 22 or newer and `git` on your PATH. Works for any language.
+Requires Node.js 22.12 or newer and `git` on your PATH. Works for any language; hidden coupling (below) is reported for TypeScript and JavaScript.
 
 ## The treemap
 
@@ -22,7 +23,7 @@ Requires Node.js 22 or newer and `git` on your PATH. Works for any language.
 
 - **Area** is lines of code, **color** is hotspot rank: the darkest tiles are the hottest 2 % of the repository. Tiles are grouped by directory, like a stock-market heatmap grouped by sector.
 - **Color by** switches between _Heat_ (hotspot rank), _Cohesion_ (the module's cohesion), and _Change_ (`#mode=change`): how a file's score moved against the window before, from cooler (blue) to warmer (orange). _Change_ needs a report made with `--compare`.
-- **Click a file** to see why it is hot and which files change with it. Its partners light up wherever they live in the tree; partners in distant folders are the modularization smell to look for.
+- **Click a file** to see why it is hot and which files change with it. Its partners light up wherever they live in the tree; partners in distant folders are the modularization smell to look for. A partner with no import to or from the file is outlined in magenta and badged _no import_: hidden coupling.
 - **Filter** by substring (`billing`) or glob (`packages/*/src/index.ts`).
 
 `--out <file>` picks the path, `--no-open` skips the browser.
@@ -56,7 +57,7 @@ npx codeheat inspect packages/billing/src/invoice.ts --json
       "reasons": [
         "changed in 48 commits (#1 of 36)",
         "indentation complexity 1900 (#2 of 36)",
-        "co-changes with packages/billing/src/tax.ts in 50% of its commits",
+        "changes with packages/billing/src/tax.ts in 50% of its commits without an import between them",
       ],
       "partners": [
         {
@@ -72,6 +73,7 @@ npx codeheat inspect packages/billing/src/invoice.ts --json
           "probability": 0.5,
           "testPair": false,
           "crossesModule": false,
+          "imports": "none",
         },
         {
           "path": "packages/web/src/routes/invoices.tsx",
@@ -79,6 +81,7 @@ npx codeheat inspect packages/billing/src/invoice.ts --json
           "probability": 0.2917,
           "testPair": false,
           "crossesModule": true,
+          "imports": "partner→file",
         },
       ],
     },
@@ -89,7 +92,7 @@ npx codeheat inspect packages/billing/src/invoice.ts --json
 
 The example shows an illustrative shop repository (the one in `fixtures/report.sample.json`).
 
-`probability` reads as: when this file changed, the partner changed too in that share of commits. `crossesModule` marks a partner that lives in another module. Globs work, so `inspect "packages/*/src/index.ts"` shows how often public barrels change and what changes with them.
+`probability` reads as: when this file changed, the partner changed too in that share of commits. `crossesModule` marks a partner that lives in another module. `imports` says how an import links the partner and the inspected file: `file→partner` (the file imports the partner), `partner→file`, `both`, or `none`, which is hidden coupling (read the partner before editing); it is `null` when unknown. Globs work, so `inspect "packages/*/src/index.ts"` shows how often public barrels change and what changes with them.
 
 [docs/agents.md](docs/agents.md) has a snippet for `AGENTS.md` / `CLAUDE.md` that makes agents use it.
 
@@ -131,6 +134,7 @@ Paths or globs. A path without glob characters is absolute or relative to the wo
 - **Score** — `norm(revisions) × norm(weighted lines)`, where weighted lines are lines plus indentation levels and `norm(x) = ln(1+x) / ln(1+max)` over the repository. 0..1, relative to this repository: a 0.8 here says nothing about a 0.8 elsewhere.
 - **Coupling degree** — `shared commits / mean(revisions of both)`. Pairs need 3 shared commits and a degree of 0.3. Commits touching more than 50 files (formatting runs, mass renames) are ignored for coupling.
 - **Co-change probability** — `shared commits / revisions of one file`: how likely a change to that file also changes its partner. The `analyze` terminal table shows it in both directions (`a → b`, `b → a`); `inspect` shows it for the focused file.
+- **Hidden coupling** — every coupling in `analyze --json` has `imports`: `a→b` when file `a` imports file `b`, `b→a`, `both`, or `none` when neither does. The terminal shows the same in an import column (`hidden` for `none`). An import counts when it is static (`import` and `export … from`, type-only included), a dynamic `import("…")` with a plain string, or a `require("…")`; importing a module also reaches what that module re-exports (`export * from`, `export { x } from`), so a file that imports a barrel imports what the barrel exports. Relative specifiers resolve as TypeScript does (extension, `index` file, `.js` for `.ts`); the name of a workspace package (`name` in its `package.json`) resolves to the package's entry points. Only files that take part in couplings are read, plus the modules they import for re-exports. `imports` is `null` when a file is not TypeScript or JavaScript (`.ts .tsx .mts .cts .js .jsx .mjs .cjs`), does not parse (a broken file is unknown, never `none`), or the parser could not be loaded. A file whose strongest non-test partner has no import and a probability of at least `thresholds.minHiddenProbability` gets a reason line.
 - **Test pairs** — `a.ts` with its test (`a.test.ts`, `a.spec.ts`, `a_test.go`, `a_spec.rb`) is expected coupling; it is marked, never counted as a smell.
 - **Breadth and hubs** — breadth is the number of co-changed files: distinct other files that shared a counted commit (at most 50 files) with this one, however rarely. A hub is a file changed at least 5 times, not a test, with a breadth of at least 10 among the widest 5% of such files (ties included); it gets a reason line even when no single pair is coupled strongly enough to report, as with barrels.
 - **Modules and cohesion** — a module is a package (a directory below the root with a tracked `package.json`, `go.mod`, `Cargo.toml`, `pyproject.toml`, `pom.xml`, `build.gradle`, `build.gradle.kts`, or `*.csproj`; a file belongs to its nearest package) or, outside packages, a directory, cut where the files first split into two or more directories (when no depth splits them, at the first level: `scripts/release.ts` and `scripts/lib/util.ts` are one module `scripts`). A repository that yields a single module is split by directory instead. A module's cohesion is the share of its counted commits (at most 50 files) that touched no other module; `partners` lists the modules the rest touched. Modules are ranked only when they have at least `max(5, 1% of the commits counted for coupling)` counted commits (`thresholds.minModuleCommits`) and are not test-only (`testOnly`: every file is test code, by a test suffix or a `test`, `tests`, `__tests__`, `spec`, `specs`, `e2e`, `fixtures`, or `__fixtures__` directory). `modules` lists the ranked ones first, least cohesive first. A coupling between files of different modules is marked `crossesModule`, neutrally: an app legitimately changes with the library it uses.
@@ -141,6 +145,8 @@ The report states every threshold under `thresholds`, and the JSON contract is v
 
 ## Known limits
 
+- Hidden coupling sees only imports it can resolve to files in the analysis: relative specifiers and workspace package names. Imports through tsconfig `paths` or `#` aliases, installed packages, and generated code count as no import, so a repository that relies on aliases reports `none` for pairs that do import each other. Other languages than TypeScript and JavaScript report `imports: null`.
+- The code parser is a native module (`oxc-parser`, the one runtime dependency of the package). Where its binary cannot load, codeheat says so on stderr, reports `imports: null`, and still runs everything else.
 - Indentation is a proxy. Unusual formatting distorts it; minified files are excluded for that reason.
 - Shallow clones lack history; codeheat warns and ignores the boundary commit. Run `git fetch --unshallow` for full results.
 - git gives up on rename detection in very large commits (`diff.renameLimit`), and a path reused after a delete inherits the old file's history, like `git log --follow`.

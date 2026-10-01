@@ -1,0 +1,7 @@
+---
+"codeheat": minor
+---
+
+Flag hidden coupling: coupled TypeScript and JavaScript files with no import between them. Every coupling in the JSON report gains `imports` (`a→b`, `b→a`, `both`, `none`, or `null` when a file is not TypeScript or JavaScript, does not parse, or no parser was available), and every `inspect` partner gains `imports` seen from the inspected file (`file→partner`, `partner→file`, `both`, `none`, or `null`). `none` is hidden coupling. A file whose strongest partner is hidden, with a co-change probability of at least `thresholds.minHiddenProbability` (0.5, new), gets a reason line ("changes with X in 70% of its commits without an import between them"). The terminal coupling and partner tables gain an import column, and the treemap badges and outlines such partners in their own color. Imports are resolved from relative specifiers (as TypeScript does, including `.js` for `.ts` and `index` files) and workspace package names, and follow re-exports through barrels; tsconfig `paths` aliases are not resolved, so a repository that relies on them can report `none` for pairs that do import each other.
+
+The imports are read with `oxc-parser`, now the package's one runtime dependency, loaded lazily. codeheat now requires Node.js 22.12 or newer (it was 22). If the parser's native binary cannot load, codeheat says so once on stderr, reports `imports: null`, and everything else works as before. `analyze` needs about a second longer and more memory on a repository the size of angular/angular.
