@@ -13,6 +13,7 @@ import { renderAnalysis } from "../output/terminal/analysis-view.js";
 import { version } from "../version.js";
 import { WorkingDirectory } from "../working-directory.js";
 import { resolveAnalysisTarget } from "./analysis-target.js";
+import { rejectMisplacedHtmlOutput } from "./misplaced-html-output.js";
 import {
   DEFAULT_SINCE,
   entryFlag,
@@ -86,6 +87,11 @@ export const analyzeCommand = Command.make(
     if (Option.isSome(since) && Option.isSome(compare)) {
       return yield* new FlagsConflict({ flags: ["--compare", "--since"] });
     }
+    yield* rejectMisplacedHtmlOutput({
+      path,
+      html: flags.html,
+      out: flags.out,
+    });
     const cwd = yield* WorkingDirectory;
     // A path argument both locates the repository and narrows the universe,
     // so `codeheat analyze ../other-repo` works from anywhere.

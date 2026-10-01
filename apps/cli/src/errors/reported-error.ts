@@ -6,6 +6,7 @@ import { CliError } from "effect/cli";
 import { escapeForTerminal } from "../output/escape.js";
 import type { HtmlWriteFailed } from "../output/html/html-write-failed.js";
 import type { FlagsConflict } from "./flags-conflict.js";
+import type { MisplacedHtmlOutput } from "./misplaced-html-output.js";
 import type { NothingMatched } from "./nothing-matched.js";
 import type { PathNotFound } from "./path-not-found.js";
 
@@ -34,6 +35,7 @@ export class CliReportedError extends Schema.TaggedError<CliReportedError>()(
 export type KnownFailure =
   | AnalyzeError
   | FlagsConflict
+  | MisplacedHtmlOutput
   | NothingMatched
   | PathNotFound
   | HtmlWriteFailed
@@ -54,6 +56,9 @@ const cliFailure = (error: CliError.CliError): Failure => {
   };
 };
 
+const shellWord = (text: string): string =>
+  /[\s"'\\$`]/u.test(text) ? `"${text.replaceAll(/["\\$`]/gu, "\\$&")}"` : text;
+
 const usageMessage = (
   error: Extract<
     KnownFailure,
@@ -62,6 +67,7 @@ const usageMessage = (
         | "InvalidSince"
         | "InvalidCompare"
         | "FlagsConflict"
+        | "MisplacedHtmlOutput"
         | "PathNotFound";
     }
   >,
@@ -75,6 +81,9 @@ const usageMessage = (
   if (error._tag === "FlagsConflict") {
     return `${error.flags.join(" and ")} cannot be combined`;
   }
+  if (error._tag === "MisplacedHtmlOutput") {
+    return `--html takes no file name; to write the treemap to ${error.path}, use --out ${shellWord(error.path)} (to analyze a directory of that name, write ${shellWord(`${error.path}/`)})`;
+  }
   return `no such file or directory: ${error.path}`;
 };
 
@@ -82,6 +91,7 @@ const engineFailure = (
   error:
     | AnalyzeError
     | FlagsConflict
+    | MisplacedHtmlOutput
     | NothingMatched
     | PathNotFound
     | HtmlWriteFailed,
@@ -90,6 +100,7 @@ const engineFailure = (
     error._tag === "InvalidSince" ||
     error._tag === "InvalidCompare" ||
     error._tag === "FlagsConflict" ||
+    error._tag === "MisplacedHtmlOutput" ||
     error._tag === "PathNotFound"
   ) {
     return { message: usageMessage(error), exitCode: USAGE };
@@ -133,8 +144,9 @@ const reported = ({ message, exitCode }: Failure): CliReportedError =>
 /**
  * Words an expected failure and assigns its exit code: 2 for usage errors
  * (an invalid `--since` or `--compare`, flags that cannot be combined, a path
- * that does not exist), 3 for no git repository or no git, 4 when `inspect`
- * matched nothing, 1 for the rest.
+ * that does not exist, a `.html` path given to `--html` instead of `--out`),
+ * 3 for no git repository or no git, 4 when `inspect` matched nothing, 1 for
+ * the rest.
  */
 export const toReportedError = (error: KnownFailure): CliReportedError =>
   reported(describe(error));
