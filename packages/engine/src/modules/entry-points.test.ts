@@ -17,6 +17,10 @@ const entryPointsOf = (
   options: {
     readonly kind?: ModuleRef["kind"];
     readonly globs?: ReadonlyArray<string>;
+    /** The directories with a manifest; the package itself unless given. */
+    readonly packages?: ReadonlyArray<string>;
+    /** The module the files belong to; the package unless given. */
+    readonly module?: string;
   } = {},
 ) =>
   Effect.gen(function* () {
@@ -30,13 +34,15 @@ const entryPointsOf = (
         manifest,
       );
     }
-    const ref: ModuleRef = { path: PACKAGE, kind: options.kind ?? "package" };
+    const module = options.module ?? PACKAGE;
+    const ref: ModuleRef = { path: module, kind: options.kind ?? "package" };
     const found = yield* findEntryPoints(
       root,
       new Map(files.map((file) => [file, ref])),
+      new Set(options.packages ?? [PACKAGE]),
       options.globs ?? [],
     );
-    return found.get(PACKAGE);
+    return found.get(module);
   });
 
 const file = (relative: string): string => `${PACKAGE}/${relative}`;
@@ -296,10 +302,38 @@ layer(NodeServices.layer)("findEntryPoints by convention", (it) => {
       const entries = yield* entryPointsOf(
         [file("index.ts"), file("src/main.ts")],
         '{ "exports": "./src/main.ts" }',
-        { kind: "directory" },
+        { kind: "directory", packages: [] },
       );
 
       assert.deepStrictEqual(entries, [file("index.ts")]);
+    }),
+  );
+});
+
+layer(NodeServices.layer)("findEntryPoints of a split package", (it) => {
+  const api = file("src/api");
+
+  it.effect("gives the piece that holds a manifest target that target", () =>
+    Effect.gen(function* () {
+      const entries = yield* entryPointsOf(
+        [`${api}/main.ts`, `${api}/helper.ts`],
+        '{ "exports": "./src/api/main.ts" }',
+        { kind: "directory", module: api },
+      );
+
+      assert.deepStrictEqual(entries, [`${api}/main.ts`]);
+    }),
+  );
+
+  it.effect("gives a piece that holds no target only conventional files", () =>
+    Effect.gen(function* () {
+      const entries = yield* entryPointsOf(
+        [file("src/other/a.ts"), file("src/other/b.ts")],
+        '{ "exports": "./src/api/main.ts" }',
+        { kind: "directory", module: file("src/other") },
+      );
+
+      assert.deepStrictEqual(entries, []);
     }),
   );
 });

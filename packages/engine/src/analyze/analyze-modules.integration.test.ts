@@ -238,3 +238,131 @@ layer(NodeServices.layer)("analyze module fallback", (it) => {
     }),
   );
 });
+
+const app = "packages/app";
+
+/**
+ * One package of 21 files (16 of them never change in the window) and a
+ * script, so the package holds more than 70 % of at least 20 files. Counted
+ * commits:
+ *
+ * 1: index.ts, billing/invoice.ts      2: invoice.ts, billing/tax.ts
+ * 3: auth/session.ts                   4: scripts/release.ts, auth/login.ts
+ */
+const buildSinglePackageHistory = (repo: TempRepository) =>
+  Effect.gen(function* () {
+    yield* repo.commit("2024-01-01T12:00:00Z", {
+      [`${app}/package.json`]: '{ "name": "app", "main": "src/index.ts" }\n',
+      [`${app}/src/index.ts`]: "0\n",
+      [`${app}/src/billing/invoice.ts`]: "0\n",
+      [`${app}/src/billing/tax.ts`]: "0\n",
+      [`${app}/src/auth/session.ts`]: "0\n",
+      [`${app}/src/auth/login.ts`]: "0\n",
+      "scripts/release.ts": "0\n",
+      ...Object.fromEntries(
+        ["billing", "auth"].flatMap((directory) =>
+          Array.from({ length: 8 }, (_, index) => [
+            `${app}/src/${directory}/still${index}.ts`,
+            "0\n",
+          ]),
+        ),
+      ),
+    });
+    yield* repo.commit(day(1), {
+      [`${app}/src/index.ts`]: "1\n",
+      [`${app}/src/billing/invoice.ts`]: "1\n",
+    });
+    yield* repo.commit(day(2), {
+      [`${app}/src/billing/invoice.ts`]: "2\n",
+      [`${app}/src/billing/tax.ts`]: "2\n",
+    });
+    yield* repo.commit(day(3), { [`${app}/src/auth/session.ts`]: "3\n" });
+    yield* repo.commit(day(4), {
+      "scripts/release.ts": "4\n",
+      [`${app}/src/auth/login.ts`]: "4\n",
+    });
+  });
+
+const expectedSplitModules: ReadonlyArray<{
+  readonly kind: Report["modules"][number]["kind"];
+  readonly [key: string]: unknown;
+}> = [
+  {
+    path: `${app}/src`,
+    kind: "directory",
+    files: 1,
+    cohesion: 0,
+    entryPoints: [`${app}/src/index.ts`],
+    interfaceCommits: 1,
+    implementationCommits: 0,
+    leakage: null,
+    partners: [`${app}/src/billing`],
+  },
+  {
+    path: `${app}/src/auth`,
+    kind: "directory",
+    files: 10,
+    cohesion: 0.5,
+    entryPoints: [],
+    interfaceCommits: 0,
+    implementationCommits: 2,
+    leakage: null,
+    partners: ["scripts"],
+  },
+  {
+    path: `${app}/src/billing`,
+    kind: "directory",
+    files: 10,
+    cohesion: 0.5,
+    entryPoints: [],
+    interfaceCommits: 0,
+    implementationCommits: 2,
+    leakage: null,
+    partners: [`${app}/src`],
+  },
+  {
+    path: "scripts",
+    kind: "directory",
+    files: 1,
+    cohesion: 0,
+    entryPoints: [],
+    interfaceCommits: 0,
+    implementationCommits: 1,
+    leakage: null,
+    partners: [`${app}/src/auth`],
+  },
+];
+
+layer(NodeServices.layer)(
+  "analyze a package that holds most of the files",
+  (it) => {
+    // `main` names the interface of a package, which is no module any more:
+    // the module of the entry file owns it as a conventional `index.ts`.
+    it.effect("measures the modules inside the only package", () =>
+      Effect.gen(function* () {
+        yield* setNow;
+        const repo = yield* makeTempRepository;
+        yield* buildSinglePackageHistory(repo);
+
+        const report = yield* analyze(analyzeOptionsFor(repo));
+
+        assert.deepStrictEqual(
+          report.modules
+            .map((module) => ({
+              path: module.path,
+              kind: module.kind,
+              files: module.files,
+              cohesion: module.cohesion,
+              entryPoints: module.entryPoints,
+              interfaceCommits: module.interfaceCommits,
+              implementationCommits: module.implementationCommits,
+              leakage: module.leakage,
+              partners: module.partners.map(({ path }) => path),
+            }))
+            .toSorted((a, b) => a.path.localeCompare(b.path)),
+          expectedSplitModules,
+        );
+      }),
+    );
+  },
+);

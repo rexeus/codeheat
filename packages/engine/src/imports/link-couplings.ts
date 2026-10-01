@@ -6,7 +6,7 @@ import type { FileSystem, Path } from "effect";
 import type { LanguageAdapter } from "../code/language-adapter.js";
 import type { GitError } from "../git/git-errors.js";
 import type { Git } from "../git/git.js";
-import type { ModuleRef } from "../modules/detect.js";
+import { packageDirectoriesOf } from "../modules/package-directories.js";
 import type { Coupling } from "../report/report.js";
 import { listTrackedFiles } from "../universe/tracked-files.js";
 import { loadLinks, reachableFrom } from "./module-links.js";
@@ -21,8 +21,6 @@ export type LinkOptions = {
   readonly scope: string;
   /** Every universe file; imports of other files link nothing. */
   readonly universe: ReadonlySet<string>;
-  /** The module of every universe file; the packages among them can be imported by name. */
-  readonly modules: ReadonlyMap<string, ModuleRef>;
   readonly adapters: ReadonlyArray<LanguageAdapter>;
 };
 
@@ -85,7 +83,8 @@ export const linkCouplings = (
     const tracked = yield* listTrackedFiles(options.scope);
     const workspace = yield* readWorkspace(
       options.root,
-      options.modules,
+      options.universe,
+      packageDirectoriesOf(tracked),
       manifestFilesFor(options.scope, tracked),
     );
     const links = yield* loadLinks(

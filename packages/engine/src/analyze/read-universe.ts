@@ -48,7 +48,12 @@ export const readUniverse = (options: {
       files.map((file) => file.path),
       packageDirectories,
     );
-    const entryPoints = yield* findEntryPoints(root, modules, options.entry);
+    const entryPoints = yield* findEntryPoints(
+      root,
+      modules,
+      packageDirectories,
+      options.entry,
+    );
     const depths = yield* measureDepths({
       root,
       adapters: options.adapters,

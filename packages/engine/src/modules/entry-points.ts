@@ -5,6 +5,7 @@ import type { FileSystem } from "effect";
 
 import { matchesAny } from "../universe/globs.js";
 import type { ModuleRef } from "./detect.js";
+import { packageOf } from "./package-directories.js";
 import { readManifestTargets } from "./package-manifest.js";
 
 /** `index` of the JavaScript family (not `index.test.ts`, not `index.html`), Rust and Python module roots. */
@@ -92,22 +93,28 @@ const resolveTarget = (
   return stemmed.find((matches) => matches.length > 0) ?? [];
 };
 
+/** `targets` are relative to `manifestDirectory`, the package the manifest belongs to; conventional files are looked for at the `module` root. */
 const detectEntryPoints = (
   module: string,
   files: ReadonlyArray<string>,
-  targets: ReadonlyArray<string>,
+  manifest: {
+    readonly directory: string;
+    readonly targets: ReadonlyArray<string>;
+  },
 ): ReadonlyArray<string> => {
   const code = files.filter((file) => isManifestCode(file));
   return [
     ...new Set([
-      ...targets.flatMap((target) => resolveTarget(module, target, code)),
+      ...manifest.targets.flatMap((target) =>
+        resolveTarget(manifest.directory, target, code),
+      ),
       ...files.filter((file) => isConventionalEntry(module, file)),
     ]),
   ].toSorted(Order.String);
 };
 
 /** The universe files of each module, with the kind of the module. */
-export const groupByModule = (
+const groupByModule = (
   modules: ReadonlyMap<string, ModuleRef>,
 ): ReadonlyMap<string, ModuleFiles> => {
   const grouped = new Map<
@@ -145,22 +152,44 @@ export const packageMainEntries = (
 };
 
 /**
+ * The directory whose `package.json` names the interface of a module: the
+ * package module itself, or, for a directory module cut out of a package that
+ * was split, the package all its files lie in (the files of the package that
+ * the manifest names fall to the piece that holds them).
+ */
+const manifestDirectory = (
+  module: string,
+  kind: ModuleRef["kind"],
+  files: ReadonlyArray<string>,
+  packages: ReadonlySet<string>,
+): string | undefined => {
+  if (kind === "package") {
+    return module;
+  }
+  const homes = new Set(files.map((file) => packageOf(file, packages)));
+  const [home] = homes;
+  return homes.size === 1 ? home : undefined;
+};
+
+/**
  * Finds the entry points of every module, keyed by module path (a module
  * without any maps to an empty list). `modules` assigns the universe files to
- * their modules; `root` is the repository root manifests are read under.
+ * their modules; `packages` are the directories with a manifest, and `root` is the repository root manifests are read under.
  *
  * Without `globs`, a package's entry points are the files its `package.json`
  * names in `exports`, `main`, `module`, and `types`, as far as they are
  * JavaScript or TypeScript files and no `*.config.*` files (a target in `dist/` or
  * `build/` stands for the same-stem source under the package's `src/` or root,
  * when one exists), plus `index.<ts|js|…>`, `mod.rs`, `lib.rs`, and `__init__.py` at
- * the module root or its `src/`. Directory modules use the conventional files
- * only. Non-empty `globs` replace all of that: entry points are the module
+ * the module root or its `src/`. A directory module that is a piece of a split
+ * package also takes the manifest's targets that lie in it. Other directory
+ * modules use the conventional files only. Non-empty `globs` replace all of that: entry points are the module
  * files matching any glob.
  */
 export const findEntryPoints = (
   root: string,
   modules: ReadonlyMap<string, ModuleRef>,
+  packages: ReadonlySet<string>,
   globs: ReadonlyArray<string>,
 ): Effect.Effect<
   ReadonlyMap<string, ReadonlyArray<string>>,
@@ -179,11 +208,20 @@ export const findEntryPoints = (
         );
         continue;
       }
+      const directory = manifestDirectory(module, kind, files, packages);
       const targets =
-        kind === "package"
-          ? yield* readManifestTargets(path.join(root, module, "package.json"))
-          : [];
-      entryPoints.set(module, detectEntryPoints(module, files, targets));
+        directory === undefined
+          ? []
+          : yield* readManifestTargets(
+              path.join(root, directory, "package.json"),
+            );
+      entryPoints.set(
+        module,
+        detectEntryPoints(module, files, {
+          directory: directory ?? module,
+          targets,
+        }),
+      );
     }
     return entryPoints;
   });
