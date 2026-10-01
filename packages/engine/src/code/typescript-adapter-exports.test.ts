@@ -140,6 +140,21 @@ describe("typescript adapter export bindings", () => {
   });
 });
 
+describe("typescript adapter export bindings of imports declared late", () => {
+  it("binds an exported import to what it imports when the import follows the export", () => {
+    expect(
+      bindings(
+        "late.ts",
+        'export { d, b };\nexport const k = 1;\nimport d, { a as b } from "./m";',
+      ),
+    ).toStrictEqual({
+      d: { specifier: "./m", name: "default" },
+      b: { specifier: "./m", name: "a" },
+      k: { local: "k" },
+    });
+  });
+});
+
 describe("typescript adapter exports of odd input", () => {
   it("lists nothing for a file that exports nothing", () => {
     expect(read("side-effect.ts", "console.log(1);")).toStrictEqual({

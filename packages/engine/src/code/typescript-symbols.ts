@@ -97,15 +97,18 @@ const readImports = (imports: StaticImports): Imports => {
 
 /** The binding an export entry stands for, or undefined when the record does not say. */
 const bindingOf = (
-  { start, moduleRequest, importName, exportName, localName }: Entry,
+  { moduleRequest, importName, exportName, localName }: Entry,
   imports: Imports,
 ): Binding | undefined => {
-  if (moduleRequest !== null && moduleRequest.start < start) {
-    // `import { a } from "m"; export { a }` comes as an indirect export whose
-    // import name is the one of the import, which the position identifies.
-    return importName.start === null
+  // `import { a } from "m"; export { a }` comes as an indirect export, in
+  // whichever order the two statements stand, whose import name is the one of
+  // the import; a genuine `export { a } from "m"` has the position of its own.
+  const folded =
+    importName.start === null
       ? undefined
       : imports.byPosition.get(importName.start);
+  if (moduleRequest !== null && folded !== undefined) {
+    return folded;
   }
   if (moduleRequest !== null) {
     const name = importName.kind === "All" ? "*" : importedName(importName);
