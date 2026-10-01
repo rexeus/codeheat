@@ -56,7 +56,7 @@ export const analyzeCommand = Command.make(
     ),
     limit: Flag.Int("limit").pipe(
       Flag.withDescription(
-        `Files and couplings to report, each; 0 for no limit (default ${DEFAULT_LIMIT})`,
+        `Files, couplings, and modules to report in --json, each; 0 for no limit (default ${DEFAULT_LIMIT})`,
       ),
       Flag.withDefault(DEFAULT_LIMIT),
       Flag.filter(
