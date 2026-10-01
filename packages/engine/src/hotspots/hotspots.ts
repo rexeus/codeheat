@@ -3,6 +3,7 @@ import { Order } from "effect";
 
 import { groupByPath, partnersOf } from "../coupling/partners.js";
 import type { Complexity } from "../metrics/complexity.js";
+import { isTestPath } from "../modules/test-path.js";
 import { roundReported } from "../report/precision.js";
 import type { Coupling, FileStats } from "../report/report.js";
 import { describeFile, isHubCandidate } from "./reasons.js";
@@ -106,6 +107,7 @@ export const rankFiles = (
       const { path, revisions, complexity, breadth } = measure;
       return {
         path,
+        test: isTestPath(path),
         module: measure.module,
         rank: index + 1,
         score: roundReported(score),

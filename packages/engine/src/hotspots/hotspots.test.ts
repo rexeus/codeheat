@@ -276,3 +276,34 @@ describe("rankFiles hub candidates", () => {
     ]);
   });
 });
+
+describe("rankFiles test flag", () => {
+  it("marks files with a test suffix or below a test directory", () => {
+    const paths = [
+      "src/a.ts",
+      "src/a.test.ts",
+      "src/a_spec.rb",
+      "test/utils.ts",
+      "src/__tests__/a.ts",
+      "src/test",
+    ];
+
+    const files = rankFiles(
+      paths.map((path) => measure(path, 1, 10, 0)),
+      [],
+    );
+
+    expect(
+      files
+        .toSorted((a, b) => a.path.localeCompare(b.path))
+        .map((file) => [file.path, file.test]),
+    ).toEqual([
+      ["src/__tests__/a.ts", true],
+      ["src/a_spec.rb", true],
+      ["src/a.test.ts", true],
+      ["src/a.ts", false],
+      ["src/test", false],
+      ["test/utils.ts", true],
+    ]);
+  });
+});

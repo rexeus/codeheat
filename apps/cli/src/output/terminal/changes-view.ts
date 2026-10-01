@@ -1,6 +1,5 @@
 // Owns the "Biggest changes" part of the terminal view: what warmed up and which
 // modules moved in cohesion between the previous window and the latest one.
-import { isTestFile } from "@codeheat/engine";
 import type { FileStats, Report } from "@codeheat/engine";
 
 import { escapeForTerminal } from "../escape.js";
@@ -34,7 +33,7 @@ const warmingFiles = (files: ReadonlyArray<FileStats>) =>
       file.trend !== null &&
       !file.trend.newlyActive &&
       file.trend.scoreDelta > 0 &&
-      !isTestFile(file.path)
+      !file.test
         ? [{ file, trend: file.trend }]
         : [],
     )
@@ -44,9 +43,7 @@ const warmingFiles = (files: ReadonlyArray<FileStats>) =>
 /** The highest-ranked source files that had no revision in the previous window. */
 const newlyActiveFiles = (files: ReadonlyArray<FileStats>) =>
   files
-    .filter(
-      (file) => file.trend?.newlyActive === true && !isTestFile(file.path),
-    )
+    .filter((file) => file.trend?.newlyActive === true && !file.test)
     .slice(0, TOP_NEWLY_ACTIVE);
 
 /** The modules whose cohesion moved most in either direction, among the ranked ones (enough commits, not test-only). */

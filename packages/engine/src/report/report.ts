@@ -93,6 +93,14 @@ export const FileStats = Schema.Struct({
    * commits (at most `Thresholds.maxCommitFiles` files), however rarely.
    */
   breadth: Count,
+  /**
+   * The path is test code: its name has a test suffix (`.test`, `.spec`,
+   * `_test`, `_spec`) or a directory above it is named like a test directory
+   * (`test`, `tests`, `__tests__`, `spec`, `specs`, `e2e`, `fixtures`,
+   * `__fixtures__`). Tests are left out of the terminal's rankings of
+   * warming files; apply the same rule to `trend`.
+   */
+  test: Schema.Boolean,
   /** `path` of the file's module (see `Module`). */
   module: Schema.String,
   /** Non-blank lines. */

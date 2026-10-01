@@ -5,6 +5,7 @@ import { inspect } from "./inspect.js";
 
 const stats = (path: string, rank: number, revisions: number): FileStats => ({
   path,
+  test: false,
   module: path.startsWith("lib/") ? "lib" : "src",
   rank,
   score: 1 / rank,

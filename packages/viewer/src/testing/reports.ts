@@ -6,6 +6,7 @@ export const fileStats = (
   overrides: Partial<FileStats> = {},
 ): FileStats => ({
   path,
+  test: false,
   rank: 1,
   score: 0.5,
   revisions: 10,

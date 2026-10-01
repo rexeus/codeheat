@@ -6,6 +6,7 @@ import { makeStyle } from "./style.js";
 
 const entry: InspectResult["matches"][number] = {
   path: "packages/billing/src/invoice.ts",
+  test: false,
   rank: 1,
   score: 0.97,
   revisions: 48,

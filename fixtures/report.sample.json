@@ -67,7 +67,8 @@
         "previousRevisions": 33,
         "scoreDelta": 0.31,
         "newlyActive": false
-      }
+      },
+      "test": false
     },
     {
       "path": "packages/billing/src/tax.ts",
@@ -93,7 +94,8 @@
         "previousRevisions": 36,
         "scoreDelta": -0.12,
         "newlyActive": false
-      }
+      },
+      "test": false
     },
     {
       "path": "packages/billing/src/invoice.test.ts",
@@ -119,7 +121,8 @@
         "previousRevisions": 34,
         "scoreDelta": 0.05,
         "newlyActive": false
-      }
+      },
+      "test": true
     },
     {
       "path": "packages/web/src/routes/invoices.tsx",
@@ -145,7 +148,8 @@
         "previousRevisions": 24,
         "scoreDelta": -0.2,
         "newlyActive": false
-      }
+      },
+      "test": false
     },
     {
       "path": "apps/cli/src/commands/analyze.ts",
@@ -171,7 +175,8 @@
         "previousRevisions": 21,
         "scoreDelta": 0.14,
         "newlyActive": false
-      }
+      },
+      "test": false
     },
     {
       "path": "packages/auth/src/session.ts",
@@ -197,7 +202,8 @@
         "previousRevisions": 22,
         "scoreDelta": 0.0,
         "newlyActive": false
-      }
+      },
+      "test": false
     },
     {
       "path": "packages/billing/src/tax.test.ts",
@@ -223,7 +229,8 @@
         "previousRevisions": 25,
         "scoreDelta": -0.08,
         "newlyActive": false
-      }
+      },
+      "test": true
     },
     {
       "path": "packages/shared/src/config.ts",
@@ -249,7 +256,8 @@
         "previousRevisions": 10,
         "scoreDelta": 0.22,
         "newlyActive": false
-      }
+      },
+      "test": false
     },
     {
       "path": "packages/auth/src/session.test.ts",
@@ -275,7 +283,8 @@
         "previousRevisions": 18,
         "scoreDelta": -0.15,
         "newlyActive": false
-      }
+      },
+      "test": true
     },
     {
       "path": "packages/web/src/hooks/use-session.ts",
@@ -301,7 +310,8 @@
         "previousRevisions": 11,
         "scoreDelta": 0.02,
         "newlyActive": false
-      }
+      },
+      "test": false
     },
     {
       "path": "packages/auth/src/tokens.ts",
@@ -327,7 +337,8 @@
         "previousRevisions": 2,
         "scoreDelta": 0.31,
         "newlyActive": false
-      }
+      },
+      "test": false
     },
     {
       "path": "packages/web/src/components/table.tsx",
@@ -353,7 +364,8 @@
         "previousRevisions": 12,
         "scoreDelta": -0.12,
         "newlyActive": false
-      }
+      },
+      "test": false
     },
     {
       "path": "apps/cli/src/commands/inspect.ts",
@@ -379,7 +391,8 @@
         "previousRevisions": 6,
         "scoreDelta": 0.05,
         "newlyActive": false
-      }
+      },
+      "test": false
     },
     {
       "path": "packages/shared/src/index.ts",
@@ -405,7 +418,8 @@
         "previousRevisions": 9,
         "scoreDelta": -0.2,
         "newlyActive": false
-      }
+      },
+      "test": false
     },
     {
       "path": "apps/cli/src/output/terminal.ts",
@@ -431,7 +445,8 @@
         "previousRevisions": 4,
         "scoreDelta": 0.14,
         "newlyActive": false
-      }
+      },
+      "test": false
     },
     {
       "path": "packages/billing/src/discounts.ts",
@@ -457,7 +472,8 @@
         "previousRevisions": 5,
         "scoreDelta": 0.0,
         "newlyActive": false
-      }
+      },
+      "test": false
     },
     {
       "path": "packages/web/src/routes/login.tsx",
@@ -483,7 +499,8 @@
         "previousRevisions": 6,
         "scoreDelta": -0.08,
         "newlyActive": false
-      }
+      },
+      "test": false
     },
     {
       "path": "apps/cli/src/commands/analyze.test.ts",
@@ -509,7 +526,8 @@
         "previousRevisions": 1,
         "scoreDelta": 0.22,
         "newlyActive": false
-      }
+      },
+      "test": true
     },
     {
       "path": "packages/web/src/app.tsx",
@@ -535,7 +553,8 @@
         "previousRevisions": 6,
         "scoreDelta": -0.15,
         "newlyActive": false
-      }
+      },
+      "test": false
     },
     {
       "path": "packages/shared/src/logger.ts",
@@ -561,7 +580,8 @@
         "previousRevisions": 6,
         "scoreDelta": 0.02,
         "newlyActive": false
-      }
+      },
+      "test": false
     },
     {
       "path": "packages/web/src/styles.css",
@@ -587,7 +607,8 @@
         "previousRevisions": 0,
         "scoreDelta": 0.2783,
         "newlyActive": true
-      }
+      },
+      "test": false
     },
     {
       "path": "apps/cli/src/output/html.ts",
@@ -613,7 +634,8 @@
         "previousRevisions": 9,
         "scoreDelta": -0.12,
         "newlyActive": false
-      }
+      },
+      "test": false
     },
     {
       "path": "packages/auth/src/oauth/github.ts",
@@ -639,7 +661,8 @@
         "previousRevisions": 3,
         "scoreDelta": 0.05,
         "newlyActive": false
-      }
+      },
+      "test": false
     },
     {
       "path": "packages/billing/src/index.ts",
@@ -665,7 +688,8 @@
         "previousRevisions": 16,
         "scoreDelta": -0.2,
         "newlyActive": false
-      }
+      },
+      "test": false
     },
     {
       "path": "packages/shared/src/money.ts",
@@ -691,7 +715,8 @@
         "previousRevisions": 1,
         "scoreDelta": 0.14,
         "newlyActive": false
-      }
+      },
+      "test": false
     },
     {
       "path": "packages/billing/src/currency.ts",
@@ -717,7 +742,8 @@
         "previousRevisions": 3,
         "scoreDelta": 0.0,
         "newlyActive": false
-      }
+      },
+      "test": false
     },
     {
       "path": "packages/auth/src/index.ts",
@@ -743,7 +769,8 @@
         "previousRevisions": 10,
         "scoreDelta": -0.08,
         "newlyActive": false
-      }
+      },
+      "test": false
     },
     {
       "path": "packages/billing/src/legacy/export-csv.ts",
@@ -769,7 +796,8 @@
         "previousRevisions": 0,
         "scoreDelta": 0.2179,
         "newlyActive": true
-      }
+      },
+      "test": false
     },
     {
       "path": "apps/cli/src/cli.ts",
@@ -795,7 +823,8 @@
         "previousRevisions": 3,
         "scoreDelta": -0.15,
         "newlyActive": false
-      }
+      },
+      "test": false
     },
     {
       "path": "packages/web/src/components/modal.tsx",
@@ -821,7 +850,8 @@
         "previousRevisions": 2,
         "scoreDelta": 0.02,
         "newlyActive": false
-      }
+      },
+      "test": false
     },
     {
       "path": "packages/auth/src/permissions.ts",
@@ -847,7 +877,8 @@
         "previousRevisions": 0,
         "scoreDelta": 0.2093,
         "newlyActive": true
-      }
+      },
+      "test": false
     },
     {
       "path": "apps/cli/src/output/json.ts",
@@ -873,7 +904,8 @@
         "previousRevisions": 3,
         "scoreDelta": -0.12,
         "newlyActive": false
-      }
+      },
+      "test": false
     },
     {
       "path": "packages/shared/src/dates.ts",
@@ -899,7 +931,8 @@
         "previousRevisions": 1,
         "scoreDelta": 0.05,
         "newlyActive": false
-      }
+      },
+      "test": false
     },
     {
       "path": "apps/cli/src/bin.ts",
@@ -922,7 +955,8 @@
         "previousRevisions": 0,
         "scoreDelta": 0,
         "newlyActive": false
-      }
+      },
+      "test": false
     },
     {
       "path": "packages/auth/src/oauth/google.ts",
@@ -945,7 +979,8 @@
         "previousRevisions": 0,
         "scoreDelta": 0,
         "newlyActive": false
-      }
+      },
+      "test": false
     },
     {
       "path": "packages/billing/src/legacy/import-sap.ts",
@@ -968,7 +1003,8 @@
         "previousRevisions": 0,
         "scoreDelta": 0,
         "newlyActive": false
-      }
+      },
+      "test": false
     }
   ],
   "couplings": [
