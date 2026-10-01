@@ -2,7 +2,7 @@
 import type { AnalyzeOptions } from "../analyze/analyze.js";
 import type { TempRepository } from "./temp-repository.js";
 
-/** Analyzes the whole repository over the last 12 months unless `overrides` say otherwise. */
+/** Analyzes the whole repository over the last 12 months, without reading any imports, unless `overrides` say otherwise. */
 export const analyzeOptionsFor = (
   repo: Pick<TempRepository, "directory">,
   overrides: Partial<AnalyzeOptions> = {},
@@ -12,6 +12,7 @@ export const analyzeOptionsFor = (
   include: [],
   exclude: [],
   entry: [],
+  adapters: [],
   toolVersion: "0.0.0-test",
   ...overrides,
 });

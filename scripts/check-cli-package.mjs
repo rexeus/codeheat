@@ -1,6 +1,7 @@
 // Proves the packed `codeheat` package works the way `npx codeheat` will run it:
-// one bundled file, no runtime dependencies, installable with npm and pnpm, and
-// able to analyze a real git repository. Run after `pnpm --filter codeheat build`.
+// one bundled file whose only runtime dependency is the pinned oxc-parser,
+// installable with npm and pnpm, loading that parser, and able to analyze a
+// real git repository. Run after `pnpm --filter codeheat build`.
 import { execFileSync, spawnSync } from "node:child_process";
 import {
   existsSync,
@@ -76,6 +77,24 @@ const pack = () => {
   return join(destination, tarballs[0]);
 };
 
+/**
+ * The packed manifest declares oxc-parser, pinned to an exact version, as its
+ * only runtime dependency.
+ * @param {string} packedManifest
+ */
+const expectPinnedParserOnly = (packedManifest) => {
+  const dependencies = fieldOf(packedManifest, "dependencies");
+  const found =
+    typeof dependencies === "object" && dependencies !== null
+      ? JSON.stringify(dependencies)
+      : "none";
+  if (!/^\{"oxc-parser":"\d+\.\d+\.\d+"\}$/u.test(found)) {
+    throw new Error(
+      `The packed manifest must declare exactly one runtime dependency, oxc-parser, pinned to an exact version; found: ${found}.`,
+    );
+  }
+};
+
 /** @param {string} tarball */
 const expectBundledArtifact = (tarball) => {
   const listing = execFileSync("tar", ["-tzf", tarball], { encoding: "utf8" });
@@ -126,14 +145,10 @@ const expectBundledArtifact = (tarball) => {
     ["-xOzf", tarball, "package/package.json"],
     { encoding: "utf8" },
   );
-  if (fieldOf(packed, "dependencies") !== undefined) {
-    throw new Error(
-      "The packed manifest declares runtime dependencies; the CLI must stay bundled.",
-    );
-  }
+  expectPinnedParserOnly(packed);
 };
 
-/** A tiny repository with two files that always change together. */
+/** A tiny repository with two files that always change together and never import each other. */
 const makeRepository = () => {
   const root = join(temporary, "repository");
   mkdirSync(root);
@@ -196,6 +211,12 @@ const expectWorkingInstall = (applicationRoot, installer, repositoryRoot) => {
       `codeheat from ${installer} did not analyze the repository:\n${analysis.stdout}${analysis.stderr}`,
     );
   }
+  // `none` instead of null proves that the installed package loaded oxc-parser and parsed both files.
+  if (fieldOf(JSON.stringify(couplings[0]), "imports") !== "none") {
+    throw new Error(
+      `codeheat from ${installer} could not read imports; is oxc-parser installed with its native binding?\n${analysis.stderr}`,
+    );
+  }
 };
 
 try {
@@ -226,6 +247,9 @@ try {
   );
   if (existsSync(join(npmApplication, "node_modules", "effect"))) {
     throw new Error("npm installed effect; the bundle must not need it.");
+  }
+  if (!existsSync(join(npmApplication, "node_modules", "oxc-parser"))) {
+    throw new Error("npm did not install the oxc-parser dependency.");
   }
   expectWorkingInstall(npmApplication, "npm", repositoryRoot);
 

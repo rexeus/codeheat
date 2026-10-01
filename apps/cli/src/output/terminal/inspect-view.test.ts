@@ -26,6 +26,7 @@ const entry: InspectResult["matches"][number] = {
       probability: 0.646,
       testPair: true,
       crossesModule: false,
+      imports: null,
     },
     {
       path: "packages/billing/src/tax.ts",
@@ -33,6 +34,7 @@ const entry: InspectResult["matches"][number] = {
       probability: 0.5,
       testPair: false,
       crossesModule: false,
+      imports: null,
     },
     {
       path: "packages/web/src/checkout.ts",
@@ -40,6 +42,7 @@ const entry: InspectResult["matches"][number] = {
       probability: 0.25,
       testPair: false,
       crossesModule: true,
+      imports: null,
     },
   ],
 };

@@ -16,6 +16,14 @@ const Partner = Schema.Struct({
   testPair: Schema.Boolean,
   /** The partner belongs to a different module than the inspected file. */
   crossesModule: Schema.Boolean,
+  /**
+   * `Coupling.imports` seen from the inspected file: `file→partner` means the
+   * inspected file imports the partner. `none` is hidden coupling; null when
+   * the relation is unknown.
+   */
+  imports: Schema.NullOr(
+    Schema.Literals(["file→partner", "partner→file", "both", "none"]),
+  ),
 });
 
 /** One inspected file with its standing in the whole universe. */

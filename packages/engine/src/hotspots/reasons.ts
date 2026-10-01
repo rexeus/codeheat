@@ -9,6 +9,9 @@ export const HUB_MIN_REVISIONS = 5;
 /** Share of the hub candidates, widest first, that may be hubs; ties at the cut-off are included. */
 export const HUB_TOP_SHARE = 0.05;
 
+/** Smallest co-change probability at which a partner without an import gets a reason line. */
+export const MIN_HIDDEN_PROBABILITY = 0.5;
+
 /** Only frequently changed files that are not tests can be hubs and are ranked by breadth. */
 export const isHubCandidate = (path: string, revisions: number): boolean =>
   revisions >= HUB_MIN_REVISIONS && !isTestFile(path);
@@ -44,9 +47,36 @@ const isHub = (facts: ReasonFacts): boolean =>
   facts.breadth >= HUB_MIN_BREADTH &&
   facts.breadthRank <= Math.ceil(facts.candidates * HUB_TOP_SHARE);
 
+const percentOf = (probability: number): number =>
+  Math.round(probability * 100);
+
+const describePartners = (
+  partners: ReadonlyArray<Partner>,
+): ReadonlyArray<string> => {
+  const strongest = partners.find(({ testPair }) => !testPair);
+  const hidden = partners.find(
+    ({ testPair, imports, probability }) =>
+      !testPair && imports === "none" && probability >= MIN_HIDDEN_PROBABILITY,
+  );
+  const reasons: Array<string> = [];
+  if (strongest !== undefined && strongest !== hidden) {
+    reasons.push(
+      `co-changes with ${strongest.path} in ${percentOf(strongest.probability)}% of its commits`,
+    );
+  }
+  if (hidden !== undefined) {
+    reasons.push(
+      `changes with ${hidden.path} in ${percentOf(hidden.probability)}% of its commits without an import between them`,
+    );
+  }
+  return reasons;
+};
+
 /**
  * Reasons in a fixed order: churn, complexity, then the strongest non-test
- * co-change partner, then the breadth of a hub, then a leaking interface. A
+ * co-change partner, then the strongest hidden-coupled one (a partner no import
+ * links to, with a probability of at least `MIN_HIDDEN_PROBABILITY`; it is
+ * the same line when the partner is the strongest one), then the breadth of a hub, then a leaking interface. A
  * signal at zero gives no reason.
  */
 export const describeFile = (facts: ReasonFacts): ReadonlyArray<string> => {
@@ -62,20 +92,13 @@ export const describeFile = (facts: ReasonFacts): ReadonlyArray<string> => {
       `indentation complexity ${facts.complexity} (#${facts.complexityRank} of ${facts.of})`,
     );
   }
-  const partner = facts.partners.find(({ testPair }) => !testPair);
-  if (partner !== undefined) {
-    const percent = Math.round(partner.probability * 100);
-    reasons.push(
-      `co-changes with ${partner.path} in ${percent}% of its commits`,
-    );
-  }
+  reasons.push(...describePartners(facts.partners));
   if (isHub(facts)) {
     reasons.push(`changes together with ${facts.breadth} different files`);
   }
   if (facts.interfaceLeakage !== undefined) {
-    const percent = Math.round(facts.interfaceLeakage * 100);
     reasons.push(
-      `interface changed in ${percent}% of its module's implementation commits`,
+      `interface changed in ${percentOf(facts.interfaceLeakage)}% of its module's implementation commits`,
     );
   }
   return reasons;

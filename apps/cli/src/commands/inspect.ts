@@ -3,6 +3,7 @@ import { Console, Effect } from "effect";
 import { Argument, Command } from "effect/cli";
 
 import { NothingMatched } from "../errors/nothing-matched.js";
+import { loadLanguageAdapters } from "../languages/load-language-adapters.js";
 import { warnIfEntryMatchedNothing } from "../output/entry-warning.js";
 import { escapeForTerminal } from "../output/escape.js";
 import { printResult } from "../output/print-result.js";
@@ -33,6 +34,7 @@ export const inspectCommand = Command.make(
       include: [],
       exclude: [],
       entry,
+      adapters: yield* loadLanguageAdapters,
       toolVersion: version,
     });
     yield* warnIfShallow(report);

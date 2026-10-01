@@ -8,6 +8,7 @@ import {
   HUB_MIN_BREADTH,
   HUB_MIN_REVISIONS,
   HUB_TOP_SHARE,
+  MIN_HIDDEN_PROBABILITY,
 } from "../hotspots/reasons.js";
 import { minModuleCommitsFor } from "../modules/cohesion.js";
 import {
@@ -28,6 +29,7 @@ export const thresholdsFor = (couplingCommits: number) =>
     hubMinRevisions: HUB_MIN_REVISIONS,
     hubTopShare: HUB_TOP_SHARE,
     minModuleCommits: minModuleCommitsFor(couplingCommits),
+    minHiddenProbability: MIN_HIDDEN_PROBABILITY,
     minLeakage: MIN_LEAKAGE,
     minImplementationCommits: MIN_IMPLEMENTATION_COMMITS,
     minSharedCommits: MIN_SHARED_COMMITS,

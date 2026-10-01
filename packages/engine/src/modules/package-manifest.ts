@@ -47,6 +47,29 @@ const targetsOf = (
   ...exportTargets(manifest["exports"]),
 ];
 
+/** The manifest as an object; undefined when it is missing, unreadable, or not a JSON object. */
+const readManifest = (
+  manifestFile: string,
+): Effect.Effect<
+  Record<string, unknown> | undefined,
+  never,
+  FileSystem.FileSystem
+> =>
+  Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    const text = yield* Effect.option(fs.readFileString(manifestFile));
+    if (Option.isNone(text)) {
+      return undefined;
+    }
+    const parsed = yield* Effect.option(
+      Effect.try(() => JSON.parse(text.value) as unknown),
+    );
+    return parsed.pipe(
+      Option.flatMap((manifest) => decodeObject(manifest)),
+      Option.getOrUndefined,
+    );
+  });
+
 /**
  * The file paths `manifestFile` names in `exports` (strings, lists, and nested
  * conditions or subpaths), `main`, `module`, and `types`, as written, relative
@@ -56,18 +79,14 @@ const targetsOf = (
 export const readManifestTargets = (
   manifestFile: string,
 ): Effect.Effect<ReadonlyArray<string>, never, FileSystem.FileSystem> =>
-  Effect.gen(function* () {
-    const fs = yield* FileSystem.FileSystem;
-    const text = yield* Effect.option(fs.readFileString(manifestFile));
-    if (Option.isNone(text)) {
-      return [];
-    }
-    const parsed = yield* Effect.option(
-      Effect.try(() => JSON.parse(text.value) as unknown),
-    );
-    return parsed.pipe(
-      Option.flatMap((manifest) => decodeObject(manifest)),
-      Option.map((manifest) => targetsOf(manifest)),
-      Option.getOrElse((): ReadonlyArray<string> => []),
-    );
-  });
+  Effect.map(readManifest(manifestFile), (manifest) =>
+    manifest === undefined ? [] : targetsOf(manifest),
+  );
+
+/** The `name` of the manifest; undefined when it is missing, unreadable, or not a string. */
+export const readManifestName = (
+  manifestFile: string,
+): Effect.Effect<string | undefined, never, FileSystem.FileSystem> =>
+  Effect.map(readManifest(manifestFile), (manifest) =>
+    Option.getOrUndefined(decodeString(manifest?.["name"])),
+  );

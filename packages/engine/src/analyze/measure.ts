@@ -1,6 +1,7 @@
 // Owns the pure part of an analysis: scoring files, coupling them, and measuring modules,
 // in the latest window and, when comparing, against the window before it.
 import { findCouplings } from "../coupling/coupling.js";
+import type { Couplings } from "../coupling/coupling.js";
 import type { History } from "../history/history.js";
 import { rankFiles } from "../hotspots/hotspots.js";
 import type { FileMeasure } from "../hotspots/hotspots.js";
@@ -42,14 +43,12 @@ const measureFiles = (
     };
   });
 
-/** Scores the files, couples them, and measures the modules; the pure part of an analysis. */
-const measure = (
-  files: ReadonlyArray<InventoryFile>,
+/** The coupled pairs of a window's history, without import relations. */
+export const coupleHistory = (
   history: History,
   modules: ReadonlyMap<string, ModuleRef>,
-  entryPoints: ReadonlyMap<string, ReadonlyArray<string>>,
-) => {
-  const { couplingCommits, couplings, breadth } = findCouplings(
+): Couplings =>
+  findCouplings(
     history.commits,
     history.paths,
     new Map(
@@ -57,6 +56,20 @@ const measure = (
     ),
     modules,
   );
+
+/** The universe with its modules and their entry points: what every window is measured over. */
+export type Universe = {
+  readonly files: ReadonlyArray<InventoryFile>;
+  readonly modules: ReadonlyMap<string, ModuleRef>;
+  readonly entryPoints: ReadonlyMap<string, ReadonlyArray<string>>;
+};
+
+/** Scores the files and measures the modules around the couplings; the pure part of an analysis. */
+const measure = (
+  { files, modules, entryPoints }: Universe,
+  history: History,
+  { couplingCommits, couplings, breadth }: Couplings,
+) => {
   const thresholds = thresholdsFor(couplingCommits);
   const interfaces = measureInterfaces(history, modules, entryPoints);
   const measuredModules = measureModules(
@@ -86,21 +99,25 @@ const measure = (
 };
 
 /**
- * Measures the latest window; with a previous one, also its files and modules
- * with the trend against it. `commits`, `couplingCommits`, and `thresholds`
- * describe the latest window.
+ * Measures the latest window, whose couplings are `couplings` (see
+ * `coupleHistory`); with a previous one, also its files and modules with the
+ * trend against it. `commits`, `couplingCommits`, and `thresholds` describe
+ * the latest window.
  */
 export const measureWindows = (
-  files: ReadonlyArray<InventoryFile>,
+  universe: Universe,
   histories: WindowHistories,
-  modules: ReadonlyMap<string, ModuleRef>,
-  entryPoints: ReadonlyMap<string, ReadonlyArray<string>>,
+  couplings: Couplings,
 ) => {
-  const current = measure(files, histories.current, modules, entryPoints);
+  const current = measure(universe, histories.current, couplings);
   if (histories.previous === null) {
     return current;
   }
-  const previous = measure(files, histories.previous, modules, entryPoints);
+  const previous = measure(
+    universe,
+    histories.previous,
+    coupleHistory(histories.previous, universe.modules),
+  );
   return {
     ...current,
     ...withTrends(current, previous, current.thresholds.minModuleCommits),

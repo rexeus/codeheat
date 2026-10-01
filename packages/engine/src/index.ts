@@ -1,3 +1,5 @@
+export type { LanguageAdapter } from "./code/language-adapter.js";
+export { typescriptAdapter } from "./code/typescript-adapter.js";
 export { analyze } from "./analyze/analyze.js";
 export type { AnalyzeError } from "./analyze/analyze.js";
 export { inspectFrom } from "./inspect/inspect-from.js";

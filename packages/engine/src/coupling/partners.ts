@@ -26,6 +26,17 @@ export const groupByPath = (
   return grouped;
 };
 
+/** `coupling.imports` seen from `path`, one of the coupled files. */
+const importsFrom = (path: string, coupling: Coupling): Partner["imports"] => {
+  const { imports } = coupling;
+  if (imports === "a→b" || imports === "b→a") {
+    return (imports === "a→b") === (coupling.a === path)
+      ? "file→partner"
+      : "partner→file";
+  }
+  return imports;
+};
+
 /**
  * The partners of `path` among its `couplings`, most likely to change along
  * with it first. `revisions` is the number of commits that touched `path`.
@@ -42,6 +53,7 @@ export const partnersOf = (
       probability: roundReported(coupling.sharedCommits / revisions),
       testPair: coupling.testPair,
       crossesModule: coupling.crossesModule,
+      imports: importsFrom(path, coupling),
     }))
     .toSorted(
       (a, b) =>

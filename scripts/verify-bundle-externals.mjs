@@ -63,6 +63,13 @@ const NODE_BUILTINS = new Set([
   "zlib",
 ]);
 
+/**
+ * Packages the bundle may import besides Node built-ins: the runtime
+ * dependencies of the `codeheat` package, which is loaded lazily.
+ * @type {Set<string>}
+ */
+const ALLOWED_PACKAGES = new Set(["oxc-parser"]);
+
 /** @type {ReadonlyArray<RegExp>} */
 const SPECIFIER_PATTERNS = [
   /(?:^|\n)\s*import\s+[^;'"]*?from\s*["']([^"']+)["']/gu,
@@ -92,7 +99,8 @@ const extractSpecifiers = (source) => {
 };
 
 /**
- * A single-file deployable may only reach for Node built-ins.
+ * A single-file deployable may only reach for Node built-ins and the
+ * package's declared runtime dependencies.
  *
  * Relative, absolute, `file:`, and `data:` specifiers are rejected too: a
  * self-contained artifact must not silently depend on a sibling chunk, a
@@ -101,7 +109,9 @@ const extractSpecifiers = (source) => {
  * @returns {boolean}
  */
 const isAllowed = (specifier) =>
-  specifier.startsWith("node:") || NODE_BUILTINS.has(specifier);
+  specifier.startsWith("node:") ||
+  NODE_BUILTINS.has(specifier) ||
+  ALLOWED_PACKAGES.has(specifier);
 
 /** @type {string[]} */
 const targets = process.argv.slice(2);
@@ -127,7 +137,7 @@ for (const target of targets) {
 
 if (failed) {
   console.error(
-    "Deployable bundles must be self-contained apart from Node built-ins.",
+    "Deployable bundles must be self-contained apart from Node built-ins and oxc-parser.",
   );
   process.exit(1);
 }

@@ -35,6 +35,9 @@
     "test:unit": "vitest run --passWithNoTests",
     "typecheck": "tsc -p tsconfig.json"
   },
+  "dependencies": {
+    "oxc-parser": "catalog:"
+  },
   "devDependencies": {
     "@codeheat/engine": "workspace:*",
     "@codeheat/tsconfig": "workspace:*",
@@ -48,6 +51,6 @@
     "vitest": "catalog:"
   },
   "engines": {
-    "node": ">=22"
+    "node": ">=22.12"
   }
 }

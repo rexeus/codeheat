@@ -62,11 +62,19 @@ const breadthById = (
   return breadth;
 };
 
+/** The couplings of one window with what was learned counting them. */
+export type Couplings = {
+  readonly couplingCommits: number;
+  readonly couplings: ReadonlyArray<Coupling>;
+  readonly breadth: ReadonlyMap<string, number>;
+};
+
 /**
  * Finds the coupled pairs among `commits`, each the distinct ids of the files
  * one commit touched; an id is an index into `paths`. `revisions` counts every
  * commit per path, including the ones ignored here for being too large.
  *
+ * Every coupling comes back with `imports: null`; the import graph fills it in.
  * `couplingCommits` is the number of commits small enough to count. Pairs
  * are sorted by their reported (rounded) degree, then shared commits, then path.
  * `breadth` maps every path in `paths` to the number of distinct other files it
@@ -78,11 +86,7 @@ export const findCouplings = (
   paths: ReadonlyArray<string>,
   revisions: ReadonlyMap<string, number>,
   modules: ReadonlyMap<string, ModuleRef>,
-): {
-  readonly couplingCommits: number;
-  readonly couplings: ReadonlyArray<Coupling>;
-  readonly breadth: ReadonlyMap<string, number>;
-} => {
+): Couplings => {
   const counted = commits.filter((commit) => commit.length <= MAX_COMMIT_FILES);
   const revisionsById = paths.map((path) => revisions.get(path) ?? 0);
   const couplings: Array<Coupling> = [];
@@ -107,6 +111,7 @@ export const findCouplings = (
           distance: directoryDistance(a, b),
           testPair: isTestPair(a, b),
           crossesModule: modules.get(a)?.path !== modules.get(b)?.path,
+          imports: null,
         });
       }
     }

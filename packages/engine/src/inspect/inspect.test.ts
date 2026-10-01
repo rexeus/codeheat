@@ -32,6 +32,7 @@ const coupling = (
   distance: 0,
   testPair: false,
   crossesModule: false,
+  imports: null,
   ...flags,
 });
 
@@ -92,6 +93,7 @@ const reportOf = (
     hubMinRevisions: 5,
     hubTopShare: 0.05,
     minModuleCommits: 5,
+    minHiddenProbability: 0.5,
     minLeakage: 0.5,
     minImplementationCommits: 5,
     minSharedCommits: 3,
@@ -187,6 +189,7 @@ describe("inspect partners", () => {
       probability: 0.7,
       testPair: false,
       crossesModule: false,
+      imports: null,
     });
   });
 
@@ -201,7 +204,9 @@ describe("inspect partners", () => {
     // 3 shared commits / 7 revisions = 0.42857
     expect(a?.partners[0]?.probability).toBe(0.4286);
   });
+});
 
+describe("inspect partner marks", () => {
   it("finds partners on either side of a coupling with the probability of the focused file", () => {
     const report = reportOf(
       [stats("a.ts", 1, 10), stats("b.ts", 2, 4)],
@@ -217,6 +222,7 @@ describe("inspect partners", () => {
         probability: 0.4,
         testPair: false,
         crossesModule: false,
+        imports: null,
       },
     ]);
     expect(b?.partners).toStrictEqual([
@@ -226,12 +232,11 @@ describe("inspect partners", () => {
         probability: 1,
         testPair: false,
         crossesModule: false,
+        imports: null,
       },
     ]);
   });
-});
 
-describe("inspect partner marks", () => {
   it("marks a partner that is the file's test as a test pair", () => {
     const report = reportOf(
       [stats("src/a.ts", 1, 10)],
@@ -247,6 +252,7 @@ describe("inspect partner marks", () => {
         probability: 0.5,
         testPair: true,
         crossesModule: false,
+        imports: null,
       },
     ]);
   });
@@ -262,6 +268,32 @@ describe("inspect partner marks", () => {
     expect(entry?.partners.map(({ crossesModule }) => crossesModule)).toEqual([
       true,
     ]);
+  });
+});
+
+const importsSeenFrom = (focus: string, relation: Coupling["imports"]) => {
+  const report = reportOf(
+    [stats("src/a.ts", 1, 10), stats("src/b.ts", 2, 10)],
+    [{ ...coupling("src/a.ts", "src/b.ts", 5), imports: relation }],
+  );
+  return inspect(report, [focus]).matches[0]?.partners[0]?.imports;
+};
+
+describe("inspect import relations", () => {
+  it("reads a→b from the file's side: a file that imports its partner", () => {
+    expect(importsSeenFrom("src/a.ts", "a→b")).toBe("file→partner");
+    expect(importsSeenFrom("src/b.ts", "a→b")).toBe("partner→file");
+  });
+
+  it("reads b→a from the file's side: a file its partner imports", () => {
+    expect(importsSeenFrom("src/a.ts", "b→a")).toBe("partner→file");
+    expect(importsSeenFrom("src/b.ts", "b→a")).toBe("file→partner");
+  });
+
+  it("keeps both, none, and unknown the same from either side", () => {
+    expect(importsSeenFrom("src/b.ts", "both")).toBe("both");
+    expect(importsSeenFrom("src/a.ts", "none")).toBe("none");
+    expect(importsSeenFrom("src/a.ts", null)).toBeNull();
   });
 });
 
