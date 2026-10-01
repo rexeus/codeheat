@@ -202,4 +202,30 @@ describe("renderInspect import relations", () => {
       "      50%      24  imported by  packages/billing/src/tax.ts",
     );
   });
+
+  it("does not call a file's test hidden, in text or in color", () => {
+    const partners = [
+      {
+        path: "tax.test.ts",
+        sharedCommits: 3,
+        probability: 0.5,
+        testPair: true,
+        crossesModule: false,
+        imports: "none" as const,
+      },
+    ];
+
+    const plainView = renderInspect(
+      result([{ ...entry, partners }]),
+      makeStyle(false),
+    );
+    const colorView = renderInspect(
+      result([{ ...entry, partners }]),
+      makeStyle(true),
+    );
+
+    expect(plainView).toContain("none    tax.test.ts (test)");
+    expect(plainView).not.toContain("hidden");
+    expect(colorView).not.toContain("\u001B[1mnone");
+  });
 });

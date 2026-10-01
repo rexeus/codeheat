@@ -43,8 +43,23 @@ describe("indexPartners", () => {
         distance: 0,
         crossesModule: false,
         imports: null,
+        hidden: false,
       },
     ]);
+  });
+
+  it("marks a partner without an import as hidden, but never a test pair", () => {
+    const marked = indexPartners([
+      coupling("src/a.ts", "src/b.ts", { imports: "none" }),
+      coupling("src/c.ts", "src/c.test.ts", {
+        imports: "none",
+        testPair: true,
+      }),
+    ]);
+
+    expect(marked.get("src/a.ts")?.[0]?.hidden).toBe(true);
+    expect(marked.get("src/b.ts")?.[0]?.hidden).toBe(true);
+    expect(marked.get("src/c.ts")?.[0]?.hidden).toBe(false);
   });
 
   it("reads the import direction from the side of the file the partners belong to", () => {

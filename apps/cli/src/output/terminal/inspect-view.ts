@@ -25,16 +25,24 @@ const IMPORT_LABELS: Readonly<Record<PartnerImports, string>> = {
   none: "hidden",
 };
 
-/** What the inspected file does with its partner; no import at all is hidden coupling, which stands out. */
+/**
+ * What the inspected file does with its partner. No import at all is hidden
+ * coupling, which stands out; for the file's test it is just "none", since a
+ * test is expected to be coupled.
+ */
 const importsCell = (
-  { imports }: Entry["partners"][number],
+  { imports, testPair }: Entry["partners"][number],
   style: Style,
 ): Cell => {
   if (imports === null) {
     return plain("-");
   }
-  const text = IMPORT_LABELS[imports];
-  return imports === "none" ? { text, paint: style.bold } : plain(text);
+  if (imports === "none") {
+    return testPair
+      ? plain("none")
+      : { text: IMPORT_LABELS[imports], paint: style.bold };
+  }
+  return plain(IMPORT_LABELS[imports]);
 };
 
 const partnerLines = (entry: Entry, style: Style): ReadonlyArray<string> =>

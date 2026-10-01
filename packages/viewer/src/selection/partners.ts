@@ -15,6 +15,8 @@ export type Partner = {
    * hidden coupling; null when unknown.
    */
   readonly imports: "file→partner" | "partner→file" | "both" | "none" | null;
+  /** Hidden coupling: no import links the files. A file's test is never hidden, since it is expected to be coupled. */
+  readonly hidden: boolean;
 };
 
 /** Partners of every coupled file, strongest first. */
@@ -43,8 +45,19 @@ export const indexPartners = (couplings: readonly Coupling[]): PartnerIndex => {
     }
   };
   for (const { a, b, imports, ...measures } of couplings) {
-    add(a, { path: b, ...measures, imports: importsSeenFrom(imports, true) });
-    add(b, { path: a, ...measures, imports: importsSeenFrom(imports, false) });
+    const hidden = imports === "none" && !measures.testPair;
+    add(a, {
+      path: b,
+      ...measures,
+      imports: importsSeenFrom(imports, true),
+      hidden,
+    });
+    add(b, {
+      path: a,
+      ...measures,
+      imports: importsSeenFrom(imports, false),
+      hidden,
+    });
   }
   for (const partners of index.values()) {
     partners.sort((left, right) => right.degree - left.degree);

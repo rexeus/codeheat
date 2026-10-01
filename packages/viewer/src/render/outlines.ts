@@ -31,7 +31,7 @@ const lineStyle = ({ crossesModule, testPair }: Partner): string => {
 };
 
 const outlineClass = (partner: Partner): string =>
-  `outline partner${lineStyle(partner)}${partner.imports === "none" ? " hidden-coupling" : ""}`;
+  `outline partner${lineStyle(partner)}${partner.hidden ? " hidden-coupling" : ""}`;
 
 /**
  * Outline rectangles for the selected file and its partners, drawn above the

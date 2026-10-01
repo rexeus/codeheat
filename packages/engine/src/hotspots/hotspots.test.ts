@@ -231,7 +231,7 @@ describe("rankFiles hidden coupling reason", () => {
     expect(reasonsFor("b.ts", [testPair])?.slice(2)).toStrictEqual([]);
   });
 
-  it("adds the hidden partner after a stronger partner that is imported", () => {
+  it("words only the strongest non-test partner, so a weaker hidden one stays a co-change", () => {
     const reasons = reasonsFor("x.ts", [
       { ...coupling("p.ts", "x.ts", 4), imports: "a→b" },
       hidden("q.ts", "x.ts", 2),
@@ -239,7 +239,6 @@ describe("rankFiles hidden coupling reason", () => {
 
     expect(reasons?.slice(2)).toStrictEqual([
       "co-changes with p.ts in 100% of its commits",
-      "changes with q.ts in 50% of its commits without an import between them",
     ]);
   });
 });
