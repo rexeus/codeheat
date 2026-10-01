@@ -14,6 +14,7 @@ Run `npx codeheat inspect <file> --json` (quote globs) before changing a file an
 - `partners` with `probability` ≥ 0.5 usually change together with this file. Read them, and update them in the same change or state why not. A partner in a distant folder (not a `testPair`) is a hidden dependency: prefer fixing the boundary over copying the coupling.
 - A low `rank` (1 is hottest) means the file is large or nested and changes often. Keep the change small, add tests first, and prefer extracting over adding more code to it.
 - `reasons` explains the rank in plain words; quote it when you explain your plan.
+- `modules` describes the module the file lives in (see below): a low `cohesion` means changes there usually reach into other modules.
 
 For orientation in an unfamiliar repository, run `npx codeheat analyze --json` once: `files` are the top hotspots, `couplings` the strongest co-changing pairs, and `totals` the full size.
 ```
@@ -28,6 +29,29 @@ For orientation in an unfamiliar repository, run `npx codeheat analyze --json` o
 | "Only this package, last quarter"                             | `codeheat analyze packages/billing --since 3m --json` | Same, scoped                       |
 
 Every call analyzes the repository again (seconds on a repository with a few thousand commits). Call `analyze` once per task, and `inspect` per file you are about to change.
+
+## Reading module context
+
+The files of a repository are grouped into modules: workspace packages (a directory with its own `package.json`, `go.mod`, `Cargo.toml`, …) or, without manifests, directories. Before a change, read the module of the file you are about to edit, in `modules` of the `inspect` result (the file's own `module` names it):
+
+```json
+{
+  "path": "packages/billing",
+  "kind": "package",
+  "files": 9,
+  "commits": 74,
+  "localCommits": 41,
+  "cohesion": 0.5541,
+  "partners": [{ "path": "packages/web", "sharedCommits": 20 }]
+}
+```
+
+- `cohesion` is the share of the module's counted commits that touched nothing outside it. At 0.55, nearly half of the changes to `packages/billing` reach into another module, and `partners` says which ones, here `packages/web` in 20 of 74 commits. Plan to check those modules too, and say so when you leave them untouched.
+- A high `cohesion` means the module is usually safe to change alone.
+- `cohesion` is `null` when no counted commit touched the module: there is no signal, not perfect cohesion. Trust a module with few `commits` less (the terminal ranks only modules with at least `thresholds.minModuleCommits`).
+- A coupling with `crossesModule: true` joins files of different modules. That is neutral information: an app changes with the library it uses. It is worth a look when the modules should not know each other.
+
+`codeheat analyze --json` lists every module in `modules`, least cohesive first, bounded by `--limit` like `files` and `couplings`; `totals.modules` is the full count.
 
 ## Contract
 
