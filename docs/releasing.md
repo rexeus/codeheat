@@ -6,7 +6,7 @@
 
 1. Pull requests that change what users see add a changeset (`pnpm changeset`, see [.changeset/README.md](../.changeset/README.md)).
 2. On every push to `main`, the release workflow opens or updates a **Version Packages** pull request that bumps `apps/cli/package.json` and writes the changelog.
-3. Merging that pull request runs `pnpm check` — including building, packing, and installing the package with npm and pnpm — and then publishes through npm trusted publishing (OIDC) with provenance.
+3. Merging that pull request runs `pnpm check` — including building, packing, and installing the package with npm and pnpm — and then publishes through npm trusted publishing (OIDC) with provenance. The publish job runs on a GitHub-hosted runner, because npm accepts provenance only from those; every other job runs on Blacksmith.
 
 ## Package files
 
