@@ -26,8 +26,6 @@ export type PanelData = {
     readonly minSharedCommits: number;
     readonly minDegree: number;
     readonly minModuleCommits: number;
-    readonly minLeakage: number;
-    readonly minImplementationCommits: number;
   };
 };
 
@@ -125,7 +123,7 @@ const partnersSection = (
 };
 
 const fileSections = (
-  { files, heat, moduleOf, thresholds }: Context,
+  { files, heat, moduleOf }: Context,
   file: FileStats,
 ): HTMLElement[] => [
   h(
@@ -152,7 +150,7 @@ const fileSections = (
       "lines changed",
     ),
   ),
-  ...fileModuleSection(moduleOf(file.path), thresholds),
+  ...fileModuleSection(moduleOf(file.path)),
   section(
     "Why it stands out",
     h("ul", "reasons", ...file.reasons.map((reason) => h("li", "", reason))),

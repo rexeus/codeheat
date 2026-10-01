@@ -1,7 +1,6 @@
 import type { Module } from "@codeheat/engine";
 
 import { cohesionStep } from "../color/cohesion-scale.js";
-import { isLeakyInterface } from "../modules/leaky-interface.js";
 import { leastCohesive } from "../modules/least-cohesive.js";
 import { h, pathLabel, section } from "./dom.js";
 import { formatCount, formatPercent } from "./format.js";
@@ -57,12 +56,7 @@ const cohesionLine = ({
 /** Entry points listed before the rest collapse into a count. */
 const SHOWN_ENTRY_POINTS = 5;
 
-type InterfaceThresholds = {
-  readonly minLeakage: number;
-  readonly minImplementationCommits: number;
-};
-
-const leakageLine = (module: Module, leaky: boolean): HTMLElement =>
+const leakageLine = (module: Module): HTMLElement =>
   module.leakage === null
     ? h("p", "hint", "No implementation commit touched this module.")
     : h(
@@ -79,7 +73,7 @@ const leakageLine = (module: Module, leaky: boolean): HTMLElement =>
             `${formatCount(module.implementationCommits)} implementation commits`,
           ),
         ),
-        ...(leaky ? [h("span", "badge", "leaky")] : []),
+        ...(module.leakyInterface ? [h("span", "badge", "leaky")] : []),
       );
 
 const entryPointList = (entryPoints: readonly string[]): HTMLElement =>
@@ -101,16 +95,13 @@ const entryPointList = (entryPoints: readonly string[]): HTMLElement =>
   );
 
 /** The module's entry points and how often its implementation commits change them too; nothing without entry points. */
-const interfaceSection = (
-  module: Module,
-  thresholds: InterfaceThresholds,
-): HTMLElement[] =>
+const interfaceSection = (module: Module): HTMLElement[] =>
   module.entryPoints.length === 0
     ? []
     : [
         section(
           "Interface",
-          leakageLine(module, isLeakyInterface(module, thresholds)),
+          leakageLine(module),
           entryPointList(module.entryPoints),
         ),
       ];
@@ -120,10 +111,7 @@ const interfaceSection = (
  * how many of its changes stay inside, its interface, and the modules it
  * changes with. Nothing when the report does not list the module.
  */
-export const fileModuleSection = (
-  module: Module | undefined,
-  thresholds: InterfaceThresholds,
-): HTMLElement[] =>
+export const fileModuleSection = (module: Module | undefined): HTMLElement[] =>
   module === undefined
     ? []
     : [
@@ -137,7 +125,7 @@ export const fileModuleSection = (
           ),
           cohesionLine(module),
         ),
-        ...interfaceSection(module, thresholds),
+        ...interfaceSection(module),
         ...(module.partners.length === 0
           ? []
           : [
