@@ -1,6 +1,5 @@
 // Owns the human view of `analyze`: top hotspots, top couplings, the weakest modules, one hint.
 import type { Coupling, FileStats, Module, Report } from "@codeheat/engine";
-import { Order } from "effect";
 
 import { escapeForTerminal } from "../escape.js";
 import { day, percent } from "./format.js";
@@ -149,37 +148,20 @@ const leakageLines = (
     style,
   );
 
-/**
- * Modules with entry points and enough implementation commits, the highest
- * leakage first; ties go to more commits, then path. This is a ranking of its
- * own over all modules: the report's order is by cohesion. Test-only modules
- * have no interface to judge.
- */
-const leakiestModules = (report: Report): ReadonlyArray<Module> =>
+/** The first modules the report flags as having a leaky interface, in the report's order. */
+const leakyModules = (report: Report): ReadonlyArray<Module> =>
   report.modules
-    .filter(
-      (module) =>
-        !module.testOnly &&
-        module.leakage !== null &&
-        module.implementationCommits >=
-          report.thresholds.minImplementationCommits,
-    )
-    .toSorted(
-      (a, b) =>
-        (b.leakage ?? 0) - (a.leakage ?? 0) ||
-        b.implementationCommits - a.implementationCommits ||
-        Order.String(a.path, b.path),
-    )
+    .filter((module) => module.leakyInterface)
     .slice(0, TOP_MODULES);
 
 /**
  * Renders the terminal view of an `analyze` report: the ten hottest files,
  * the five strongest couplings that are not test pairs, each with the
  * co-change probability in both directions (`shared / revisions(side)`), the
- * five least cohesive modules, and the five modules whose interface changes
- * with their implementation most often. The report must not be cut to
- * `--limit`: test pairs could crowd out every other coupling, and every
- * coupled file must appear in `files`: rendering throws otherwise.
+ * five least cohesive modules, and the first five modules with a leaky
+ * interface. The report must not be cut to `--limit`: test pairs could crowd
+ * out every other coupling, and every coupled file must appear in `files`:
+ * rendering throws otherwise.
  * The result has no trailing newline.
  */
 export const renderAnalysis = (report: Report, style: Style): string => {
@@ -190,7 +172,7 @@ export const renderAnalysis = (report: Report, style: Style): string => {
       : hotspotLines(report.files, style);
   const couplings = couplingLines(report.couplings, report.files, style);
   const modules = rankedModules(report);
-  const leaky = leakiestModules(report);
+  const leaky = leakyModules(report);
   return [
     style.bold(summary),
     "",
@@ -209,12 +191,10 @@ export const renderAnalysis = (report: Report, style: Style): string => {
           `No module has ${report.thresholds.minModuleCommits} or more counted commits.`,
         ]),
     "",
-    style.bold("Leakiest interfaces"),
+    style.bold("Leaky interfaces"),
     ...(leaky.length > 0
       ? leakageLines(leaky, style)
-      : [
-          `No module has entry points and ${report.thresholds.minImplementationCommits} or more implementation commits.`,
-        ]),
+      : ["No module has a leaky interface."]),
     "",
     style.dim("Use --html for the treemap or --json for the full report."),
   ].join("\n");

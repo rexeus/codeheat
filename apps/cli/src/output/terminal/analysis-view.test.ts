@@ -1,3 +1,4 @@
+import type { Module, Report } from "@codeheat/engine";
 import { describe, expect, it } from "vitest";
 
 import { sampleReport } from "../../testing/sample-report.js";
@@ -171,79 +172,66 @@ describe("renderAnalysis module ranking", () => {
   });
 });
 
-describe("renderAnalysis interfaces", () => {
-  it("lists modules by how often their interface changes with their implementation", () => {
-    const interfaces = section(plainView(), "Leakiest interfaces");
+const withLeaky = (
+  report: Report,
+  leaky: ReadonlyArray<string>,
+  change: Partial<Module> = {},
+): Report => ({
+  ...report,
+  modules: report.modules.map((module) =>
+    leaky.includes(module.path)
+      ? { ...module, leakyInterface: true, ...change }
+      : module,
+  ),
+});
 
-    // 6 of 29, 6 of 43, and 9 of 71 implementation commits also changed an entry point
+describe("renderAnalysis leaky interfaces", () => {
+  it("lists the flagged modules in the report's order", () => {
+    const report = withLeaky(sampleReport(), [
+      "packages/billing",
+      "packages/shared",
+    ]);
+
+    const interfaces = section(plainView(report), "Leaky interfaces");
+
+    // the sample lists shared before billing; leakage 6 of 29 and 9 of 71 implementation commits
     expect(interfaces).toEqual([
       "leakage  commits  module            entry points",
       "    21%       29  packages/shared   packages/shared/src/index.ts",
-      "    14%       43  packages/auth     packages/auth/src/index.ts",
       "    13%       71  packages/billing  packages/billing/src/index.ts",
     ]);
   });
 
   it("names two entry points and counts the rest", () => {
-    const report = sampleReport();
-    const modules = report.modules.map((module) =>
-      module.path === "packages/shared"
-        ? { ...module, entryPoints: ["a.ts", "b.ts", "c.ts", "d.ts"] }
-        : module,
-    );
+    const report = withLeaky(sampleReport(), ["packages/shared"], {
+      entryPoints: ["a.ts", "b.ts", "c.ts", "d.ts"],
+    });
 
-    const interfaces = section(
-      plainView({ ...report, modules }),
-      "Leakiest interfaces",
-    );
+    const interfaces = section(plainView(report), "Leaky interfaces");
 
     expect(interfaces[1]).toContain("a.ts, b.ts +2 more");
   });
-});
 
-describe("renderAnalysis interfaces filtering and safety", () => {
   it("escapes control characters in entry points", () => {
-    const report = sampleReport();
-    const modules = report.modules.map((module) =>
-      Object.assign({}, module, { entryPoints: ["i\u001B[31mndex.ts"] }),
-    );
+    const report = withLeaky(sampleReport(), ["packages/shared"], {
+      entryPoints: ["i\u001B[31mndex.ts"],
+    });
 
-    const view = plainView({ ...report, modules });
+    const view = plainView(report);
 
     expect(view).toContain("i\\u001b[31mndex.ts");
     expect(view).not.toContain("\u001B");
   });
 
-  it("leaves out test-only modules, however leaky", () => {
+  it("says so when no module is flagged, however leaky its numbers look", () => {
     const report = sampleReport();
     const modules = report.modules.map((module) =>
-      module.path === "packages/shared"
-        ? Object.assign({}, module, { testOnly: true })
-        : module,
-    );
-
-    const interfaces = section(
-      plainView({ ...report, modules }),
-      "Leakiest interfaces",
+      Object.assign({}, module, { leakage: 1 }),
     );
 
     expect(
-      interfaces.filter((line) => line.includes("packages/shared")),
-    ).toEqual([]);
-    expect(interfaces).toHaveLength(3);
-  });
-
-  it("leaves out modules with too few implementation commits or no entry points", () => {
-    const report = sampleReport();
-    const modules = report.modules.map((module) =>
-      Object.assign({}, module, { implementationCommits: 4 }),
-    );
-
-    expect(
-      section(plainView({ ...report, modules }), "Leakiest interfaces"),
-    ).toEqual([
-      "No module has entry points and 5 or more implementation commits.",
-    ]);
+      section(plainView({ ...report, modules }), "Leaky interfaces"),
+    ).toEqual(["No module has a leaky interface."]);
   });
 });
 
