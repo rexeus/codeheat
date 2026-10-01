@@ -247,6 +247,31 @@ button:focus-visible {
   display: block;
 }
 
+.empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 24px;
+  text-align: center;
+  pointer-events: none;
+}
+.empty-title {
+  font-size: 14px;
+}
+.empty-detail {
+  max-width: 44ch;
+  margin: 0;
+  color: var(--text-2);
+}
+
+.empty .flag {
+  white-space: nowrap;
+}
+
 .group {
   fill: var(--group);
   stroke: var(--hairline);

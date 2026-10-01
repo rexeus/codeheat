@@ -3,6 +3,7 @@ import type { FileStats } from "@codeheat/engine";
 import type { HeatScale } from "../color/heat-scale.js";
 import type { Partner } from "../selection/partners.js";
 import { h } from "./dom.js";
+import { EMPTY_PANEL_NOTE } from "./empty-notice.js";
 import {
   formatCount,
   formatPercent,
@@ -202,12 +203,16 @@ export const createPanel = (
         .map((file) => hotspotRow(context, file));
       root.replaceChildren(
         h("h2", "panel-title", "Hotspots"),
-        h(
-          "p",
-          "hint",
-          "Big and hot: many lines, changed often, deeply nested. Select a tile to outline the files that change together with it.",
-        ),
-        section("Top hotspots", h("ul", "list", ...rows)),
+        ...(rows.length === 0
+          ? [h("p", "hint", EMPTY_PANEL_NOTE)]
+          : [
+              h(
+                "p",
+                "hint",
+                "Big and hot: many lines, changed often, deeply nested. Select a tile to outline the files that change together with it.",
+              ),
+              section("Top hotspots", h("ul", "list", ...rows)),
+            ]),
       );
       root.scrollTop = 0;
     },
