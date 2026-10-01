@@ -3,7 +3,7 @@
 import type { LanguageAdapter, SourceImports } from "./language-adapter.js";
 import { modulesInAst } from "./typescript-ast.js";
 import { exportedSymbols } from "./typescript-symbols.js";
-import type { StaticExports } from "./typescript-symbols.js";
+import type { StaticExports, StaticImports } from "./typescript-symbols.js";
 
 /**
  * The part of the result of oxc-parser's `parseSync` that the adapter reads,
@@ -13,12 +13,7 @@ import type { StaticExports } from "./typescript-symbols.js";
 type ParsedModule = {
   readonly errors: ReadonlyArray<unknown>;
   readonly module: {
-    readonly staticImports: ReadonlyArray<{
-      readonly moduleRequest: { readonly value: string };
-      readonly entries: ReadonlyArray<{
-        readonly localName: { readonly value: string };
-      }>;
-    }>;
+    readonly staticImports: StaticImports;
     readonly staticExports: StaticExports;
     readonly dynamicImports: ReadonlyArray<{
       readonly moduleRequest: { readonly start: number; readonly end: number };
@@ -193,7 +188,7 @@ export const typescriptAdapter = (parse: ParseModule): LanguageAdapter => ({
     ),
   exports: (file, source) =>
     readParsed(parse, file, source, ({ module, program }) =>
-      exportedSymbols(module.staticExports, program, source),
+      exportedSymbols(module, program, source),
     ),
   canReexport: (source) =>
     MENTIONS_EXPORT.test(source) && MENTIONS_MODULE.test(source),

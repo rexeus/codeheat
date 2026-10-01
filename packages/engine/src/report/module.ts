@@ -27,8 +27,12 @@ const ModuleDepth = Schema.Struct({
   /**
    * Distinct names the module's entry points export, following
    * `export * from` within the module; `export { x } from` and
-   * `export * as ns from` add their names. A name that several entry points
-   * export counts once. A type counts like a value, `default` like a name.
+   * `export * as ns from` add their names. As in ECMAScript, a file's own
+   * export wins over `export *`, `export *` never forwards `default`, and a
+   * name that two `export *` sources export as different bindings is exported
+   * by neither (the same binding reached twice counts once). A name that
+   * several entry points export counts once. A type counts like a value,
+   * `default` like a name.
    */
   exports: Schema.Int.check(Schema.isGreaterThanOrEqualTo(1)),
   /** Non-blank lines of the module's files that are neither entry points, test code, nor tool configuration (`*.config.{js,ts,mjs,…}`). At least 1. */
@@ -94,7 +98,8 @@ export const Module = Schema.Struct({
    * does not parse (or no parser was available), it exports in a way that
    * cannot be listed (`export =`, CommonJS), an `export * from` cannot be
    * followed within the module (an external package, an unresolved specifier,
-   * a file of another module), it exports nothing, or no file is left to
+   * a specifier that resolves to several files, a file of another module), or
+   * two bindings of a name cannot be told apart, it exports nothing, or no file is left to
    * count as implementation (all code sits in the entry points, in test code
    * or in configuration files). Null is never a depth of zero.
    */

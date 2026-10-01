@@ -15,17 +15,35 @@ export type SourceImports = {
   readonly computed: boolean;
 };
 
+/** A name a file exports on its own account, and what it stands for. */
+export type ExportedName = {
+  /** The exported name; the default export is named `default`. */
+  readonly name: string;
+  /**
+   * The binding behind the name. Two names (or two files) that export the same
+   * binding export one thing. Either declared in this file, `local` naming
+   * it (so `export { a, a as b }` shares one binding), or taken from another
+   * module: the `specifier` as written and the `name` that module exports it
+   * as, `*` for its namespace object (`export * as ns from "./m"`,
+   * `import * as ns from "./m"; export { ns }`).
+   */
+  readonly binding:
+    | { readonly local: string }
+    | { readonly specifier: string; readonly name: string };
+};
+
 /** The symbols one file exports, as written in its source. */
 export type SourceExports = {
   /**
    * Distinct names the file exports on its own account: declarations,
    * `export { a as b }`, `export { x } from "…"`, `export * as ns from "…"`.
-   * The default export is named `default`.
    */
-  readonly names: ReadonlyArray<string>;
+  readonly names: ReadonlyArray<ExportedName>;
   /**
-   * Specifiers of `export * from "…"`: each adds every name the module it
-   * names exports, except `default`, which `export *` never forwards.
+   * Specifiers of `export * from "…"`: each adds the names the module it names
+   * exports, except `default`, which `export *` never forwards, and except the
+   * names this file exports itself, which win. A name that two of these
+   * modules export as different bindings is exported by neither.
    */
   readonly forwarded: ReadonlyArray<string>;
 };

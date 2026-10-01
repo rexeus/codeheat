@@ -35,6 +35,9 @@ const tenFunctions = Array.from(
  * - cyclic: `own`, `fromA`, `fromB`, but not b's default, over a.ts (2) and b.ts (3)
  * - named-external: 1 export, forwarded by name from a package, over impl.ts (3)
  * - bare and configured: the same index.ts exporting ten functions, the second next to a two-line eslint.config.mjs; a configuration file is no implementation, so both have no depth
+ * - conflict: `export *` from a.ts and b.ts, which both export a different `x`; ES exports neither `x`, so only onlyA and onlyB count, over a.ts (2) and b.ts (2)
+ * - local-wins: the index exports its own `x` next to `export *` from a.ts, which exports `x` and `y`: 2 exports over a.ts (2)
+ * - diamond: `x` reaches the index through `export *` from left.ts and right.ts, which take the same binding of base.ts, once by `export *` and once by name: 1 export over three files (1 each)
  * - configured-impl: 2 exports over impl.ts (5); its configuration files (2 and 3) do not count
  */
 const files: Readonly<Record<string, string>> = {
@@ -95,6 +98,26 @@ const files: Readonly<Record<string, string>> = {
   "packages/configured/src/index.ts": tenFunctions,
   "packages/configured/eslint.config.mjs":
     "export default [];\nconst unused = 1;\n",
+
+  "packages/conflict/package.json": manifest("src/index.ts"),
+  "packages/conflict/src/index.ts":
+    'export * from "./a.js";\nexport * from "./b.js";\n',
+  "packages/conflict/src/a.ts":
+    "export const x = 1;\nexport const onlyA = 1;\n",
+  "packages/conflict/src/b.ts":
+    "export const x = 2;\nexport const onlyB = 1;\n",
+
+  "packages/local-wins/package.json": manifest("src/index.ts"),
+  "packages/local-wins/src/index.ts":
+    'export * from "./a.js";\nexport const x = 0;\n',
+  "packages/local-wins/src/a.ts": "export const x = 1;\nexport const y = 1;\n",
+
+  "packages/diamond/package.json": manifest("src/index.ts"),
+  "packages/diamond/src/index.ts":
+    'export * from "./left.js";\nexport * from "./right.js";\n',
+  "packages/diamond/src/left.ts": 'export * from "./base.js";\n',
+  "packages/diamond/src/right.ts": 'export { x } from "./base.js";\n',
+  "packages/diamond/src/base.ts": "export const x = 1;\n",
 
   "packages/configured-impl/package.json": manifest("src/index.ts"),
   "packages/configured-impl/src/index.ts":
@@ -161,6 +184,11 @@ layer(NodeServices.layer)("analyze module depth", (it) => {
           implementationLines: 3,
           linesPerExport: 3,
         });
+        assert.deepStrictEqual(depths.get("packages/diamond"), {
+          exports: 1,
+          implementationLines: 3,
+          linesPerExport: 3,
+        });
         assert.deepStrictEqual(depths.get("packages/configured-impl"), {
           exports: 2,
           implementationLines: 5,
@@ -169,6 +197,35 @@ layer(NodeServices.layer)("analyze module depth", (it) => {
       }),
   );
 });
+
+layer(NodeServices.layer)(
+  "analyze module depth with conflicting stars",
+  (it) => {
+    it.effect("exports neither of two different bindings of a name", () =>
+      Effect.gen(function* () {
+        const depths = yield* analyzeShop([typescriptAdapter(parseSync)]);
+
+        assert.deepStrictEqual(depths.get("packages/conflict"), {
+          exports: 2,
+          implementationLines: 4,
+          linesPerExport: 2,
+        });
+      }),
+    );
+
+    it.effect("lets the file's own export win over export-star", () =>
+      Effect.gen(function* () {
+        const depths = yield* analyzeShop([typescriptAdapter(parseSync)]);
+
+        assert.deepStrictEqual(depths.get("packages/local-wins"), {
+          exports: 2,
+          implementationLines: 2,
+          linesPerExport: 1,
+        });
+      }),
+    );
+  },
+);
 
 layer(NodeServices.layer)("analyze module depth that cannot be told", (it) => {
   it.effect("reports no depth where the exports cannot be told exactly", () =>

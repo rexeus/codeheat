@@ -12,7 +12,7 @@ import { roundReported } from "../report/precision.js";
 import type { InventoryFile } from "../universe/inventory.js";
 import type { ModuleRef } from "./detect.js";
 import { isConfigFile } from "./entry-points.js";
-import { countExportedSymbols } from "./exported-symbols.js";
+import { countExportedNames } from "./exported-symbols.js";
 import { isTestPath } from "./test-path.js";
 
 /** Modules read at once; each reads one file at a time. */
@@ -68,7 +68,7 @@ const depthOf = (
 
 /**
  * The depth of every module that has one, keyed by module path: its exported
- * symbols (see `countExportedSymbols`) against the lines of its
+ * symbols (see `countExportedNames`) against the lines of its
  * implementation. A module is absent when it has no entry points, an entry
  * point no adapter reads, no implementation lines (nothing to read for it), or
  * symbols that cannot be counted exactly.
@@ -105,7 +105,7 @@ export const measureDepths = (
       measurable,
       ([module, entries]) =>
         Effect.map(
-          countExportedSymbols(sources, module, entries),
+          countExportedNames(sources, module, entries),
           (exports) =>
             [module, depthOf(exports, lines.get(module) ?? 0)] as const,
         ),

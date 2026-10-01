@@ -1,4 +1,4 @@
-// Owns counting the symbols a module exports: those of its entry points,
+// Owns counting the names a module exports: those of its entry points,
 // followed through `export * from` into the files of the same module.
 import { Effect, FileSystem, Path } from "effect";
 
@@ -9,6 +9,8 @@ import type {
 } from "../code/language-adapter.js";
 import type { Resolver } from "../imports/resolve.js";
 import type { ModuleRef } from "./detect.js";
+import { resolveExport } from "./export-resolution.js";
+import type { ExportWorld } from "./export-resolution.js";
 
 export type SymbolSources = {
   /** Absolute path of the work tree root. */
@@ -20,8 +22,8 @@ export type SymbolSources = {
   readonly modules: ReadonlyMap<string, ModuleRef>;
 };
 
-/** A file to list and whether `export *` brought it in, which leaves out its default export. */
-type Visit = { readonly file: string; readonly forwarded: boolean };
+/** A file to load; a required one must be listable, for the others the answer only gets less exact. */
+type Visit = { readonly file: string; readonly required: boolean };
 
 /** The exports of `file`; undefined when no adapter reads it, it is unreadable, or the adapter cannot list them. */
 const listExports = (
@@ -43,43 +45,137 @@ const listExports = (
     return adapter.exports(file, source);
   }).pipe(Effect.orElseSucceed(() => undefined));
 
-/**
- * The files `specifiers` name, written in `from`, each one a file of `module`;
- * undefined when one is a package, resolves to nothing or to several files, or
- * leaves the module, since its implementation would then not be counted.
- */
-const forwardedFiles = (
-  { resolve, modules }: SymbolSources,
-  module: string,
+/** The universe file that `specifier`, written in `from`, names, when it is exactly one. */
+const fileNamedBy = (
+  { resolve }: SymbolSources,
   from: string,
-  specifiers: ReadonlyArray<string>,
-): ReadonlyArray<string> | undefined => {
-  const targets: Array<string> = [];
-  for (const specifier of specifiers) {
-    const { files, resolved } = resolve(from, specifier);
-    const [target] = files;
-    if (
-      !resolved ||
-      files.length !== 1 ||
-      target === undefined ||
-      modules.get(target)?.path !== module
-    ) {
+  specifier: string,
+): string | undefined => {
+  const { files, resolved } = resolve(from, specifier);
+  const [target] = files;
+  return resolved && files.length === 1 ? target : undefined;
+};
+
+/** The files of `module` that the exports of `file` refer to: the `export * from` sources, which are required, and the modules that named exports are taken from. */
+const referencedFiles = (
+  sources: SymbolSources,
+  module: string,
+  file: string,
+  listed: SourceExports,
+): ReadonlyArray<Visit> | undefined => {
+  const named = listed.names.flatMap(({ binding }) =>
+    "specifier" in binding && binding.specifier.startsWith(".")
+      ? [binding.specifier]
+      : [],
+  );
+  const visits: Array<Visit> = [];
+  for (const specifier of listed.forwarded) {
+    const target = fileNamedBy(sources, file, specifier);
+    if (target === undefined || sources.modules.get(target)?.path !== module) {
       return undefined;
     }
-    targets.push(target);
+    visits.push({ file: target, required: true });
   }
-  return targets;
+  for (const specifier of named) {
+    const target = fileNamedBy(sources, file, specifier);
+    if (target !== undefined && sources.modules.get(target)?.path === module) {
+      visits.push({ file: target, required: false });
+    }
+  }
+  return visits;
 };
 
 /**
- * The number of distinct symbols `entryPoints` export, all of them files of
- * `module`: their own names, and those of the files they forward with
- * `export * from` (relative specifiers, transitively, `default` left out), a
- * cycle visited once. Undefined when that cannot be told exactly: a file is
- * read by no adapter, unreadable or unlistable, or a forwarded specifier does
- * not name exactly one file of the module.
+ * The exports of `entryPoints` and of every file of `module` they reach by
+ * re-exporting; undefined when a file that `export *` forwards cannot be
+ * listed, or a forwarded specifier does not name exactly one file of the module.
  */
-export const countExportedSymbols = (
+const loadExports = (
+  sources: SymbolSources,
+  module: string,
+  entryPoints: ReadonlyArray<string>,
+): Effect.Effect<
+  ReadonlyMap<string, SourceExports> | undefined,
+  never,
+  FileSystem.FileSystem | Path.Path
+> =>
+  Effect.gen(function* () {
+    const loaded = new Map<string, SourceExports>();
+    const failed = new Set<string>();
+    const pending: Array<Visit> = entryPoints.map((file) => ({
+      file,
+      required: true,
+    }));
+    for (
+      let visit = pending.pop();
+      visit !== undefined;
+      visit = pending.pop()
+    ) {
+      if (visit.required && failed.has(visit.file)) {
+        return undefined;
+      }
+      if (loaded.has(visit.file) || failed.has(visit.file)) {
+        continue;
+      }
+      const listed = yield* listExports(sources, visit.file);
+      if (listed === undefined) {
+        failed.add(visit.file);
+        if (visit.required) {
+          return undefined;
+        }
+        continue;
+      }
+      loaded.set(visit.file, listed);
+      const next = referencedFiles(sources, module, visit.file, listed);
+      if (next === undefined) {
+        return undefined;
+      }
+      pending.push(...next);
+    }
+    return loaded;
+  });
+
+/** The names `entry` may export: its own, and those of the files its `export *` reaches (not their `default`). */
+const candidateNames = (
+  { loaded, fileOf }: ExportWorld,
+  entry: string,
+): ReadonlySet<string> => {
+  const names = new Set<string>();
+  const visited = new Set<string>();
+  const pending = [entry];
+  for (let file = pending.pop(); file !== undefined; file = pending.pop()) {
+    const listed = loaded.get(file);
+    if (visited.has(file) || listed === undefined) {
+      continue;
+    }
+    visited.add(file);
+    for (const { name } of listed.names) {
+      if (file === entry || name !== "default") {
+        names.add(name);
+      }
+    }
+    for (const specifier of listed.forwarded) {
+      const target = fileOf(file, specifier);
+      if (target !== undefined) {
+        pending.push(target);
+      }
+    }
+  }
+  return names;
+};
+
+/**
+ * The number of distinct names `entryPoints` export, all of them files of
+ * `module`: a name counts once however many entry points export it. Within an
+ * entry point, the names of its own and of the files it forwards with
+ * `export * from` (relative specifiers, transitively, `default` left out); a
+ * name that two `export *` sources export as different bindings, and that the
+ * file does not export itself, is not exported. Undefined when that cannot be
+ * told exactly: a file is read by no adapter, unreadable or unlistable, a
+ * forwarded specifier does not name exactly one file of the module, or two
+ * bindings of a name cannot be told apart.
+ */
+export const countExportedNames = (
   sources: SymbolSources,
   module: string,
   entryPoints: ReadonlyArray<string>,
@@ -89,37 +185,25 @@ export const countExportedSymbols = (
   FileSystem.FileSystem | Path.Path
 > =>
   Effect.gen(function* () {
-    const names = new Set<string>();
-    const visited = new Set<string>();
-    const pending: Array<Visit> = entryPoints.map((file) => ({
-      file,
-      forwarded: false,
-    }));
-    for (
-      let visit = pending.pop();
-      visit !== undefined;
-      visit = pending.pop()
-    ) {
-      const key = `${visit.forwarded ? "*" : "="}${visit.file}`;
-      if (visited.has(key)) {
-        continue;
-      }
-      visited.add(key);
-      const listed = yield* listExports(sources, visit.file);
-      const next =
-        listed === undefined
-          ? undefined
-          : forwardedFiles(sources, module, visit.file, listed.forwarded);
-      if (listed === undefined || next === undefined) {
-        return undefined;
-      }
-      for (const name of listed.names) {
-        // `export *` never forwards a default export.
-        if (!visit.forwarded || name !== "default") {
-          names.add(name);
+    const loaded = yield* loadExports(sources, module, entryPoints);
+    if (loaded === undefined) {
+      return undefined;
+    }
+    const world: ExportWorld = {
+      loaded,
+      fileOf: (from, specifier) => fileNamedBy(sources, from, specifier),
+    };
+    const exported = new Set<string>();
+    for (const entry of entryPoints) {
+      for (const name of candidateNames(world, entry)) {
+        const { kind } = resolveExport(world, entry, name);
+        if (kind === "unknown") {
+          return undefined;
+        }
+        if (kind === "binding") {
+          exported.add(name);
         }
       }
-      pending.push(...next.map((file) => ({ file, forwarded: true })));
     }
-    return names.size;
+    return exported.size;
   });
