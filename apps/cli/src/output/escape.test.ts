@@ -19,7 +19,31 @@ describe("escapeForTerminal", () => {
     expect(escapeForTerminal("a\u2028b\u202Ec")).toBe("a\\u2028b\\u202ec");
   });
 
-  it("doubles backslashes so escapes stay unambiguous", () => {
-    expect(escapeForTerminal("a\\u001b")).toBe("a\\\\u001b");
+  it("leaves Windows paths untouched so they stay pasteable", () => {
+    expect(escapeForTerminal("C:\\Users\\me\\codeheat-report.html")).toBe(
+      "C:\\Users\\me\\codeheat-report.html",
+    );
+    expect(escapeForTerminal("\\\\server\\share\\x.ts")).toBe(
+      "\\\\server\\share\\x.ts",
+    );
+  });
+
+  it("leaves backslashes before ordinary letters untouched", () => {
+    expect(escapeForTerminal("C:\\Users\\me\\src\\utils\\x.ts")).toBe(
+      "C:\\Users\\me\\src\\utils\\x.ts",
+    );
+  });
+
+  it("doubles a backslash run before something that reads as an escape", () => {
+    expect(escapeForTerminal("a\\u001b.ts")).toBe("a\\\\u001b.ts");
+    expect(escapeForTerminal("a\\\\u001b.ts")).toBe("a\\\\\\\\u001b.ts");
+  });
+
+  it("prints a literal backslash before ESC differently from a literal escape text", () => {
+    const literalEscapeText = escapeForTerminal("a\\\\u001b.ts");
+    const backslashThenEsc = escapeForTerminal("a\\\u001B.ts");
+
+    expect(backslashThenEsc).toBe("a\\\\\\u001b.ts");
+    expect(literalEscapeText).not.toBe(backslashThenEsc);
   });
 });
