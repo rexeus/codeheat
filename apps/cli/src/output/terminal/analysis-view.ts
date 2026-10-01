@@ -1,5 +1,5 @@
 // Owns the human view of `analyze`: top hotspots, top couplings, one hint.
-import type { Coupling, FileStats, Report } from "@codeheat/engine";
+import type { Coupling, FileStats, Module, Report } from "@codeheat/engine";
 
 import { escapeForTerminal } from "../escape.js";
 import { day, percent } from "./format.js";
@@ -8,6 +8,7 @@ import { plain, renderTable } from "./table.js";
 
 const TOP_HOTSPOTS = 10;
 const TOP_COUPLINGS = 5;
+const TOP_MODULES = 5;
 const BAR_WIDTH = 10;
 
 const scoreBar = (score: number): string => {
@@ -81,13 +82,46 @@ const couplingLines = (
   );
 };
 
+const moduleLines = (
+  modules: ReadonlyArray<Module>,
+  style: Style,
+): ReadonlyArray<string> =>
+  renderTable(
+    [
+      { header: "cohesion", align: "right" },
+      { header: "commits", align: "right" },
+      { header: "module", align: "left" },
+      { header: "changes most with", align: "left" },
+    ],
+    modules.map((module) => {
+      const [partner] = module.partners;
+      return [
+        plain(percent(module.cohesion ?? 0)),
+        plain(String(module.commits)),
+        plain(escapeForTerminal(module.path)),
+        plain(
+          partner === undefined
+            ? ""
+            : `${escapeForTerminal(partner.path)} (${partner.sharedCommits})`,
+        ),
+      ];
+    }),
+    style,
+  );
+
+/** The least cohesive modules with enough commits to say something; the report lists them least cohesive first. */
+const rankedModules = (report: Report): ReadonlyArray<Module> =>
+  report.modules
+    .filter((module) => module.commits >= report.thresholds.minModuleCommits)
+    .slice(0, TOP_MODULES);
+
 /**
- * Renders the terminal view of an `analyze` report: the ten hottest files and
+ * Renders the terminal view of an `analyze` report: the ten hottest files,
  * the five strongest couplings that are not test pairs, each with the
- * co-change probability in both directions (`shared / revisions(side)`). The
- * report must not be cut to `--limit`: test pairs could crowd out every other
- * coupling, and every coupled file must appear in `files`: rendering throws
- * otherwise.
+ * co-change probability in both directions (`shared / revisions(side)`), and
+ * the five least cohesive modules. The report must not be cut to `--limit`:
+ * test pairs could crowd out every other coupling, and every coupled file must
+ * appear in `files`: rendering throws otherwise.
  * The result has no trailing newline.
  */
 export const renderAnalysis = (report: Report, style: Style): string => {
@@ -97,6 +131,7 @@ export const renderAnalysis = (report: Report, style: Style): string => {
       ? ["No files in the analysis universe."]
       : hotspotLines(report.files, style);
   const couplings = couplingLines(report.couplings, report.files, style);
+  const modules = rankedModules(report);
   return [
     style.bold(summary),
     "",
@@ -107,6 +142,13 @@ export const renderAnalysis = (report: Report, style: Style): string => {
     ...(couplings.length > 1
       ? couplings
       : ["No change coupling above the thresholds."]),
+    "",
+    style.bold("Least cohesive modules"),
+    ...(modules.length > 0
+      ? moduleLines(modules, style)
+      : [
+          `No module has ${report.thresholds.minModuleCommits} or more counted commits.`,
+        ]),
     "",
     style.dim("Use --html for the treemap or --json for the full report."),
   ].join("\n");

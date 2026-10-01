@@ -1,4 +1,4 @@
-import type { InspectResult } from "@codeheat/engine";
+import type { InspectResult, Module } from "@codeheat/engine";
 import { describe, expect, it } from "vitest";
 
 import { renderInspect } from "./inspect-view.js";
@@ -33,7 +33,23 @@ const entry: InspectResult["matches"][number] = {
   ],
 };
 
-const result = (matches: InspectResult["matches"]): InspectResult => ({
+const billing: Module = {
+  path: "packages/billing",
+  kind: "package",
+  files: 9,
+  commits: 74,
+  localCommits: 41,
+  cohesion: 0.5541,
+  partners: [
+    { path: "packages/web", sharedCommits: 20 },
+    { path: "packages/auth", sharedCommits: 9 },
+  ],
+};
+
+const result = (
+  matches: InspectResult["matches"],
+  modules: InspectResult["modules"] = [billing],
+): InspectResult => ({
   schemaVersion: 1,
   window: {
     since: "2025-09-29T12:00:00.000Z",
@@ -42,7 +58,7 @@ const result = (matches: InspectResult["matches"]): InspectResult => ({
     couplingCommits: 198,
   },
   matches,
-  modules: [],
+  modules,
   unmatched: [],
 });
 
@@ -56,6 +72,7 @@ describe("renderInspect", () => {
         "rank #1 of 36, score 0.97",
         "48 revisions, 14 co-changed files, +384 -672 lines, 964 loc",
         "indentation complexity 1900 (mean 1.97, max 9)",
+        "module packages/billing: 55% of 74 commits stay inside, most often with packages/web (20)",
         "- changed in 48 commits (#1 of 36)",
         "",
         "Changes together with",
@@ -89,11 +106,56 @@ describe("renderInspect", () => {
   });
 
   it("escapes control characters in paths", () => {
-    const hostile = { ...entry, path: "a\u001B[2J.ts" };
+    const hostile = { ...entry, path: "a\u001B[2J.ts", module: "m\u001B[2J" };
+    const hostileModule = { ...billing, path: "m\u001B[2J" };
 
-    const view = renderInspect(result([hostile]), makeStyle(false));
+    const view = renderInspect(
+      result([hostile], [hostileModule]),
+      makeStyle(false),
+    );
 
     expect(view).toContain("a\\u001b[2J.ts");
+    expect(view).toContain("module m\\u001b[2J:");
     expect(view).not.toContain("\u001B");
+  });
+});
+
+describe("renderInspect modules", () => {
+  it("says when the module has no counted commits or no partner", () => {
+    const quiet: Module = {
+      ...billing,
+      commits: 0,
+      cohesion: null,
+      partners: [],
+    };
+    const alone: Module = { ...billing, commits: 8, cohesion: 1, partners: [] };
+
+    expect(renderInspect(result([entry], [quiet]), makeStyle(false))).toContain(
+      "module packages/billing: no counted commits\n",
+    );
+    expect(renderInspect(result([entry], [alone]), makeStyle(false))).toContain(
+      "module packages/billing: 100% of 8 commits stay inside\n",
+    );
+  });
+
+  it("prints one module line per match, each from its own module", () => {
+    const web = { ...entry, path: "packages/web/a.ts", module: "packages/web" };
+    const webModule: Module = {
+      ...billing,
+      path: "packages/web",
+      cohesion: 0.5,
+      commits: 10,
+      partners: [],
+    };
+
+    const view = renderInspect(
+      result([entry, web], [billing, webModule]),
+      makeStyle(false),
+    );
+
+    expect(view).toContain("module packages/billing: 55%");
+    expect(view).toContain(
+      "module packages/web: 50% of 10 commits stay inside\n",
+    );
   });
 });

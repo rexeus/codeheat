@@ -83,6 +83,61 @@ describe("renderAnalysis", () => {
   });
 });
 
+describe("renderAnalysis modules", () => {
+  it("lists the five least cohesive modules with their top partner", () => {
+    const modules = section(plainView(), "Least cohesive modules");
+
+    expect(modules).toEqual([
+      "cohesion  commits  module            changes most with",
+      "     40%       30  packages/shared   apps/cli (11)",
+      "     50%       26  apps/cli          packages/shared (11)",
+      "     53%       58  packages/web      packages/billing (20)",
+      "     55%       74  packages/billing  packages/web (20)",
+      "     61%       44  packages/auth     packages/web (14)",
+    ]);
+  });
+
+  it("leaves out modules below the commit floor, however incohesive", () => {
+    const report = sampleReport();
+    const tiny = report.modules
+      .slice(0, 1)
+      .map((module) =>
+        Object.assign({}, module, { path: "tiny", commits: 4, cohesion: 0 }),
+      );
+
+    const modules = section(
+      plainView({ ...report, modules: [...tiny, ...report.modules] }),
+      "Least cohesive modules",
+    );
+
+    expect(modules.filter((line) => line.includes("tiny"))).toEqual([]);
+    expect(modules).toHaveLength(6);
+  });
+
+  it("escapes control characters in module paths", () => {
+    const report = sampleReport();
+    const hostile = report.modules
+      .slice(0, 1)
+      .map((module) => Object.assign({}, module, { path: "m\u001B[31m" }));
+
+    const view = plainView({ ...report, modules: hostile });
+
+    expect(view).toContain("m\\u001b[31m");
+    expect(view).not.toContain("\u001B");
+  });
+
+  it("says so when no module has enough commits", () => {
+    const report = sampleReport();
+    const modules = report.modules.map((module) =>
+      Object.assign({}, module, { commits: 4 }),
+    );
+
+    expect(
+      section(plainView({ ...report, modules }), "Least cohesive"),
+    ).toEqual(["No module has 5 or more counted commits."]);
+  });
+});
+
 describe("renderAnalysis styling and safety", () => {
   it("carries no ANSI escape codes in plain style", () => {
     expect(plainView()).not.toContain("\u001B");

@@ -130,6 +130,7 @@ describe("codeheat analyze terminal view", () => {
         expect(result.stdout).not.toContain("No change coupling");
         // the hotspot table is not cut to one row either
         expect(result.stdout).toContain("src/a.test.ts");
+        expect(result.stdout).toContain("Least cohesive modules");
       }).pipe(Effect.scoped),
   );
 });
