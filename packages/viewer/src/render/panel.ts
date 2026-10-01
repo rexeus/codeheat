@@ -1,6 +1,5 @@
 import type { FileStats, Module } from "@codeheat/engine";
 
-import type { ColorMode } from "../color/color-mode.js";
 import type { HeatScale } from "../color/heat-scale.js";
 import type { Partner } from "../selection/partners.js";
 import { h, pathLabel, section } from "./dom.js";
@@ -12,6 +11,7 @@ import {
   formatScore,
 } from "./format.js";
 import { fileModuleSection, leastCohesiveSection } from "./module-panel.js";
+import { overviewIntro } from "./overview-intro.js";
 
 /** Side panel: an overview until a file is selected, then its reasons and partners. */
 export type Panel = {
@@ -186,43 +186,6 @@ const hotspotsSection = (rows: readonly HTMLElement[]): HTMLElement => {
   element.dataset["overview"] = "hotspots";
   return element;
 };
-
-/** Marks `element` for one color mode; the stylesheet hides it in the other. */
-const forMode = (mode: ColorMode, element: HTMLElement): HTMLElement => {
-  element.dataset["modeOnly"] = mode;
-  return element;
-};
-
-/** The overview's title and intro in each color mode. */
-const overviewIntro = (): HTMLElement[] => [
-  forMode("heat", h("h2", "panel-title", "Hotspots")),
-  forMode(
-    "heat",
-    h(
-      "p",
-      "hint",
-      "Big and hot: many lines, changed often, deeply nested. Select a tile to outline the files that change together with it.",
-    ),
-  ),
-  forMode("cohesion", h("h2", "panel-title", "Modules")),
-  forMode(
-    "cohesion",
-    h(
-      "p",
-      "hint",
-      "Cohesion is the share of a module's commits that touch no other module; low means its changes spread. Tiles take the color of their module. Select a tile to outline the files that change together with it.",
-    ),
-  ),
-  forMode("change", h("h2", "panel-title", "Change")),
-  forMode(
-    "change",
-    h(
-      "p",
-      "hint",
-      "Cooler tiles got less hot than the window before, warmer tiles hotter; scores are normalized within each window, so this is a shift in standing. Files that were not active before are neutral. Select a tile to outline the files that change together with it.",
-    ),
-  ),
-];
 
 export const createPanel = (
   root: HTMLElement,
