@@ -101,6 +101,25 @@ export const readHead: Effect.Effect<string | null, GitError, Git> = Effect.gen(
   },
 );
 
+/**
+ * When the oldest reachable commit was made, in seconds since the epoch; null
+ * without commits. Of several root commits the earliest counts. In a shallow
+ * clone the commits it was cut at are roots, so this is the start of the
+ * history that exists.
+ *
+ * Runs git inside the repository, which needs a `HEAD`.
+ */
+export const readOldestCommitTime: Effect.Effect<number | null, GitError, Git> =
+  Effect.gen(function* () {
+    const git = yield* Git;
+    const output = yield* git.text(["log", "--max-parents=0", "--format=%ct"]);
+    const times = output
+      .split("\n")
+      .filter((line) => line !== "")
+      .map(Number);
+    return times.length === 0 ? null : Math.min(...times);
+  });
+
 const SHALLOW_FILE_ARGS = ["rev-parse", "--git-path", "shallow"];
 
 /**

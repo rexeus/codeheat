@@ -5,6 +5,7 @@ import type { GitError } from "../git/git-errors.js";
 import type { Git } from "../git/git.js";
 import { readHistory, readHistoryHalves } from "../history/history.js";
 import type { History, HistoryOptions } from "../history/history.js";
+import type { Report } from "../report/report.js";
 import {
   resolveComparisonRanges,
   resolveTimeRange,
@@ -68,3 +69,24 @@ export const readWindows = (
           previous: earlier,
         })),
       );
+
+/**
+ * The report's `comparison` for the windows and their histories: null unless
+ * comparing. `oldestCommit` is the time in seconds since the epoch of the
+ * oldest reachable commit, null for a repository without commits.
+ */
+export const comparisonOf = (
+  { previous }: Windows,
+  histories: WindowHistories,
+  oldestCommit: number | null,
+): Report["comparison"] =>
+  previous === null || histories.previous === null
+    ? null
+    : {
+        previousSince: previous.since,
+        previousUntil: previous.until,
+        previousCommits: histories.previous.commits.length,
+        previousTruncated:
+          oldestCommit !== null &&
+          Date.parse(previous.since) < oldestCommit * 1000,
+      };

@@ -9,6 +9,7 @@ import type { GitError } from "../git/git-errors.js";
 import { Git } from "../git/git.js";
 import {
   readHead,
+  readOldestCommitTime,
   readShallowBoundary,
   repositoryRoot,
   repositoryScope,
@@ -20,7 +21,12 @@ import type { Report } from "../report/report.js";
 import { inventory } from "../universe/inventory.js";
 import type { InvalidCompare, InvalidSince } from "./analysis-window.js";
 import { measureWindows } from "./measure.js";
-import { noHistories, readWindows, resolveWindows } from "./windows.js";
+import {
+  comparisonOf,
+  noHistories,
+  readWindows,
+  resolveWindows,
+} from "./windows.js";
 import type { Windows } from "./windows.js";
 
 /** Every expected failure of `analyze`. */
@@ -83,6 +89,10 @@ const analyzeRepository = (
             skipCommits: shallowBoundary ?? new Set(),
             universe: new Set(files.map((file) => file.path)),
           });
+    const oldestCommit =
+      head === null || windows.previous === null
+        ? null
+        : yield* readOldestCommitTime;
     const { commits, couplingCommits, thresholds, ...measured } =
       measureWindows(files, histories, modules, entryPoints);
     return {
@@ -96,13 +106,7 @@ const analyzeRepository = (
         shallow: shallowBoundary !== undefined,
       },
       window: { ...windows.current, commits, couplingCommits },
-      comparison:
-        windows.previous === null
-          ? null
-          : {
-              previousSince: windows.previous.since,
-              previousUntil: windows.previous.until,
-            },
+      comparison: comparisonOf(windows, histories, oldestCommit),
       thresholds,
       totals: {
         files: measured.files.length,

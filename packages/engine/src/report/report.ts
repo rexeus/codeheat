@@ -23,6 +23,18 @@ const Comparison = Schema.Struct({
   previousSince: Schema.String,
   /** Equals `window.since`; no commit is in both windows. */
   previousUntil: Schema.String,
+  /**
+   * Non-merge commits in the previous window that touched at least one
+   * universe file. 0 means there is nothing to compare against: every trend is
+   * null, which is not the same as "nothing changed".
+   */
+  previousCommits: Count,
+  /**
+   * The previous window reaches back past the oldest reachable commit, because
+   * the repository is younger than the two windows together or a shallow clone
+   * cut its history. Its numbers then cover less than the full window.
+   */
+  previousTruncated: Schema.Boolean,
 });
 
 /** How a file's score changed against the window before (`analyze --compare`). */

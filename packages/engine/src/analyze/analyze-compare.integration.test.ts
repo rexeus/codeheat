@@ -85,6 +85,8 @@ layer(NodeServices.layer)("analyze --compare", (it) => {
       assert.deepStrictEqual(report.comparison, {
         previousSince: "2025-12-01T12:00:00.000Z",
         previousUntil: "2026-03-01T12:00:00.000Z",
+        previousCommits: 5,
+        previousTruncated: false,
       });
       assert.strictEqual(report.window.since, "2026-03-01T12:00:00.000Z");
       assert.strictEqual(report.window.commits, 3);
@@ -180,35 +182,84 @@ layer(NodeServices.layer)("analyze --compare against --since", (it) => {
 });
 
 layer(NodeServices.layer)("analyze --compare edge cases", (it) => {
-  it.effect("leaves file trends null when the previous window is empty", () =>
-    Effect.gen(function* () {
-      yield* setNow;
-      const repo = yield* makeTempRepository;
-      yield* repo.commit("2025-11-01T12:00:00Z", { [hot]: "0\n" });
-      yield* repo.commit("2026-04-10T12:00:00Z", { [hot]: "1\n" });
+  it.effect(
+    "leaves file trends null and counts no commits when the previous window is quiet",
+    () =>
+      Effect.gen(function* () {
+        yield* setNow;
+        const repo = yield* makeTempRepository;
+        yield* repo.commit("2025-11-01T12:00:00Z", { [hot]: "0\n" });
+        yield* repo.commit("2026-04-10T12:00:00Z", { [hot]: "1\n" });
 
-      const report = yield* analyze(compareOptions(repo));
+        const report = yield* analyze(compareOptions(repo));
 
-      assert.deepStrictEqual(
-        report.files.map((file) => file.trend),
-        [null],
-      );
-    }),
-  );
-
-  it.effect("rejects a compare value that is not a duration", () =>
-    Effect.gen(function* () {
-      yield* setNow;
-      const repo = yield* makeTempRepository;
-
-      const failure = yield* Effect.flip(
-        analyze(analyzeOptionsFor(repo, { compare: "2026-01-01" })),
-      );
-
-      assert.deepStrictEqual(
-        failure,
-        new InvalidCompare({ input: "2026-01-01" }),
-      );
-    }),
+        assert.deepStrictEqual(
+          report.files.map((file) => file.trend),
+          [null],
+        );
+        assert.strictEqual(report.comparison?.previousCommits, 0);
+        assert.isFalse(report.comparison?.previousTruncated);
+      }),
   );
 });
+
+layer(NodeServices.layer)(
+  "analyze --compare against a young repository",
+  (it) => {
+    it.effect(
+      "marks the previous window as truncated when the repository is younger than it",
+      () =>
+        Effect.gen(function* () {
+          yield* setNow;
+          const repo = yield* makeTempRepository;
+          yield* repo.commit("2026-04-10T12:00:00Z", { [hot]: "0\n" });
+          yield* repo.commit("2026-05-10T12:00:00Z", { [hot]: "1\n" });
+
+          const report = yield* analyze(compareOptions(repo));
+
+          assert.strictEqual(report.comparison?.previousCommits, 0);
+          assert.isTrue(report.comparison?.previousTruncated);
+        }),
+    );
+
+    it.effect(
+      "compares a duration longer than the repository's age without data to compare",
+      () =>
+        Effect.gen(function* () {
+          yield* setNow;
+          const repo = yield* makeTempRepository;
+          yield* repo.commit("2026-04-10T12:00:00Z", { [hot]: "0\n" });
+          yield* repo.commit("2026-05-10T12:00:00Z", { [hot]: "1\n" });
+
+          const report = yield* analyze(
+            analyzeOptionsFor(repo, { compare: "15y" }),
+          );
+
+          assert.strictEqual(report.window.commits, 2);
+          assert.deepStrictEqual(report.comparison, {
+            previousSince: "1996-06-01T12:00:00.000Z",
+            previousUntil: "2011-06-01T12:00:00.000Z",
+            previousCommits: 0,
+            previousTruncated: true,
+          });
+          assert.isNull(report.files[0]?.trend);
+        }),
+    );
+
+    it.effect("rejects a compare value that is not a duration", () =>
+      Effect.gen(function* () {
+        yield* setNow;
+        const repo = yield* makeTempRepository;
+
+        const failure = yield* Effect.flip(
+          analyze(analyzeOptionsFor(repo, { compare: "2026-01-01" })),
+        );
+
+        assert.deepStrictEqual(
+          failure,
+          new InvalidCompare({ input: "2026-01-01" }),
+        );
+      }),
+    );
+  },
+);
