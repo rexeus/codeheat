@@ -47,8 +47,8 @@ const NODE_BUILTINS = new Set([
   "worker_threads",
   "zlib",
 ]);
-/** `node:fs`, `npm:x`, `jsr:x`, `https://…`: the runtime or a registry resolves these. */
-const PROTOCOL = /^[a-z][a-z0-9+.-]*:/u;
+/** `node:fs`, `npm:x`, `jsr:x`, `https://…`: the runtime or a registry resolves these. Other schemes (`virtual:`, `astro:`, `$app/`…) belong to a bundler plugin, which we cannot see. */
+const PROTOCOL = /^(?:node|npm|jsr|https?):/u;
 
 /** `name` of a bare specifier, and what follows it: `@a/b/c` is `@a/b` plus `c`. */
 export const splitPackageName = (

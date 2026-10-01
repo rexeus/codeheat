@@ -84,6 +84,16 @@ describe("specifiers that are not accounted for", () => {
     }
   });
 
+  it("does not account for a scheme that a bundler plugin owns", () => {
+    for (const specifier of [
+      "virtual:pwa-register",
+      "astro:content",
+      "data:text/javascript,1",
+    ]) {
+      expect(resolve("src/main.ts", specifier).resolved).toBe(false);
+    }
+  });
+
   it("does not account for an undeclared package", () => {
     expect(resolve("src/main.ts", "left-pad").resolved).toBe(false);
   });
