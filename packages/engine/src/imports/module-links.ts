@@ -8,8 +8,6 @@ import type { Resolver } from "./resolve.js";
 
 /** Files read at once; bounds open file handles. */
 const READ_CONCURRENCY = 16;
-/** Files parsed before the event loop gets a turn; see `yieldToEventLoop`. */
-const PARSE_BATCH = 20;
 
 /** The universe files one file refers to. */
 export type ModuleLinks = {
@@ -81,34 +79,14 @@ const readLinks = (
     };
   }).pipe(Effect.orElseSucceed(() => undefined));
 
-/**
- * Lets the event loop run. oxc-parser frees the native memory of a parsed file
- * in a finalizer, which Node runs only after a garbage collection and a turn
- * of the event loop; parsing in one long synchronous stretch keeps all of it.
- */
-const yieldToEventLoop = Effect.promise(
-  () =>
-    new Promise<void>((resolve) => {
-      setImmediate(resolve);
-    }),
-);
-
-const chunked = <A>(
-  items: ReadonlyArray<A>,
-  size: number,
-): ReadonlyArray<ReadonlyArray<A>> =>
-  Array.from({ length: Math.ceil(items.length / size) }, (_, index) =>
-    items.slice(index * size, (index + 1) * size),
-  );
-
-/** Records what `loaded` says of the files of `batch`; returns the files whose links are worth reading next. */
+/** Records what `loaded` says of the `pending` files; returns the files whose links are worth reading next. */
 const absorb = (
   links: Map<string, ModuleLinks>,
-  batch: ReadonlyArray<string>,
+  pending: ReadonlyArray<string>,
   loaded: ReadonlyArray<ModuleLinks | undefined>,
   roots: ReadonlySet<string>,
 ): ReadonlyArray<string> =>
-  batch.flatMap((file, index) => {
+  pending.flatMap((file, index) => {
     const found = loaded[index];
     if (found === undefined) {
       return [];
@@ -135,21 +113,15 @@ export const loadLinks = (
     const attempted = new Set<string>();
     let pending: ReadonlyArray<string> = [...roots];
     while (pending.length > 0) {
-      const next = new Set<string>();
-      for (const batch of chunked(pending, PARSE_BATCH)) {
-        const loaded = yield* Effect.forEach(
-          batch,
-          (file) => readLinks(sources, file, roots.has(file)),
-          { concurrency: READ_CONCURRENCY },
-        );
-        for (const file of batch) {
-          attempted.add(file);
-        }
-        for (const target of absorb(links, batch, loaded, roots)) {
-          next.add(target);
-        }
-        yield* yieldToEventLoop;
+      const loaded = yield* Effect.forEach(
+        pending,
+        (file) => readLinks(sources, file, roots.has(file)),
+        { concurrency: READ_CONCURRENCY },
+      );
+      for (const file of pending) {
+        attempted.add(file);
       }
+      const next = new Set(absorb(links, pending, loaded, roots));
       pending = [...next].filter((file) => !attempted.has(file));
     }
     return links;
