@@ -1,6 +1,22 @@
 import { describe, expect, it } from "vitest";
 
-import { findCouplings } from "./coupling.js";
+import type { ModuleRef } from "../modules/detect.js";
+import { findCouplings as findCouplingsByFileId } from "./coupling.js";
+
+/** Numbers the paths in order of first appearance; any numbering works, since findCouplings orders each pair by path. */
+const findCouplings = (
+  commits: ReadonlyArray<ReadonlyArray<string>>,
+  revisions: ReadonlyMap<string, number>,
+  modules: ReadonlyMap<string, ModuleRef> = new Map(),
+) => {
+  const paths = [...new Set(commits.flat())];
+  const indexed = commits.map((commit) =>
+    Uint32Array.from(commit, (path) => paths.indexOf(path)),
+  );
+  return findCouplingsByFileId(indexed, paths, revisions, modules);
+};
+
+const pkg = (path: string): ModuleRef => ({ path, kind: "package" });
 
 const repeat = <T>(count: number, value: T): Array<T> =>
   Array.from({ length: count }, () => value);
@@ -83,7 +99,8 @@ describe("findCouplings commit size", () => {
 
     const result = findCouplings(repeat(3, files), revisions);
 
-    expect(result).toStrictEqual({ couplingCommits: 0, couplings: [] });
+    expect(result).toMatchObject({ couplingCommits: 0, couplings: [] });
+    expect(new Set(result.breadth.values())).toStrictEqual(new Set([0]));
   });
 
   it("counts commits touching exactly 50 files", () => {
@@ -140,6 +157,63 @@ describe("findCouplings pair facts", () => {
       "c.ts d.ts",
       "a.ts b.ts",
       "e.ts f.ts",
+    ]);
+  });
+});
+
+describe("findCouplings breadth", () => {
+  it("counts the distinct files a file changed with, however rarely", () => {
+    // index.ts joins each of f0..f11 in one commit: 12 partners, no coupling
+    const files = Array.from({ length: 12 }, (_, index) => `f${index}.ts`);
+    const commits = files.map((file) => ["index.ts", file]);
+
+    const { breadth, couplings } = findCouplings(commits, new Map());
+
+    expect(couplings).toStrictEqual([]);
+    expect(breadth.get("index.ts")).toBe(12);
+    expect(breadth.get("f0.ts")).toBe(1);
+  });
+
+  it("counts a repeated partner once", () => {
+    const commits = [
+      ["a.ts", "b.ts"],
+      ["a.ts", "b.ts"],
+      ["a.ts", "b.ts", "c.ts"],
+    ];
+
+    const { breadth } = findCouplings(commits, new Map());
+
+    expect([...breadth]).toStrictEqual([
+      ["a.ts", 2],
+      ["b.ts", 2],
+      ["c.ts", 2],
+    ]);
+  });
+
+  it("gives a file that only changed alone a breadth of zero", () => {
+    const { breadth } = findCouplings([["a.ts"], ["b.ts", "c.ts"]], new Map());
+
+    expect(breadth.get("a.ts")).toBe(0);
+  });
+});
+
+describe("findCouplings modules", () => {
+  it("marks a pair of files in different modules as crossing", () => {
+    const commits = repeat(3, ["app/a.ts", "lib/b.ts", "lib/c.ts"]);
+    const modules = new Map([
+      ["app/a.ts", pkg("app")],
+      ["lib/b.ts", pkg("lib")],
+      ["lib/c.ts", pkg("lib")],
+    ]);
+
+    const { couplings } = findCouplings(commits, new Map(), modules);
+
+    expect(
+      couplings.map(({ a, b, crossesModule }) => [a, b, crossesModule]),
+    ).toStrictEqual([
+      ["app/a.ts", "lib/b.ts", true],
+      ["app/a.ts", "lib/c.ts", true],
+      ["lib/b.ts", "lib/c.ts", false],
     ]);
   });
 });

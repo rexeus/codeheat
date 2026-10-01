@@ -2,7 +2,12 @@ import { assert, describe, it } from "@effect/vitest";
 import { Effect } from "effect";
 import { TestClock } from "effect/testing";
 
-import { InvalidSince, resolveTimeRange } from "./analysis-window.js";
+import {
+  InvalidCompare,
+  InvalidSince,
+  resolveComparisonRanges,
+  resolveTimeRange,
+} from "./analysis-window.js";
 
 const setNow = TestClock.setTime(Date.parse("2026-06-15T10:30:00Z"));
 
@@ -50,5 +55,50 @@ describe("resolveTimeRange", () => {
 
       assert.deepStrictEqual(failure, new InvalidSince({ input: since }));
     }),
+  );
+});
+
+describe("resolveComparisonRanges", () => {
+  it.effect.each([
+    {
+      compare: "30d",
+      current: "2026-05-16T10:30:00.000Z",
+      previous: "2026-04-16T10:30:00.000Z",
+    },
+    {
+      compare: "3m",
+      current: "2026-03-15T10:30:00.000Z",
+      previous: "2025-12-15T10:30:00.000Z",
+    },
+    {
+      compare: "1y",
+      current: "2025-06-15T10:30:00.000Z",
+      previous: "2024-06-15T10:30:00.000Z",
+    },
+  ])(
+    "resolves $compare to adjacent windows split at $current",
+    ({ compare, current, previous }) =>
+      Effect.gen(function* () {
+        yield* setNow;
+
+        const ranges = yield* resolveComparisonRanges(compare);
+
+        assert.deepStrictEqual(ranges, {
+          current: { since: current, until: "2026-06-15T10:30:00.000Z" },
+          previous: { since: previous, until: current },
+        });
+      }),
+  );
+
+  it.effect.each(["", "0d", "3", "2026-01-31", "yesterday", "999999999y"])(
+    "rejects %j",
+    (compare) =>
+      Effect.gen(function* () {
+        yield* setNow;
+
+        const failure = yield* Effect.flip(resolveComparisonRanges(compare));
+
+        assert.deepStrictEqual(failure, new InvalidCompare({ input: compare }));
+      }),
   );
 });

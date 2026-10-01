@@ -7,6 +7,8 @@ export type Partner = {
   readonly degree: number;
   readonly distance: number;
   readonly testPair: boolean;
+  /** The partner lives in another module. */
+  readonly crossesModule: boolean;
 };
 
 /** Partners of every coupled file, strongest first. */

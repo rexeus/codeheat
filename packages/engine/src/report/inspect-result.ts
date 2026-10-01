@@ -3,7 +3,9 @@
 // Additive fields keep schemaVersion 1; renaming or removing a field bumps it.
 import { Schema } from "effect";
 
-import { AnalysisWindow, Count, FileStats, UnitInterval } from "./report.js";
+import { Module } from "./module.js";
+import { AnalysisWindow, FileStats } from "./report.js";
+import { Count, UnitInterval } from "./scalars.js";
 
 /** A file that changes together with an inspected file. */
 const Partner = Schema.Struct({
@@ -12,6 +14,8 @@ const Partner = Schema.Struct({
   /** `sharedCommits / revisions(inspected file)`: how likely a change here also changes the partner; rounded to 4 decimals. */
   probability: UnitInterval,
   testPair: Schema.Boolean,
+  /** The partner belongs to a different module than the inspected file. */
+  crossesModule: Schema.Boolean,
 });
 
 /** One inspected file with its standing in the whole universe. */
@@ -29,6 +33,8 @@ export const InspectResult = Schema.Struct({
   window: AnalysisWindow,
   /** Sorted by rank. */
   matches: Schema.Array(InspectEntry),
+  /** The modules of the matched files, in report order: where a change would land and what it tends to pull in. */
+  modules: Schema.Array(Module),
   /** Requested paths or globs that matched no universe file. */
   unmatched: Schema.Array(Schema.String),
 });

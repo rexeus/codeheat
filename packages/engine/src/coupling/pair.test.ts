@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { directoryDistance, isTestPair } from "./pair.js";
+import { directoryDistance, isTestFile, isTestPair } from "./pair.js";
 
 describe("directoryDistance", () => {
   it("is 0 for files in the same directory", () => {
@@ -28,6 +28,7 @@ describe("isTestPair", () => {
     ["src/a.test.ts", "src/a.ts"],
     ["src/a.ts", "src/a.spec.tsx"],
     ["lib/a.py", "lib/a_test.py"],
+    ["src/a.ts", "src/a_spec.ts"],
   ])("recognizes %s and %s", (a, b) => {
     expect(isTestPair(a, b)).toBe(true);
   });
@@ -40,4 +41,22 @@ describe("isTestPair", () => {
   ])("does not pair %s with %s", (a, b) => {
     expect(isTestPair(a, b)).toBe(false);
   });
+});
+
+describe("isTestFile", () => {
+  it.each([
+    "src/a.test.ts",
+    "src/a.spec.tsx",
+    "lib/a_test.py",
+    "src/a_spec.ts",
+  ])("recognizes %s", (path) => {
+    expect(isTestFile(path)).toBe(true);
+  });
+
+  it.each(["src/a.ts", "src/test/a.ts", "src/attest.ts"])(
+    "does not take %s for a test",
+    (path) => {
+      expect(isTestFile(path)).toBe(false);
+    },
+  );
 });

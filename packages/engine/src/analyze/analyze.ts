@@ -5,36 +5,32 @@ import { Effect, Path } from "effect";
 import type { FileSystem } from "effect";
 import type { ChildProcessSpawner } from "effect/process";
 
-import {
-  MAX_COMMIT_FILES,
-  MIN_DEGREE,
-  MIN_SHARED_COMMITS,
-  findCouplings,
-} from "../coupling/coupling.js";
 import type { GitError } from "../git/git-errors.js";
 import { Git } from "../git/git.js";
 import {
   readHead,
+  readOldestCommitTime,
   readShallowBoundary,
   repositoryRoot,
   repositoryScope,
 } from "../git/repository.js";
-import { readHistory } from "../history/history.js";
-import type { History } from "../history/history.js";
-import { rankFiles } from "../hotspots/hotspots.js";
-import type { FileMeasure } from "../hotspots/hotspots.js";
+import { detectModules } from "../modules/detect.js";
+import { findEntryPoints } from "../modules/entry-points.js";
+import { listPackageDirectories } from "../modules/package-directories.js";
 import type { Report } from "../report/report.js";
 import { inventory } from "../universe/inventory.js";
-import type { InventoryFile } from "../universe/inventory.js";
+import type { InvalidCompare, InvalidSince } from "./analysis-window.js";
+import { measureWindows } from "./measure.js";
 import {
-  MAX_FILE_BYTES,
-  MAX_MEAN_LINE_LENGTH,
-} from "../universe/source-file.js";
-import { resolveTimeRange } from "./analysis-window.js";
-import type { InvalidSince, TimeRange } from "./analysis-window.js";
+  comparisonOf,
+  noHistories,
+  readWindows,
+  resolveWindows,
+} from "./windows.js";
+import type { Windows } from "./windows.js";
 
 /** Every expected failure of `analyze`. */
-export type AnalyzeError = GitError | InvalidSince;
+export type AnalyzeError = GitError | InvalidSince | InvalidCompare;
 
 export type AnalyzeOptions = {
   /** A directory inside the repository; git locates the work tree from here. */
@@ -46,45 +42,30 @@ export type AnalyzeOptions = {
   readonly scope?: string | undefined;
   /** `<n>d`, `<n>w`, `<n>m`, `<n>y`, or an ISO date (`YYYY-MM-DD`), resolved against `Clock`. */
   readonly since: string;
+  /**
+   * `<n>d`, `<n>w`, `<n>m`, or `<n>y`: the report describes the latest window
+   * of that length, and every file and module carries how it changed against
+   * the window before it. Replaces `since`.
+   */
+  readonly compare?: string | undefined;
   /** Globs that replace the language allow-list when non-empty. */
   readonly include: ReadonlyArray<string>;
   /** Globs removed from the universe after `include`. */
   readonly exclude: ReadonlyArray<string>;
+  /**
+   * Globs of the files that make up each module's interface; when non-empty
+   * they replace entry-point detection from `package.json` and conventions.
+   */
+  readonly entry: ReadonlyArray<string>;
   /** Written to `Report.tool.version`. */
   readonly toolVersion: string;
 };
-
-const NO_HISTORY: History = { commits: [], files: new Map() };
-
-const THRESHOLDS = {
-  maxCommitFiles: MAX_COMMIT_FILES,
-  minSharedCommits: MIN_SHARED_COMMITS,
-  minDegree: MIN_DEGREE,
-  maxMeanLineLength: MAX_MEAN_LINE_LENGTH,
-  maxFileBytes: MAX_FILE_BYTES,
-} satisfies Report["thresholds"];
-
-/** Every universe file with the window's activity on it, none for untouched files. */
-const measureFiles = (
-  files: ReadonlyArray<InventoryFile>,
-  history: History,
-): ReadonlyArray<FileMeasure> =>
-  files.map(({ path, complexity }) => {
-    const activity = history.files.get(path);
-    return {
-      path,
-      revisions: activity?.revisions ?? 0,
-      linesAdded: activity?.linesAdded ?? 0,
-      linesDeleted: activity?.linesDeleted ?? 0,
-      complexity,
-    };
-  });
 
 const analyzeRepository = (
   options: AnalyzeOptions,
   root: string,
   scope: string,
-  range: TimeRange,
+  windows: Windows,
 ) =>
   Effect.gen(function* () {
     const path = yield* Path.Path;
@@ -96,35 +77,43 @@ const analyzeRepository = (
       include: options.include,
       exclude: options.exclude,
     });
-    const history =
+    const modules = detectModules(
+      files.map((file) => file.path),
+      yield* listPackageDirectories(scope),
+    );
+    const entryPoints = yield* findEntryPoints(root, modules, options.entry);
+    const histories =
       head === null
-        ? NO_HISTORY
-        : yield* readHistory({
-            ...range,
+        ? noHistories(windows)
+        : yield* readWindows(windows, {
             skipCommits: shallowBoundary ?? new Set(),
             universe: new Set(files.map((file) => file.path)),
           });
-    const measures = measureFiles(files, history);
-    const { couplingCommits, couplings } = findCouplings(
-      history.commits,
-      new Map(measures.map((measure) => [measure.path, measure.revisions])),
-    );
-    const ranked = rankFiles(measures, couplings);
+    const oldestCommit =
+      head === null || windows.previous === null
+        ? null
+        : yield* readOldestCommitTime;
+    const { commits, couplingCommits, thresholds, ...measured } =
+      measureWindows(files, histories, modules, entryPoints);
     return {
       schemaVersion: 1,
       tool: { name: "codeheat", version: options.toolVersion },
-      generatedAt: range.until,
+      generatedAt: windows.current.until,
       repository: {
         name: path.basename(root),
         head,
         scope,
         shallow: shallowBoundary !== undefined,
       },
-      window: { ...range, commits: history.commits.length, couplingCommits },
-      thresholds: THRESHOLDS,
-      totals: { files: ranked.length, couplings: couplings.length },
-      files: ranked,
-      couplings,
+      window: { ...windows.current, commits, couplingCommits },
+      comparison: comparisonOf(windows, histories, oldestCommit),
+      thresholds,
+      totals: {
+        files: measured.files.length,
+        couplings: measured.couplings.length,
+        modules: measured.modules.length,
+      },
+      ...measured,
     } satisfies Report;
   });
 
@@ -142,13 +131,13 @@ export const analyze = (
   ChildProcessSpawner.ChildProcessSpawner | FileSystem.FileSystem | Path.Path
 > =>
   Effect.gen(function* () {
-    const range = yield* resolveTimeRange(options.since);
+    const windows = yield* resolveWindows(options);
     const root = yield* repositoryRoot(options.cwd);
     const scope =
       options.scope === undefined
         ? "."
         : yield* repositoryScope(root, options.cwd, options.scope);
-    return yield* analyzeRepository(options, root, scope, range).pipe(
+    return yield* analyzeRepository(options, root, scope, windows).pipe(
       Effect.provide(Git.layer(root)),
     );
   });

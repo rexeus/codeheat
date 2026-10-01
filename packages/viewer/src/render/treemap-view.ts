@@ -1,9 +1,10 @@
-import type { HeatScale } from "../color/heat-scale.js";
 import type { PlacedLeaf, Size, TreemapLayout } from "../layout/treemap.js";
 import type { Highlight, Selection } from "../selection/highlight.js";
 import { svgFactory } from "./dom.js";
+import type { SvgFactory } from "./dom.js";
 import { drawOutlines } from "./outlines.js";
-import { drawGroup, drawLeaf } from "./tiles.js";
+import { NO_DATA_PATTERN, drawGroup, drawLeaf } from "./tiles.js";
+import type { TileColors } from "./tiles.js";
 
 /** What the treemap reports back to the page. */
 export type TreemapHandlers = {
@@ -22,9 +23,26 @@ export type TreemapView = {
   ) => void;
 };
 
+/** The diagonal hatch of tiles that have no change to show. */
+const noDataPattern = (create: SvgFactory): SVGElement => {
+  const pattern = create("pattern", {
+    id: NO_DATA_PATTERN,
+    width: 5,
+    height: 5,
+    patternUnits: "userSpaceOnUse",
+    patternTransform: "rotate(45)",
+  });
+  pattern.append(
+    create("line", { class: "hatch-line", x1: 0, y1: 0, x2: 0, y2: 5 }),
+  );
+  const defs = create("defs");
+  defs.append(pattern);
+  return defs;
+};
+
 export const createTreemapView = (
   svg: SVGSVGElement,
-  heat: HeatScale,
+  colors: TileColors,
   handlers: TreemapHandlers,
 ): TreemapView => {
   const create = svgFactory(svg);
@@ -58,11 +76,14 @@ export const createTreemapView = (
   return {
     draw: (layout, { width, height }) => {
       leaves = layout.leaves;
-      tiles = leaves.map((leaf, index) => drawLeaf(create, leaf, index, heat));
+      tiles = leaves.map((leaf, index) =>
+        drawLeaf(create, leaf, index, colors),
+      );
       overlay = create("g", { class: "overlay" });
       svg.setAttribute("width", String(width));
       svg.setAttribute("height", String(height));
       svg.replaceChildren(
+        noDataPattern(create),
         ...layout.groups.flatMap((group) => drawGroup(create, group)),
         ...tiles,
         overlay,

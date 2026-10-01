@@ -1,5 +1,6 @@
 // Owns what the analysis window's commits say about the universe's files:
-// revisions, changed lines, and which files changed together.
+// revisions, changed lines, and which files changed together. A window can be
+// read as one History or split in two at a point in time.
 import { Effect, Stream } from "effect";
 
 import type { GitError } from "../git/git-errors.js";
@@ -16,8 +17,10 @@ type FileHistory = {
 };
 
 export type History = {
-  /** Per commit that touched the universe, the distinct universe paths it touched. */
-  readonly commits: ReadonlyArray<ReadonlyArray<string>>;
+  /** The universe paths; a file id is an index into this list. */
+  readonly paths: ReadonlyArray<string>;
+  /** Per commit that touched the universe, the distinct file ids it touched. */
+  readonly commits: ReadonlyArray<Uint32Array>;
   /** Only files with at least one revision. */
   readonly files: ReadonlyMap<string, FileHistory>;
 };
@@ -40,61 +43,81 @@ const addLines = (total: Lines | undefined, more: Lines): Lines => ({
 });
 
 /**
- * The lines the commit changed per current universe path. Records the
- * commit's renames in `renamedTo`, which maps old paths to current ones.
+ * The lines the commit changed per file id. Records the commit's renames in
+ * `renamedTo`, which maps old paths to current ones.
  */
-const linesByUniversePath = (
+const linesByFileId = (
   commit: Commit,
   renamedTo: Map<string, string>,
-  universe: ReadonlySet<string>,
-): ReadonlyMap<string, Lines> => {
-  const lines = new Map<string, Lines>();
+  fileIds: ReadonlyMap<string, number>,
+): ReadonlyMap<number, Lines> => {
+  const lines = new Map<number, Lines>();
   for (const change of commit.changes) {
     const path = renamedTo.get(change.path) ?? change.path;
     if (change.renamedFrom !== undefined) {
       renamedTo.set(change.renamedFrom, path);
     }
-    if (universe.has(path)) {
-      lines.set(path, addLines(lines.get(path), change));
+    const id = fileIds.get(path);
+    if (id !== undefined) {
+      lines.set(id, addLines(lines.get(id), change));
     }
   }
   return lines;
 };
 
-/**
- * Reads the non-merge commits of the window from newest to oldest. A rename
- * makes every older commit that touched the old path count for the new one,
- * so a file keeps its history under its current name.
- *
- * The whole repository's log is read, never a path-limited one: a file moved
- * into the universe from outside keeps the history it had before the move.
- *
- * Git must run in the repository root, and the repository needs a `HEAD`.
- */
-export const readHistory = (
-  options: HistoryOptions,
-): Effect.Effect<History, GitError, Git> =>
-  Effect.gen(function* () {
-    const git = yield* Git;
-    const renamedTo = new Map<string, string>();
-    const commits: Array<ReadonlyArray<string>> = [];
-    const files = new Map<string, FileHistory>();
-
-    const absorb = (commit: Commit): void => {
-      if (options.skipCommits.has(commit.sha)) {
-        return;
-      }
-      const touched = linesByUniversePath(commit, renamedTo, options.universe);
-      for (const [path, lines] of touched) {
-        const before = files.get(path);
-        files.set(path, {
+/** Collects the commits routed to it into one `History`. */
+const makeCollector = (paths: ReadonlyArray<string>) => {
+  const commits: Array<Uint32Array> = [];
+  const fileHistories = new Map<number, FileHistory>();
+  return {
+    add: (touched: ReadonlyMap<number, Lines>): void => {
+      for (const [id, lines] of touched) {
+        const before = fileHistories.get(id);
+        fileHistories.set(id, {
           revisions: (before?.revisions ?? 0) + 1,
           linesAdded: (before?.linesAdded ?? 0) + lines.added,
           linesDeleted: (before?.linesDeleted ?? 0) + lines.deleted,
         });
       }
+      commits.push(Uint32Array.from(touched.keys()));
+    },
+    finish: (): History => {
+      const files = new Map<string, FileHistory>();
+      for (const [id, path] of paths.entries()) {
+        const fileHistory = fileHistories.get(id);
+        if (fileHistory !== undefined) {
+          files.set(path, fileHistory);
+        }
+      }
+      return { paths, commits, files };
+    },
+  };
+};
+
+/**
+ * Streams the window's commits from newest to oldest and hands each one that
+ * touched the universe to `route` with its commit time. A rename makes every
+ * older commit that touched the old path count for the new one, so a file
+ * keeps its history under its current name, whichever collector it lands in.
+ *
+ * The whole repository's log is read, never a path-limited one: a file moved
+ * into the universe from outside keeps the history it had before the move.
+ */
+const scanCommits = (
+  options: HistoryOptions,
+  fileIds: ReadonlyMap<string, number>,
+  route: (time: number, touched: ReadonlyMap<number, Lines>) => void,
+): Effect.Effect<void, GitError, Git> =>
+  Effect.gen(function* () {
+    const git = yield* Git;
+    const renamedTo = new Map<string, string>();
+    const absorb = (commit: Commit): void => {
+      if (options.skipCommits.has(commit.sha)) {
+        return;
+      }
+      const touched = linesByFileId(commit, renamedTo, fileIds);
       if (touched.size > 0) {
-        commits.push([...touched.keys()]);
+        route(commit.time, touched);
       }
     };
 
@@ -117,6 +140,49 @@ export const readHistory = (
           }),
         ),
       );
+  });
 
-    return { commits, files };
+const indexPaths = (options: HistoryOptions) => {
+  const paths = [...options.universe];
+  return { paths, fileIds: new Map(paths.map((path, id) => [path, id])) };
+};
+
+/**
+ * Reads the non-merge commits of the window from newest to oldest.
+ *
+ * Git must run in the repository root, and the repository needs a `HEAD`.
+ */
+export const readHistory = (
+  options: HistoryOptions,
+): Effect.Effect<History, GitError, Git> =>
+  Effect.gen(function* () {
+    const { paths, fileIds } = indexPaths(options);
+    const collector = makeCollector(paths);
+    yield* scanCommits(options, fileIds, (_time, touched) => {
+      collector.add(touched);
+    });
+    return collector.finish();
+  });
+
+/**
+ * Reads the window once and splits its commits at `splitAt`, the time in
+ * seconds since the epoch: `recent` holds the commits at or after it,
+ * `earlier` those before it. Renames are followed across the split.
+ */
+export const readHistoryHalves = (
+  options: HistoryOptions,
+  splitAt: number,
+): Effect.Effect<
+  { readonly recent: History; readonly earlier: History },
+  GitError,
+  Git
+> =>
+  Effect.gen(function* () {
+    const { paths, fileIds } = indexPaths(options);
+    const recent = makeCollector(paths);
+    const earlier = makeCollector(paths);
+    yield* scanCommits(options, fileIds, (time, touched) => {
+      (time >= splitAt ? recent : earlier).add(touched);
+    });
+    return { recent: recent.finish(), earlier: earlier.finish() };
   });

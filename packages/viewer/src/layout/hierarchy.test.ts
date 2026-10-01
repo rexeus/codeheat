@@ -95,6 +95,7 @@ describe("buildTree above 8,000 files", () => {
         ),
         loc: 8000,
         score: 0.4,
+        change: null,
       },
     ]);
   });
@@ -124,5 +125,32 @@ describe("buildTree above 8,000 files", () => {
     expect(gen.kind === "directory" && gen.children).toMatchObject([
       { kind: "aggregate", count: 130_000, score: 0.9 },
     ]);
+  });
+});
+
+describe("buildTree aggregates in a comparison", () => {
+  it("carries the largest rise and drop among the merged files that were active before", () => {
+    // index 5 is new: its change is its whole score, so it must not count
+    const trends = new Map([
+      [3, { scoreDelta: -0.3, newlyActive: false }],
+      [4, { scoreDelta: 0.05, newlyActive: false }],
+      [5, { scoreDelta: 0.4, newlyActive: true }],
+    ]);
+    const files = manySmall().map((file, index) =>
+      trends.has(index)
+        ? Object.assign({}, file, {
+            trend: { previousScore: 0.2, ...trends.get(index) },
+          })
+        : file,
+    );
+
+    const src = childNamed(buildTree(files, noKeep), "src");
+
+    expect(src.kind === "directory" && src.children).toContainEqual(
+      expect.objectContaining({
+        kind: "aggregate",
+        change: { rise: 0.05, drop: -0.3 },
+      }),
+    );
   });
 });

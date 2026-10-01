@@ -30,6 +30,10 @@ describe("codeheat inspect against a git repository", () => {
       expect(inspected.matches[0]?.partners).toMatchObject([
         { path: "src/b.ts", probability: 1 },
       ]);
+      expect(inspected.matches[0]?.module).toBe("src");
+      expect(inspected.modules).toMatchObject([
+        { path: "src", commits: 4, cohesion: 1 },
+      ]);
     }).pipe(Effect.scoped),
   );
 
@@ -86,6 +90,32 @@ describe("codeheat inspect with exact paths", () => {
       expect(result.exitCode).toBe(4);
       expect(result.stdout).toBe("");
       expect(result.stderr).toContain('"./a.ts"');
+    }).pipe(Effect.scoped),
+  );
+});
+
+describe("codeheat inspect --entry", () => {
+  it.live("names the interface of the matched modules", () =>
+    Effect.gen(function* () {
+      const repo = yield* makeCoupledProject;
+
+      const result = yield* journey({
+        args: ["inspect", "src/b.ts", "--entry", "src/c.ts", "--json"],
+        cwd: repo.root,
+      });
+
+      const inspected = yield* Schema.decodeUnknownEffect(InspectResult)(
+        JSON.parse(result.stdout),
+      );
+      // c.ts changes only in the first of the 4 commits, which also changes a.ts and b.ts
+      expect(inspected.modules).toMatchObject([
+        {
+          entryPoints: ["src/c.ts"],
+          interfaceCommits: 1,
+          implementationCommits: 4,
+          leakage: 0.25,
+        },
+      ]);
     }).pipe(Effect.scoped),
   );
 });

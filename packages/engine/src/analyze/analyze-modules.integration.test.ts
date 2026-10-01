@@ -1,0 +1,236 @@
+import { NodeServices } from "@effect/platform-node";
+import { assert, layer } from "@effect/vitest";
+import { Effect } from "effect";
+import { TestClock } from "effect/testing";
+
+import type { Report } from "../report/report.js";
+import { analyzeOptionsFor } from "../testing/analyze-options.js";
+import { makeTempRepository } from "../testing/temp-repository.js";
+import type { TempRepository } from "../testing/temp-repository.js";
+import { analyze } from "./analyze.js";
+
+const setNow = TestClock.setTime(Date.parse("2026-06-01T12:00:00Z"));
+
+const day = (number: number): string =>
+  `2026-05-${String(number).padStart(2, "0")}T12:00:00Z`;
+
+const manifest = (name: string): string => `{ "name": "${name}" }\n`;
+
+/**
+ * Three packages and one that stays quiet in the window. Counted commits
+ * (a = packages/a, and so on):
+ *
+ * 1: a, a2        2: a, a2       3: a, b        4: a, a2, b
+ * 5: a, c         6: b           7: c (and c's manifest)
+ * 8: a, b, c      9: 51 bulk files of a, and b (52 files: not counted)
+ */
+const buildHistory = (repo: TempRepository) =>
+  Effect.gen(function* () {
+    yield* repo.commit("2024-01-01T12:00:00Z", {
+      "packages/a/package.json": manifest("a"),
+      "packages/b/package.json": manifest("b"),
+      "packages/c/package.json": manifest("c"),
+      "packages/d/package.json": manifest("d"),
+      "packages/a/a.ts": "0\n",
+      "packages/a/a2.ts": "0\n",
+      "packages/b/b.ts": "0\n",
+      "packages/c/c.ts": "0\n",
+      "packages/d/d.ts": "0\n",
+    });
+    const a = "packages/a/a.ts";
+    const a2 = "packages/a/a2.ts";
+    const b = "packages/b/b.ts";
+    const c = "packages/c/c.ts";
+    yield* repo.commit(day(1), { [a]: "1\n", [a2]: "1\n" });
+    yield* repo.commit(day(2), { [a]: "2\n", [a2]: "2\n" });
+    yield* repo.commit(day(3), { [a]: "3\n", [b]: "3\n" });
+    yield* repo.commit(day(4), { [a]: "4\n", [a2]: "4\n", [b]: "4\n" });
+    yield* repo.commit(day(5), { [a]: "5\n", [c]: "5\n" });
+    yield* repo.commit(day(6), { [b]: "6\n" });
+    yield* repo.commit(day(7), {
+      [c]: "7\n",
+      "packages/c/package.json": manifest("c7"),
+    });
+    yield* repo.commit(day(8), { [a]: "8\n", [b]: "8\n", [c]: "8\n" });
+    yield* repo.commit(day(9), {
+      [b]: "9\n",
+      ...Object.fromEntries(
+        Array.from({ length: 51 }, (_, index) => [
+          `packages/a/bulk/g${index}.ts`,
+          "9\n",
+        ]),
+      ),
+    });
+  });
+
+// a is the only module with the 5 commits that rank it, so it leads; then b, c (least cohesive first); d has no commits
+const expectedModules: Report["modules"] = [
+  {
+    path: "packages/a",
+    kind: "package",
+    testOnly: false,
+    files: 53,
+    commits: 6,
+    localCommits: 2,
+    cohesion: 0.3333,
+    partners: [
+      { path: "packages/b", sharedCommits: 3 },
+      { path: "packages/c", sharedCommits: 2 },
+    ],
+    entryPoints: [],
+    interfaceCommits: 0,
+    implementationCommits: 6,
+    leakage: null,
+    leakyInterface: false,
+    trend: null,
+  },
+  {
+    path: "packages/b",
+    kind: "package",
+    testOnly: false,
+    files: 1,
+    commits: 4,
+    localCommits: 1,
+    cohesion: 0.25,
+    partners: [
+      { path: "packages/a", sharedCommits: 3 },
+      { path: "packages/c", sharedCommits: 1 },
+    ],
+    entryPoints: [],
+    interfaceCommits: 0,
+    implementationCommits: 4,
+    leakage: null,
+    leakyInterface: false,
+    trend: null,
+  },
+  {
+    path: "packages/c",
+    kind: "package",
+    testOnly: false,
+    files: 1,
+    commits: 3,
+    localCommits: 1,
+    cohesion: 0.3333,
+    partners: [
+      { path: "packages/a", sharedCommits: 2 },
+      { path: "packages/b", sharedCommits: 1 },
+    ],
+    entryPoints: [],
+    interfaceCommits: 0,
+    implementationCommits: 3,
+    leakage: null,
+    leakyInterface: false,
+    trend: null,
+  },
+  {
+    path: "packages/d",
+    kind: "package",
+    testOnly: false,
+    files: 1,
+    commits: 0,
+    localCommits: 0,
+    cohesion: null,
+    partners: [],
+    entryPoints: [],
+    interfaceCommits: 0,
+    implementationCommits: 0,
+    leakage: null,
+    leakyInterface: false,
+    trend: null,
+  },
+];
+
+layer(NodeServices.layer)("analyze module cohesion", (it) => {
+  it.effect(
+    "measures each package's cohesion and partners over the counted commits",
+    () =>
+      Effect.gen(function* () {
+        yield* setNow;
+        const repo = yield* makeTempRepository;
+        yield* buildHistory(repo);
+
+        const report = yield* analyze(analyzeOptionsFor(repo));
+
+        assert.deepStrictEqual(report.modules, expectedModules);
+        assert.strictEqual(report.totals.modules, 4);
+      }),
+  );
+});
+
+layer(NodeServices.layer)("analyze module membership", (it) => {
+  it.effect("marks files with their module and couplings that cross one", () =>
+    Effect.gen(function* () {
+      yield* setNow;
+      const repo = yield* makeTempRepository;
+      yield* buildHistory(repo);
+
+      const report = yield* analyze(analyzeOptionsFor(repo));
+
+      const moduleOf = new Map(report.files.map((f) => [f.path, f.module]));
+      assert.deepStrictEqual(
+        [
+          moduleOf.get("packages/a/a.ts"),
+          moduleOf.get("packages/a/bulk/g0.ts"),
+          moduleOf.get("packages/d/d.ts"),
+        ],
+        ["packages/a", "packages/a", "packages/d"],
+      );
+      // a.ts + a2.ts: 3 shared of mean(6, 3) revisions; a.ts + b.ts: 3 shared of mean(6, 5)
+      assert.deepStrictEqual(
+        report.couplings.map(({ a, b, sharedCommits, crossesModule }) => [
+          a,
+          b,
+          sharedCommits,
+          crossesModule,
+        ]),
+        [
+          ["packages/a/a.ts", "packages/a/a2.ts", 3, false],
+          ["packages/a/a.ts", "packages/b/b.ts", 3, true],
+        ],
+      );
+    }),
+  );
+});
+
+layer(NodeServices.layer)("analyze module fallback", (it) => {
+  it.effect("groups a repository without manifests by directory", () =>
+    Effect.gen(function* () {
+      yield* setNow;
+      const repo = yield* makeTempRepository;
+      yield* repo.commit(day(1), {
+        "src/billing/invoice.ts": "1\n",
+        "src/auth/session.ts": "1\n",
+        "index.ts": "1\n",
+      });
+      yield* repo.commit(day(2), { "src/billing/invoice.ts": "2\n" });
+
+      const report = yield* analyze(analyzeOptionsFor(repo));
+
+      assert.deepStrictEqual(
+        report.modules.map(({ path, kind, commits, cohesion }) => [
+          path,
+          kind,
+          commits,
+          cohesion,
+        ]),
+        [
+          [".", "directory", 1, 0],
+          ["src/auth", "directory", 1, 0],
+          ["src/billing", "directory", 2, 0.5],
+        ],
+      );
+    }),
+  );
+
+  it.effect("reports no modules for an empty repository", () =>
+    Effect.gen(function* () {
+      yield* setNow;
+      const repo = yield* makeTempRepository;
+
+      const report = yield* analyze(analyzeOptionsFor(repo));
+
+      assert.deepStrictEqual(report.modules, []);
+      assert.strictEqual(report.totals.modules, 0);
+    }),
+  );
+});

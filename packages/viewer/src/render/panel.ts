@@ -1,15 +1,17 @@
-import type { FileStats } from "@codeheat/engine";
+import type { FileStats, Module } from "@codeheat/engine";
 
 import type { HeatScale } from "../color/heat-scale.js";
 import type { Partner } from "../selection/partners.js";
-import { h } from "./dom.js";
+import { h, pathLabel, section } from "./dom.js";
 import { EMPTY_PANEL_NOTE } from "./empty-notice.js";
 import {
+  describeScoreTrend,
   formatCount,
   formatPercent,
   formatScore,
-  splitPath,
 } from "./format.js";
+import { fileModuleSection, leastCohesiveSection } from "./module-panel.js";
+import { overviewIntro, overviewTitles } from "./overview-intro.js";
 
 /** Side panel: an overview until a file is selected, then its reasons and partners. */
 export type Panel = {
@@ -22,9 +24,13 @@ export type PanelData = {
   /** Hottest first. */
   readonly hotspots: readonly FileStats[];
   readonly heat: HeatScale;
+  readonly modules: readonly Module[];
+  /** The module of a file; `undefined` when the report does not list it. */
+  readonly moduleOf: (path: string) => Module | undefined;
   readonly thresholds: {
     readonly minSharedCommits: number;
     readonly minDegree: number;
+    readonly minModuleCommits: number;
   };
 };
 
@@ -44,21 +50,8 @@ const swatch = (heat: HeatScale, score: number): HTMLElement => {
   return element;
 };
 
-const pathLabel = (path: string): HTMLElement => {
-  const { dir, name } = splitPath(path);
-  return h(
-    "span",
-    "path",
-    h("span", "path-dir", dir),
-    h("strong", "path-name", name),
-  );
-};
-
 const stat = (value: string, label: string): HTMLElement =>
   h("div", "stat", h("strong", "", value), h("span", "", label));
-
-const section = (title: string, ...content: readonly Node[]): HTMLElement =>
-  h("section", "panel-section", h("h3", "", title), ...content);
 
 const distanceLabel = (distance: number): string => {
   if (distance === 0) {
@@ -99,6 +92,9 @@ const partnerRow = (context: Context, partner: Partner): HTMLElement => {
   if (partner.testPair) {
     meta.append(h("span", "badge", "test pair"));
   }
+  if (partner.crossesModule) {
+    meta.append(h("span", "badge cross-module", "other module"));
+  }
   return h(
     "li",
     "",
@@ -132,7 +128,7 @@ const partnersSection = (
 };
 
 const fileSections = (
-  { files, heat }: Context,
+  { files, heat, moduleOf }: Context,
   file: FileStats,
 ): HTMLElement[] => [
   h(
@@ -145,12 +141,14 @@ const fileSections = (
       "score-meta",
       h("span", "", "hotspot score"),
       h("span", "", `rank #${file.rank} of ${formatCount(files.size)}`),
+      ...(file.trend === null ? [] : [h("span", "", trendText(file.trend))]),
     ),
   ),
   h(
     "div",
     "stats",
     stat(formatCount(file.revisions), "revisions"),
+    stat(formatCount(file.breadth), "co-changed files"),
     stat(formatCount(file.loc), "lines of code"),
     stat(formatCount(file.complexity.total), "complexity"),
     stat(
@@ -158,11 +156,17 @@ const fileSections = (
       "lines changed",
     ),
   ),
+  ...fileModuleSection(moduleOf(file.path)),
   section(
     "Why it stands out",
     h("ul", "reasons", ...file.reasons.map((reason) => h("li", "", reason))),
   ),
 ];
+
+const trendText = (trend: NonNullable<FileStats["trend"]>): string => {
+  const { value, note } = describeScoreTrend(trend);
+  return `${value}: ${note}`;
+};
 
 const hotspotRow = (context: Context, file: FileStats): HTMLElement =>
   h(
@@ -176,6 +180,12 @@ const hotspotRow = (context: Context, file: FileStats): HTMLElement =>
       h("span", "score-chip", formatScore(file.score)),
     ),
   );
+
+const hotspotsSection = (rows: readonly HTMLElement[]): HTMLElement => {
+  const element = section("Top hotspots", h("ul", "list", ...rows));
+  element.dataset["overview"] = "hotspots";
+  return element;
+};
 
 export const createPanel = (
   root: HTMLElement,
@@ -202,16 +212,19 @@ export const createPanel = (
         .slice(0, OVERVIEW_HOTSPOTS)
         .map((file) => hotspotRow(context, file));
       root.replaceChildren(
-        h("h2", "panel-title", "Hotspots"),
         ...(rows.length === 0
-          ? [h("p", "hint", EMPTY_PANEL_NOTE)]
+          ? [...overviewTitles(), h("p", "hint", EMPTY_PANEL_NOTE)]
           : [
+              ...overviewIntro(),
               h(
-                "p",
-                "hint",
-                "Big and hot: many lines, changed often, deeply nested. Select a tile to outline the files that change together with it.",
+                "div",
+                "overview-sections",
+                hotspotsSection(rows),
+                leastCohesiveSection(
+                  data.modules,
+                  data.thresholds.minModuleCommits,
+                ),
               ),
-              section("Top hotspots", h("ul", "list", ...rows)),
             ]),
       );
       root.scrollTop = 0;

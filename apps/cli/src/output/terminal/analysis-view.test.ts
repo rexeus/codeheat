@@ -1,3 +1,4 @@
+import type { Module, Report } from "@codeheat/engine";
 import { describe, expect, it } from "vitest";
 
 import { sampleReport } from "../../testing/sample-report.js";
@@ -80,6 +81,157 @@ describe("renderAnalysis", () => {
     expect(plainView().split("\n").at(-1)).toBe(
       "Use --html for the treemap or --json for the full report.",
     );
+  });
+});
+
+describe("renderAnalysis modules", () => {
+  it("lists the five least cohesive modules with their top partner", () => {
+    const modules = section(plainView(), "Least cohesive modules");
+
+    expect(modules).toEqual([
+      "cohesion  commits  module            changes most with",
+      "     40%       30  packages/shared   apps/cli (11)",
+      "     50%       26  apps/cli          packages/shared (11)",
+      "     53%       58  packages/web      packages/billing (20)",
+      "     55%       74  packages/billing  packages/web (20)",
+      "     61%       44  packages/auth     packages/web (14)",
+    ]);
+  });
+
+  it("leaves out modules below the commit floor, however incohesive", () => {
+    const report = sampleReport();
+    const tiny = report.modules
+      .slice(0, 1)
+      .map((module) =>
+        Object.assign({}, module, { path: "tiny", commits: 4, cohesion: 0 }),
+      );
+
+    const modules = section(
+      plainView({ ...report, modules: [...tiny, ...report.modules] }),
+      "Least cohesive modules",
+    );
+
+    expect(modules.filter((line) => line.includes("tiny"))).toEqual([]);
+    expect(modules).toHaveLength(6);
+  });
+});
+
+describe("renderAnalysis module ranking", () => {
+  it("leaves out test-only modules", () => {
+    const report = sampleReport();
+    const tests = report.modules.slice(0, 1).map((module) =>
+      Object.assign({}, module, {
+        path: "e2e",
+        testOnly: true,
+        cohesion: 0,
+      }),
+    );
+
+    const modules = section(
+      plainView({ ...report, modules: [...tests, ...report.modules] }),
+      "Least cohesive modules",
+    );
+
+    expect(modules.filter((line) => line.includes("e2e"))).toEqual([]);
+    expect(modules).toHaveLength(6);
+  });
+
+  it("keeps the order of the report instead of sorting again", () => {
+    const report = sampleReport();
+    const reversed = report.modules.toReversed();
+
+    const modules = section(
+      plainView({ ...report, modules: reversed }),
+      "Least cohesive modules",
+    );
+
+    expect(modules[1]).toContain("packages/auth");
+  });
+
+  it("escapes control characters in module paths", () => {
+    const report = sampleReport();
+    const hostile = report.modules
+      .slice(0, 1)
+      .map((module) => Object.assign({}, module, { path: "m\u001B[31m" }));
+
+    const view = plainView({ ...report, modules: hostile });
+
+    expect(view).toContain("m\\u001b[31m");
+    expect(view).not.toContain("\u001B");
+  });
+
+  it("says so when no module has enough commits", () => {
+    const report = sampleReport();
+    const modules = report.modules.map((module) =>
+      Object.assign({}, module, { commits: 4 }),
+    );
+
+    expect(
+      section(plainView({ ...report, modules }), "Least cohesive"),
+    ).toEqual(["No module has 5 or more counted commits."]);
+  });
+});
+
+const withLeaky = (
+  report: Report,
+  leaky: ReadonlyArray<string>,
+  change: Partial<Module> = {},
+): Report => ({
+  ...report,
+  modules: report.modules.map((module) =>
+    leaky.includes(module.path)
+      ? { ...module, leakyInterface: true, ...change }
+      : module,
+  ),
+});
+
+describe("renderAnalysis leaky interfaces", () => {
+  it("lists the flagged modules in the report's order", () => {
+    const report = withLeaky(sampleReport(), [
+      "packages/billing",
+      "packages/shared",
+    ]);
+
+    const interfaces = section(plainView(report), "Leaky interfaces");
+
+    // the sample lists shared before billing; leakage 6 of 29 and 9 of 71 implementation commits
+    expect(interfaces).toEqual([
+      "leakage  commits  module            entry points",
+      "    21%       29  packages/shared   packages/shared/src/index.ts",
+      "    13%       71  packages/billing  packages/billing/src/index.ts",
+    ]);
+  });
+
+  it("names two entry points and counts the rest", () => {
+    const report = withLeaky(sampleReport(), ["packages/shared"], {
+      entryPoints: ["a.ts", "b.ts", "c.ts", "d.ts"],
+    });
+
+    const interfaces = section(plainView(report), "Leaky interfaces");
+
+    expect(interfaces[1]).toContain("a.ts, b.ts +2 more");
+  });
+
+  it("escapes control characters in entry points", () => {
+    const report = withLeaky(sampleReport(), ["packages/shared"], {
+      entryPoints: ["i\u001B[31mndex.ts"],
+    });
+
+    const view = plainView(report);
+
+    expect(view).toContain("i\\u001b[31mndex.ts");
+    expect(view).not.toContain("\u001B");
+  });
+
+  it("says so when no module is flagged, however leaky its numbers look", () => {
+    const report = sampleReport();
+    const modules = report.modules.map((module) =>
+      Object.assign({}, module, { leakage: 1 }),
+    );
+
+    expect(
+      section(plainView({ ...report, modules }), "Leaky interfaces"),
+    ).toEqual(["No module has a leaky interface."]);
   });
 });
 

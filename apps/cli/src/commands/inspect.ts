@@ -3,13 +3,14 @@ import { Console, Effect } from "effect";
 import { Argument, Command } from "effect/cli";
 
 import { NothingMatched } from "../errors/nothing-matched.js";
+import { warnIfEntryMatchedNothing } from "../output/entry-warning.js";
 import { escapeForTerminal } from "../output/escape.js";
 import { printResult } from "../output/print-result.js";
 import { warnIfShallow } from "../output/shallow-warning.js";
 import { renderInspect } from "../output/terminal/inspect-view.js";
 import { version } from "../version.js";
 import { WorkingDirectory } from "../working-directory.js";
-import { jsonFlag, sinceFlag } from "./shared-flags.js";
+import { entryFlag, jsonFlag, sinceFlag } from "./shared-flags.js";
 
 export const inspectCommand = Command.make(
   "inspect",
@@ -22,17 +23,20 @@ export const inspectCommand = Command.make(
     ),
     json: jsonFlag,
     since: sinceFlag,
+    entry: entryFlag,
   },
-  Effect.fn(function* ({ patterns, json, since }) {
+  Effect.fn(function* ({ patterns, json, since, entry }) {
     const cwd = yield* WorkingDirectory;
     const report = yield* analyze({
       cwd,
       since,
       include: [],
       exclude: [],
+      entry,
       toolVersion: version,
     });
     yield* warnIfShallow(report);
+    yield* warnIfEntryMatchedNothing(report, entry);
     const result = yield* inspectFrom({ cwd, report, patterns });
     if (result.matches.length === 0) {
       return yield* new NothingMatched({ patterns: result.unmatched });

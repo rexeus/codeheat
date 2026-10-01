@@ -39,3 +39,14 @@ Why each tool is here, how the pieces depend on each other, and how to upgrade t
 2. Upgrade Effect by changing the catalog **and** `scripts/effect-reference.mjs` (version and the commit of tag `effect@<version>`: `git ls-remote https://github.com/Effect-TS/effect refs/tags/effect@<version>`), then `pnpm install`.
 3. Upgrade `@effect/tsgo` with the oxlint versions it supports; `pnpm install` fails fast otherwise.
 4. Run `pnpm check`. Read the Effect changelog for renamed APIs — the CLI and child-process modules changed between release candidates.
+
+## Performance
+
+`analyze` was measured on a full clone of `angular/angular` (about 38.7k commits, 10.6k tracked files, 8.1k files in the universe) with `--json --limit 1`. Times are wall clock; RSS is the peak of the `codeheat` Node process. `git log`, which runs as a separate process and dominates the wall time, is listed apart.
+
+| Window                     | Commits | Wall time | Node peak RSS, before → after | `git log` alone |
+| -------------------------- | ------- | --------- | ----------------------------- | --------------- |
+| 12 months (default)        | 2,325   | 10 s      | 150 MB → 137 MB               | 9 s, 275 MB     |
+| `--since 10y` (unbudgeted) | 15,577  | 43 s      | 264 MB → 175 MB               | 40–60 s, 638 MB |
+
+"Before" counted pairs of files under `a + "\0" + b` string keys; "after" numbers each universe file once per analysis and counts pairs in a nested table (lower file id → higher file id → shared commits), so no single `Map` approaches V8's limit of 2^24 entries. The default window stays far inside the budget recorded on issue #9 (under 60 s and 1 GB peak RSS): the Node process peaks near 140 MB (±10 MB between runs), and git's own peak adds roughly 275 MB. The report is byte-identical before and after apart from its timestamps. The remaining wall time is git reading the history, which `codeheat` does not control.

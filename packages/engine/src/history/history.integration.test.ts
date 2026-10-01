@@ -5,8 +5,8 @@ import { Effect } from "effect";
 import { Git } from "../git/git.js";
 import { makeTempRepository } from "../testing/temp-repository.js";
 import type { TempRepository } from "../testing/temp-repository.js";
-import { readHistory } from "./history.js";
-import type { HistoryOptions } from "./history.js";
+import { readHistory, readHistoryHalves } from "./history.js";
+import type { History, HistoryOptions } from "./history.js";
 
 // Ten distinct lines keep a file similar enough for git to detect a rename
 // after one appended line.
@@ -25,6 +25,12 @@ const history = (
     skipCommits: new Set(),
     ...options,
   }).pipe(Effect.provide(Git.layer(repo.directory)));
+
+/** Each commit's touched paths, sorted. */
+const pathsOfCommits = (result: History): Array<Array<string>> =>
+  result.commits.map((ids) =>
+    Array.from(ids, (id) => result.paths[id] ?? "").toSorted(),
+  );
 
 /** a.ts is created, edited, renamed to b.ts, edited, renamed to c.ts, edited. */
 const commitRenamedTwice = (repo: TempRepository) =>
@@ -81,17 +87,14 @@ layer(NodeServices.layer)("readHistory", (it) => {
         universe: new Set(["c.ts", "other.ts"]),
       });
 
-      assert.deepStrictEqual(
-        result.commits.map((paths) => paths.toSorted()),
-        [
-          ["c.ts"],
-          ["c.ts"],
-          ["c.ts"],
-          ["c.ts"],
-          ["c.ts"],
-          ["c.ts", "other.ts"],
-        ],
-      );
+      assert.deepStrictEqual(pathsOfCommits(result), [
+        ["c.ts"],
+        ["c.ts"],
+        ["c.ts"],
+        ["c.ts"],
+        ["c.ts"],
+        ["c.ts", "other.ts"],
+      ]);
     }),
   );
 });
@@ -105,7 +108,7 @@ layer(NodeServices.layer)("readHistory universe and window", (it) => {
       const result = yield* history(repo, { universe: new Set(["other.ts"]) });
 
       assert.deepStrictEqual([...result.files.keys()], ["other.ts"]);
-      assert.deepStrictEqual(result.commits, [["other.ts"]]);
+      assert.deepStrictEqual(pathsOfCommits(result), [["other.ts"]]);
     }),
   );
 
@@ -163,5 +166,46 @@ layer(NodeServices.layer)("readHistory content", (it) => {
         linesDeleted: 0,
       });
     }),
+  );
+});
+
+layer(NodeServices.layer)("readHistoryHalves", (it) => {
+  it.effect(
+    "splits commits at the time and follows a rename across the split",
+    () =>
+      Effect.gen(function* () {
+        const repo = yield* makeTempRepository;
+        yield* commitRenamedTwice(repo);
+
+        const { recent, earlier } = yield* readHistoryHalves(
+          {
+            since: "2026-01-01T00:00:00.000Z",
+            until: "2026-12-31T00:00:00.000Z",
+            skipCommits: new Set(),
+            universe: new Set(["c.ts", "other.ts"]),
+          },
+          // the commit at exactly this time belongs to the recent half
+          Date.parse("2026-03-04T12:00:00Z") / 1000,
+        ).pipe(Effect.provide(Git.layer(repo.directory)));
+
+        // recent: the edit, the second rename, the last edit; earlier: creation, edit, first rename
+        assert.deepStrictEqual(recent.files.get("c.ts"), {
+          revisions: 3,
+          linesAdded: 2,
+          linesDeleted: 0,
+        });
+        assert.deepStrictEqual(earlier.files.get("c.ts"), {
+          revisions: 3,
+          linesAdded: 11,
+          linesDeleted: 0,
+        });
+        assert.isFalse(recent.files.has("other.ts"));
+        assert.strictEqual(earlier.files.get("other.ts")?.revisions, 1);
+        assert.deepStrictEqual(pathsOfCommits(recent), [
+          ["c.ts"],
+          ["c.ts"],
+          ["c.ts"],
+        ]);
+      }),
   );
 });

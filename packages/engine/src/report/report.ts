@@ -3,10 +3,9 @@
 // Additive fields keep schemaVersion 1; renaming or removing a field bumps it.
 import { Schema } from "effect";
 
-export const Count = Schema.Natural;
-export const UnitInterval = Schema.Finite.check(
-  Schema.isBetween({ minimum: 0, maximum: 1 }),
-);
+import { Module } from "./module.js";
+import { Count, UnitDelta, UnitInterval } from "./scalars.js";
+
 const Rank = Schema.Int.check(Schema.isGreaterThanOrEqualTo(1));
 
 /** The history range an analysis covers, resolved to ISO timestamps. */
@@ -19,11 +18,61 @@ export const AnalysisWindow = Schema.Struct({
   couplingCommits: Count,
 });
 
+/** The window before the analysis window that `analyze --compare` measured, adjacent to it. */
+const Comparison = Schema.Struct({
+  previousSince: Schema.String,
+  /** Equals `window.since`; no commit is in both windows. */
+  previousUntil: Schema.String,
+  /**
+   * Non-merge commits in the previous window that touched at least one
+   * universe file. 0 means there is nothing to compare against: every trend is
+   * null, which is not the same as "nothing changed".
+   */
+  previousCommits: Count,
+  /**
+   * The previous window reaches back past the oldest reachable commit, because
+   * the repository is younger than the two windows together or a shallow clone
+   * cut its history. Its numbers then cover less than the full window.
+   */
+  previousTruncated: Schema.Boolean,
+});
+
+/** How a file's score changed against the window before (`analyze --compare`). */
+const FileTrend = Schema.Struct({
+  /** The score the file had in the previous window, normalized within that window; rounded to 4 decimals. */
+  previousScore: UnitInterval,
+  /** Revisions the file had in the previous window. */
+  previousRevisions: Count,
+  /** `score - previousScore`, rounded to 4 decimals; positive means the file got hotter relative to its window's hottest. */
+  scoreDelta: UnitDelta,
+  /**
+   * The file had no revision in the previous window but has in the latest one.
+   * Its `scoreDelta` is then just its score, not a file warming up; rank
+   * warming only among files where this is false.
+   */
+  newlyActive: Schema.Boolean,
+});
+
 /** The noise limits an analysis applied, reported so consumers see them. */
 const Thresholds = Schema.Struct({
   maxCommitFiles: Count,
+  /** Fewest distinct co-changed files (`FileStats.breadth`) that make a file a hub. */
+  hubMinBreadth: Count,
+  /** Fewest revisions a file needs to be a hub candidate; test files are never candidates. */
+  hubMinRevisions: Count,
+  /** Share of the hub candidates that may be hubs: widest candidate files first, ties included. */
+  hubTopShare: UnitInterval,
   minSharedCommits: Count,
   minDegree: UnitInterval,
+  /**
+   * Fewest counted commits a module needs to be ranked as (in)cohesive:
+   * `max(5, ceil(0.01 × window.couplingCommits))`, so the floor grows with the window.
+   */
+  minModuleCommits: Count,
+  /** Smallest `Module.leakage` at which a module's entry points get a reason line. */
+  minLeakage: UnitInterval,
+  /** Fewest `Module.implementationCommits` a module needs before its entry points get that reason line. */
+  minImplementationCommits: Count,
   maxMeanLineLength: Count,
   maxFileBytes: Count,
 });
@@ -39,6 +88,21 @@ export const FileStats = Schema.Struct({
   revisions: Count,
   linesAdded: Count,
   linesDeleted: Count,
+  /**
+   * Distinct other universe files this file changed together with in counted
+   * commits (at most `Thresholds.maxCommitFiles` files), however rarely.
+   */
+  breadth: Count,
+  /**
+   * The path is test code: its name has a test suffix (`.test`, `.spec`,
+   * `_test`, `_spec`) or a directory above it is named like a test directory
+   * (`test`, `tests`, `__tests__`, `spec`, `specs`, `e2e`, `fixtures`,
+   * `__fixtures__`). Tests are left out of the terminal's rankings of
+   * warming files; apply the same rule to `trend`.
+   */
+  test: Schema.Boolean,
+  /** `path` of the file's module (see `Module`). */
+  module: Schema.String,
   /** Non-blank lines. */
   loc: Count,
   complexity: Schema.Struct({
@@ -49,6 +113,8 @@ export const FileStats = Schema.Struct({
   }),
   /** Human- and agent-readable explanations, most significant first. */
   reasons: Schema.Array(Schema.String),
+  /** Null without `--compare`, and when either window has no commit touching the universe. */
+  trend: Schema.NullOr(FileTrend),
 });
 export type FileStats = typeof FileStats.Type;
 
@@ -63,6 +129,8 @@ export const Coupling = Schema.Struct({
   distance: Count,
   /** One file is the other's test; expected coupling, never a smell. */
   testPair: Schema.Boolean,
+  /** The files belong to different modules. Neutral: an app legitimately changes with the library it uses. */
+  crossesModule: Schema.Boolean,
 });
 export type Coupling = typeof Coupling.Type;
 
@@ -87,13 +155,24 @@ export const Report = Schema.Struct({
      */
     shallow: Schema.Boolean,
   }),
+  /** The current window; with `--compare`, every field of the report describes it. */
   window: AnalysisWindow,
+  /** Null without `--compare`. */
+  comparison: Schema.NullOr(Comparison),
   thresholds: Thresholds,
   /** Sizes before any output limit, so truncated reports keep their context. */
-  totals: Schema.Struct({ files: Count, couplings: Count }),
+  totals: Schema.Struct({ files: Count, couplings: Count, modules: Count }),
   /** Sorted by rank. */
   files: Schema.Array(FileStats),
   /** Sorted by degree, descending. */
   couplings: Schema.Array(Coupling),
+  /**
+   * The ranking order, which terminal and viewer keep. First the ranked
+   * modules (`commits` ≥ `Thresholds.minModuleCommits` and not `testOnly`),
+   * then the other modules with commits, each group by `cohesion` ascending,
+   * then more `commits` first, then `path`; last the modules without counted
+   * commits (`cohesion` null), by `path`.
+   */
+  modules: Schema.Array(Module),
 });
 export type Report = typeof Report.Type;

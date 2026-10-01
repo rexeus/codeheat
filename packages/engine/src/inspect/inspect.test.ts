@@ -5,22 +5,71 @@ import { inspect } from "./inspect.js";
 
 const stats = (path: string, rank: number, revisions: number): FileStats => ({
   path,
+  test: false,
+  module: path.startsWith("lib/") ? "lib" : "src",
   rank,
   score: 1 / rank,
   revisions,
   linesAdded: 0,
   linesDeleted: 0,
+  breadth: 0,
   loc: 10,
   complexity: { total: 5, mean: 0.5, max: 2 },
   reasons: [],
+  trend: null,
 });
 
 const coupling = (
   a: string,
   b: string,
   sharedCommits: number,
-  testPair = false,
-): Coupling => ({ a, b, sharedCommits, degree: 0.5, distance: 0, testPair });
+  flags: Partial<Pick<Coupling, "testPair" | "crossesModule">> = {},
+): Coupling => ({
+  a,
+  b,
+  sharedCommits,
+  degree: 0.5,
+  distance: 0,
+  testPair: false,
+  crossesModule: false,
+  ...flags,
+});
+
+// Least cohesive first, as `analyze` reports them.
+const modules: Report["modules"] = [
+  {
+    path: "lib",
+    kind: "directory",
+    testOnly: false,
+    files: 1,
+    commits: 4,
+    localCommits: 1,
+    cohesion: 0.25,
+    partners: [{ path: "src", sharedCommits: 3 }],
+    entryPoints: [],
+    interfaceCommits: 0,
+    implementationCommits: 4,
+    leakage: null,
+    leakyInterface: false,
+    trend: null,
+  },
+  {
+    path: "src",
+    kind: "package",
+    testOnly: false,
+    files: 3,
+    commits: 20,
+    localCommits: 17,
+    cohesion: 0.85,
+    partners: [{ path: "lib", sharedCommits: 3 }],
+    entryPoints: ["src/index.ts"],
+    interfaceCommits: 4,
+    implementationCommits: 20,
+    leakage: 0.2,
+    leakyInterface: false,
+    trend: null,
+  },
+];
 
 const reportOf = (
   files: ReadonlyArray<FileStats>,
@@ -36,16 +85,24 @@ const reportOf = (
     commits: 40,
     couplingCommits: 38,
   },
+  comparison: null,
   thresholds: {
     maxCommitFiles: 50,
+    hubMinBreadth: 10,
+    hubMinRevisions: 5,
+    hubTopShare: 0.05,
+    minModuleCommits: 5,
+    minLeakage: 0.5,
+    minImplementationCommits: 5,
     minSharedCommits: 3,
     minDegree: 0.3,
     maxMeanLineLength: 300,
     maxFileBytes: 1_048_576,
   },
-  totals: { files: files.length, couplings: couplings.length },
+  totals: { files: files.length, couplings: couplings.length, modules: 2 },
   files,
   couplings,
+  modules,
 });
 
 const universe = [
@@ -129,6 +186,7 @@ describe("inspect partners", () => {
       sharedCommits: 14,
       probability: 0.7,
       testPair: false,
+      crossesModule: false,
     });
   });
 
@@ -153,17 +211,31 @@ describe("inspect partners", () => {
     const [a, b] = inspect(report, ["*.ts"]).matches;
 
     expect(a?.partners).toStrictEqual([
-      { path: "b.ts", sharedCommits: 4, probability: 0.4, testPair: false },
+      {
+        path: "b.ts",
+        sharedCommits: 4,
+        probability: 0.4,
+        testPair: false,
+        crossesModule: false,
+      },
     ]);
     expect(b?.partners).toStrictEqual([
-      { path: "a.ts", sharedCommits: 4, probability: 1, testPair: false },
+      {
+        path: "a.ts",
+        sharedCommits: 4,
+        probability: 1,
+        testPair: false,
+        crossesModule: false,
+      },
     ]);
   });
+});
 
+describe("inspect partner marks", () => {
   it("marks a partner that is the file's test as a test pair", () => {
     const report = reportOf(
       [stats("src/a.ts", 1, 10)],
-      [coupling("src/a.test.ts", "src/a.ts", 5, true)],
+      [coupling("src/a.test.ts", "src/a.ts", 5, { testPair: true })],
     );
 
     const [entry] = inspect(report, ["src/a.ts"]).matches;
@@ -174,7 +246,44 @@ describe("inspect partners", () => {
         sharedCommits: 5,
         probability: 0.5,
         testPair: true,
+        crossesModule: false,
       },
     ]);
+  });
+
+  it("marks a partner in another module", () => {
+    const report = reportOf(
+      [stats("src/a.ts", 1, 10)],
+      [coupling("lib/b.ts", "src/a.ts", 5, { crossesModule: true })],
+    );
+
+    const [entry] = inspect(report, ["src/a.ts"]).matches;
+
+    expect(entry?.partners.map(({ crossesModule }) => crossesModule)).toEqual([
+      true,
+    ]);
+  });
+});
+
+describe("inspect modules", () => {
+  it("lists each module of the matched files once, in report order", () => {
+    const result = inspect(reportOf(universe), [
+      "src/b.ts",
+      "src/a.ts",
+      "lib/c.ts",
+    ]);
+
+    expect(result.modules.map(({ path }) => path)).toEqual(["lib", "src"]);
+    expect(result.modules[0]).toEqual(modules[0]);
+  });
+
+  it("leaves out the modules of files that were not matched", () => {
+    const result = inspect(reportOf(universe), ["src/*.ts"]);
+
+    expect(result.modules.map(({ path }) => path)).toEqual(["src"]);
+  });
+
+  it("lists no module when nothing matched", () => {
+    expect(inspect(reportOf(universe), ["nope.ts"]).modules).toEqual([]);
   });
 });

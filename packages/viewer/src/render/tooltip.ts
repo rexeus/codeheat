@@ -1,7 +1,18 @@
+import type { FileStats } from "@codeheat/engine";
+
 import type { AggregateNode, FileNode } from "../layout/hierarchy.js";
 import type { PlacedLeaf } from "../layout/treemap.js";
+import type { ModuleIndex } from "../modules/module-index.js";
 import { h } from "./dom.js";
-import { formatCount, formatScore, splitPath } from "./format.js";
+import {
+  describeScoreTrend,
+  formatCount,
+  formatPercent,
+  formatPointChange,
+  formatScore,
+  formatScoreChange,
+  splitPath,
+} from "./format.js";
 
 /** Metrics readout that follows the pointer over the treemap. */
 export type Tooltip = {
@@ -15,6 +26,11 @@ const POINTER_OFFSET = 14;
 const row = (value: string, label: string): HTMLElement =>
   h("div", "tooltip-row", h("strong", "", value), h("span", "", ` ${label}`));
 
+const trendRow = (trend: NonNullable<FileStats["trend"]>): HTMLElement => {
+  const { value, note } = describeScoreTrend(trend);
+  return row(value, note);
+};
+
 const pathLine = (path: string): HTMLElement => {
   const { dir, name } = splitPath(path);
   return h(
@@ -25,15 +41,40 @@ const pathLine = (path: string): HTMLElement => {
   );
 };
 
+/** The file's module and how many of its changes stay inside; nothing when the module is unknown. */
+const moduleRows = (path: string, modules: ModuleIndex): HTMLElement[] => {
+  const module = modules.moduleOf(path);
+  if (module === undefined) {
+    return [];
+  }
+  const { cohesion, trend } = module;
+  return [
+    row(
+      cohesion === null ? "no data" : formatPercent(cohesion),
+      `of changes to ${module.path} stay inside`,
+    ),
+    ...(trend === null
+      ? []
+      : [
+          row(
+            formatPointChange(trend.cohesionDelta),
+            `cohesion change (was ${formatPercent(trend.previousCohesion)})`,
+          ),
+        ]),
+  ];
+};
+
 const fileContent = (
   { file, path }: FileNode,
   totalFiles: number,
+  modules: ModuleIndex,
 ): HTMLElement[] => [
   pathLine(path),
   row(
     formatScore(file.score),
     `hotspot score, rank #${file.rank} of ${formatCount(totalFiles)}`,
   ),
+  ...(file.trend === null ? [] : [trendRow(file.trend)]),
   row(formatCount(file.revisions), "revisions"),
   row(formatCount(file.loc), "lines of code"),
   row(
@@ -44,6 +85,7 @@ const fileContent = (
     `+${formatCount(file.linesAdded)} / −${formatCount(file.linesDeleted)}`,
     "lines changed",
   ),
+  ...moduleRows(path, modules),
 ];
 
 const aggregateContent = (node: AggregateNode): HTMLElement[] => [
@@ -55,12 +97,19 @@ const aggregateContent = (node: AggregateNode): HTMLElement[] => [
   ),
   row(formatCount(node.loc), "lines of code combined"),
   row(formatScore(node.score), "highest hotspot score among them"),
+  ...(node.change === null
+    ? []
+    : [
+        row(formatScoreChange(node.change.rise), "largest rise among them"),
+        row(formatScoreChange(node.change.drop), "largest drop among them"),
+      ]),
 ];
 
 export const createTooltip = (
   element: HTMLElement,
   stage: HTMLElement,
   totalFiles: number,
+  modules: ModuleIndex,
 ): Tooltip => {
   const place = (event: PointerEvent): void => {
     const bounds = stage.getBoundingClientRect();
@@ -82,7 +131,7 @@ export const createTooltip = (
     show: ({ node }, event) => {
       element.replaceChildren(
         ...(node.kind === "file"
-          ? fileContent(node, totalFiles)
+          ? fileContent(node, totalFiles, modules)
           : aggregateContent(node)),
       );
       element.hidden = false;
