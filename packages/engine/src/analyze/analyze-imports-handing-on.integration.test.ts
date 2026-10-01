@@ -28,6 +28,9 @@ const still: Record<string, string> = {
     "import { run } from './target';\nexport const api = { run };\n",
   "src/usage.ts":
     "import { run } from './target';\nexport function f() { return run(); }\n",
+  "src/lazy.ts": "export const loadPage = () => import('./target');\n",
+  "src/libindex.js":
+    "const helper = require('./target').helper;\nmodule.exports = { helper };\n",
   "src/Comp.vue": "<script>export default {};</script>\n",
   "src/constants/index.ts": "export const A = 1;\n",
 };
@@ -53,6 +56,10 @@ const changing = (version: number): Record<string, string> =>
         "import Comp from './Comp.vue';\nexport const main8 = Comp;\n",
       "src/main9.ts":
         "import { A } from 'constants';\nexport const main9 = A;\n",
+      "src/main11.ts":
+        "import { loadPage } from './lazy';\nexport const main11 = loadPage;\n",
+      "src/main12.js":
+        "const { helper } = require('./libindex');\nconsole.log(helper);\n",
       "src/main10.ts":
         "import { readFileSync } from 'fs';\nexport const main10 = readFileSync;\n",
     }).map(([file, content]) => [file, `${content}// ${version}\n`]),
@@ -130,6 +137,29 @@ layer(NodeServices.layer)(
           assert.strictEqual(relationOf(report, "main6.ts"), "a→b");
           assert.strictEqual(relationOf(report, "main7.ts"), "none");
         }),
+    );
+  },
+);
+
+layer(NodeServices.layer)(
+  "analyze imports through functions and bindings that load modules",
+  (it) => {
+    it.effect(
+      "follows a function that an exported name loads a module with",
+      () =>
+        Effect.gen(function* () {
+          const report = yield* analyzeFixture;
+
+          assert.strictEqual(relationOf(report, "main11.ts"), "a→b");
+        }),
+    );
+
+    it.effect("follows a name bound to a member of a required module", () =>
+      Effect.gen(function* () {
+        const report = yield* analyzeFixture;
+
+        assert.strictEqual(relationOf(report, "main12.js"), "a→b");
+      }),
     );
   },
 );

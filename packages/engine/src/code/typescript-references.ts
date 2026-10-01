@@ -5,6 +5,9 @@ import { Predicate } from "effect";
 import { isUrlOfImportMeta, plainString, requiredModule } from "./ast-nodes.js";
 import type { Node } from "./ast-nodes.js";
 
+const asList = (value: unknown): ReadonlyArray<unknown> =>
+  Array.isArray(value) ? (value as ReadonlyArray<unknown>) : [];
+
 /** Nodes whose parts run only when the function is called. */
 const FUNCTIONS = new Set([
   "ArrowFunctionExpression",
@@ -25,16 +28,36 @@ const KEYED = new Set([
 const SPELLED: ReadonlyMap<string, ReadonlyArray<string>> = new Map([
   ["JSXMemberExpression", ["property"]],
   ["TSQualifiedName", ["right"]],
+  ["TSTypeParameter", ["name"]],
+  ["TSMappedType", ["key"]],
+  ["MetaProperty", ["meta", "property"]],
   ["JSXAttribute", ["name"]],
   ["LabeledStatement", ["label"]],
   ["BreakStatement", ["label"]],
   ["ContinueStatement", ["label"]],
 ]);
 
+/** Nodes that declare parameters of a type, and where: the names are declarations, their annotations are not. */
+const PARAMETER_LISTS: ReadonlyMap<string, string> = new Map([
+  ["TSFunctionType", "params"],
+  ["TSConstructorType", "params"],
+  ["TSMethodSignature", "params"],
+  ["TSCallSignatureDeclaration", "params"],
+  ["TSConstructSignatureDeclaration", "params"],
+  ["TSIndexSignature", "parameters"],
+]);
+
+/** A JSX tag that starts in lower case names an intrinsic element such as `<a>`, not a binding. */
+const isIntrinsicTag = (name: unknown): boolean =>
+  Predicate.isObject(name) &&
+  name["type"] === "JSXIdentifier" &&
+  /^[a-z]/u.test(String(name["name"]));
+
 /**
  * The parts of `node` that spell a name without referring to a binding: a plain
  * property key, a member after the dot, a qualified name's right side, a JSX
- * attribute name, a label. Shorthand `{ run }` keeps its value, which does refer.
+ * attribute name, a label, the name of a type parameter or mapped-type key, an
+ * intrinsic JSX tag, the `meta` of `import.meta`. Shorthand `{ run }` keeps its value, which does refer.
  */
 const spellingOnly = (node: Node): ReadonlyArray<string> => {
   const type = String(node["type"]);
@@ -43,6 +66,9 @@ const spellingOnly = (node: Node): ReadonlyArray<string> => {
   }
   if (type === "MemberExpression") {
     return node["computed"] === true ? [] : ["property"];
+  }
+  if (type === "JSXOpeningElement" || type === "JSXClosingElement") {
+    return isIntrinsicTag(node["name"]) ? ["name"] : [];
   }
   return SPELLED.get(type) ?? [];
 };
@@ -78,7 +104,7 @@ const runsLater = (node: Node, key: string): boolean =>
 const modulesAt = (
   node: Node,
   nested: boolean,
-  locals: ReadonlyMap<string, string>,
+  locals: ReadonlyMap<string, ReadonlyArray<string>>,
 ): ReadonlyArray<string> => {
   const isName =
     node["type"] === "Identifier" || node["type"] === "JSXIdentifier";
@@ -86,21 +112,32 @@ const modulesAt = (
     !nested && isName && typeof node["name"] === "string"
       ? locals.get(node["name"])
       : undefined;
-  return [loadedModule(node), named].filter((module) => module !== undefined);
+  return [loadedModule(node), ...(named ?? [])].filter(
+    (module) => module !== undefined,
+  );
 };
+
+/** The children of a parameter list without the parameters' own names: only their type annotations. */
+const withoutParameterNames = (parameters: unknown): unknown =>
+  asList(parameters).map((parameter) =>
+    Predicate.isObject(parameter) && parameter["type"] === "Identifier"
+      ? parameter["typeAnnotation"]
+      : parameter,
+  );
 
 const childrenOf = (node: Node, nested: boolean): ReadonlyArray<Pending> => {
   const skipped = spellingOnly(node);
+  const parameterList = PARAMETER_LISTS.get(String(node["type"]));
   return Object.entries(node)
     .filter(([key]) => !skipped.includes(key))
     .map(([key, child]) => ({
-      node: child,
+      node: key === parameterList ? withoutParameterNames(child) : child,
       nested: nested || runsLater(node, key),
     }));
 };
 
 /**
- * The modules that `root` refers to, given `locals`, the module each name
+ * The modules that `root` refers to, given `locals`, the modules each name
  * stands for. A name counts where it references a binding and is evaluated
  * with the expression: not as a plain key, a member after the dot, or an
  * attribute name, and not inside a function or class body, where it is only
@@ -109,7 +146,7 @@ const childrenOf = (node: Node, nested: boolean): ReadonlyArray<Pending> => {
  */
 export const moduleReferences = (
   root: unknown,
-  locals: ReadonlyMap<string, string>,
+  locals: ReadonlyMap<string, ReadonlyArray<string>>,
 ): ReadonlyArray<string> => {
   const found = new Set<string>();
   const pending: Array<Pending> = [{ node: root, nested: false }];
