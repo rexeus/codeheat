@@ -3,6 +3,7 @@ import { Console, Effect } from "effect";
 import { Argument, Command } from "effect/cli";
 
 import { NothingMatched } from "../errors/nothing-matched.js";
+import { warnIfEntryMatchedNothing } from "../output/entry-warning.js";
 import { escapeForTerminal } from "../output/escape.js";
 import { printResult } from "../output/print-result.js";
 import { warnIfShallow } from "../output/shallow-warning.js";
@@ -35,6 +36,7 @@ export const inspectCommand = Command.make(
       toolVersion: version,
     });
     yield* warnIfShallow(report);
+    yield* warnIfEntryMatchedNothing(report, entry);
     const result = yield* inspectFrom({ cwd, report, patterns });
     if (result.matches.length === 0) {
       return yield* new NothingMatched({ patterns: result.unmatched });

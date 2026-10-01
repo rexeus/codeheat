@@ -2,6 +2,7 @@ import { analyze } from "@codeheat/engine";
 import { Effect, Option } from "effect";
 import { Argument, Command, Flag } from "effect/cli";
 
+import { warnIfEntryMatchedNothing } from "../output/entry-warning.js";
 import { writeHtmlReport } from "../output/html/write-html-report.js";
 import { limitReport } from "../output/limit-report.js";
 import { printResult } from "../output/print-result.js";
@@ -81,6 +82,7 @@ export const analyzeCommand = Command.make(
       toolVersion: version,
     });
     yield* warnIfShallow(report);
+    yield* warnIfEntryMatchedNothing(report, entry);
     if (flags.html || Option.isSome(flags.out)) {
       yield* writeHtmlReport({
         report,

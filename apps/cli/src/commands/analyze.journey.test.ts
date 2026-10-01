@@ -94,6 +94,7 @@ describe("codeheat analyze --entry", () => {
       expect((yield* decode(detected.stdout)).modules).toMatchObject([
         { entryPoints: [], leakage: null },
       ]);
+      expect(overridden.stderr).toBe("");
       // a.ts changes in all 4 commits, and b.ts or c.ts changes in each of them
       expect((yield* decode(overridden.stdout)).modules).toMatchObject([
         {
@@ -102,6 +103,32 @@ describe("codeheat analyze --entry", () => {
           implementationCommits: 4,
           leakage: 1,
         },
+      ]);
+    }).pipe(Effect.scoped),
+  );
+
+  it.live("warns once on stderr when the globs select no file", () =>
+    Effect.gen(function* () {
+      const repo = yield* makeCoupledProject;
+
+      const result = yield* journey({
+        args: [
+          "analyze",
+          "--json",
+          "--entry",
+          "nope/*",
+          "--entry",
+          "*.nothing",
+        ],
+        cwd: repo.root,
+      });
+
+      expect(result.exitCode).toBe(0);
+      expect(result.stderr).toBe(
+        "codeheat: --entry matched no file of the analysis universe",
+      );
+      expect((yield* decode(result.stdout)).modules).toMatchObject([
+        { entryPoints: [], leakage: null },
       ]);
     }).pipe(Effect.scoped),
   );

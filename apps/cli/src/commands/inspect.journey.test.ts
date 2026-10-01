@@ -95,29 +95,27 @@ describe("codeheat inspect with exact paths", () => {
 });
 
 describe("codeheat inspect --entry", () => {
-  it.live(
-    "names the interface of the matched modules the interface of the matched modules",
-    () =>
-      Effect.gen(function* () {
-        const repo = yield* makeCoupledProject;
+  it.live("names the interface of the matched modules", () =>
+    Effect.gen(function* () {
+      const repo = yield* makeCoupledProject;
 
-        const result = yield* journey({
-          args: ["inspect", "src/b.ts", "--entry", "src/c.ts", "--json"],
-          cwd: repo.root,
-        });
+      const result = yield* journey({
+        args: ["inspect", "src/b.ts", "--entry", "src/c.ts", "--json"],
+        cwd: repo.root,
+      });
 
-        const inspected = yield* Schema.decodeUnknownEffect(InspectResult)(
-          JSON.parse(result.stdout),
-        );
-        // c.ts changes only in the first of the 4 commits, which also changes a.ts and b.ts
-        expect(inspected.modules).toMatchObject([
-          {
-            entryPoints: ["src/c.ts"],
-            interfaceCommits: 1,
-            implementationCommits: 4,
-            leakage: 0.25,
-          },
-        ]);
-      }).pipe(Effect.scoped),
+      const inspected = yield* Schema.decodeUnknownEffect(InspectResult)(
+        JSON.parse(result.stdout),
+      );
+      // c.ts changes only in the first of the 4 commits, which also changes a.ts and b.ts
+      expect(inspected.modules).toMatchObject([
+        {
+          entryPoints: ["src/c.ts"],
+          interfaceCommits: 1,
+          implementationCommits: 4,
+          leakage: 0.25,
+        },
+      ]);
+    }).pipe(Effect.scoped),
   );
 });
