@@ -1,0 +1,132 @@
+import { parseSync } from "oxc-parser";
+import { describe, expect, it } from "vitest";
+
+import { typescriptAdapter } from "./typescript-adapter.js";
+
+const adapter = typescriptAdapter(parseSync);
+const read = (file: string, source: string) => adapter.exports(file, source);
+
+describe("typescript adapter exported symbols", () => {
+  it("lists every kind of declaration and specifier by its exported name", () => {
+    const found = read(
+      "api.ts",
+      [
+        "export function run() {}",
+        "export const { a, b: [c] } = source;",
+        "export class Box {}",
+        "export interface Options {}",
+        "export type Id = string;",
+        "export enum Level {}",
+        "const local = 1;",
+        "export { local, local as alias };",
+      ].join("\n"),
+    );
+
+    expect(found?.names.toSorted()).toStrictEqual([
+      "Box",
+      "Id",
+      "Level",
+      "Options",
+      "a",
+      "alias",
+      "c",
+      "local",
+      "run",
+    ]);
+    expect(found?.forwarded).toStrictEqual([]);
+  });
+
+  it("names the default export default, whatever it is", () => {
+    expect(read("a.ts", "export default class {}")?.names).toStrictEqual([
+      "default",
+    ]);
+    expect(
+      read("b.ts", "const x = 1;\nexport { x as default };")?.names,
+    ).toStrictEqual(["default"]);
+  });
+
+  it("counts re-exported names by their exported name and forwards only export-star", () => {
+    const found = read(
+      "barrel.ts",
+      [
+        'export * from "./all";',
+        'export type * from "./types";',
+        'export * as ns from "./namespace";',
+        'export { x, y as z } from "pkg";',
+        'export { default } from "./d";',
+      ].join("\n"),
+    );
+
+    expect(found?.names.toSorted()).toStrictEqual(["default", "ns", "x", "z"]);
+    expect(found?.forwarded).toStrictEqual(["./all", "./types"]);
+  });
+
+  it("counts a name once however often it is exported", () => {
+    const found = read(
+      "dupes.ts",
+      'import { x } from "./x";\nexport { x };\nexport { x as y } from "./x";\nexport { x as y2 } from "./x";\nexport * from "./a";\nexport * from "./a";',
+    );
+
+    expect(found?.names.toSorted()).toStrictEqual(["x", "y", "y2"]);
+    expect(found?.forwarded).toStrictEqual(["./a"]);
+  });
+});
+
+describe("typescript adapter exports of odd input", () => {
+  it("lists nothing for a file that exports nothing", () => {
+    expect(read("side-effect.ts", "console.log(1);")).toStrictEqual({
+      names: [],
+      forwarded: [],
+    });
+  });
+
+  it("reads JavaScript with JSX", () => {
+    expect(
+      read("view.js", "export const View = () => <div />;")?.names,
+    ).toStrictEqual(["View"]);
+  });
+
+  it("does not list a file with syntax errors", () => {
+    expect(read("broken.ts", "export const = ;")).toBeUndefined();
+  });
+
+  it("does not list a parse that throws", () => {
+    const throwing = typescriptAdapter(() => {
+      throw new Error("parser crashed");
+    });
+
+    expect(throwing.exports("a.ts", "export const a = 1;")).toBeUndefined();
+  });
+});
+
+describe("typescript adapter exports it cannot list", () => {
+  it.each([
+    ["export =", "const api = {};\nexport = api;", "api.ts"],
+    ["module.exports", "module.exports = { a: 1 };", "api.js"],
+    ["exports.x", "exports.a = 1;", "api.js"],
+    [
+      "Object.defineProperty(exports",
+      'Object.defineProperty(exports, "a", { value: 1 });',
+      "api.js",
+    ],
+    [
+      "tsc's __exportStar",
+      'Object.defineProperty(exports, "__esModule", { value: true });\n__exportStar(require("./a"), exports);',
+      "api.js",
+    ],
+    [
+      "ES syntax next to CommonJS",
+      "export const a = 1;\nmodule.exports.b = 2;",
+      "mixed.js",
+    ],
+  ])("does not list a file that uses %s", (_, source, file) => {
+    expect(read(file, source)).toBeUndefined();
+  });
+
+  it("lists a file that only mentions exports in text", () => {
+    expect(
+      read("doc.ts", '// exports a value\nexport const note = "exports";')
+        ?.names,
+    ).toStrictEqual(["note"]);
+  });
+});

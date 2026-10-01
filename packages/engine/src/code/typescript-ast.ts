@@ -147,3 +147,37 @@ export const modulesInAst = (
     handedOn: handedOn(Array.isArray(body) ? body : [], imported, assigned),
   };
 };
+
+/** `Object.defineProperty(exports, "x", …)`, which defines an export by call. */
+const definesExport = (node: Node): boolean => {
+  const args = node["arguments"];
+  return (
+    node["type"] === "CallExpression" &&
+    isMember(node["callee"], "Object", "defineProperty") &&
+    Array.isArray(args) &&
+    isExportsObject(args[0])
+  );
+};
+
+/**
+ * Whether `program` exports in a way the module record does not list:
+ * `export = x`, or CommonJS (`module.exports = …`, `exports.x = …`,
+ * `Object.assign(module.exports, …)`, `Object.defineProperty(exports, …)`,
+ * tsc's `__exportStar` and `__export`).
+ */
+export const exportsOutsideRecord = (program: unknown): boolean => {
+  let found = false;
+  walk(
+    program,
+    (node) => {
+      found =
+        found ||
+        node["type"] === "TSExportAssignment" ||
+        isExportsAssignment(node) ||
+        definesExport(node) ||
+        exportedByCall(node).length > 0;
+    },
+    () => !found,
+  );
+  return found;
+};
