@@ -137,6 +137,38 @@ layer(NodeServices.layer)("findEntryPoints from built targets", (it) => {
   );
 });
 
+layer(NodeServices.layer)("findEntryPoints from hostile manifests", (it) => {
+  it.effect("survives exports nested thousands of levels deep", () =>
+    Effect.gen(function* () {
+      const depth = 2000;
+      const nested = `${'{ "a": '.repeat(depth)}"./src/deep.ts"${" }".repeat(depth)}`;
+      const manifest = `{ "exports": ${nested}, "main": "./src/main.ts" }`;
+
+      const entries = yield* entryPointsOf(
+        [file("src/deep.ts"), file("src/main.ts")],
+        manifest,
+      );
+
+      // targets below the depth limit are not followed; the rest of the manifest still counts
+      assert.deepStrictEqual(entries, [file("src/main.ts")]);
+    }),
+  );
+
+  it.effect("keeps a valid field when another one has the wrong type", () =>
+    Effect.gen(function* () {
+      const entries = yield* entryPointsOf(
+        [file("src/main.ts"), file("src/types.ts"), file("src/other.ts")],
+        '{ "main": 5, "types": "./src/types.ts", "exports": { ".": "./src/main.ts", "./x": 7 } }',
+      );
+
+      assert.deepStrictEqual(entries, [
+        file("src/main.ts"),
+        file("src/types.ts"),
+      ]);
+    }),
+  );
+});
+
 layer(NodeServices.layer)("findEntryPoints by convention", (it) => {
   it.effect(
     "finds index, mod, lib, and __init__ files at the root or in src",
