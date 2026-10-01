@@ -242,8 +242,9 @@ layer(NodeServices.layer)("analyze module fallback", (it) => {
 const app = "packages/app";
 
 /**
- * One package of five files and a script, so the package holds more than
- * 70 % of the files. Counted commits:
+ * One package of 21 files (16 of them never change in the window) and a
+ * script, so the package holds more than 70 % of at least 20 files. Counted
+ * commits:
  *
  * 1: index.ts, billing/invoice.ts      2: invoice.ts, billing/tax.ts
  * 3: auth/session.ts                   4: scripts/release.ts, auth/login.ts
@@ -258,6 +259,14 @@ const buildSinglePackageHistory = (repo: TempRepository) =>
       [`${app}/src/auth/session.ts`]: "0\n",
       [`${app}/src/auth/login.ts`]: "0\n",
       "scripts/release.ts": "0\n",
+      ...Object.fromEntries(
+        ["billing", "auth"].flatMap((directory) =>
+          Array.from({ length: 8 }, (_, index) => [
+            `${app}/src/${directory}/still${index}.ts`,
+            "0\n",
+          ]),
+        ),
+      ),
     });
     yield* repo.commit(day(1), {
       [`${app}/src/index.ts`]: "1\n",
@@ -292,7 +301,7 @@ const expectedSplitModules: ReadonlyArray<{
   {
     path: `${app}/src/auth`,
     kind: "directory",
-    files: 2,
+    files: 10,
     cohesion: 0.5,
     entryPoints: [],
     interfaceCommits: 0,
@@ -303,7 +312,7 @@ const expectedSplitModules: ReadonlyArray<{
   {
     path: `${app}/src/billing`,
     kind: "directory",
-    files: 2,
+    files: 10,
     cohesion: 0.5,
     entryPoints: [],
     interfaceCommits: 0,

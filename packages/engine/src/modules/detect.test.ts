@@ -294,7 +294,7 @@ describe("detectModules keeps a module that holds most of the files", () => {
   });
 
   it("keeps a module that has no directories to split by", () => {
-    const files = [...filesIn("lib", 9), ...filesIn("scripts", 1)];
+    const files = [...filesIn("lib", 29), ...filesIn("scripts", 1)];
 
     expect(modulesOf(files)).toStrictEqual(
       new Set(["directory:lib", "directory:scripts"]),
@@ -302,7 +302,7 @@ describe("detectModules keeps a module that holds most of the files", () => {
   });
 
   it("keeps the only package when its files cannot be split", () => {
-    const files = [...filesIn("tool/src", 9), ...filesIn("scripts", 1)];
+    const files = [...filesIn("tool/src", 29), ...filesIn("scripts", 1)];
 
     expect(modulesOf(files, ["tool"])).toStrictEqual(
       new Set(["package:tool", "directory:scripts"]),
@@ -332,6 +332,75 @@ describe("detectModules at the share that makes a module dominant", () => {
         "directory:src/auth",
         "directory:tools",
       ]),
+    );
+  });
+});
+
+/** A package of two directories with `inPackage` files, and a script. */
+const modulesWithPackage = (inPackage: number) =>
+  modulesOf(
+    [
+      ...filesIn("app/src/billing", Math.ceil(inPackage / 2)),
+      ...filesIn("app/src/auth", Math.floor(inPackage / 2)),
+      ...filesIn("scripts", 1),
+    ],
+    ["app"],
+  );
+
+describe("detectModules leaves small and declared modules alone", () => {
+  it("keeps a module of 19 files, however large its share", () => {
+    expect(modulesWithPackage(19)).toStrictEqual(
+      new Set(["package:app", "directory:scripts"]),
+    );
+  });
+
+  it("splits a module of 20 files that holds more than the share", () => {
+    expect(modulesWithPackage(20)).toStrictEqual(
+      new Set([
+        "directory:app/src/billing",
+        "directory:app/src/auth",
+        "directory:scripts",
+      ]),
+    );
+  });
+
+  it("keeps a repository of ten files as it was", () => {
+    const files = [
+      ...filesIn("src/a", 5),
+      ...filesIn("src/b", 4),
+      "tools/x.ts",
+    ];
+
+    expect(modulesOf(files)).toStrictEqual(
+      new Set(["directory:src", "directory:tools"]),
+    );
+  });
+
+  it("splits the only package although a package of test code alone sits beside it", () => {
+    const files = [
+      ...filesIn("app/src/billing", 15),
+      ...filesIn("app/src/auth", 15),
+      ...filesIn("test/fixtures/sample", 1),
+    ];
+
+    expect(modulesOf(files, ["app", "test/fixtures/sample"])).toStrictEqual(
+      new Set([
+        "directory:app/src/billing",
+        "directory:app/src/auth",
+        "package:test/fixtures/sample",
+      ]),
+    );
+  });
+
+  it("keeps a package beside a package that has code outside test directories", () => {
+    const files = [
+      ...filesIn("app/src/billing", 15),
+      ...filesIn("app/src/auth", 15),
+      ...filesIn("tools/fmt", 1),
+    ];
+
+    expect(modulesOf(files, ["app", "tools/fmt"])).toStrictEqual(
+      new Set(["package:app", "package:tools/fmt"]),
     );
   });
 });
