@@ -42,6 +42,7 @@ export const moduleStats = (
   path,
   kind: "package",
   files: 2,
+  testOnly: false,
   commits: 10,
   localCommits: 6,
   cohesion: 0.6,

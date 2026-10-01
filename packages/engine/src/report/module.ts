@@ -21,6 +21,12 @@ export const Module = Schema.Struct({
   kind: Schema.Literals(["package", "directory"]),
   /** Universe files in the module. */
   files: Count,
+  /**
+   * Every universe file in the module is a test file, or the module path has a
+   * segment named test, tests, __tests__, spec, specs, e2e, fixtures, or
+   * __fixtures__. Test-only modules are never ranked.
+   */
+  testOnly: Schema.Boolean,
   /** Counted commits (at most `Thresholds.maxCommitFiles` files) that touched the module. */
   commits: Count,
   /** Of those, commits that touched no universe file outside the module. */

@@ -37,6 +37,7 @@ const billing: Module = {
   path: "packages/billing",
   kind: "package",
   files: 9,
+  testOnly: false,
   commits: 74,
   localCommits: 41,
   cohesion: 0.5541,

@@ -4,20 +4,15 @@ import type { Module } from "@codeheat/engine";
 const LEAST_COHESIVE_LIMIT = 5;
 
 /**
- * The least cohesive modules, lowest first. Modules with fewer than
- * `minCommits` counted commits are left out: a share of two commits says
- * little. Modules without data (`cohesion` is `null`) never qualify.
+ * The first five ranked modules of `modules`, which the report already lists
+ * least cohesive first: the ones with at least `minCommits` counted commits
+ * that are not test-only. A share of two commits says little, and a test
+ * module's cohesion says nothing about the design.
  */
 export const leastCohesive = (
   modules: readonly Module[],
   minCommits: number,
 ): Module[] =>
   modules
-    .filter(
-      ({ commits, cohesion }) => cohesion !== null && commits >= minCommits,
-    )
-    .toSorted(
-      (a, b) =>
-        (a.cohesion ?? 0) - (b.cohesion ?? 0) || a.path.localeCompare(b.path),
-    )
+    .filter(({ commits, testOnly }) => commits >= minCommits && !testOnly)
     .slice(0, LEAST_COHESIVE_LIMIT);

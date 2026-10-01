@@ -37,6 +37,7 @@ const modules: Report["modules"] = [
   {
     path: "lib",
     kind: "directory",
+    testOnly: false,
     files: 1,
     commits: 4,
     localCommits: 1,
@@ -46,6 +47,7 @@ const modules: Report["modules"] = [
   {
     path: "src",
     kind: "package",
+    testOnly: false,
     files: 3,
     commits: 20,
     localCommits: 17,

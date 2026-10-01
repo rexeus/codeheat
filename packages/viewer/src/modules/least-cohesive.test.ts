@@ -3,44 +3,40 @@ import { describe, expect, it } from "vitest";
 import { moduleStats } from "../testing/reports.js";
 import { leastCohesive } from "./least-cohesive.js";
 
-const withCohesion = (path: string, cohesion: number | null, commits = 10) =>
-  moduleStats(path, { cohesion, commits });
-
 const paths = (modules: readonly { path: string }[]): string[] =>
   modules.map(({ path }) => path);
 
 describe("leastCohesive", () => {
-  it("lists the lowest cohesion first and at most five modules", () => {
-    const modules = [0.9, 0.2, 0.7, 0.4, 0.5, 0.3, 0.8].map((cohesion) =>
-      withCohesion(`m/${cohesion}`, cohesion),
+  it("keeps the report order and lists at most five modules", () => {
+    const modules = ["f", "e", "d", "c", "b", "a"].map((path) =>
+      moduleStats(path),
     );
 
-    expect(paths(leastCohesive(modules, 5))).toEqual([
-      "m/0.2",
-      "m/0.3",
-      "m/0.4",
-      "m/0.5",
-      "m/0.7",
-    ]);
+    expect(paths(leastCohesive(modules, 5))).toEqual(["f", "e", "d", "c", "b"]);
   });
 
   it("leaves out modules below the commit floor, however incohesive", () => {
     const modules = [
-      withCohesion("tiny", 0, 4),
-      withCohesion("exact", 0.5, 5),
-      withCohesion("big", 0.6, 50),
+      moduleStats("tiny", { cohesion: 0, commits: 4 }),
+      moduleStats("exact", { cohesion: 0.5, commits: 5 }),
+      moduleStats("big", { cohesion: 0.6, commits: 50 }),
     ];
 
     expect(paths(leastCohesive(modules, 5))).toEqual(["exact", "big"]);
   });
 
-  it("never lists a module without data", () => {
-    expect(leastCohesive([withCohesion("none", null, 10)], 5)).toEqual([]);
+  it("leaves out test-only modules", () => {
+    const modules = [
+      moduleStats("e2e", { cohesion: 0, testOnly: true }),
+      moduleStats("lib", { cohesion: 0.4 }),
+    ];
+
+    expect(paths(leastCohesive(modules, 5))).toEqual(["lib"]);
   });
 
-  it("breaks ties by path", () => {
-    const modules = [withCohesion("b", 0.5), withCohesion("a", 0.5)];
+  it("never lists a module without data", () => {
+    const none = moduleStats("none", { commits: 0, cohesion: null });
 
-    expect(paths(leastCohesive(modules, 5))).toEqual(["a", "b"]);
+    expect(leastCohesive([none], 5)).toEqual([]);
   });
 });

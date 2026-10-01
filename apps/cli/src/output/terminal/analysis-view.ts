@@ -109,10 +109,14 @@ const moduleLines = (
     style,
   );
 
-/** The least cohesive modules with enough commits to say something; the report lists them least cohesive first. */
+/** The first modules of the report's ranking: enough commits to say something, not test-only. The report already lists them least cohesive first. */
 const rankedModules = (report: Report): ReadonlyArray<Module> =>
   report.modules
-    .filter((module) => module.commits >= report.thresholds.minModuleCommits)
+    .filter(
+      (module) =>
+        module.commits >= report.thresholds.minModuleCommits &&
+        !module.testOnly,
+    )
     .slice(0, TOP_MODULES);
 
 /**

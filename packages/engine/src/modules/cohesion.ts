@@ -3,33 +3,57 @@
 import { Order } from "effect";
 
 import { MAX_COMMIT_FILES } from "../coupling/coupling.js";
+import { isTestFile } from "../coupling/pair.js";
 import type { Module } from "../report/module.js";
 import { roundReported } from "../report/precision.js";
 import type { ModuleRef } from "./detect.js";
 
-/** Fewest counted commits a module needs to be ranked by its cohesion. */
-export const MIN_MODULE_COMMITS = 5;
+const MIN_MODULE_COMMITS_FLOOR = 5;
+const MIN_MODULE_COMMITS_SHARE = 0.01;
 const MAX_PARTNERS = 5;
+const TEST_DIRECTORY_NAMES = new Set([
+  "test",
+  "tests",
+  "__tests__",
+  "spec",
+  "specs",
+  "e2e",
+  "fixtures",
+  "__fixtures__",
+]);
+
+/**
+ * Fewest counted commits a module needs to be ranked by its cohesion: 1% of
+ * the `couplingCommits`, at least 5, so the floor grows with the window.
+ */
+export const minModuleCommitsFor = (couplingCommits: number): number =>
+  Math.max(
+    MIN_MODULE_COMMITS_FLOOR,
+    Math.ceil(MIN_MODULE_COMMITS_SHARE * couplingCommits),
+  );
 
 type Tally = {
   readonly kind: ModuleRef["kind"];
   files: number;
+  testFiles: number;
   commits: number;
   localCommits: number;
   /** Shared commits per other module path. */
   readonly shared: Map<string, number>;
 };
 
-const byCohesion = (a: Module, b: Module): number => {
-  if (a.cohesion === null || b.cohesion === null) {
-    return Number(a.cohesion === null) - Number(b.cohesion === null);
+/** Ranked modules first, then the other measured ones, then those without commits. */
+const groupOf = (module: Module, minModuleCommits: number): number => {
+  if (module.cohesion === null) {
+    return 2;
   }
-  return (
-    a.cohesion - b.cohesion ||
-    b.commits - a.commits ||
-    Order.String(a.path, b.path)
-  );
+  return module.commits >= minModuleCommits && !module.testOnly ? 0 : 1;
 };
+
+const byCohesion = (a: Module, b: Module): number =>
+  (a.cohesion ?? 0) - (b.cohesion ?? 0) ||
+  b.commits - a.commits ||
+  Order.String(a.path, b.path);
 
 const byPartnerStrength = (
   a: Module["partners"][number],
@@ -40,15 +64,17 @@ const tallyFiles = (
   refs: ReadonlyMap<string, ModuleRef>,
 ): ReadonlyMap<string, Tally> => {
   const tallies = new Map<string, Tally>();
-  for (const { path, kind } of refs.values()) {
+  for (const [file, { path, kind }] of refs) {
     const tally = tallies.get(path) ?? {
       kind,
       files: 0,
+      testFiles: 0,
       commits: 0,
       localCommits: 0,
       shared: new Map(),
     };
     tally.files += 1;
+    tally.testFiles += isTestFile(file) ? 1 : 0;
     tallies.set(path, tally);
   }
   return tallies;
@@ -80,6 +106,9 @@ const toModule = (path: string, tally: Tally): Module => ({
   path,
   kind: tally.kind,
   files: tally.files,
+  testOnly:
+    tally.testFiles === tally.files ||
+    path.split("/").some((segment) => TEST_DIRECTORY_NAMES.has(segment)),
   commits: tally.commits,
   localCommits: tally.localCommits,
   cohesion:
@@ -98,12 +127,14 @@ const toModule = (path: string, tally: Tally): Module => ({
  * indexes into `paths`; `refs` maps every one of those paths to its module.
  *
  * A module's cohesion is the share of its commits that touched no other
- * module. Modules come back least cohesive first, those without commits last.
+ * module. The order is the one documented on `Report.modules`; a module is
+ * ranked when it has at least `minModuleCommits` commits and is not test-only.
  */
 export const measureModules = (
   commits: ReadonlyArray<Uint32Array>,
   paths: ReadonlyArray<string>,
   refs: ReadonlyMap<string, ModuleRef>,
+  minModuleCommits: number,
 ): ReadonlyArray<Module> => {
   const tallies = tallyFiles(refs);
   const moduleOfId = paths.map((path) => refs.get(path)?.path ?? ".");
@@ -117,5 +148,9 @@ export const measureModules = (
   }
   return [...tallies]
     .map(([path, tally]) => toModule(path, tally))
-    .toSorted(byCohesion);
+    .toSorted(
+      (a, b) =>
+        groupOf(a, minModuleCommits) - groupOf(b, minModuleCommits) ||
+        byCohesion(a, b),
+    );
 };

@@ -29,7 +29,10 @@ const Thresholds = Schema.Struct({
   hubTopShare: UnitInterval,
   minSharedCommits: Count,
   minDegree: UnitInterval,
-  /** Fewest counted commits a module needs to be ranked as (in)cohesive in terminal views. */
+  /**
+   * Fewest counted commits a module needs to be ranked as (in)cohesive:
+   * `max(5, ceil(0.01 × window.couplingCommits))`, so the floor grows with the window.
+   */
   minModuleCommits: Count,
   maxMeanLineLength: Count,
   maxFileBytes: Count,
@@ -111,7 +114,13 @@ export const Report = Schema.Struct({
   files: Schema.Array(FileStats),
   /** Sorted by degree, descending. */
   couplings: Schema.Array(Coupling),
-  /** Sorted by cohesion, least cohesive first, modules without counted commits last. */
+  /**
+   * The ranking order, which terminal and viewer keep. First the ranked
+   * modules (`commits` ≥ `Thresholds.minModuleCommits` and not `testOnly`),
+   * then the other modules with commits, each group by `cohesion` ascending,
+   * then more `commits` first, then `path`; last the modules without counted
+   * commits (`cohesion` null), by `path`.
+   */
   modules: Schema.Array(Module),
 });
 export type Report = typeof Report.Type;

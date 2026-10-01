@@ -63,23 +63,12 @@ const buildHistory = (repo: TempRepository) =>
     });
   });
 
-// Least cohesive first; a and c tie on 1/3, the module with more commits leads; d has no commits
+// a is the only module with the 5 commits that rank it, so it leads; then b, c (least cohesive first); d has no commits
 const expectedModules: Report["modules"] = [
-  {
-    path: "packages/b",
-    kind: "package",
-    files: 1,
-    commits: 4,
-    localCommits: 1,
-    cohesion: 0.25,
-    partners: [
-      { path: "packages/a", sharedCommits: 3 },
-      { path: "packages/c", sharedCommits: 1 },
-    ],
-  },
   {
     path: "packages/a",
     kind: "package",
+    testOnly: false,
     files: 53,
     commits: 6,
     localCommits: 2,
@@ -90,8 +79,22 @@ const expectedModules: Report["modules"] = [
     ],
   },
   {
+    path: "packages/b",
+    kind: "package",
+    testOnly: false,
+    files: 1,
+    commits: 4,
+    localCommits: 1,
+    cohesion: 0.25,
+    partners: [
+      { path: "packages/a", sharedCommits: 3 },
+      { path: "packages/c", sharedCommits: 1 },
+    ],
+  },
+  {
     path: "packages/c",
     kind: "package",
+    testOnly: false,
     files: 1,
     commits: 3,
     localCommits: 1,
@@ -104,6 +107,7 @@ const expectedModules: Report["modules"] = [
   {
     path: "packages/d",
     kind: "package",
+    testOnly: false,
     files: 1,
     commits: 0,
     localCommits: 0,

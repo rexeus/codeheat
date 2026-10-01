@@ -28,7 +28,7 @@ import {
   HUB_MIN_REVISIONS,
   HUB_TOP_SHARE,
 } from "../hotspots/reasons.js";
-import { measureModules, MIN_MODULE_COMMITS } from "../modules/cohesion.js";
+import { measureModules, minModuleCommitsFor } from "../modules/cohesion.js";
 import { detectModules } from "../modules/detect.js";
 import type { ModuleRef } from "../modules/detect.js";
 import { listPackageDirectories } from "../modules/package-directories.js";
@@ -69,17 +69,18 @@ const NO_HISTORY: History = {
   files: new Map(),
 };
 
-const THRESHOLDS = {
-  maxCommitFiles: MAX_COMMIT_FILES,
-  hubMinBreadth: HUB_MIN_BREADTH,
-  hubMinRevisions: HUB_MIN_REVISIONS,
-  hubTopShare: HUB_TOP_SHARE,
-  minModuleCommits: MIN_MODULE_COMMITS,
-  minSharedCommits: MIN_SHARED_COMMITS,
-  minDegree: MIN_DEGREE,
-  maxMeanLineLength: MAX_MEAN_LINE_LENGTH,
-  maxFileBytes: MAX_FILE_BYTES,
-} satisfies Report["thresholds"];
+const thresholdsFor = (couplingCommits: number) =>
+  ({
+    maxCommitFiles: MAX_COMMIT_FILES,
+    hubMinBreadth: HUB_MIN_BREADTH,
+    hubMinRevisions: HUB_MIN_REVISIONS,
+    hubTopShare: HUB_TOP_SHARE,
+    minModuleCommits: minModuleCommitsFor(couplingCommits),
+    minSharedCommits: MIN_SHARED_COMMITS,
+    minDegree: MIN_DEGREE,
+    maxMeanLineLength: MAX_MEAN_LINE_LENGTH,
+    maxFileBytes: MAX_FILE_BYTES,
+  }) satisfies Report["thresholds"];
 
 /** Every universe file with the window's activity on it, none for untouched files. */
 const measureFiles = (
@@ -115,11 +116,18 @@ const measure = (
     ),
     modules,
   );
+  const thresholds = thresholdsFor(couplingCommits);
   return {
     couplingCommits,
+    thresholds,
     files: rankFiles(measureFiles(files, history, breadth, modules), couplings),
     couplings,
-    modules: measureModules(history.commits, history.paths, modules),
+    modules: measureModules(
+      history.commits,
+      history.paths,
+      modules,
+      thresholds.minModuleCommits,
+    ),
   };
 };
 
@@ -151,7 +159,11 @@ const analyzeRepository = (
             skipCommits: shallowBoundary ?? new Set(),
             universe: new Set(files.map((file) => file.path)),
           });
-    const { couplingCommits, ...measured } = measure(files, history, modules);
+    const { couplingCommits, thresholds, ...measured } = measure(
+      files,
+      history,
+      modules,
+    );
     return {
       schemaVersion: 1,
       tool: { name: "codeheat", version: options.toolVersion },
@@ -167,7 +179,7 @@ const analyzeRepository = (
         commits: history.commits.length,
         couplingCommits,
       },
-      thresholds: THRESHOLDS,
+      thresholds,
       totals: {
         files: measured.files.length,
         couplings: measured.couplings.length,
