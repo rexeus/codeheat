@@ -1,8 +1,8 @@
 import type { Report } from "@codeheat/engine";
 
 /**
- * Applies `--limit` to a report: `files` and `couplings` are each cut to
- * their first `limit` entries, `0` keeps everything, and `totals` still
+ * Applies `--limit` to a report: `files`, `couplings`, and `modules` are each
+ * cut to their first `limit` entries, `0` keeps everything, and `totals` still
  * describe the untruncated sizes.
  */
 export const limitReport = (report: Report, limit: number): Report =>
@@ -12,4 +12,5 @@ export const limitReport = (report: Report, limit: number): Report =>
         ...report,
         files: report.files.slice(0, limit),
         couplings: report.couplings.slice(0, limit),
+        modules: report.modules.slice(0, limit),
       };

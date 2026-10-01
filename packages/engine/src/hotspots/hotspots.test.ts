@@ -12,6 +12,7 @@ const measure = (
   complexityTotal: number,
 ): FileMeasure => ({
   path,
+  module: ".",
   revisions,
   linesAdded: revisions * 10,
   linesDeleted: revisions,
@@ -24,7 +25,15 @@ const coupling = (
   b: string,
   sharedCommits: number,
   testPair = false,
-): Coupling => ({ a, b, sharedCommits, degree: 0.5, distance: 0, testPair });
+): Coupling => ({
+  a,
+  b,
+  sharedCommits,
+  degree: 0.5,
+  distance: 0,
+  testPair,
+  crossesModule: false,
+});
 
 describe("rankFiles", () => {
   // log-max normalization: revisions max 7 gives log(1+r)/log(8) = 1, 2/3, 1/3, 0

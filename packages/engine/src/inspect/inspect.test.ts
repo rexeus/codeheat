@@ -5,6 +5,7 @@ import { inspect } from "./inspect.js";
 
 const stats = (path: string, rank: number, revisions: number): FileStats => ({
   path,
+  module: path.startsWith("lib/") ? "lib" : "src",
   rank,
   score: 1 / rank,
   revisions,
@@ -21,7 +22,37 @@ const coupling = (
   b: string,
   sharedCommits: number,
   testPair = false,
-): Coupling => ({ a, b, sharedCommits, degree: 0.5, distance: 0, testPair });
+): Coupling => ({
+  a,
+  b,
+  sharedCommits,
+  degree: 0.5,
+  distance: 0,
+  testPair,
+  crossesModule: false,
+});
+
+// Least cohesive first, as `analyze` reports them.
+const modules: Report["modules"] = [
+  {
+    path: "lib",
+    kind: "directory",
+    files: 1,
+    commits: 4,
+    localCommits: 1,
+    cohesion: 0.25,
+    partners: [{ path: "src", sharedCommits: 3 }],
+  },
+  {
+    path: "src",
+    kind: "package",
+    files: 3,
+    commits: 20,
+    localCommits: 17,
+    cohesion: 0.85,
+    partners: [{ path: "lib", sharedCommits: 3 }],
+  },
+];
 
 const reportOf = (
   files: ReadonlyArray<FileStats>,
@@ -42,14 +73,16 @@ const reportOf = (
     hubMinBreadth: 10,
     hubMinRevisions: 5,
     hubTopShare: 0.05,
+    minModuleCommits: 5,
     minSharedCommits: 3,
     minDegree: 0.3,
     maxMeanLineLength: 300,
     maxFileBytes: 1_048_576,
   },
-  totals: { files: files.length, couplings: couplings.length },
+  totals: { files: files.length, couplings: couplings.length, modules: 2 },
   files,
   couplings,
+  modules,
 });
 
 const universe = [
@@ -180,5 +213,28 @@ describe("inspect partners", () => {
         testPair: true,
       },
     ]);
+  });
+});
+
+describe("inspect modules", () => {
+  it("lists each module of the matched files once, in report order", () => {
+    const result = inspect(reportOf(universe), [
+      "src/b.ts",
+      "src/a.ts",
+      "lib/c.ts",
+    ]);
+
+    expect(result.modules.map(({ path }) => path)).toEqual(["lib", "src"]);
+    expect(result.modules[0]).toEqual(modules[0]);
+  });
+
+  it("leaves out the modules of files that were not matched", () => {
+    const result = inspect(reportOf(universe), ["src/*.ts"]);
+
+    expect(result.modules.map(({ path }) => path)).toEqual(["src"]);
+  });
+
+  it("lists no module when nothing matched", () => {
+    expect(inspect(reportOf(universe), ["nope.ts"]).modules).toEqual([]);
   });
 });

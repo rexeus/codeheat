@@ -41,6 +41,7 @@ describe("indexPartners", () => {
         testPair: true,
         sharedCommits: 20,
         distance: 0,
+        crossesModule: false,
       },
     ]);
   });

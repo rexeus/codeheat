@@ -28,6 +28,10 @@ import {
   HUB_MIN_REVISIONS,
   HUB_TOP_SHARE,
 } from "../hotspots/reasons.js";
+import { measureModules, MIN_MODULE_COMMITS } from "../modules/cohesion.js";
+import { detectModules } from "../modules/detect.js";
+import type { ModuleRef } from "../modules/detect.js";
+import { listPackageDirectories } from "../modules/package-directories.js";
 import type { Report } from "../report/report.js";
 import { inventory } from "../universe/inventory.js";
 import type { InventoryFile } from "../universe/inventory.js";
@@ -70,6 +74,7 @@ const THRESHOLDS = {
   hubMinBreadth: HUB_MIN_BREADTH,
   hubMinRevisions: HUB_MIN_REVISIONS,
   hubTopShare: HUB_TOP_SHARE,
+  minModuleCommits: MIN_MODULE_COMMITS,
   minSharedCommits: MIN_SHARED_COMMITS,
   minDegree: MIN_DEGREE,
   maxMeanLineLength: MAX_MEAN_LINE_LENGTH,
@@ -81,11 +86,13 @@ const measureFiles = (
   files: ReadonlyArray<InventoryFile>,
   history: History,
   breadth: ReadonlyMap<string, number>,
+  modules: ReadonlyMap<string, ModuleRef>,
 ): ReadonlyArray<FileMeasure> =>
   files.map(({ path, complexity }) => {
     const activity = history.files.get(path);
     return {
       path,
+      module: modules.get(path)?.path ?? ".",
       revisions: activity?.revisions ?? 0,
       linesAdded: activity?.linesAdded ?? 0,
       linesDeleted: activity?.linesDeleted ?? 0,
@@ -93,6 +100,28 @@ const measureFiles = (
       complexity,
     };
   });
+
+/** Scores the files, couples them, and measures the modules; the pure part of an analysis. */
+const measure = (
+  files: ReadonlyArray<InventoryFile>,
+  history: History,
+  modules: ReadonlyMap<string, ModuleRef>,
+) => {
+  const { couplingCommits, couplings, breadth } = findCouplings(
+    history.commits,
+    history.paths,
+    new Map(
+      [...history.files].map(([file, activity]) => [file, activity.revisions]),
+    ),
+    modules,
+  );
+  return {
+    couplingCommits,
+    files: rankFiles(measureFiles(files, history, breadth, modules), couplings),
+    couplings,
+    modules: measureModules(history.commits, history.paths, modules),
+  };
+};
 
 const analyzeRepository = (
   options: AnalyzeOptions,
@@ -110,6 +139,10 @@ const analyzeRepository = (
       include: options.include,
       exclude: options.exclude,
     });
+    const modules = detectModules(
+      files.map((file) => file.path),
+      yield* listPackageDirectories(scope),
+    );
     const history =
       head === null
         ? NO_HISTORY
@@ -118,17 +151,7 @@ const analyzeRepository = (
             skipCommits: shallowBoundary ?? new Set(),
             universe: new Set(files.map((file) => file.path)),
           });
-    const { couplingCommits, couplings, breadth } = findCouplings(
-      history.commits,
-      history.paths,
-      new Map(
-        [...history.files].map(([file, activity]) => [
-          file,
-          activity.revisions,
-        ]),
-      ),
-    );
-    const ranked = rankFiles(measureFiles(files, history, breadth), couplings);
+    const { couplingCommits, ...measured } = measure(files, history, modules);
     return {
       schemaVersion: 1,
       tool: { name: "codeheat", version: options.toolVersion },
@@ -139,11 +162,18 @@ const analyzeRepository = (
         scope,
         shallow: shallowBoundary !== undefined,
       },
-      window: { ...range, commits: history.commits.length, couplingCommits },
+      window: {
+        ...range,
+        commits: history.commits.length,
+        couplingCommits,
+      },
       thresholds: THRESHOLDS,
-      totals: { files: ranked.length, couplings: couplings.length },
-      files: ranked,
-      couplings,
+      totals: {
+        files: measured.files.length,
+        couplings: measured.couplings.length,
+        modules: measured.modules.length,
+      },
+      ...measured,
     } satisfies Report;
   });
 

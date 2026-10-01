@@ -1,6 +1,7 @@
 // Owns change coupling: which pairs of files repeatedly change in the same commits.
 import { Order } from "effect";
 
+import type { ModuleRef } from "../modules/detect.js";
 import { roundReported } from "../report/precision.js";
 import type { Coupling } from "../report/report.js";
 import { directoryDistance, isTestPair } from "./pair.js";
@@ -69,12 +70,14 @@ const breadthById = (
  * `couplingCommits` is the number of commits small enough to count. Pairs
  * are sorted by their reported (rounded) degree, then shared commits, then path.
  * `breadth` maps every path in `paths` to the number of distinct other files it
- * shares a counted commit with, whatever the pair's strength.
+ * shares a counted commit with, whatever the pair's strength. `modules` maps
+ * every path to its module and decides `crossesModule`.
  */
 export const findCouplings = (
   commits: ReadonlyArray<Uint32Array>,
   paths: ReadonlyArray<string>,
   revisions: ReadonlyMap<string, number>,
+  modules: ReadonlyMap<string, ModuleRef>,
 ): {
   readonly couplingCommits: number;
   readonly couplings: ReadonlyArray<Coupling>;
@@ -103,6 +106,7 @@ export const findCouplings = (
           degree: roundReported(degree),
           distance: directoryDistance(a, b),
           testPair: isTestPair(a, b),
+          crossesModule: modules.get(a)?.path !== modules.get(b)?.path,
         });
       }
     }

@@ -35,13 +35,21 @@ describe("codeheat analyze against a git repository", () => {
           "src/c.ts",
         ]);
         expect(report.couplings).toMatchObject([
-          { a: "src/a.ts", b: "src/b.ts", sharedCommits: 4 },
+          {
+            a: "src/a.ts",
+            b: "src/b.ts",
+            sharedCommits: 4,
+            crossesModule: false,
+          },
+        ]);
+        expect(report.modules).toMatchObject([
+          { path: "src", kind: "directory", commits: 4, cohesion: 1 },
         ]);
       }).pipe(Effect.scoped),
   );
 
   it.live(
-    "truncates files and couplings to --limit and leaves totals untouched",
+    "truncates files, couplings and modules to --limit and leaves totals untouched",
     () =>
       Effect.gen(function* () {
         const repo = yield* makeCoupledProject;
@@ -57,7 +65,11 @@ describe("codeheat analyze against a git repository", () => {
         expect(report.files.map(({ path }) => path)).toStrictEqual([
           "src/a.ts",
         ]);
-        expect(report.totals).toStrictEqual({ files: 3, couplings: 1 });
+        expect(report.totals).toStrictEqual({
+          files: 3,
+          couplings: 1,
+          modules: 1,
+        });
       }).pipe(Effect.scoped),
   );
 });

@@ -13,10 +13,17 @@ describe("limitReport", () => {
     ]);
   });
 
+  it("cuts the least cohesive modules to the limit as well", () => {
+    expect(
+      limitReport(sampleReport(), 2).modules.map((module) => module.path),
+    ).toEqual(["packages/shared", "apps/cli"]);
+  });
+
   it("keeps the totals of the untruncated report", () => {
     expect(limitReport(sampleReport(), 3).totals).toEqual({
       files: 36,
       couplings: 8,
+      modules: 5,
     });
   });
 
@@ -25,6 +32,7 @@ describe("limitReport", () => {
 
     expect(limited.files).toHaveLength(36);
     expect(limited.couplings).toHaveLength(8);
+    expect(limited.modules).toHaveLength(5);
   });
 
   it("keeps everything when the limit exceeds both lists", () => {

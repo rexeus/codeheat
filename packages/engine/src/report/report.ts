@@ -3,10 +3,9 @@
 // Additive fields keep schemaVersion 1; renaming or removing a field bumps it.
 import { Schema } from "effect";
 
-export const Count = Schema.Natural;
-export const UnitInterval = Schema.Finite.check(
-  Schema.isBetween({ minimum: 0, maximum: 1 }),
-);
+import { Module } from "./module.js";
+import { Count, UnitInterval } from "./scalars.js";
+
 const Rank = Schema.Int.check(Schema.isGreaterThanOrEqualTo(1));
 
 /** The history range an analysis covers, resolved to ISO timestamps. */
@@ -30,6 +29,8 @@ const Thresholds = Schema.Struct({
   hubTopShare: UnitInterval,
   minSharedCommits: Count,
   minDegree: UnitInterval,
+  /** Fewest counted commits a module needs to be ranked as (in)cohesive in terminal views. */
+  minModuleCommits: Count,
   maxMeanLineLength: Count,
   maxFileBytes: Count,
 });
@@ -50,6 +51,8 @@ export const FileStats = Schema.Struct({
    * commits (at most `Thresholds.maxCommitFiles` files), however rarely.
    */
   breadth: Count,
+  /** `path` of the file's module (see `Module`). */
+  module: Schema.String,
   /** Non-blank lines. */
   loc: Count,
   complexity: Schema.Struct({
@@ -74,6 +77,8 @@ export const Coupling = Schema.Struct({
   distance: Count,
   /** One file is the other's test; expected coupling, never a smell. */
   testPair: Schema.Boolean,
+  /** The files belong to different modules. Neutral: an app legitimately changes with the library it uses. */
+  crossesModule: Schema.Boolean,
 });
 export type Coupling = typeof Coupling.Type;
 
@@ -101,10 +106,12 @@ export const Report = Schema.Struct({
   window: AnalysisWindow,
   thresholds: Thresholds,
   /** Sizes before any output limit, so truncated reports keep their context. */
-  totals: Schema.Struct({ files: Count, couplings: Count }),
+  totals: Schema.Struct({ files: Count, couplings: Count, modules: Count }),
   /** Sorted by rank. */
   files: Schema.Array(FileStats),
   /** Sorted by degree, descending. */
   couplings: Schema.Array(Coupling),
+  /** Sorted by cohesion, least cohesive first, modules without counted commits last. */
+  modules: Schema.Array(Module),
 });
 export type Report = typeof Report.Type;

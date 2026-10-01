@@ -30,6 +30,10 @@ describe("codeheat inspect against a git repository", () => {
       expect(inspected.matches[0]?.partners).toMatchObject([
         { path: "src/b.ts", probability: 1 },
       ]);
+      expect(inspected.matches[0]?.module).toBe("src");
+      expect(inspected.modules).toMatchObject([
+        { path: "src", commits: 4, cohesion: 1 },
+      ]);
     }).pipe(Effect.scoped),
   );
 

@@ -12,6 +12,7 @@ export const fileStats = (
   linesAdded: 100,
   linesDeleted: 20,
   breadth: 3,
+  module: ".",
   loc: 100,
   complexity: { total: 200, mean: 2, max: 5 },
   reasons: [],
@@ -29,6 +30,7 @@ export const coupling = (
   degree: 0.5,
   distance: 0,
   testPair: false,
+  crossesModule: false,
   ...overrides,
 });
 
@@ -52,12 +54,14 @@ export const reportOf = (
     hubMinBreadth: 10,
     hubMinRevisions: 5,
     hubTopShare: 0.05,
+    minModuleCommits: 5,
     minSharedCommits: 3,
     minDegree: 0.3,
     maxMeanLineLength: 300,
     maxFileBytes: 1048576,
   },
-  totals: { files: files.length, couplings: couplings.length },
+  totals: { files: files.length, couplings: couplings.length, modules: 0 },
   files,
   couplings,
+  modules: [],
 });

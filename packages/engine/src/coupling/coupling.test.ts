@@ -1,18 +1,22 @@
 import { describe, expect, it } from "vitest";
 
+import type { ModuleRef } from "../modules/detect.js";
 import { findCouplings as findCouplingsByFileId } from "./coupling.js";
 
 /** Numbers the paths in order of first appearance; any numbering works, since findCouplings orders each pair by path. */
 const findCouplings = (
   commits: ReadonlyArray<ReadonlyArray<string>>,
   revisions: ReadonlyMap<string, number>,
+  modules: ReadonlyMap<string, ModuleRef> = new Map(),
 ) => {
   const paths = [...new Set(commits.flat())];
   const indexed = commits.map((commit) =>
     Uint32Array.from(commit, (path) => paths.indexOf(path)),
   );
-  return findCouplingsByFileId(indexed, paths, revisions);
+  return findCouplingsByFileId(indexed, paths, revisions, modules);
 };
+
+const pkg = (path: string): ModuleRef => ({ path, kind: "package" });
 
 const repeat = <T>(count: number, value: T): Array<T> =>
   Array.from({ length: count }, () => value);
@@ -190,5 +194,26 @@ describe("findCouplings breadth", () => {
     const { breadth } = findCouplings([["a.ts"], ["b.ts", "c.ts"]], new Map());
 
     expect(breadth.get("a.ts")).toBe(0);
+  });
+});
+
+describe("findCouplings modules", () => {
+  it("marks a pair of files in different modules as crossing", () => {
+    const commits = repeat(3, ["app/a.ts", "lib/b.ts", "lib/c.ts"]);
+    const modules = new Map([
+      ["app/a.ts", pkg("app")],
+      ["lib/b.ts", pkg("lib")],
+      ["lib/c.ts", pkg("lib")],
+    ]);
+
+    const { couplings } = findCouplings(commits, new Map(), modules);
+
+    expect(
+      couplings.map(({ a, b, crossesModule }) => [a, b, crossesModule]),
+    ).toStrictEqual([
+      ["app/a.ts", "lib/b.ts", true],
+      ["app/a.ts", "lib/c.ts", true],
+      ["lib/b.ts", "lib/c.ts", false],
+    ]);
   });
 });

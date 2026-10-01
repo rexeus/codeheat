@@ -10,6 +10,8 @@ import { describeFile, isHubCandidate } from "./reasons.js";
 /** What is known about one universe file before it is scored. */
 export type FileMeasure = {
   readonly path: string;
+  /** `path` of the file's module. */
+  readonly module: string;
   readonly revisions: number;
   readonly linesAdded: number;
   readonly linesDeleted: number;
@@ -99,6 +101,7 @@ export const rankFiles = (
       const { path, revisions, complexity, breadth } = measure;
       return {
         path,
+        module: measure.module,
         rank: index + 1,
         score: roundReported(score),
         revisions,

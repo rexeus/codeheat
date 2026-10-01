@@ -25,7 +25,7 @@ const toEntry = (
 
 /**
  * Reports the files matching `patterns`, each with its rank in the whole
- * universe and its strongest co-change partners.
+ * universe and its strongest co-change partners, and the modules they belong to.
  *
  * `report` must be unlimited (as `analyze` returns it); a truncated report
  * would drop matches and partners.
@@ -47,15 +47,17 @@ export const inspect = (
     }
   }
   const coupled = groupByPath(report.couplings);
+  const matches = report.files
+    .filter((file) => focused.has(file.path))
+    .toSorted((a, b) => a.rank - b.rank);
+  const focusedModules = new Set(matches.map((file) => file.module));
   return {
     schemaVersion: 1,
     window: report.window,
-    matches: report.files
-      .filter((file) => focused.has(file.path))
-      .toSorted((a, b) => a.rank - b.rank)
-      .map((file) =>
-        toEntry(file, report.totals.files, coupled.get(file.path) ?? []),
-      ),
+    matches: matches.map((file) =>
+      toEntry(file, report.totals.files, coupled.get(file.path) ?? []),
+    ),
+    modules: report.modules.filter(({ path }) => focusedModules.has(path)),
     unmatched,
   };
 };
