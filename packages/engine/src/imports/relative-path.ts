@@ -65,17 +65,30 @@ export const isAssetPath = (path: string): boolean => {
   );
 };
 
-/** The places a path without a known extension can be: itself, with an extension, or a directory with an `index`. */
-export const candidatesFor = (base: string): ReadonlyArray<string> => {
+/**
+ * The places that a path can stand for, in the order the stages are tried; the
+ * files of the first stage that has any are the ones meant. A runtime extension
+ * (`./a.js`) stands for its TypeScript source and the file itself, but only
+ * when the importer is TypeScript, which maps `.js` to `.ts`; otherwise for the
+ * file itself. A path without one stands for the path with any code extension,
+ * and failing that for a directory's `index`.
+ */
+export const candidateStages = (
+  base: string,
+  importerIsTypeScript: boolean,
+): ReadonlyArray<ReadonlyArray<string>> => {
   const extensionStart = base.lastIndexOf(".");
-  const replacements =
-    extensionStart > base.lastIndexOf("/")
+  const sources =
+    importerIsTypeScript && extensionStart > base.lastIndexOf("/")
       ? (SOURCE_FOR_RUNTIME_EXTENSION.get(base.slice(extensionStart)) ?? [])
       : [];
   return [
-    ...replacements.map((source) => base.slice(0, extensionStart) + source),
-    base,
-    ...APPENDED_EXTENSIONS.map((appended) => base + appended),
-    ...APPENDED_EXTENSIONS.map((appended) => `${base}/index${appended}`),
+    [...sources.map((source) => base.slice(0, extensionStart) + source), base],
+    APPENDED_EXTENSIONS.map((appended) => base + appended),
+    APPENDED_EXTENSIONS.map((appended) => `${base}/index${appended}`),
   ];
 };
+
+/** Whether `file` is TypeScript, whose importers read `.js` as the `.ts` beside it. */
+export const isTypeScriptFile = (file: string): boolean =>
+  /\.[cm]?tsx?$/u.test(file);

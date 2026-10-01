@@ -6,10 +6,11 @@
 // the file may depend on code we cannot see.
 import { isAccountedExternal, splitPackageName } from "./external-modules.js";
 import {
-  candidatesFor,
+  candidateStages,
   directoryOf,
   isAssetPath,
   isRelative,
+  isTypeScriptFile,
   joinPath,
   withoutQuery,
 } from "./relative-path.js";
@@ -50,13 +51,17 @@ const ACCOUNTED: Resolution = { files: [], resolved: true };
 export const createResolver = (world: ResolveWorld): Resolver => {
   const { universe, tracked, packages, dependencies } = world;
 
-  /** The first candidate in the universe; unresolved when only an excluded file or nothing exists. */
-  const code = (base: string | undefined): Resolution => {
-    const candidates = base === undefined ? [] : candidatesFor(base);
-    const found = candidates.find((candidate) => universe.has(candidate));
-    return found === undefined
-      ? UNRESOLVED
-      : { files: [found], resolved: true };
+  /** The universe files that `base` stands for when imported by `from`; unresolved when only an excluded file or nothing exists. */
+  const code = (from: string, base: string | undefined): Resolution => {
+    const stages =
+      base === undefined ? [] : candidateStages(base, isTypeScriptFile(from));
+    for (const stage of stages) {
+      const found = stage.filter((candidate) => universe.has(candidate));
+      if (found.length > 0) {
+        return { files: found, resolved: true };
+      }
+    }
+    return UNRESOLVED;
   };
 
   const relative = (from: string, specifier: string): Resolution => {
@@ -64,10 +69,11 @@ export const createResolver = (world: ResolveWorld): Resolver => {
     if (target !== undefined && isAssetPath(target) && tracked.has(target)) {
       return ACCOUNTED;
     }
-    return code(target);
+    return code(from, target);
   };
 
   const workspace = (
+    from: string,
     { directory, entryPoints }: WorkspacePackage,
     subpath: string,
   ): Resolution => {
@@ -76,10 +82,10 @@ export const createResolver = (world: ResolveWorld): Resolver => {
         ? UNRESOLVED
         : { files: entryPoints, resolved: true };
     }
-    const direct = code(joinPath(directory, subpath));
+    const direct = code(from, joinPath(directory, subpath));
     return direct.resolved
       ? direct
-      : code(joinPath(directory, `src/${subpath}`));
+      : code(from, joinPath(directory, `src/${subpath}`));
   };
 
   return (from, specifier) => {
@@ -89,7 +95,7 @@ export const createResolver = (world: ResolveWorld): Resolver => {
     const { name, subpath } = splitPackageName(specifier);
     const workspacePackage = packages.get(name);
     if (workspacePackage !== undefined) {
-      return workspace(workspacePackage, subpath);
+      return workspace(from, workspacePackage, subpath);
     }
     return isAccountedExternal(specifier, dependencies)
       ? ACCOUNTED

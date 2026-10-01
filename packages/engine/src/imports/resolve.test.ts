@@ -18,7 +18,7 @@ const resolverFor = (
 };
 
 describe("relative specifiers with extensions", () => {
-  it("adds the extension that exists, TypeScript before JavaScript", () => {
+  it("adds the extension that exists, and links both a TypeScript and a JavaScript file of the name", () => {
     const resolve = resolverFor([
       "src/util.js",
       "src/util.ts",
@@ -26,7 +26,10 @@ describe("relative specifiers with extensions", () => {
       "src/old.js",
     ]);
 
-    expect(resolve("src/main.ts", "./util")).toStrictEqual(["src/util.ts"]);
+    expect(resolve("src/main.ts", "./util")).toStrictEqual([
+      "src/util.ts",
+      "src/util.js",
+    ]);
     expect(resolve("src/main.ts", "./view")).toStrictEqual(["src/view.tsx"]);
     expect(resolve("src/main.ts", "./old")).toStrictEqual(["src/old.js"]);
   });
@@ -50,6 +53,23 @@ describe("relative specifiers with extensions", () => {
     expect(resolve("src/main.ts", "./types.js")).toStrictEqual([
       "src/types.d.ts",
     ]);
+  });
+
+  it("links the type declarations and the runtime file of a .js specifier", () => {
+    const resolve = resolverFor(["src/legacy.js", "src/legacy.d.ts"]);
+
+    expect(resolve("src/main.ts", "./legacy.js")).toStrictEqual([
+      "src/legacy.d.ts",
+      "src/legacy.js",
+    ]);
+  });
+
+  it("reads .js as the file itself for a JavaScript importer, which has no .ts mapping", () => {
+    const resolve = resolverFor(["src/foo.ts", "src/bar.js", "src/bar.ts"]);
+
+    expect(resolve("src/main.mjs", "./foo.js")).toStrictEqual([]);
+    expect(resolve("src/main.mjs", "./bar.js")).toStrictEqual(["src/bar.js"]);
+    expect(resolve("src/main.cjs", "./foo")).toStrictEqual(["src/foo.ts"]);
   });
 
   it("keeps a real .js file when no source with that name exists", () => {
