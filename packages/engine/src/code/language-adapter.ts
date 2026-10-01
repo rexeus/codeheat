@@ -8,6 +8,11 @@ export type SourceImports = {
   readonly imports: ReadonlyArray<string>;
   /** Specifiers of `export … from "…"`: importing this file reaches them too. */
   readonly reexports: ReadonlyArray<string>;
+  /**
+   * The file also loads modules by an expression (`import(name)`,
+   * `require(name)`), so it depends on modules that no specifier names.
+   */
+  readonly computed: boolean;
 };
 
 /** Reads the dependencies of the files of one language. */
@@ -20,14 +25,12 @@ export type LanguageAdapter = {
    */
   readonly imports: (file: string, source: string) => SourceImports | undefined;
   /**
-   * Only the `reexports` of `imports`, for a file that is read because another
-   * file imports it, where the rest is no use. An adapter may skip the
-   * expensive parse for a source that cannot re-export.
+   * Whether a file with this `source` may forward other modules (re-export
+   * them). A file imported by another is read only when it may; the rest
+   * cannot change what the importer reaches, so the adapter can skip the
+   * expensive parse. Err towards true.
    */
-  readonly reexports: (
-    file: string,
-    source: string,
-  ) => SourceImports["reexports"] | undefined;
+  readonly canReexport: (source: string) => boolean;
 };
 
 /** The adapter that reads files with `path`'s extension, if any. */

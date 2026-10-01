@@ -112,6 +112,7 @@ describe("typescript adapter unknown results", () => {
     expect(read("plain.mjs", "export const x = 1;\n")).toStrictEqual({
       imports: [],
       reexports: [],
+      computed: false,
     });
   });
 
@@ -130,50 +131,91 @@ describe("typescript adapter unknown results", () => {
   });
 });
 
-const countingParser = () => {
-  const parsed: Array<string> = [];
-  const counting = typescriptAdapter((file, source) => {
-    parsed.push(file);
-    return parseSync(file, source);
-  });
-  return { counting, parsed };
-};
+describe("typescript adapter modules named by an expression", () => {
+  it("marks a file that loads a module by an expression as computed", () => {
+    const sources = [
+      "export const load = (name: string) => import(name);",
+      "export const load = (name: string) => import(`./dir/${name}`);",
+      "const load = (name) => require(name);\nmodule.exports = load;",
+      "const load = (name) => require(`./dir/${name}`);\nmodule.exports = load;",
+    ];
 
-describe("typescript adapter re-exports only", () => {
-  it("lists every form of re-export", () => {
-    const { counting } = countingParser();
-    const source = [
-      'export * from "./a";',
-      'export * as ns from "./b";',
-      'export type { T } from "./c";',
-      'export {\n  d,\n  e as f,\n} from "./d";',
-      'import { g } from "./g";',
-    ].join("\n");
-
-    expect(counting.reexports("barrel.ts", source)).toStrictEqual([
-      "./a",
-      "./b",
-      "./c",
-      "./d",
-    ]);
-  });
-
-  it("skips the parser for a source that cannot re-export", () => {
-    const { counting, parsed } = countingParser();
-
-    const found = counting.reexports(
-      "plain.ts",
-      'import { x } from "./x";\nexport const y = x;\nexport { y as z };\n',
+    const computed = sources.map(
+      (source, index) => read(index < 2 ? "a.ts" : "a.js", source)?.computed,
     );
 
-    expect(found).toStrictEqual([]);
-    expect(parsed).toStrictEqual([]);
+    expect(computed).toStrictEqual([true, true, true, true]);
   });
 
-  it("is unknown for a source that looks like a barrel but does not parse", () => {
+  it("does not mark plain strings and templates without holes as computed", () => {
+    const found = read(
+      "a.js",
+      'const a = require("./a");\nconst b = require(`./b`);\nconst c = () => import(`./c`);\nmodule.exports = [a, b, c];',
+    );
+
+    expect(found?.computed).toBe(false);
+    expect(found?.imports.toSorted()).toStrictEqual(["./a", "./b", "./c"]);
+  });
+});
+
+describe("typescript adapter TypeScript import types", () => {
+  it('lists the module of import("x").T and typeof import("x") in a type', () => {
+    const found = read(
+      "types.ts",
+      [
+        'export type A = import("./x").T;',
+        'export type B = typeof import("./y");',
+        "export type C = Array<import('./z').U>;",
+      ].join("\n"),
+    );
+
+    expect(found?.imports.toSorted()).toStrictEqual(["./x", "./y", "./z"]);
+  });
+
+  it("is not looked for in JavaScript, where import() is never a type", () => {
+    const found = read("a.js", 'const lazy = () => import("./lazy");');
+
+    expect(found?.imports).toStrictEqual(["./lazy"]);
+  });
+});
+
+describe("typescript adapter JSX in JavaScript files", () => {
+  it("reads JSX in a .js file by retrying the parse as JSX", () => {
+    const found = read(
+      "view.js",
+      'import { Button } from "./button";\nexport const View = () => <Button>x</Button>;\n',
+    );
+
+    expect(found?.imports).toStrictEqual(["./button"]);
+  });
+
+  it("still treats a .js file with a real syntax error as unknown", () => {
+    expect(read("broken.js", "export const = ;")).toBeUndefined();
+  });
+
+  it("does not retry TypeScript, where JSX has its own extension", () => {
     expect(
-      adapter.reexports("broken.ts", 'export * from "./a";\nexport const = ;'),
+      read("view.ts", "export const View = () => <b>x</b>;"),
     ).toBeUndefined();
+  });
+});
+
+describe("typescript adapter canReexport", () => {
+  it("is false for a source that has nothing to forward", () => {
+    expect(adapter.canReexport("export const y = 1;\n")).toBe(false);
+    expect(
+      adapter.canReexport('import { x } from "./x";\nconsole.log(x);'),
+    ).toBe(false);
+  });
+
+  it("is true whenever the source exports and mentions a module", () => {
+    expect(adapter.canReexport('export * from "./a";')).toBe(true);
+    expect(adapter.canReexport('import { x } from "./x";\nexport { x };')).toBe(
+      true,
+    );
+    expect(adapter.canReexport('module.exports = { ...require("./a") };')).toBe(
+      true,
+    );
   });
 });
 

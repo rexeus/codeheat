@@ -3,10 +3,19 @@ import { describe, expect, it } from "vitest";
 import { createResolver } from "./resolve.js";
 import type { WorkspacePackage } from "./resolve.js";
 
+/** The files a specifier resolves to, in a repository whose tracked files are all in the universe. */
 const resolverFor = (
   files: ReadonlyArray<string>,
   packages: Record<string, WorkspacePackage> = {},
-) => createResolver(new Set(files), new Map(Object.entries(packages)));
+) => {
+  const resolve = createResolver({
+    universe: new Set(files),
+    tracked: new Set(files),
+    packages: new Map(Object.entries(packages)),
+    dependencies: new Set(),
+  });
+  return (from: string, specifier: string) => resolve(from, specifier).files;
+};
 
 describe("relative specifiers with extensions", () => {
   it("adds the extension that exists, TypeScript before JavaScript", () => {

@@ -1,132 +1,98 @@
 // Owns resolving a module specifier, as written in a file, to universe files.
 // Relative specifiers follow TypeScript's rules (extension, `index`, `.js` for
 // `.ts`); a workspace package name stands for the package's entry points.
-// Anything else — Node built-ins, installed packages, tsconfig path aliases —
-// resolves to nothing.
+// A specifier is either accounted for or unresolved. Unresolved ones (tsconfig
+// path aliases, `#` subpath imports, code that is not in the universe) mean
+// the file may depend on code we cannot see.
+import { isAccountedExternal, splitPackageName } from "./external-modules.js";
+import {
+  candidatesFor,
+  directoryOf,
+  isAssetPath,
+  isRelative,
+  joinPath,
+  withoutQuery,
+} from "./relative-path.js";
 
 /** A package of the repository, importable by the `name` in its manifest. */
 export type WorkspacePackage = {
   /** Repository-relative directory of the package. */
   readonly directory: string;
-  /** The universe files that make up the package's public interface. */
+  /** The universe files that importing the package by its name reaches. */
   readonly entryPoints: ReadonlyArray<string>;
 };
 
-/** The universe files `specifier`, written in `from`, may refer to; none when it leaves the universe. */
-export type Resolver = (
-  from: string,
-  specifier: string,
-) => ReadonlyArray<string>;
+/** What a specifier refers to. */
+type Resolution = {
+  /** The universe files it refers to; none for an external or asset import. */
+  readonly files: ReadonlyArray<string>;
+  /** Whether the specifier is accounted for: it refers to `files`, or to something that is no code of ours (a built-in, a declared dependency, an image). */
+  readonly resolved: boolean;
+};
 
-/** What TypeScript tries in place of a runtime extension, in its order. */
-const SOURCE_FOR_RUNTIME_EXTENSION: ReadonlyMap<
-  string,
-  ReadonlyArray<string>
-> = new Map([
-  [".js", [".ts", ".tsx", ".d.ts"]],
-  [".jsx", [".tsx"]],
-  [".mjs", [".mts", ".d.mts"]],
-  [".cjs", [".cts", ".d.cts"]],
-]);
-const APPENDED_EXTENSIONS = [
-  ".ts",
-  ".tsx",
-  ".d.ts",
-  ".mts",
-  ".cts",
-  ".js",
-  ".jsx",
-  ".mjs",
-  ".cjs",
-];
+/** Resolves `specifier`, written in the file `from`. */
+export type Resolver = (from: string, specifier: string) => Resolution;
 
-/** Joins POSIX segments, resolving `.` and `..`; undefined when the result leaves the repository. */
-const join = (directory: string, relative: string): string | undefined => {
-  const segments = directory === "." ? [] : directory.split("/");
-  for (const segment of relative.split("/")) {
-    if (segment === "..") {
-      if (segments.pop() === undefined) {
-        return undefined;
-      }
-    } else if (segment !== "." && segment !== "") {
-      segments.push(segment);
+/** What resolving needs to know about the repository. */
+export type ResolveWorld = {
+  /** Every universe file. */
+  readonly universe: ReadonlySet<string>;
+  /** Every file git tracks in the analyzed scope, whether it is in the universe or not. */
+  readonly tracked: ReadonlySet<string>;
+  readonly packages: ReadonlyMap<string, WorkspacePackage>;
+  /** Dependency names declared by the repository's manifests. */
+  readonly dependencies: ReadonlySet<string>;
+};
+
+const UNRESOLVED: Resolution = { files: [], resolved: false };
+const ACCOUNTED: Resolution = { files: [], resolved: true };
+
+export const createResolver = (world: ResolveWorld): Resolver => {
+  const { universe, tracked, packages, dependencies } = world;
+
+  /** The first candidate in the universe; unresolved when only an excluded file or nothing exists. */
+  const code = (base: string | undefined): Resolution => {
+    const candidates = base === undefined ? [] : candidatesFor(base);
+    const found = candidates.find((candidate) => universe.has(candidate));
+    return found === undefined
+      ? UNRESOLVED
+      : { files: [found], resolved: true };
+  };
+
+  const relative = (from: string, specifier: string): Resolution => {
+    const target = joinPath(directoryOf(from), withoutQuery(specifier));
+    if (target !== undefined && isAssetPath(target) && tracked.has(target)) {
+      return ACCOUNTED;
     }
-  }
-  return segments.join("/");
-};
-
-const directoryOf = (file: string): string =>
-  file.includes("/") ? file.slice(0, file.lastIndexOf("/")) : ".";
-
-const isRelative = (specifier: string): boolean =>
-  specifier === "." ||
-  specifier === ".." ||
-  specifier.startsWith("./") ||
-  specifier.startsWith("../");
-
-/** `name` of a bare specifier, and what follows it: `@a/b/c` is `@a/b` plus `c`. */
-const splitPackageName = (
-  specifier: string,
-): { readonly name: string; readonly subpath: string } => {
-  const parts = specifier.split("/");
-  const nameLength = specifier.startsWith("@") ? 2 : 1;
-  return {
-    name: parts.slice(0, nameLength).join("/"),
-    subpath: parts.slice(nameLength).join("/"),
+    return code(target);
   };
-};
 
-/** The places a path without a known extension can be: itself, with an extension, or a directory with an `index`. */
-const candidatesFor = (base: string): ReadonlyArray<string> => {
-  const extensionStart = base.lastIndexOf(".");
-  const extension = base.slice(extensionStart);
-  const replacements =
-    extensionStart > base.lastIndexOf("/")
-      ? (SOURCE_FOR_RUNTIME_EXTENSION.get(extension) ?? [])
-      : [];
-  return [
-    ...replacements.map((source) => base.slice(0, extensionStart) + source),
-    base,
-    ...APPENDED_EXTENSIONS.map((appended) => base + appended),
-    ...APPENDED_EXTENSIONS.map((appended) => `${base}/index${appended}`),
-  ];
-};
-
-/**
- * Builds the resolver for a universe and the packages named in its manifests.
- *
- * A relative specifier resolves to the first existing candidate, as the
- * TypeScript compiler picks it. A package name resolves to all entry points
- * of that package (an `exports` map cannot tell which one is meant); its
- * subpath resolves like a relative path under the package or its `src/`.
- */
-export const createResolver = (
-  universe: ReadonlySet<string>,
-  packages: ReadonlyMap<string, WorkspacePackage>,
-): Resolver => {
-  const firstExisting = (base: string | undefined): ReadonlyArray<string> => {
-    const found =
-      base === undefined
-        ? undefined
-        : candidatesFor(base).find((candidate) => universe.has(candidate));
-    return found === undefined ? [] : [found];
+  const workspace = (
+    { directory, entryPoints }: WorkspacePackage,
+    subpath: string,
+  ): Resolution => {
+    if (subpath === "") {
+      return entryPoints.length === 0
+        ? UNRESOLVED
+        : { files: entryPoints, resolved: true };
+    }
+    const direct = code(joinPath(directory, subpath));
+    return direct.resolved
+      ? direct
+      : code(joinPath(directory, `src/${subpath}`));
   };
+
   return (from, specifier) => {
     if (isRelative(specifier)) {
-      return firstExisting(join(directoryOf(from), specifier));
+      return relative(from, specifier);
     }
     const { name, subpath } = splitPackageName(specifier);
     const workspacePackage = packages.get(name);
-    if (workspacePackage === undefined) {
-      return [];
+    if (workspacePackage !== undefined) {
+      return workspace(workspacePackage, subpath);
     }
-    if (subpath === "") {
-      return workspacePackage.entryPoints;
-    }
-    const { directory } = workspacePackage;
-    const direct = firstExisting(join(directory, subpath));
-    return direct.length > 0
-      ? direct
-      : firstExisting(join(directory, `src/${subpath}`));
+    return isAccountedExternal(specifier, dependencies)
+      ? ACCOUNTED
+      : UNRESOLVED;
   };
 };
