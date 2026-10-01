@@ -8,7 +8,7 @@ import type { Node } from "./ast-nodes.js";
 import { moduleReferences } from "./typescript-references.js";
 
 /** The modules a name stands for, by name. */
-export type Bindings = Map<string, ReadonlyArray<string>>;
+export type Bindings = Map<string, Set<string>>;
 
 export const asList = (value: unknown): ReadonlyArray<unknown> =>
   Array.isArray(value) ? (value as ReadonlyArray<unknown>) : [];
@@ -90,7 +90,7 @@ const importEqualsModules = (
       (module) => module !== undefined,
     );
   }
-  return bindings.get(leftmostName(reference) ?? "") ?? [];
+  return [...(bindings.get(leftmostName(reference) ?? "") ?? [])];
 };
 
 /** Adds `modules` to what each of `names` stands for. */
@@ -99,11 +99,13 @@ const bind = (
   names: ReadonlyArray<string>,
   modules: ReadonlyArray<string>,
 ): void => {
-  if (modules.length > 0) {
-    for (const name of names) {
-      bindings.set(name, [
-        ...new Set([...(bindings.get(name) ?? []), ...modules]),
-      ]);
+  for (const name of names) {
+    const known = bindings.get(name) ?? new Set<string>();
+    for (const module of modules) {
+      known.add(module);
+    }
+    if (known.size > 0) {
+      bindings.set(name, known);
     }
   }
 };
@@ -125,8 +127,8 @@ const WRAPPERS = new Set([
   "TSSatisfiesExpression",
 ]);
 
-/** The top-level name an assignment target is rooted at: `n` in `n = …`, `n.a.b = …`, `(n as T).a = …`. */
-const targetName = (target: unknown): string | undefined => {
+/** The top-level names an assignment target is rooted at: `n` in `n = …`, `n.a.b = …`, `(n as T).a = …`, and every one in `{ a, b: n.c } = …` and `[a, ...b] = …`. */
+const targetNames = (target: unknown): ReadonlyArray<string> => {
   let node = target;
   while (
     Predicate.isObject(node) &&
@@ -135,11 +137,31 @@ const targetName = (target: unknown): string | undefined => {
     node =
       node["type"] === "MemberExpression" ? node["object"] : node["expression"];
   }
-  return Predicate.isObject(node) &&
-    node["type"] === "Identifier" &&
-    typeof node["name"] === "string"
-    ? node["name"]
-    : undefined;
+  if (!Predicate.isObject(node)) {
+    return [];
+  }
+  switch (node["type"]) {
+    case "Identifier":
+      return typeof node["name"] === "string" ? [node["name"]] : [];
+    case "ObjectPattern":
+      return asList(node["properties"]).flatMap((property) =>
+        targetNames(
+          Predicate.isObject(property) && property["type"] === "Property"
+            ? property["value"]
+            : property,
+        ),
+      );
+    case "ArrayPattern":
+      return asList(node["elements"]).flatMap((element) =>
+        targetNames(element),
+      );
+    case "RestElement":
+      return targetNames(node["argument"]);
+    case "AssignmentPattern":
+      return targetNames(node["left"]);
+    default:
+      return [];
+  }
 };
 
 /** Merges what the assignments in `statement` (not in functions or classes) give to top-level names. */
@@ -147,12 +169,12 @@ const bindAssignments = (statement: Node, bindings: Bindings): void => {
   walk(
     statement,
     (node) => {
-      const name =
-        node["type"] === "AssignmentExpression"
-          ? targetName(node["left"])
-          : undefined;
-      if (name !== undefined) {
-        bind(bindings, [name], moduleReferences(node["right"], bindings));
+      if (node["type"] === "AssignmentExpression") {
+        bind(
+          bindings,
+          targetNames(node["left"]),
+          moduleReferences(node["right"], bindings),
+        );
       }
     },
     (node) => !NOT_TOP_LEVEL.has(String(node["type"])),
@@ -216,7 +238,7 @@ export const topLevelBindings = (
   imported: ReadonlyMap<string, string>,
 ): Bindings => {
   const bindings: Bindings = new Map(
-    [...imported].map(([name, module]) => [name, [module]]),
+    [...imported].map(([name, module]) => [name, new Set([module])]),
   );
   hoistFunctions(body, bindings);
   for (const statement of body) {

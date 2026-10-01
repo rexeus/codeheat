@@ -119,3 +119,86 @@ describe("typescript adapter decorators and implements", () => {
     ).toStrictEqual([]);
   });
 });
+
+describe("typescript adapter members assigned to exported functions", () => {
+  it("hands on what is assigned to a default-exported function", () => {
+    expect(
+      handedOn(
+        "Card.tsx",
+        "import Header from './t.js';\nexport default function Card() { return <div />; }\nCard.Header = Header;\n",
+      ),
+    ).toStrictEqual(["./t.js"]);
+  });
+
+  it("hands on what is assigned to a named exported function", () => {
+    expect(
+      handedOn(
+        "Card.tsx",
+        "import Header from './t.js';\nexport function Card() { return null; }\nCard.Header = Header;\n",
+      ),
+    ).toStrictEqual(["./t.js"]);
+  });
+
+  it("hands on a loader assigned to an exported async function", () => {
+    expect(
+      handedOn(
+        "load.ts",
+        "export default async function load() {}\nload.page = () => import('./t.js');\n",
+      ),
+    ).toStrictEqual(["./t.js"]);
+  });
+
+  it("hands on what is assigned to an exported class", () => {
+    expect(
+      handedOn(
+        "K.ts",
+        "import Header from './t.js';\nexport class K {}\nK.Header = Header;\n",
+      ),
+    ).toStrictEqual(["./t.js"]);
+  });
+});
+
+describe("typescript adapter destructuring assignments", () => {
+  it("hands on what an object pattern at the top level is assigned", () => {
+    expect(
+      handedOn(
+        "lib.js",
+        "let a;\n({ a } = require('./t'));\nmodule.exports = { a };\n",
+      ),
+    ).toStrictEqual(["./t"]);
+  });
+
+  it("hands on what an array pattern, a rest element, and a member target are assigned", () => {
+    expect(
+      handedOn(
+        "lib.js",
+        "let a;\n[a] = [require('./t')];\nmodule.exports = { a };\n",
+      ),
+    ).toStrictEqual(["./t"]);
+    expect(
+      handedOn(
+        "lib.js",
+        "let a, rest;\n({ a, ...rest } = require('./t'));\nmodule.exports = rest;\n",
+      ),
+    ).toStrictEqual(["./t"]);
+    expect(
+      handedOn(
+        "lib.js",
+        "const o = {};\n({ x: o.x } = require('./t'));\nmodule.exports = o;\n",
+      ),
+    ).toStrictEqual(["./t"]);
+  });
+});
+
+describe("typescript adapter many assignments", () => {
+  it("reads twenty thousand exports assigned from requires without slowing down", () => {
+    const source = Array.from(
+      { length: 20_000 },
+      (_, index) => `exports.a${index} = require('./m${index}');`,
+    ).join("\n");
+
+    const found = handedOn("big.js", source);
+
+    expect(found).toHaveLength(20_000);
+  }, 5000);
+});

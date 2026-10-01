@@ -32,6 +32,16 @@ const typeAliasParts = (declaration: Node): ReadonlyArray<unknown> =>
 /** A bare reference to `name`, which stands for what the name was bound to, assignments after the declaration included. */
 const nameNode = (name: string): Node => ({ type: "Identifier", name });
 
+/** A function or class declaration as a value: its own loads and heritage, and its name, which stands for what is assigned to it later (`Card.Header = Header`). */
+const declaredValue = (declaration: unknown): ReadonlyArray<unknown> =>
+  Predicate.isObject(declaration) &&
+  (declaration["type"] === "FunctionDeclaration" ||
+    declaration["type"] === "ClassDeclaration")
+    ? [declaration].concat(
+        bindingNames(declaration["id"]).map((name) => nameNode(name)),
+      )
+    : [declaration];
+
 /** The expressions a top-level statement exports. */
 const exportedExpressions = (statement: Node): ReadonlyArray<unknown> => {
   switch (statement["type"]) {
@@ -46,17 +56,17 @@ const exportedExpressions = (statement: Node): ReadonlyArray<unknown> => {
         ),
         importEqualsOf(statement)?.["moduleReference"],
         ...typeAliasParts(declaration),
-        declaration["type"] === "FunctionDeclaration" ||
+        ...(declaration["type"] === "FunctionDeclaration" ||
         declaration["type"] === "ClassDeclaration"
-          ? declaration
-          : undefined,
+          ? declaredValue(declaration)
+          : []),
         ...asList(statement["specifiers"]).map((specifier) =>
           Predicate.isObject(specifier) ? specifier["local"] : undefined,
         ),
       ];
     }
     case "ExportDefaultDeclaration":
-      return [statement["declaration"]];
+      return declaredValue(statement["declaration"]);
     case "TSExportAssignment":
       return [statement["expression"]];
     default:
@@ -68,16 +78,17 @@ const exportedExpressions = (statement: Node): ReadonlyArray<unknown> => {
  * The specifiers of the imports that `body` (the top-level statements of the
  * program) exports: those whose binding, or loading call, occurs inside
  *
- * - the initializer, and later assignments, of an exported variable, an exported function or class,
+ * - the initializer of an exported variable, an exported function or class, each with what is assigned to its name,
  * - an `export default <expression>`, `export =`, or `export { name }`,
  * - an exported `import X = …`, or an exported `type U<…> = T`,
  * - the value of `module.exports = …` or `exports.x = …` (`assigned`).
  *
  * A top-level name stands for the modules its own initializer or declaration
- * refers to (see `topLevelBindings`), so `const api = { run }; export default
- * api` hands on what `run` was imported from. A function or class contributes
- * only what it loads wherever it is, and its heritage (`extends Base`). An
- * interface is usage. `imported` maps the local names of the static imports to
+ * refers to, plus what is assigned to it or to a member of it at the top level
+ * (see `topLevelBindings`), so `const api = { run }; export default api` hands
+ * on what `run` was imported from, and so does `export function Card() {…}
+ * Card.Header = Header`. A function or class contributes only what it loads
+ * wherever it is, and its heritage (`extends Base`). An interface is usage. `imported` maps the local names of the static imports to
  * their specifiers.
  */
 export const handedOn = (

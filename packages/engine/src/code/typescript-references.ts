@@ -106,7 +106,7 @@ const runsLater = (node: Node, key: string): boolean =>
 const modulesAt = (
   node: Node,
   nested: boolean,
-  locals: ReadonlyMap<string, ReadonlyArray<string>>,
+  locals: ReadonlyMap<string, Iterable<string>>,
 ): ReadonlyArray<string> => {
   const isName =
     node["type"] === "Identifier" || node["type"] === "JSXIdentifier";
@@ -148,7 +148,7 @@ const childrenOf = (node: Node, nested: boolean): ReadonlyArray<Pending> => {
  */
 export const moduleReferences = (
   root: unknown,
-  locals: ReadonlyMap<string, ReadonlyArray<string>>,
+  locals: ReadonlyMap<string, Iterable<string>>,
 ): ReadonlyArray<string> => {
   const found = new Set<string>();
   const pending: Array<Pending> = [{ node: root, nested: false }];
