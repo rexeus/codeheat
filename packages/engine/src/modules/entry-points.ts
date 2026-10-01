@@ -7,8 +7,9 @@ import { matchesAny } from "../universe/globs.js";
 import type { ModuleRef } from "./detect.js";
 import { readManifestTargets } from "./package-manifest.js";
 
-/** `index.<ext>` (not `index.test.ts`), Rust and Python module roots. */
-const CONVENTIONAL_ENTRY = /^(index\.[^./]+|mod\.rs|lib\.rs|__init__\.py)$/u;
+/** `index` of the JavaScript family (not `index.test.ts`, not `index.html`), Rust and Python module roots. */
+const CONVENTIONAL_ENTRY =
+  /^(index\.[cm]?[jt]sx?|mod\.rs|lib\.rs|__init__\.py)$/u;
 /** Where a manifest points at build output rather than at the source that produces it. */
 const BUILD_DIRECTORIES = ["dist/", "build/"];
 
@@ -96,7 +97,7 @@ const groupByModule = (
  * Without `globs`, a package's entry points are the files its `package.json`
  * names in `exports`, `main`, `module`, and `types` (a target in `dist/` or
  * `build/` stands for the same-stem source under the package's `src/` or root,
- * when one exists), plus `index.*`, `mod.rs`, `lib.rs`, and `__init__.py` at
+ * when one exists), plus `index.<ts|js|…>`, `mod.rs`, `lib.rs`, and `__init__.py` at
  * the module root or its `src/`. Directory modules use the conventional files
  * only. Non-empty `globs` replace all of that: entry points are the module
  * files matching any glob.

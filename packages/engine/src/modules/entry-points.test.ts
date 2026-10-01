@@ -150,6 +150,7 @@ layer(NodeServices.layer)("findEntryPoints by convention", (it) => {
           file("src/__init__.py"),
           file("src/index.test.ts"),
           file("src/index.d.ts"),
+          file("src/index.html"),
           file("src/deep/index.ts"),
           file("other/lib.rs"),
           file("main.ts"),
