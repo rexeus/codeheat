@@ -26,7 +26,7 @@ Requires Node.js 22.12 or newer and `git` on your PATH. Works for any language; 
 - **Click a file** to see why it is hot and which files change with it. Its partners light up wherever they live in the tree; partners in distant folders are the modularization smell to look for. A partner with no import to or from the file is outlined in magenta and badged _no import_: hidden coupling.
 - **Filter** by substring (`billing`) or glob (`packages/*/src/index.ts`).
 
-`--out <file>` picks the path, `--no-open` skips the browser.
+`--out <file>` picks the path, `--no-open` skips the browser. `--html` takes no value: `codeheat analyze --html report.html` exits 2 and suggests `--out report.html` (to analyze a directory named `x.html`, write `./x.html/`).
 
 ## For agents
 
