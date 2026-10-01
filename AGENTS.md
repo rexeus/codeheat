@@ -45,7 +45,10 @@ pnpm typecheck       # tsc over scripts/, then every package via turbo
 pnpm test            # scripts/ tests, then every package's vitest suite via turbo
 pnpm --filter <pkg> exec vitest run src/<file>.test.ts   # one file
 pnpm --filter codeheat dev <args>                     # run the CLI from source (builds the viewer assets first)
+pnpm --silent --filter codeheat dev <args>            # same, without pnpm's script header
 ```
+
+Both `dev` forms keep stdout to the CLI's own output, so `dev analyze --json` pipes into a JSON parser: the viewer build's output (turbo's banner and summary, build errors) goes to stderr (`apps/cli/scripts/build-viewer.ts`), and so does pnpm's script header in pnpm 12. `--silent` drops that header, which an older pnpm writes to stdout.
 
 The CLI embeds the viewer from `packages/viewer/dist/assets.js`, which only `pnpm --filter @codeheat/viewer build` (or turbo's `build`) produces. Rebuild it after editing viewer code before running a single CLI test file directly.
 
