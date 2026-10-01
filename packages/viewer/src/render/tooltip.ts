@@ -1,11 +1,16 @@
+import type { FileStats } from "@codeheat/engine";
+
 import type { AggregateNode, FileNode } from "../layout/hierarchy.js";
 import type { PlacedLeaf } from "../layout/treemap.js";
 import type { ModuleIndex } from "../modules/module-index.js";
 import { h } from "./dom.js";
 import {
+  describeScoreTrend,
   formatCount,
   formatPercent,
+  formatPointChange,
   formatScore,
+  formatScoreChange,
   splitPath,
 } from "./format.js";
 
@@ -20,6 +25,11 @@ const POINTER_OFFSET = 14;
 /** A value with its label: the value leads, the label recedes. */
 const row = (value: string, label: string): HTMLElement =>
   h("div", "tooltip-row", h("strong", "", value), h("span", "", ` ${label}`));
+
+const trendRow = (trend: NonNullable<FileStats["trend"]>): HTMLElement => {
+  const { value, note } = describeScoreTrend(trend);
+  return row(value, note);
+};
 
 const pathLine = (path: string): HTMLElement => {
   const { dir, name } = splitPath(path);
@@ -37,11 +47,20 @@ const moduleRows = (path: string, modules: ModuleIndex): HTMLElement[] => {
   if (module === undefined) {
     return [];
   }
+  const { cohesion, trend } = module;
   return [
     row(
-      module.cohesion === null ? "no data" : formatPercent(module.cohesion),
+      cohesion === null ? "no data" : formatPercent(cohesion),
       `of changes to ${module.path} stay inside`,
     ),
+    ...(trend === null
+      ? []
+      : [
+          row(
+            formatPointChange(trend.cohesionDelta),
+            `cohesion change (was ${formatPercent(trend.previousCohesion)})`,
+          ),
+        ]),
   ];
 };
 
@@ -55,6 +74,7 @@ const fileContent = (
     formatScore(file.score),
     `hotspot score, rank #${file.rank} of ${formatCount(totalFiles)}`,
   ),
+  ...(file.trend === null ? [] : [trendRow(file.trend)]),
   row(formatCount(file.revisions), "revisions"),
   row(formatCount(file.loc), "lines of code"),
   row(
@@ -77,6 +97,14 @@ const aggregateContent = (node: AggregateNode): HTMLElement[] => [
   ),
   row(formatCount(node.loc), "lines of code combined"),
   row(formatScore(node.score), "highest hotspot score among them"),
+  ...(node.scoreDelta === null
+    ? []
+    : [
+        row(
+          formatScoreChange(node.scoreDelta),
+          "largest score change among them",
+        ),
+      ]),
 ];
 
 export const createTooltip = (

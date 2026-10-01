@@ -99,7 +99,7 @@ const mountChrome = (report: Report, page: Page): void => {
     byId("summary", HTMLElement),
   );
   renderLegend(byId("legend", HTMLElement));
-  mountModeSwitch(page.app, page.modeSwitch);
+  mountModeSwitch(page.app, page.modeSwitch, report.comparison !== null);
   showEmptyNotice(report, page.stage);
 };
 

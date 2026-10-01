@@ -31,11 +31,11 @@ describe("renderReportHtml", () => {
     expect(html).toContain("</html>");
   });
 
-  it("offers the heat and cohesion color modes as radio buttons, heat first", () => {
+  it("offers the heat, cohesion, and change color modes as radio buttons, heat first", () => {
     const html = renderReportHtml(report);
 
     expect(html).toMatch(
-      /name="color-mode" value="heat" checked>.*name="color-mode" value="cohesion">/su,
+      /name="color-mode" value="heat" checked>.*value="cohesion">.*value="change">/su,
     );
   });
 
@@ -80,5 +80,25 @@ describe("renderReportHtml", () => {
     expect(html).not.toMatch(/https?:\/\//u);
     expect(html).not.toMatch(/\s(?:src|href)="(?!data:)/u);
     expect(html).not.toContain("@import");
+  });
+});
+
+describe("renderReportHtml with a comparison", () => {
+  it("embeds the comparison and the trends of a report made with --compare", () => {
+    const compared = reportOf(
+      [
+        fileStats("src/a.ts", {
+          trend: { previousScore: 0.2, scoreDelta: 0.3, newlyActive: false },
+        }),
+      ],
+      [],
+      [],
+      {
+        previousSince: "2025-03-29T12:00:00.000Z",
+        previousUntil: "2025-09-29T12:00:00.000Z",
+      },
+    );
+
+    expect(embeddedReport(renderReportHtml(compared))).toEqual(compared);
   });
 });

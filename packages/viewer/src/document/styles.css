@@ -6,6 +6,10 @@
  * the attention end) to 6 (most cohesive, calm). It follows the same rule:
  * attention is the dark end on a light surface and the bright end on a dark
  * one; the calm end stays at least 2:1 against the surface.
+ * Change ramp: diverging, cooler (blue) to warmer (orange, the heat hue) around a
+ * neutral gray. The arms are lightness-matched steps of the sequential ramps, so
+ * strength reads as lightness for color-blind readers; the sign is never color
+ * alone: tiles, tooltip and panel print the signed number.
  */
 :root {
   color-scheme: light dark;
@@ -54,6 +58,21 @@
   --cohesion-ink-4: var(--ink-dark);
   --cohesion-ink-5: var(--ink-dark);
   --cohesion-ink-6: var(--ink-dark);
+
+  --change-1: #2a78d6;
+  --change-2: #6da7ec;
+  --change-3: #b7d3f6;
+  --change-4: #f0efec;
+  --change-5: #f2c4b4;
+  --change-6: #e28969;
+  --change-7: #c54e1c;
+  --change-ink-1: var(--ink-light);
+  --change-ink-2: var(--ink-dark);
+  --change-ink-3: var(--ink-dark);
+  --change-ink-4: var(--ink-dark);
+  --change-ink-5: var(--ink-dark);
+  --change-ink-6: var(--ink-dark);
+  --change-ink-7: var(--ink-light);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -101,6 +120,21 @@
     --cohesion-ink-4: var(--ink-dark);
     --cohesion-ink-5: var(--ink-light);
     --cohesion-ink-6: var(--ink-light);
+
+    --change-1: #9ec5f4;
+    --change-2: #5598e7;
+    --change-3: #1c5cab;
+    --change-4: #383835;
+    --change-5: #9c390c;
+    --change-6: #da7550;
+    --change-7: #efb19b;
+    --change-ink-1: var(--ink-dark);
+    --change-ink-2: var(--ink-dark);
+    --change-ink-3: var(--ink-light);
+    --change-ink-4: var(--ink-light);
+    --change-ink-5: var(--ink-light);
+    --change-ink-6: var(--ink-dark);
+    --change-ink-7: var(--ink-dark);
   }
 }
 
@@ -174,6 +208,46 @@
 .app[data-mode="cohesion"] .tile[data-cohesion="6"] {
   --fill: var(--cohesion-6);
   --ink: var(--cohesion-ink-6);
+}
+.swatch[data-change="0"],
+.app[data-mode="change"] .tile[data-change="0"] {
+  --fill: var(--heat-0);
+  --ink: var(--ink-0);
+}
+.swatch[data-change="1"],
+.app[data-mode="change"] .tile[data-change="1"] {
+  --fill: var(--change-1);
+  --ink: var(--change-ink-1);
+}
+.swatch[data-change="2"],
+.app[data-mode="change"] .tile[data-change="2"] {
+  --fill: var(--change-2);
+  --ink: var(--change-ink-2);
+}
+.swatch[data-change="3"],
+.app[data-mode="change"] .tile[data-change="3"] {
+  --fill: var(--change-3);
+  --ink: var(--change-ink-3);
+}
+.swatch[data-change="4"],
+.app[data-mode="change"] .tile[data-change="4"] {
+  --fill: var(--change-4);
+  --ink: var(--change-ink-4);
+}
+.swatch[data-change="5"],
+.app[data-mode="change"] .tile[data-change="5"] {
+  --fill: var(--change-5);
+  --ink: var(--change-ink-5);
+}
+.swatch[data-change="6"],
+.app[data-mode="change"] .tile[data-change="6"] {
+  --fill: var(--change-6);
+  --ink: var(--change-ink-6);
+}
+.swatch[data-change="7"],
+.app[data-mode="change"] .tile[data-change="7"] {
+  --fill: var(--change-7);
+  --ink: var(--change-ink-7);
 }
 
 * {
@@ -262,10 +336,15 @@ h1 {
 }
 
 .app[data-mode="heat"] [data-mode-only="cohesion"],
-.app[data-mode="cohesion"] [data-mode-only="heat"] {
+.app[data-mode="heat"] [data-mode-only="change"],
+.app[data-mode="cohesion"] [data-mode-only="heat"],
+.app[data-mode="cohesion"] [data-mode-only="change"],
+.app[data-mode="change"] [data-mode-only="heat"],
+.app[data-mode="change"] [data-mode-only="cohesion"] {
   display: none;
 }
-.ramp .swatch[data-cohesion="0"] {
+.ramp .swatch[data-cohesion="0"],
+.ramp .swatch[data-change="0"] {
   border: 1px dashed var(--muted);
 }
 .ramp-gap {
@@ -329,9 +408,18 @@ h1 {
 .mode-switch label:first-of-type span {
   border-radius: 8px 0 0 8px;
 }
-.mode-switch label:last-of-type span {
+.mode-switch label:not(:first-of-type) span {
   margin-left: -1px;
+}
+.mode-switch label:last-of-type span {
   border-radius: 0 8px 8px 0;
+}
+.mode-switch input:disabled {
+  cursor: not-allowed;
+}
+.mode-switch input:disabled + span {
+  color: var(--muted);
+  opacity: 0.6;
 }
 .mode-switch input:checked + span {
   color: var(--page);
@@ -431,7 +519,8 @@ button:focus-visible {
 .tile rect {
   fill: var(--fill);
 }
-.app[data-mode="cohesion"] .tile:not(:hover, [data-highlight="match"]) rect {
+.app[data-mode="cohesion"] .tile:not(:hover, [data-highlight="match"]) rect,
+.app[data-mode="change"] .tile:not(:hover, [data-highlight="match"]) rect {
   stroke: var(--surface);
   stroke-width: 1.5;
 }
@@ -450,10 +539,13 @@ button:focus-visible {
   opacity: 0.8;
 }
 .tile-cohesion,
-.app[data-mode="cohesion"] .tile-score {
+.tile-change,
+.app[data-mode="cohesion"] .tile-score,
+.app[data-mode="change"] .tile-score {
   display: none;
 }
-.app[data-mode="cohesion"] .tile-cohesion {
+.app[data-mode="cohesion"] .tile-cohesion,
+.app[data-mode="change"] .tile-change {
   display: block;
   font-size: 10px;
   font-variant-numeric: tabular-nums;
@@ -738,10 +830,12 @@ button:focus-visible {
   flex-direction: column;
 }
 .app[data-mode="heat"] [data-overview="hotspots"],
+.app[data-mode="change"] [data-overview="hotspots"],
 .app[data-mode="cohesion"] [data-overview="modules"] {
   order: 1;
 }
 .app[data-mode="heat"] [data-overview="modules"],
+.app[data-mode="change"] [data-overview="modules"],
 .app[data-mode="cohesion"] [data-overview="hotspots"] {
   order: 2;
 }

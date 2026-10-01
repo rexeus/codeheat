@@ -3,7 +3,7 @@ import type { Module } from "@codeheat/engine";
 import { cohesionStep } from "../color/cohesion-scale.js";
 import { leastCohesive } from "../modules/least-cohesive.js";
 import { h, pathLabel, section } from "./dom.js";
-import { formatCount, formatPercent } from "./format.js";
+import { formatCount, formatPercent, formatPointChange } from "./format.js";
 
 const cohesionSwatch = (cohesion: number | null): HTMLElement => {
   const element = h("span", "swatch");
@@ -33,6 +33,7 @@ const cohesionLine = ({
   cohesion,
   commits,
   localCommits,
+  trend,
 }: Module): HTMLElement =>
   cohesion === null
     ? h("p", "hint", "No counted commit touched this module in the window.")
@@ -50,6 +51,15 @@ const cohesionLine = ({
             "",
             `${formatCount(localCommits)} of ${formatCount(commits)} commits`,
           ),
+          ...(trend === null
+            ? []
+            : [
+                h(
+                  "span",
+                  "",
+                  `${formatPointChange(trend.cohesionDelta)} since the previous window (was ${formatPercent(trend.previousCohesion)})`,
+                ),
+              ]),
         ),
       );
 

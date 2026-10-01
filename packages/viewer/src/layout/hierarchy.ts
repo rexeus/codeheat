@@ -1,5 +1,7 @@
 import type { FileStats } from "@codeheat/engine";
 
+import { comparableChange } from "../color/change-scale.js";
+
 /** One file, drawn as one tile. */
 export type FileNode = {
   readonly kind: "file";
@@ -19,6 +21,8 @@ export type AggregateNode = {
   readonly loc: number;
   /** The hottest score among the merged files, so no hotspot hides in the tile. */
   readonly score: number;
+  /** The largest score change among the merged files that were active before; `null` when none was. */
+  readonly scoreDelta: number | null;
 };
 
 export type DirectoryNode = {
@@ -79,6 +83,10 @@ const aggregate = (
   loc: files.reduce((sum, { file }) => sum + file.loc, 0),
   // A reduce, not Math.max(...scores): spreading 125k+ arguments overflows the stack.
   score: files.reduce((hottest, { file }) => Math.max(hottest, file.score), 0),
+  scoreDelta: files.reduce<number | null>((largest, { file }) => {
+    const delta = comparableChange(file.trend);
+    return delta === null ? largest : Math.max(largest ?? delta, delta);
+  }, null),
 });
 
 type Aggregation = {

@@ -35,13 +35,14 @@ export const renderReportHtml = (report: Report): string => `<!doctype html>
       <legend>Color by</legend>
       <label><input type="radio" name="color-mode" value="heat" checked><span>Heat</span></label>
       <label><input type="radio" name="color-mode" value="cohesion"><span>Cohesion</span></label>
+      <label><input type="radio" name="color-mode" value="change"><span>Change</span></label>
     </fieldset>
     <input id="filter" type="search" autocomplete="off" spellcheck="false" aria-label="Filter files" placeholder="Filter by path or glob, e.g. billing or src/**/*.ts">
     <span id="filter-count" class="filter-count"></span>
   </div>
   <main class="content">
     <div id="stage" class="stage">
-      <svg id="treemap" role="img" aria-label="Treemap of files: area is lines of code, color is hotspot score or module cohesion"></svg>
+      <svg id="treemap" role="img" aria-label="Treemap of files: area is lines of code, color is hotspot score, module cohesion, or change since the previous window"></svg>
       <div id="tooltip" class="tooltip" hidden></div>
     </div>
     <aside id="panel" class="panel" aria-live="polite"></aside>

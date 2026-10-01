@@ -1,3 +1,4 @@
+import { changeStep, comparableChange } from "../color/change-scale.js";
 import { cohesionStep } from "../color/cohesion-scale.js";
 import type { HeatScale } from "../color/heat-scale.js";
 import type { LeafNode } from "../layout/hierarchy.js";
@@ -5,7 +6,7 @@ import { fitLabel } from "../layout/label.js";
 import { GROUP_HEADER_HEIGHT } from "../layout/treemap.js";
 import type { PlacedGroup, PlacedLeaf } from "../layout/treemap.js";
 import type { SvgFactory } from "./dom.js";
-import { formatPercent, formatScore } from "./format.js";
+import { formatPercent, formatScore, formatScoreChange } from "./format.js";
 
 const LABEL_INDENT = 4;
 const MIN_LABEL_HEIGHT = 18;
@@ -21,6 +22,18 @@ export type TileColors = {
 /** The score a leaf is colored by; an aggregate shows its hottest file. */
 const leafScore = ({ node }: PlacedLeaf): number =>
   node.kind === "file" ? node.file.score : node.score;
+
+/** The score change a leaf is colored by in change mode; see `comparableChange`. */
+const leafScoreDelta = ({ node }: PlacedLeaf): number | null =>
+  node.kind === "aggregate"
+    ? node.scoreDelta
+    : comparableChange(node.file.trend);
+
+/** What the change line of a leaf says when it has no change to show. */
+const unchangedText = ({ node }: PlacedLeaf): string =>
+  node.kind === "file" && node.file.trend?.newlyActive === true
+    ? "new"
+    : "no data";
 
 /** A group's background and, when it reserved a header strip and the name fits, its label. */
 export const drawGroup = (
@@ -51,8 +64,8 @@ export const drawGroup = (
 /**
  * One tile: a rectangle with the file name and, when there is room, a score
  * line. It carries a step for each color mode (`data-step` for heat,
- * `data-cohesion` for cohesion) and both score lines; the stylesheet shows the
- * ones of the active mode. `index` lets event handlers find the leaf again.
+ * `data-cohesion` for cohesion, `data-change` for change) and every score
+ * line; the stylesheet shows the one of the active mode. `index` lets event handlers find the leaf again.
  */
 export const drawLeaf = (
   create: SvgFactory,
@@ -68,6 +81,7 @@ export const drawLeaf = (
     "data-index": index,
     "data-step": colors.heat(leafScore(leaf)),
     "data-cohesion": cohesionStep(cohesion),
+    "data-change": changeStep(leafScoreDelta(leaf)),
   });
   tile.append(create("rect", { x: x0, y: y0, width, height }));
   const title =
@@ -97,7 +111,15 @@ export const drawLeaf = (
       y: y0 + 26,
     });
     share.textContent = cohesion === null ? "no data" : formatPercent(cohesion);
-    tile.append(score, share);
+    const change = create("text", {
+      class: "tile-change",
+      x: x0 + LABEL_INDENT,
+      y: y0 + 26,
+    });
+    const delta = leafScoreDelta(leaf);
+    change.textContent =
+      delta === null ? unchangedText(leaf) : formatScoreChange(delta);
+    tile.append(score, share, change);
   }
   return tile;
 };

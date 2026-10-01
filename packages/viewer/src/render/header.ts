@@ -1,5 +1,6 @@
 import type { Report } from "@codeheat/engine";
 
+import { CHANGE_STEP_COUNT } from "../color/change-scale.js";
 import { COHESION_STEP_COUNT } from "../color/cohesion-scale.js";
 import type { ColorMode } from "../color/color-mode.js";
 import { HEAT_STEP_COUNT } from "../color/heat-scale.js";
@@ -8,8 +9,18 @@ import { formatCount, formatDay } from "./format.js";
 
 const SHORT_SHA_LENGTH = 7;
 
-const summaryParts = ({ repository, window, files }: Report): string[] => [
+const summaryParts = ({
+  repository,
+  window,
+  files,
+  comparison,
+}: Report): string[] => [
   `${formatDay(window.since)} → ${formatDay(window.until)}`,
+  ...(comparison === null
+    ? []
+    : [
+        `compared with ${formatDay(comparison.previousSince)} → ${formatDay(comparison.previousUntil)}`,
+      ]),
   `${formatCount(window.commits)} commits`,
   `${formatCount(files.length)} files`,
   ...(repository.head === null
@@ -28,7 +39,7 @@ export const renderHeader = (
   summary.textContent = summaryParts(report).join(" · ");
 };
 
-const swatchOf = (attribute: "step" | "cohesion", step: number) => {
+const swatchOf = (attribute: "step" | "cohesion" | "change", step: number) => {
   const swatch = h("span", "swatch", "");
   swatch.dataset[attribute] = String(step);
   return swatch;
@@ -57,6 +68,19 @@ const cohesionRamp = (): HTMLElement =>
       swatchOf("cohesion", step + 1),
     ),
     h("span", "muted", "100%"),
+  );
+
+/** Diverging: cooler to warmer around the unchanged step; no data first and apart, as in cohesion. */
+const changeRamp = (): HTMLElement =>
+  ramp(
+    swatchOf("change", 0),
+    h("span", "muted", "new or no data"),
+    h("span", "ramp-gap", ""),
+    h("span", "muted", "cooler"),
+    ...Array.from({ length: CHANGE_STEP_COUNT - 1 }, (_, step) =>
+      swatchOf("change", step + 1),
+    ),
+    h("span", "muted", "warmer"),
   );
 
 /** A legend entry; `mode` limits it to one color mode, the stylesheet hides it otherwise. */
@@ -93,6 +117,12 @@ export const renderLegend = (legend: HTMLElement): void => {
       h("span", "muted", "Color"),
       h("strong", "", "module cohesion"),
       cohesionRamp(),
+    ),
+    item(
+      "change",
+      h("span", "muted", "Color"),
+      h("strong", "", "score change"),
+      changeRamp(),
     ),
     item(
       null,

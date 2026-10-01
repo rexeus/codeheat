@@ -5,7 +5,12 @@ import type { HeatScale } from "../color/heat-scale.js";
 import type { Partner } from "../selection/partners.js";
 import { h, pathLabel, section } from "./dom.js";
 import { EMPTY_PANEL_NOTE } from "./empty-notice.js";
-import { formatCount, formatPercent, formatScore } from "./format.js";
+import {
+  describeScoreTrend,
+  formatCount,
+  formatPercent,
+  formatScore,
+} from "./format.js";
 import { fileModuleSection, leastCohesiveSection } from "./module-panel.js";
 
 /** Side panel: an overview until a file is selected, then its reasons and partners. */
@@ -136,6 +141,7 @@ const fileSections = (
       "score-meta",
       h("span", "", "hotspot score"),
       h("span", "", `rank #${file.rank} of ${formatCount(files.size)}`),
+      ...(file.trend === null ? [] : [h("span", "", trendText(file.trend))]),
     ),
   ),
   h(
@@ -156,6 +162,11 @@ const fileSections = (
     h("ul", "reasons", ...file.reasons.map((reason) => h("li", "", reason))),
   ),
 ];
+
+const trendText = (trend: NonNullable<FileStats["trend"]>): string => {
+  const { value, note } = describeScoreTrend(trend);
+  return `${value}: ${note}`;
+};
 
 const hotspotRow = (context: Context, file: FileStats): HTMLElement =>
   h(
@@ -182,7 +193,7 @@ const forMode = (mode: ColorMode, element: HTMLElement): HTMLElement => {
   return element;
 };
 
-/** The overview's title and intro in both color modes. */
+/** The overview's title and intro in each color mode. */
 const overviewIntro = (): HTMLElement[] => [
   forMode("heat", h("h2", "panel-title", "Hotspots")),
   forMode(
@@ -200,6 +211,15 @@ const overviewIntro = (): HTMLElement[] => [
       "p",
       "hint",
       "Cohesion is the share of a module's commits that touch no other module; low means its changes spread. Tiles take the color of their module. Select a tile to outline the files that change together with it.",
+    ),
+  ),
+  forMode("change", h("h2", "panel-title", "Change")),
+  forMode(
+    "change",
+    h(
+      "p",
+      "hint",
+      "Cooler tiles got less hot than the window before, warmer tiles hotter; scores are normalized within each window, so this is a shift in standing. Files that were not active before are neutral. Select a tile to outline the files that change together with it.",
     ),
   ),
 ];
