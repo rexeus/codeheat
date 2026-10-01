@@ -64,7 +64,7 @@ const resolveBinding = (
   world: ExportWorld,
   file: string,
   { binding: origin }: { readonly binding: Binding },
-  seen: ReadonlySet<string>,
+  seen: Set<string>,
 ): Resolution => {
   if ("local" in origin) {
     return binding(`${file}#${origin.local}`, true);
@@ -87,12 +87,18 @@ const resolveBinding = (
  * What `name` stands for in the exports of `file`: its own export of that
  * name, else what its `export *` sources agree on. A file that was not loaded
  * resolves to itself, inexactly.
+ *
+ * `seen` is ECMAScript's resolve set, shared by the whole resolution: a name
+ * of a file is looked at once, so the cost is linear in the files reached,
+ * however many ways lead to one. Whoever reaches it a second time gets
+ * `missing`, which is right because the first visit already contributed its
+ * answer to the same resolution.
  */
 export const resolveExport = (
   world: ExportWorld,
   file: string,
   name: string,
-  seen: ReadonlySet<string> = new Set(),
+  seen: Set<string> = new Set(),
 ): Resolution => {
   const key = `${file}\0${name}`;
   if (seen.has(key)) {
@@ -102,10 +108,10 @@ export const resolveExport = (
   if (listed === undefined) {
     return binding(`${file}#${name}`, false);
   }
-  const visited = new Set(seen).add(key);
+  seen.add(key);
   const own = listed.names.find((exported) => exported.name === name);
   if (own !== undefined) {
-    return resolveBinding(world, file, own, visited);
+    return resolveBinding(world, file, own, seen);
   }
   if (name === "default") {
     return MISSING;
@@ -115,7 +121,7 @@ export const resolveExport = (
       const target = world.fileOf(file, specifier);
       return target === undefined
         ? UNKNOWN
-        : resolveExport(world, target, name, visited);
+        : resolveExport(world, target, name, seen);
     }),
   );
 };
