@@ -124,6 +124,24 @@ describe("detectModules without packages", () => {
     });
   });
 
+  it("cuts at the top level when no depth splits the files", () => {
+    const files = ["scripts/release.ts", "scripts/lib/util.ts"];
+
+    expect(moduleOf(files)).toStrictEqual({
+      "scripts/release.ts": "directory:scripts",
+      "scripts/lib/util.ts": "directory:scripts",
+    });
+  });
+
+  it("keeps one module per top-level directory when nothing below splits", () => {
+    const files = ["src/index.ts", "src/internal/helpers/deep.ts"];
+
+    expect(moduleOf(files)).toStrictEqual({
+      "src/index.ts": "directory:src",
+      "src/internal/helpers/deep.ts": "directory:src",
+    });
+  });
+
   it("keeps a repository of root files in one module", () => {
     expect(moduleOf(["a.ts", "b.ts"])).toStrictEqual({
       "a.ts": "directory:.",

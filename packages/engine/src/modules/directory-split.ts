@@ -15,6 +15,10 @@ const directoryAtDepth = (file: string, depth: number): string =>
  * descends to `src/billing` and `src/auth`. A file with fewer directories than
  * the depth being tried does not take part in that step and, at the end,
  * stays in its own directory; files at the root form module ".".
+ *
+ * When no depth splits the files (`scripts/release.ts` beside
+ * `scripts/lib/util.ts`), they are one top-level module rather than one per
+ * leaf directory.
  */
 export const splitByDirectory = (
   files: ReadonlyArray<string>,
@@ -26,9 +30,9 @@ export const splitByDirectory = (
         .filter((file) => depthOf(file) >= depth)
         .map((file) => directoryAtDepth(file, depth)),
     ).size >= 2;
-  let depth = 1;
-  while (depth < deepest && !splitsAt(depth)) {
-    depth += 1;
-  }
+  const depth =
+    Array.from({ length: deepest }, (_, index) => index + 1).find((candidate) =>
+      splitsAt(candidate),
+    ) ?? 1;
   return new Map(files.map((file) => [file, directoryAtDepth(file, depth)]));
 };
