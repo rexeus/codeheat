@@ -20,6 +20,13 @@ const filler = (count: number): string =>
     .join("\n")
     .concat("\n");
 
+/** An entry point of 120 lines exporting ten functions. */
+const tenFunctions = Array.from(
+  { length: 10 },
+  (_, index) =>
+    `export function f${index}() {\n${filler(9)}return ${index};\n}\n`,
+).join("");
+
 /**
  * One package per case. Lines are non-blank lines.
  *
@@ -27,6 +34,8 @@ const filler = (count: number): string =>
  * - shallow: 6 exports (a to d by name, e and f by `export *`) over impl.ts (4) and more.ts (2)
  * - cyclic: `own`, `fromA`, `fromB`, but not b's default, over a.ts (2) and b.ts (3)
  * - named-external: 1 export, forwarded by name from a package, over impl.ts (3)
+ * - bare and configured: the same index.ts exporting ten functions, the second next to a two-line eslint.config.mjs; a configuration file is no implementation, so both have no depth
+ * - configured-impl: 2 exports over impl.ts (5); its configuration files (2 and 3) do not count
  */
 const files: Readonly<Record<string, string>> = {
   "packages/deep/package.json": manifest("src/index.ts"),
@@ -79,6 +88,21 @@ const files: Readonly<Record<string, string>> = {
   "packages/python/package.json": manifest("__init__.py"),
   "packages/python/__init__.py": "from .impl import a\n",
   "packages/python/impl.py": "a = 1\nb = 2\n",
+
+  "packages/bare/package.json": manifest("src/index.ts"),
+  "packages/bare/src/index.ts": tenFunctions,
+  "packages/configured/package.json": manifest("src/index.ts"),
+  "packages/configured/src/index.ts": tenFunctions,
+  "packages/configured/eslint.config.mjs":
+    "export default [];\nconst unused = 1;\n",
+
+  "packages/configured-impl/package.json": manifest("src/index.ts"),
+  "packages/configured-impl/src/index.ts":
+    'export { a, b } from "./impl.js";\n',
+  "packages/configured-impl/src/impl.ts": `export const a = 1;\nexport const b = 2;\n${filler(3)}`,
+  "packages/configured-impl/eslint.config.mjs":
+    "export default [];\nconst unused = 1;\n",
+  "packages/configured-impl/vitest.config.ts": filler(3),
 
   "packages/lonely/package.json": manifest("src/index.ts"),
   "packages/lonely/src/index.ts": "export const a = 1;\n",
@@ -137,6 +161,11 @@ layer(NodeServices.layer)("analyze module depth", (it) => {
           implementationLines: 3,
           linesPerExport: 3,
         });
+        assert.deepStrictEqual(depths.get("packages/configured-impl"), {
+          exports: 2,
+          implementationLines: 5,
+          linesPerExport: 2.5,
+        });
       }),
   );
 });
@@ -153,6 +182,8 @@ layer(NodeServices.layer)("analyze module depth that cannot be told", (it) => {
         "packages/broken",
         "packages/commonjs",
         "packages/python",
+        "packages/bare",
+        "packages/configured",
         "packages/lonely",
         "packages/silent",
         "packages/no-entry",

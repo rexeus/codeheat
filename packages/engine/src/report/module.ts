@@ -25,12 +25,13 @@ const ModuleTrend = Schema.Struct({
 /** How much implementation sits behind a module's public interface. */
 const ModuleDepth = Schema.Struct({
   /**
-   * Distinct symbols the module's entry points export, following
-   * `export * from`, `export { x } from`, and `export * as ns from` within the
-   * module. A type counts like a value, `default` like a name.
+   * Distinct names the module's entry points export, following
+   * `export * from` within the module; `export { x } from` and
+   * `export * as ns from` add their names. A name that several entry points
+   * export counts once. A type counts like a value, `default` like a name.
    */
   exports: Schema.Int.check(Schema.isGreaterThanOrEqualTo(1)),
-  /** Non-blank lines of the module's files that are neither entry points nor test code. At least 1. */
+  /** Non-blank lines of the module's files that are neither entry points, test code, nor tool configuration (`*.config.{js,ts,mjs,…}`). At least 1. */
   implementationLines: Schema.Int.check(Schema.isGreaterThanOrEqualTo(1)),
   /**
    * `implementationLines / exports`, rounded to 4 decimals. A low value is a
@@ -94,8 +95,8 @@ export const Module = Schema.Struct({
    * cannot be listed (`export =`, CommonJS), an `export * from` cannot be
    * followed within the module (an external package, an unresolved specifier,
    * a file of another module), it exports nothing, or no file is left to
-   * count as implementation (all code sits in the entry points, or the module
-   * is `testOnly`). Null is never a depth of zero.
+   * count as implementation (all code sits in the entry points, in test code
+   * or in configuration files). Null is never a depth of zero.
    */
   depth: Schema.NullOr(ModuleDepth),
   /**

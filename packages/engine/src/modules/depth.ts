@@ -11,6 +11,7 @@ import type { Module } from "../report/module.js";
 import { roundReported } from "../report/precision.js";
 import type { InventoryFile } from "../universe/inventory.js";
 import type { ModuleRef } from "./detect.js";
+import { isConfigFile } from "./entry-points.js";
 import { countExportedSymbols } from "./exported-symbols.js";
 import { isTestPath } from "./test-path.js";
 
@@ -31,7 +32,7 @@ type DepthOptions = {
   readonly entryPoints: ReadonlyMap<string, ReadonlyArray<string>>;
 };
 
-/** Lines of the files of each module that are neither entry points nor test code. */
+/** Lines of the files of each module that are neither entry points, test code, nor tool configuration. */
 const implementationLinesByModule = ({
   files,
   modules,
@@ -41,7 +42,12 @@ const implementationLinesByModule = ({
   const lines = new Map<string, number>();
   for (const { path, complexity } of files) {
     const module = modules.get(path)?.path;
-    if (module !== undefined && !entries.has(path) && !isTestPath(path)) {
+    if (
+      module !== undefined &&
+      !entries.has(path) &&
+      !isTestPath(path) &&
+      !isConfigFile(path)
+    ) {
       lines.set(module, (lines.get(module) ?? 0) + complexity.loc);
     }
   }

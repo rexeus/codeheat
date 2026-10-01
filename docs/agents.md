@@ -72,7 +72,7 @@ The files of a repository are grouped into modules: workspace packages (a direct
 { "exports": 6, "implementationLines": 3105, "linesPerExport": 517.5 }
 ```
 
-- `exports` is the number of symbols the module's entry points export (re-exports within the module followed); `implementationLines` the lines of its other non-test files. A low `linesPerExport` marks a shallow module: a wide interface with little behind it, where callers must learn much and gain little. A high one marks a deep module, which hides its work behind a narrow interface.
+- `exports` is the number of distinct names the module's entry points export (re-exports within the module followed; a name several entry points export counts once); `implementationLines` the lines of its other files, without tests and tool configuration. A low `linesPerExport` marks a shallow module: a wide interface with little behind it, where callers must learn much and gain little. A high one marks a deep module, which hides its work behind a narrow interface.
 - Before adding another export to a shallow module, ask whether the new symbol belongs behind an existing one. Before splitting a deep module, check that the split keeps its interface narrow.
 - `depth: null` means unknown, not zero: no entry points, another language than TypeScript or JavaScript, a file that does not parse, CommonJS exports, an `export *` from a package or another module, no exports, or no parser (stderr says so). Do not read it as shallow.
 - It measures size, not complexity, and it is read from the code as it is now, so it needs no window: `inspect` shows the depth of the module of each matched file under `modules`; `analyze` lists the shallowest ranked modules in the terminal.
