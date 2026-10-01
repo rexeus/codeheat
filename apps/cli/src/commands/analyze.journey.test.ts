@@ -221,6 +221,20 @@ describe("codeheat analyze --compare", () => {
       ]);
     }).pipe(Effect.scoped),
   );
+
+  it.live("shows the biggest changes in the terminal view", () =>
+    Effect.gen(function* () {
+      const repo = yield* makeCoupledProject;
+
+      const result = yield* journey({
+        args: ["analyze", "--compare", "2w"],
+        cwd: repo.root,
+      });
+
+      expect(result.exitCode).toBe(0);
+      expect(result.stdout).toContain("Biggest changes against");
+    }).pipe(Effect.scoped),
+  );
 });
 
 describe("codeheat analyze a shallow clone", () => {

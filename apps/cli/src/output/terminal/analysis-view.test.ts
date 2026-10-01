@@ -280,3 +280,114 @@ describe("renderAnalysis styling and safety", () => {
     );
   });
 });
+
+describe("renderAnalysis biggest changes", () => {
+  it("names the previous window and lists the five source files that warmed up most", () => {
+    const view = plainView();
+
+    expect(view).toContain("Biggest changes against 2024-09-29 to 2025-09-29");
+    // analyze.test.ts (+0.22) is a test file and styles.css (+0.28) is new: neither is warming
+    expect(section(view, "Warming files")).toEqual([
+      "change  score  before  path",
+      " +0.31   0.97    0.66  packages/billing/src/invoice.ts",
+      " +0.31   0.42    0.11  packages/auth/src/tokens.ts",
+      " +0.22   0.54    0.32  packages/shared/src/config.ts",
+      " +0.14   0.70    0.56  apps/cli/src/commands/analyze.ts",
+      " +0.14   0.38    0.24  apps/cli/src/output/terminal.ts",
+    ]);
+  });
+
+  it("lists the three highest-ranked source files without revisions in the previous window", () => {
+    const report = sampleReport();
+    // a newly active test file ranked above the others must stay out
+    const files = report.files.map((file) =>
+      file.path === "packages/billing/src/invoice.test.ts"
+        ? Object.assign({}, file, {
+            trend: { previousScore: 0, scoreDelta: 0.78, newlyActive: true },
+          })
+        : file,
+    );
+
+    expect(section(plainView({ ...report, files }), "Newly active")).toEqual([
+      "score  path",
+      " 0.28  packages/web/src/styles.css",
+      " 0.22  packages/billing/src/legacy/export-csv.ts",
+      " 0.21  packages/auth/src/permissions.ts",
+    ]);
+  });
+
+  it("lists the five modules whose cohesion moved most, either way", () => {
+    expect(section(plainView(), "Cohesion changes")).toEqual([
+      " change  cohesion  before  module",
+      "-20 pts       53%     73%  packages/web",
+      "+12 pts       40%     28%  packages/shared",
+      " -8 pts       50%     58%  apps/cli",
+      " -5 pts       61%     66%  packages/auth",
+      " +3 pts       55%     52%  packages/billing",
+    ]);
+  });
+
+  it("leaves out modules below the commit floor", () => {
+    const report = sampleReport();
+    const modules = report.modules.map((module) =>
+      module.path === "packages/web"
+        ? Object.assign({}, module, { commits: 4 })
+        : module,
+    );
+
+    const lines = section(
+      plainView({ ...report, modules }),
+      "Cohesion changes",
+    );
+
+    expect(lines).toHaveLength(5);
+    expect(lines.join("\n")).not.toContain("packages/web");
+  });
+});
+
+describe("renderAnalysis without changes", () => {
+  it("says so when nothing warmed up and no cohesion moved", () => {
+    const report = sampleReport();
+    const calm = {
+      ...report,
+      files: report.files.map((file) =>
+        Object.assign({}, file, { trend: null }),
+      ),
+      modules: report.modules.map((module) =>
+        Object.assign({}, module, { trend: null }),
+      ),
+    };
+
+    const view = plainView(calm);
+
+    expect(section(view, "Warming files")).toEqual(["No file got hotter."]);
+    expect(section(view, "Newly active")).toEqual([
+      "No source file became active.",
+    ]);
+    expect(section(view, "Cohesion changes")).toEqual([
+      "No module changed in cohesion.",
+    ]);
+  });
+
+  it("is absent without a comparison", () => {
+    const view = plainView({ ...sampleReport(), comparison: null });
+
+    expect(view).not.toContain("Biggest changes");
+  });
+
+  it("escapes control characters in the paths it lists", () => {
+    const report = sampleReport();
+    // No couplings: the renamed file would be missing from the coupled files.
+    const hostile = {
+      ...report,
+      couplings: [],
+      files: report.files.map((file) =>
+        file.rank === 1
+          ? Object.assign({}, file, { path: "src/a\u001B[31mb.ts" })
+          : file,
+      ),
+    };
+
+    expect(plainView(hostile)).not.toContain("\u001B");
+  });
+});
