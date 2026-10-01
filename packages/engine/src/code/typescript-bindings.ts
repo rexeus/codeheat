@@ -3,7 +3,7 @@
 // import, initializer, or declaration refers to when it is evaluated.
 import { Predicate } from "effect";
 
-import { plainString } from "./ast-nodes.js";
+import { plainString, walk } from "./ast-nodes.js";
 import type { Node } from "./ast-nodes.js";
 import { moduleReferences } from "./typescript-references.js";
 
@@ -14,7 +14,7 @@ export const asList = (value: unknown): ReadonlyArray<unknown> =>
   Array.isArray(value) ? (value as ReadonlyArray<unknown>) : [];
 
 /** The names a binding pattern declares: `a`, `{ a, b: c }`, `[a, ...b]`. */
-const bindingNames = (pattern: unknown): ReadonlyArray<string> => {
+export const bindingNames = (pattern: unknown): ReadonlyArray<string> => {
   if (!Predicate.isObject(pattern)) {
     return [];
   }
@@ -93,6 +93,7 @@ const importEqualsModules = (
   return bindings.get(leftmostName(reference) ?? "") ?? [];
 };
 
+/** Adds `modules` to what each of `names` stands for. */
 const bind = (
   bindings: Bindings,
   names: ReadonlyArray<string>,
@@ -100,12 +101,82 @@ const bind = (
 ): void => {
   if (modules.length > 0) {
     for (const name of names) {
-      bindings.set(name, modules);
+      bindings.set(name, [
+        ...new Set([...(bindings.get(name) ?? []), ...modules]),
+      ]);
     }
   }
 };
 
-/** Binds what `statement` declares: `import X = …`, variables, functions, and classes. */
+/** Nodes whose inside runs later, or not at the top level, so assignments in it are not the file's own. */
+const NOT_TOP_LEVEL = new Set([
+  "ArrowFunctionExpression",
+  "FunctionExpression",
+  "FunctionDeclaration",
+  "ClassExpression",
+  "ClassDeclaration",
+]);
+
+const WRAPPERS = new Set([
+  "ParenthesizedExpression",
+  "TSAsExpression",
+  "TSNonNullExpression",
+  "TSTypeAssertion",
+  "TSSatisfiesExpression",
+]);
+
+/** The top-level name an assignment target is rooted at: `n` in `n = …`, `n.a.b = …`, `(n as T).a = …`. */
+const targetName = (target: unknown): string | undefined => {
+  let node = target;
+  while (
+    Predicate.isObject(node) &&
+    (WRAPPERS.has(String(node["type"])) || node["type"] === "MemberExpression")
+  ) {
+    node =
+      node["type"] === "MemberExpression" ? node["object"] : node["expression"];
+  }
+  return Predicate.isObject(node) &&
+    node["type"] === "Identifier" &&
+    typeof node["name"] === "string"
+    ? node["name"]
+    : undefined;
+};
+
+/** Merges what the assignments in `statement` (not in functions or classes) give to top-level names. */
+const bindAssignments = (statement: Node, bindings: Bindings): void => {
+  walk(
+    statement,
+    (node) => {
+      const name =
+        node["type"] === "AssignmentExpression"
+          ? targetName(node["left"])
+          : undefined;
+      if (name !== undefined) {
+        bind(bindings, [name], moduleReferences(node["right"], bindings));
+      }
+    },
+    (node) => !NOT_TOP_LEVEL.has(String(node["type"])),
+  );
+};
+
+/** Binds the functions first: a function declaration is hoisted, so code above it can name it. */
+const hoistFunctions = (
+  body: ReadonlyArray<Node>,
+  bindings: Bindings,
+): void => {
+  for (const statement of body) {
+    const declaration = declarationOf(statement);
+    if (declaration["type"] === "FunctionDeclaration") {
+      bind(
+        bindings,
+        bindingNames(declaration["id"]),
+        moduleReferences(declaration, bindings),
+      );
+    }
+  }
+};
+
+/** Binds what `statement` declares: `import X = …`, variables, and classes; functions are bound before. */
 const bindStatement = (statement: Node, bindings: Bindings): void => {
   const equals = importEqualsOf(statement);
   if (equals !== undefined) {
@@ -123,10 +194,7 @@ const bindStatement = (statement: Node, bindings: Bindings): void => {
     );
   }
   const declaration = declarationOf(statement);
-  if (
-    declaration["type"] === "FunctionDeclaration" ||
-    declaration["type"] === "ClassDeclaration"
-  ) {
+  if (declaration["type"] === "ClassDeclaration") {
     bind(
       bindings,
       bindingNames(declaration["id"]),
@@ -139,7 +207,9 @@ const bindStatement = (statement: Node, bindings: Bindings): void => {
  * What the top-level `body` binds, in order, starting from `imported`, the
  * specifiers by the local names of the static imports. A name stands for the
  * modules its initializer refers to when evaluated: `const helper =
- * require("./h").helper`, `const m = await import("./m")`, `const api = { run }`.
+ * require("./h").helper`, `const m = await import("./m")`, `const api = { run }`,
+ * plus what is assigned to it or to a member of it at the top level, also
+ * inside `if`, `try`, and blocks: `Form.Item = Item`, `impl = require("./t")`.
  */
 export const topLevelBindings = (
   body: ReadonlyArray<Node>,
@@ -148,8 +218,10 @@ export const topLevelBindings = (
   const bindings: Bindings = new Map(
     [...imported].map(([name, module]) => [name, [module]]),
   );
+  hoistFunctions(body, bindings);
   for (const statement of body) {
     bindStatement(statement, bindings);
+    bindAssignments(statement, bindings);
   }
   return bindings;
 };

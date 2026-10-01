@@ -14,6 +14,33 @@ import {
 import type { Node } from "./ast-nodes.js";
 import { handedOn } from "./typescript-exports.js";
 
+/** `__exportStar` and `__export`, which tsc emits for `export * from`. */
+const isExportHelper = (callee: unknown): boolean => {
+  const name = Predicate.isObject(callee)
+    ? (callee["property"] ?? callee)
+    : undefined;
+  return (
+    Predicate.isObject(name) &&
+    (name["name"] === "__exportStar" || name["name"] === "__export")
+  );
+};
+
+/** What a call puts on the exports: `Object.assign(module.exports, x)`, `__exportStar(x, exports)`, `__export(x)`. */
+const exportedByCall = (node: Node): ReadonlyArray<unknown> => {
+  const args: ReadonlyArray<unknown> = Array.isArray(node["arguments"])
+    ? (node["arguments"] as ReadonlyArray<unknown>)
+    : [];
+  if (node["type"] !== "CallExpression") {
+    return [];
+  }
+  if (isMember(node["callee"], "Object", "assign")) {
+    return isExportsObject(args[0]) ? args.slice(1) : [];
+  }
+  return isExportHelper(node["callee"])
+    ? args.filter((argument) => !isExportsObject(argument))
+    : [];
+};
+
 /** Modules the AST names beyond the module record. */
 export type AstModules = {
   /**
@@ -111,6 +138,7 @@ export const modulesInAst = (
     if (isExportsAssignment(node)) {
       assigned.push(node["right"]);
     }
+    assigned.push(...exportedByCall(node));
   });
   const body: unknown = Predicate.isObject(program) ? program["body"] : [];
   return {

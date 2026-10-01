@@ -8,6 +8,7 @@ import { Predicate } from "effect";
 import type { Node } from "./ast-nodes.js";
 import {
   asList,
+  bindingNames,
   declarationOf,
   declaratorsOf,
   importEqualsOf,
@@ -28,6 +29,9 @@ const typeAliasParts = (declaration: Node): ReadonlyArray<unknown> =>
     ? [declaration["typeAnnotation"], declaration["typeParameters"]]
     : [];
 
+/** A bare reference to `name`, which stands for what the name was bound to, assignments after the declaration included. */
+const nameNode = (name: string): Node => ({ type: "Identifier", name });
+
 /** The expressions a top-level statement exports. */
 const exportedExpressions = (statement: Node): ReadonlyArray<unknown> => {
   switch (statement["type"]) {
@@ -37,7 +41,9 @@ const exportedExpressions = (statement: Node): ReadonlyArray<unknown> => {
       }
       const declaration = declarationOf(statement);
       return [
-        ...declaratorsOf(statement).map(({ init }) => init),
+        ...declaratorsOf(statement).flatMap(({ init, id }) =>
+          [init].concat(bindingNames(id).map((name) => nameNode(name))),
+        ),
         importEqualsOf(statement)?.["moduleReference"],
         ...typeAliasParts(declaration),
         declaration["type"] === "FunctionDeclaration" ||
@@ -62,7 +68,7 @@ const exportedExpressions = (statement: Node): ReadonlyArray<unknown> => {
  * The specifiers of the imports that `body` (the top-level statements of the
  * program) exports: those whose binding, or loading call, occurs inside
  *
- * - the initializer of an exported variable, an exported function or class,
+ * - the initializer, and later assignments, of an exported variable, an exported function or class,
  * - an `export default <expression>`, `export =`, or `export { name }`,
  * - an exported `import X = …`, or an exported `type U<…> = T`,
  * - the value of `module.exports = …` or `exports.x = …` (`assigned`).

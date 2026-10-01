@@ -46,7 +46,7 @@ describe("typescript adapter imports inside exported expressions", () => {
     expect(found?.reexports).toStrictEqual(["./b"]);
   });
 
-  it("follows a name one level to the variable it exports", () => {
+  it("follows a name to the variable it exports", () => {
     const byDefault = read(
       "a.ts",
       "import { run } from './b';\nconst api = { run };\nexport default api;\n",
@@ -163,7 +163,7 @@ describe("typescript adapter CommonJS barrels", () => {
     expect(found?.reexports).toStrictEqual(["./legacy"]);
   });
 
-  it("follows a required name one level to what module.exports is assigned", () => {
+  it("follows a required name to what module.exports is assigned", () => {
     const found = read(
       "lib.js",
       "const a = require('./a');\nmodule.exports = { ...a };\n",
@@ -244,6 +244,7 @@ describe("typescript adapter canReexport for loaders", () => {
       "module.exports = require.context('./icons');",
       "export default [{ load: () => import('./Page') }];",
       "export const worker = new URL('./w.ts', import.meta.url);",
+      "__export(require('./t'));",
     ]) {
       expect(adapter.canReexport(source)).toBe(true);
     }

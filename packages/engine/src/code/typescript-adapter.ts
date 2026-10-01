@@ -46,8 +46,8 @@ const MENTIONS_AST_ONLY =
   /\brequire\s*[(.]|\bimport\.meta\b|\bnew\s+URL\s*\(|\bexport\s*=|\bexport\s+import\b|\bexports\b/u;
 /** In TypeScript, `import("x").T` is a type that only the AST shows. */
 const MENTIONS_IMPORT_CALL = /\bimport\s*\(/u;
-/** A source without `export` or `exports` exports nothing. */
-const MENTIONS_EXPORT = /\bexport/u;
+/** A source without `export` in it, as in `exports` or `__export`, exports nothing. */
+const MENTIONS_EXPORT = /export/u;
 /** A source without any of these loads no module, so it has none to forward. */
 const MENTIONS_MODULE = /\b(?:import|require|from)\b|\bnew\s+URL\b/u;
 /** A string literal without escapes or template holes. */

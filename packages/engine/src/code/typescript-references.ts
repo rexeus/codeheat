@@ -35,6 +35,8 @@ const SPELLED: ReadonlyMap<string, ReadonlyArray<string>> = new Map([
   ["LabeledStatement", ["label"]],
   ["BreakStatement", ["label"]],
   ["ContinueStatement", ["label"]],
+  ["ClassDeclaration", ["implements"]],
+  ["ClassExpression", ["implements"]],
 ]);
 
 /** Nodes that declare parameters of a type, and where: the names are declarations, their annotations are not. */

@@ -73,10 +73,15 @@ export const isUrlOfImportMeta = (node: Node): boolean => {
 };
 
 /**
- * Calls `visit` for every node below and including `root`. An explicit stack
- * keeps deep trees and arrays of any width off the call stack.
+ * Calls `visit` for every node below and including `root`, descending into a
+ * node's children only where `descend` says so. An explicit stack keeps deep
+ * trees and arrays of any width off the call stack.
  */
-export const walk = (root: unknown, visit: (node: Node) => void): void => {
+export const walk = (
+  root: unknown,
+  visit: (node: Node) => void,
+  descend: (node: Node) => boolean = () => true,
+): void => {
   const pending: Array<unknown> = [root];
   for (let node = pending.pop(); node !== undefined; node = pending.pop()) {
     if (Array.isArray(node)) {
@@ -85,7 +90,7 @@ export const walk = (root: unknown, visit: (node: Node) => void): void => {
       }
     } else if (Predicate.isObject(node)) {
       visit(node);
-      for (const child of Object.values(node)) {
+      for (const child of descend(node) ? Object.values(node) : []) {
         pending.push(child);
       }
     }
