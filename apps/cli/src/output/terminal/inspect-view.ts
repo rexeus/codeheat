@@ -2,6 +2,7 @@
 import type { InspectResult, Module } from "@codeheat/engine";
 
 import { escapeForTerminal } from "../escape.js";
+import { describeDepth } from "./depth-view.js";
 import { day, percent, twoDecimals } from "./format.js";
 import type { Style } from "./style.js";
 import { plain, renderTable } from "./table.js";
@@ -64,6 +65,14 @@ const partnerLines = (entry: Entry, style: Style): ReadonlyArray<string> =>
         style,
       );
 
+/** The module's depth on one line; nothing when it could not be measured. */
+const depthLine = (module: Module): ReadonlyArray<string> =>
+  module.depth === null
+    ? []
+    : [
+        `module ${escapeForTerminal(module.path)} depth: ${describeDepth(module.depth)}`,
+      ];
+
 /** Where a change to the file lands: how often its module's changes stay inside it, and what they pull in. */
 const moduleLine = (module: Module | undefined): ReadonlyArray<string> => {
   if (module === undefined) {
@@ -71,7 +80,7 @@ const moduleLine = (module: Module | undefined): ReadonlyArray<string> => {
   }
   const name = `module ${escapeForTerminal(module.path)}`;
   if (module.cohesion === null) {
-    return [`${name}: no counted commits`];
+    return [`${name}: no counted commits`, ...depthLine(module)];
   }
   const [partner] = module.partners;
   const partnerNote =
@@ -80,6 +89,7 @@ const moduleLine = (module: Module | undefined): ReadonlyArray<string> => {
       : `, most often with ${escapeForTerminal(partner.path)} (${partner.sharedCommits})`;
   return [
     `${name}: ${percent(module.cohesion)} of ${module.commits} commits stay inside${partnerNote}`,
+    ...depthLine(module),
   ];
 };
 

@@ -161,6 +161,26 @@ describe("renderInspect modules", () => {
     );
   });
 
+  it("states the module's depth under its cohesion, when it was measured", () => {
+    const deep: Module = {
+      ...billing,
+      depth: { exports: 6, implementationLines: 3105, linesPerExport: 517.5 },
+    };
+    const silent: Module = { ...deep, commits: 0, cohesion: null };
+
+    expect(renderInspect(result([entry], [deep]), makeStyle(false))).toContain(
+      "commits stay inside, most often with packages/web (20)\nmodule packages/billing depth: 6 exports over 3105 lines, 517.5 lines per export\n",
+    );
+    expect(
+      renderInspect(result([entry], [silent]), makeStyle(false)),
+    ).toContain(
+      "module packages/billing: no counted commits\nmodule packages/billing depth: 6 exports",
+    );
+    expect(renderInspect(result([entry]), makeStyle(false))).not.toContain(
+      "depth",
+    );
+  });
+
   it("prints one module line per match, each from its own module", () => {
     const web = { ...entry, path: "packages/web/a.ts", module: "packages/web" };
     const webModule: Module = {

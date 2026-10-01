@@ -96,7 +96,7 @@ describe("codeheat without a parser", () => {
 
         expect(result.exitCode).toBe(0);
         expect(result.stderr).toBe(
-          "codeheat: the code parser is unavailable (Cannot find native binding); import relations are not reported",
+          "codeheat: the code parser is unavailable (Cannot find native binding); import relations and module depth are not reported",
         );
         const report = yield* Schema.decodeUnknownEffect(Report)(
           JSON.parse(result.stdout),

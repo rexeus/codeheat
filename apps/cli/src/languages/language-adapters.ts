@@ -1,7 +1,7 @@
 // Owns where the engine gets its language adapters from: the CLI loads the
 // parser, because only the CLI package depends on it. The parser is a native
 // module that loads lazily, so a machine without a binding for its platform
-// still runs everything except the import relations.
+// still runs everything except the import relations and the module depth.
 import { typescriptAdapter } from "@codeheat/engine";
 import type { LanguageAdapter } from "@codeheat/engine";
 import { Context, Effect, Schema } from "effect";
