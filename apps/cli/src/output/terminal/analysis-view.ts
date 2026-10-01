@@ -42,13 +42,26 @@ const hotspotLines = (
 
 const couplingLines = (
   couplings: ReadonlyArray<Coupling>,
+  files: ReadonlyArray<FileStats>,
   style: Style,
-): ReadonlyArray<string> =>
-  renderTable(
+): ReadonlyArray<string> => {
+  const revisions = new Map(files.map((file) => [file.path, file.revisions]));
+  const coChange = (coupling: Coupling, from: string): string => {
+    const total = revisions.get(from);
+    if (total === undefined) {
+      throw new Error(
+        `Coupled file ${escapeForTerminal(from)} is missing from the report's files; render an untruncated report.`,
+      );
+    }
+    return percent(coupling.sharedCommits / total);
+  };
+  return renderTable(
     [
       { header: "degree", align: "right" },
       { header: "shared", align: "right" },
       { header: "distance", align: "right" },
+      { header: "a → b", align: "right" },
+      { header: "b → a", align: "right" },
       { header: "files", align: "left" },
     ],
     couplings
@@ -58,17 +71,23 @@ const couplingLines = (
         plain(percent(coupling.degree)),
         plain(String(coupling.sharedCommits)),
         plain(String(coupling.distance)),
+        plain(coChange(coupling, coupling.a)),
+        plain(coChange(coupling, coupling.b)),
         plain(
           `${escapeForTerminal(coupling.a)} <-> ${escapeForTerminal(coupling.b)}`,
         ),
       ]),
     style,
   );
+};
 
 /**
  * Renders the terminal view of an `analyze` report: the ten hottest files and
- * the five strongest couplings that are not test pairs. The report must not
- * be cut to `--limit`, or the test pairs could crowd out every other coupling.
+ * the five strongest couplings that are not test pairs, each with the
+ * co-change probability in both directions (`shared / revisions(side)`). The
+ * report must not be cut to `--limit`: test pairs could crowd out every other
+ * coupling, and every coupled file must appear in `files`: rendering throws
+ * otherwise.
  * The result has no trailing newline.
  */
 export const renderAnalysis = (report: Report, style: Style): string => {
@@ -77,7 +96,7 @@ export const renderAnalysis = (report: Report, style: Style): string => {
     report.files.length === 0
       ? ["No files in the analysis universe."]
       : hotspotLines(report.files, style);
-  const couplings = couplingLines(report.couplings, style);
+  const couplings = couplingLines(report.couplings, report.files, style);
   return [
     style.bold(summary),
     "",

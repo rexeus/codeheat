@@ -40,13 +40,40 @@ describe("renderAnalysis", () => {
     const couplings = section(plainView(), "Change coupling");
 
     expect(couplings).toEqual([
-      "degree  shared  distance  files",
-      "   75%       6         4  packages/billing/src/index.ts <-> packages/auth/src/index.ts",
-      "   61%      24         0  packages/billing/src/invoice.ts <-> packages/billing/src/tax.ts",
-      "   53%       9         5  packages/auth/src/session.ts <-> packages/web/src/hooks/use-session.ts",
-      "   42%       9         7  packages/shared/src/config.ts <-> apps/cli/src/commands/analyze.ts",
-      "   42%      14         5  packages/billing/src/invoice.ts <-> packages/web/src/routes/invoices.tsx",
+      "degree  shared  distance  a → b  b → a  files",
+      "   75%       6         4    67%    86%  packages/billing/src/index.ts <-> packages/auth/src/index.ts",
+      "   61%      24         0    50%    77%  packages/billing/src/invoice.ts <-> packages/billing/src/tax.ts",
+      "   53%       9         5    41%    75%  packages/auth/src/session.ts <-> packages/web/src/hooks/use-session.ts",
+      "   42%       9         7    53%    35%  packages/shared/src/config.ts <-> apps/cli/src/commands/analyze.ts",
+      "   42%      14         5    29%    74%  packages/billing/src/invoice.ts <-> packages/web/src/routes/invoices.tsx",
     ]);
+  });
+
+  it("shows the co-change probability of each side from its own revisions", () => {
+    const report = sampleReport();
+    const revisionsByPath = new Map([
+      ["packages/billing/src/index.ts", 8],
+      ["packages/auth/src/index.ts", 12],
+    ]);
+    const adjusted = {
+      ...report,
+      files: report.files.map((file) =>
+        Object.assign({}, file, {
+          revisions: revisionsByPath.get(file.path) ?? file.revisions,
+        }),
+      ),
+    };
+
+    expect(section(plainView(adjusted), "Change coupling")[1]).toBe(
+      "   75%       6         4    75%    50%  packages/billing/src/index.ts <-> packages/auth/src/index.ts",
+    );
+  });
+
+  it("refuses a report that was cut before its coupled files", () => {
+    const report = sampleReport();
+    const cut = { ...report, files: report.files.slice(0, 1) };
+
+    expect(() => plainView(cut)).toThrow(/missing from the report's files/u);
   });
 
   it("ends with one hint about the other output modes", () => {
@@ -70,12 +97,19 @@ describe("renderAnalysis styling and safety", () => {
 
   it("escapes control characters and ANSI sequences in paths", () => {
     const report = sampleReport();
+    const original = "packages/billing/src/invoice.ts";
+    const path = "src/a\u001B[31m\nb.ts";
+    const rename = (name: string): string => (name === original ? path : name);
     const hostile = {
       ...report,
       files: report.files.map((file) =>
-        file.rank === 1
-          ? Object.assign({}, file, { path: "src/a\u001B[31m\nb.ts" })
-          : file,
+        Object.assign({}, file, { path: rename(file.path) }),
+      ),
+      couplings: report.couplings.map((coupling) =>
+        Object.assign({}, coupling, {
+          a: rename(coupling.a),
+          b: rename(coupling.b),
+        }),
       ),
     };
 
