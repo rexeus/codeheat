@@ -31,7 +31,7 @@
   },
   "scripts": {
     "build": "tsx scripts/build.ts && tsx scripts/package-files.ts",
-    "dev": "turbo run build --filter=@codeheat/viewer --output-logs=errors-only && tsx src/bin.ts",
+    "dev": "tsx scripts/build-viewer.ts && tsx src/bin.ts",
     "test:unit": "vitest run --passWithNoTests",
     "typecheck": "tsc -p tsconfig.json"
   },
