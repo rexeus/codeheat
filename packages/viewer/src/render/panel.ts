@@ -1,5 +1,6 @@
 import type { FileStats, Module } from "@codeheat/engine";
 
+import type { ColorMode } from "../color/color-mode.js";
 import type { HeatScale } from "../color/heat-scale.js";
 import type { Partner } from "../selection/partners.js";
 import { h, pathLabel, section } from "./dom.js";
@@ -175,6 +176,34 @@ const hotspotsSection = (rows: readonly HTMLElement[]): HTMLElement => {
   return element;
 };
 
+/** Marks `element` for one color mode; the stylesheet hides it in the other. */
+const forMode = (mode: ColorMode, element: HTMLElement): HTMLElement => {
+  element.dataset["modeOnly"] = mode;
+  return element;
+};
+
+/** The overview's title and intro in both color modes. */
+const overviewIntro = (): HTMLElement[] => [
+  forMode("heat", h("h2", "panel-title", "Hotspots")),
+  forMode(
+    "heat",
+    h(
+      "p",
+      "hint",
+      "Big and hot: many lines, changed often, deeply nested. Select a tile to outline the files that change together with it.",
+    ),
+  ),
+  forMode("cohesion", h("h2", "panel-title", "Modules")),
+  forMode(
+    "cohesion",
+    h(
+      "p",
+      "hint",
+      "Cohesion is the share of a module's commits that touch no other module; low means its changes spread. Tiles take the color of their module. Select a tile to outline the files that change together with it.",
+    ),
+  ),
+];
+
 export const createPanel = (
   root: HTMLElement,
   data: PanelData,
@@ -200,15 +229,13 @@ export const createPanel = (
         .slice(0, OVERVIEW_HOTSPOTS)
         .map((file) => hotspotRow(context, file));
       root.replaceChildren(
-        h("h2", "panel-title", "Hotspots"),
         ...(rows.length === 0
-          ? [h("p", "hint", EMPTY_PANEL_NOTE)]
+          ? [
+              h("h2", "panel-title", "Hotspots"),
+              h("p", "hint", EMPTY_PANEL_NOTE),
+            ]
           : [
-              h(
-                "p",
-                "hint",
-                "Big and hot: many lines, changed often, deeply nested. Select a tile to outline the files that change together with it.",
-              ),
+              ...overviewIntro(),
               h(
                 "div",
                 "overview-sections",
