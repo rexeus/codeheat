@@ -61,5 +61,7 @@ jobs:
         run: |
           node --version
           node apps/cli/dist/codeheat.js --version
-          node apps/cli/dist/codeheat.js analyze --json --limit 3 > /tmp/report.json
-          node -e 'const r = JSON.parse(require("node:fs").readFileSync("/tmp/report.json", "utf8")); if (r.schemaVersion !== 1) process.exit(1)'
+          node apps/cli/dist/codeheat.js analyze --json --limit 0 > /tmp/report.json 2> /tmp/stderr.txt
+          # a parser that failed to load would only leave a note on stderr and `imports: null`
+          test ! -s /tmp/stderr.txt || { cat /tmp/stderr.txt; exit 1; }
+          node -e 'const r = JSON.parse(require("node:fs").readFileSync("/tmp/report.json", "utf8")); if (r.schemaVersion !== 1 || !r.couplings.some((c) => c.imports !== null)) process.exit(1)'
