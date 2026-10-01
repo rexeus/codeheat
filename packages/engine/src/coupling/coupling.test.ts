@@ -10,9 +10,10 @@ const findCouplings = (
   modules: ReadonlyMap<string, ModuleRef> = new Map(),
 ) => {
   const paths = [...new Set(commits.flat())];
-  const indexed = commits.map((commit) =>
-    Uint32Array.from(commit, (path) => paths.indexOf(path)),
-  );
+  const indexed = commits.map((commit) => ({
+    files: Uint32Array.from(commit, (path) => paths.indexOf(path)),
+    size: commit.length,
+  }));
   return findCouplingsByFileId(indexed, paths, revisions, modules);
 };
 
@@ -112,6 +113,19 @@ describe("findCouplings commit size", () => {
     // 50 * 49 / 2 pairs, each shared by all 3 commits
     expect(result.couplingCommits).toBe(3);
     expect(result.couplings).toHaveLength(1225);
+  });
+
+  it("sizes a commit by every file it touched, not by the ids left to count", () => {
+    const touched = { files: Uint32Array.of(0, 1), size: 51 };
+
+    const result = findCouplingsByFileId(
+      repeat(3, touched),
+      ["a.ts", "b.ts"],
+      new Map(),
+      new Map(),
+    );
+
+    expect(result).toMatchObject({ couplingCommits: 0, couplings: [] });
   });
 });
 

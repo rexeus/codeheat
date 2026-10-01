@@ -1,6 +1,7 @@
 // Owns change coupling: which pairs of files repeatedly change in the same commits.
 import { Order } from "effect";
 
+import type { HistoryCommit } from "../history/history.js";
 import type { ModuleRef } from "../modules/detect.js";
 import { roundReported } from "../report/precision.js";
 import type { Coupling } from "../report/report.js";
@@ -10,6 +11,16 @@ import { directoryDistance, isTestPair } from "./pair.js";
 export const MAX_COMMIT_FILES = 50;
 export const MIN_SHARED_COMMITS = 3;
 export const MIN_DEGREE = 0.3;
+
+/**
+ * The commits small enough to say something about coupling, modules, and
+ * interfaces: those that touched at most `MAX_COMMIT_FILES` universe files,
+ * counting files that are dead today (see `HistoryCommit.size`).
+ */
+export const countedCommits = (
+  commits: ReadonlyArray<HistoryCommit>,
+): ReadonlyArray<HistoryCommit> =>
+  commits.filter((commit) => commit.size <= MAX_COMMIT_FILES);
 
 const byStrength = (a: Coupling, b: Coupling): number =>
   b.degree - a.degree ||
@@ -38,11 +49,11 @@ const countPairs = (commit: Uint32Array, shared: SharedCommits): void => {
 
 /** Counts the commits each pair of file ids shares. Ids within one commit are distinct. */
 const countSharedCommits = (
-  commits: ReadonlyArray<Uint32Array>,
+  commits: ReadonlyArray<HistoryCommit>,
 ): SharedCommits => {
   const shared: SharedCommits = new Map();
   for (const commit of commits) {
-    countPairs(commit, shared);
+    countPairs(commit.files, shared);
   }
   return shared;
 };
@@ -70,8 +81,8 @@ export type Couplings = {
 };
 
 /**
- * Finds the coupled pairs among `commits`, each the distinct ids of the files
- * one commit touched; an id is an index into `paths`. `revisions` counts every
+ * Finds the coupled pairs among `commits`, each listing the distinct ids of
+ * the files one commit touched; an id is an index into `paths`. `revisions` counts every
  * commit per path, including the ones ignored here for being too large.
  *
  * Every coupling comes back with `imports: null`; the import graph fills it in.
@@ -82,12 +93,12 @@ export type Couplings = {
  * every path to its module and decides `crossesModule`.
  */
 export const findCouplings = (
-  commits: ReadonlyArray<Uint32Array>,
+  commits: ReadonlyArray<HistoryCommit>,
   paths: ReadonlyArray<string>,
   revisions: ReadonlyMap<string, number>,
   modules: ReadonlyMap<string, ModuleRef>,
 ): Couplings => {
-  const counted = commits.filter((commit) => commit.length <= MAX_COMMIT_FILES);
+  const counted = countedCommits(commits);
   const revisionsById = paths.map((path) => revisions.get(path) ?? 0);
   const couplings: Array<Coupling> = [];
   const shared = countSharedCommits(counted);

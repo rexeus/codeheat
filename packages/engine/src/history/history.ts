@@ -5,6 +5,8 @@ import { Effect, Stream } from "effect";
 
 import type { GitError } from "../git/git-errors.js";
 import { Git } from "../git/git.js";
+import { newLineage, touchUniverse } from "./lineage.js";
+import type { Touch } from "./lineage.js";
 import { LOG_FORMAT_ARGS, LogParser } from "./parse-log.js";
 import type { Commit } from "./parse-log.js";
 
@@ -16,11 +18,26 @@ type FileHistory = {
   readonly linesDeleted: number;
 };
 
+/** A commit that touched the universe. */
+export type HistoryCommit = {
+  /**
+   * The distinct ids of the files whose current file the commit touched; none
+   * when it only touched earlier files that lived at a universe path.
+   */
+  readonly files: Uint32Array;
+  /**
+   * How many distinct universe files it touched, earlier ones included: the
+   * size that decides whether a commit is too large to count. It never
+   * shrinks for files that are dead today.
+   */
+  readonly size: number;
+};
+
 export type History = {
   /** The universe paths; a file id is an index into this list. */
   readonly paths: ReadonlyArray<string>;
-  /** Per commit that touched the universe, the distinct file ids it touched. */
-  readonly commits: ReadonlyArray<Uint32Array>;
+  /** Per commit that touched the universe. */
+  readonly commits: ReadonlyArray<HistoryCommit>;
   /** Only files with at least one revision. */
   readonly files: ReadonlyMap<string, FileHistory>;
 };
@@ -35,42 +52,12 @@ export type HistoryOptions = {
   readonly universe: ReadonlySet<string>;
 };
 
-type Lines = { readonly added: number; readonly deleted: number };
-
-const addLines = (total: Lines | undefined, more: Lines): Lines => ({
-  added: (total?.added ?? 0) + more.added,
-  deleted: (total?.deleted ?? 0) + more.deleted,
-});
-
-/**
- * The lines the commit changed per file id. Records the commit's renames in
- * `renamedTo`, which maps old paths to current ones.
- */
-const linesByFileId = (
-  commit: Commit,
-  renamedTo: Map<string, string>,
-  fileIds: ReadonlyMap<string, number>,
-): ReadonlyMap<number, Lines> => {
-  const lines = new Map<number, Lines>();
-  for (const change of commit.changes) {
-    const path = renamedTo.get(change.path) ?? change.path;
-    if (change.renamedFrom !== undefined) {
-      renamedTo.set(change.renamedFrom, path);
-    }
-    const id = fileIds.get(path);
-    if (id !== undefined) {
-      lines.set(id, addLines(lines.get(id), change));
-    }
-  }
-  return lines;
-};
-
 /** Collects the commits routed to it into one `History`. */
 const makeCollector = (paths: ReadonlyArray<string>) => {
-  const commits: Array<Uint32Array> = [];
+  const commits: Array<HistoryCommit> = [];
   const fileHistories = new Map<number, FileHistory>();
   return {
-    add: (touched: ReadonlyMap<number, Lines>): void => {
+    add: ({ lines: touched, size }: Touch): void => {
       for (const [id, lines] of touched) {
         const before = fileHistories.get(id);
         fileHistories.set(id, {
@@ -79,7 +66,7 @@ const makeCollector = (paths: ReadonlyArray<string>) => {
           linesDeleted: (before?.linesDeleted ?? 0) + lines.deleted,
         });
       }
-      commits.push(Uint32Array.from(touched.keys()));
+      commits.push({ files: Uint32Array.from(touched.keys()), size });
     },
     finish: (): History => {
       const files = new Map<string, FileHistory>();
@@ -99,6 +86,10 @@ const makeCollector = (paths: ReadonlyArray<string>) => {
  * touched the universe to `route` with its commit time. A rename makes every
  * older commit that touched the old path count for the new one, so a file
  * keeps its history under its current name, whichever collector it lands in.
+ * A path deleted and created again does not: the file that exists there today
+ * starts at its creation, and the deleted file's changes count for nobody,
+ * whichever side of a split they fall on. Merge commits are not read, so a
+ * deletion made only inside one is not seen.
  *
  * The whole repository's log is read, never a path-limited one: a file moved
  * into the universe from outside keeps the history it had before the move.
@@ -106,18 +97,18 @@ const makeCollector = (paths: ReadonlyArray<string>) => {
 const scanCommits = (
   options: HistoryOptions,
   fileIds: ReadonlyMap<string, number>,
-  route: (time: number, touched: ReadonlyMap<number, Lines>) => void,
+  route: (time: number, touch: Touch) => void,
 ): Effect.Effect<void, GitError, Git> =>
   Effect.gen(function* () {
     const git = yield* Git;
-    const renamedTo = new Map<string, string>();
+    const lineage = newLineage();
     const absorb = (commit: Commit): void => {
       if (options.skipCommits.has(commit.sha)) {
         return;
       }
-      const touched = linesByFileId(commit, renamedTo, fileIds);
-      if (touched.size > 0) {
-        route(commit.time, touched);
+      const touch = touchUniverse(commit, lineage, fileIds);
+      if (touch.size > 0) {
+        route(commit.time, touch);
       }
     };
 
@@ -158,8 +149,8 @@ export const readHistory = (
   Effect.gen(function* () {
     const { paths, fileIds } = indexPaths(options);
     const collector = makeCollector(paths);
-    yield* scanCommits(options, fileIds, (_time, touched) => {
-      collector.add(touched);
+    yield* scanCommits(options, fileIds, (_time, touch) => {
+      collector.add(touch);
     });
     return collector.finish();
   });
@@ -167,7 +158,8 @@ export const readHistory = (
 /**
  * Reads the window once and splits its commits at `splitAt`, the time in
  * seconds since the epoch: `recent` holds the commits at or after it,
- * `earlier` those before it. Renames are followed across the split.
+ * `earlier` those before it. Renames and deletions are followed across the
+ * split.
  */
 export const readHistoryHalves = (
   options: HistoryOptions,
@@ -181,8 +173,8 @@ export const readHistoryHalves = (
     const { paths, fileIds } = indexPaths(options);
     const recent = makeCollector(paths);
     const earlier = makeCollector(paths);
-    yield* scanCommits(options, fileIds, (time, touched) => {
-      (time >= splitAt ? recent : earlier).add(touched);
+    yield* scanCommits(options, fileIds, (time, touch) => {
+      (time >= splitAt ? recent : earlier).add(touch);
     });
     return { recent: recent.finish(), earlier: earlier.finish() };
   });
