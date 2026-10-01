@@ -21,20 +21,22 @@ const isAnchored = (path: Path.Path, pattern: string): boolean =>
  * The repository-relative reading of a pattern without glob metacharacters.
  * The path relative to `cwd` wins. Only an unanchored path (not absolute, not
  * starting with `./` or `../`) that does not exist there is read as already
- * repository-relative. A path outside the repository stays as given.
+ * repository-relative. A path that resolves outside the repository becomes
+ * its absolute path, which no report entry matches.
  */
 const resolveExact = (root: string, cwd: string, pattern: string) =>
   Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
+    const absolute = path.resolve(cwd, pattern);
     const exists = yield* fs
-      .exists(path.resolve(cwd, pattern))
+      .exists(absolute)
       .pipe(Effect.orElseSucceed(() => false));
     if (!exists && !isAnchored(path, pattern)) {
       return pattern;
     }
     return yield* repositoryScope(root, cwd, pattern).pipe(
-      Effect.catchTag("NotAGitRepository", () => Effect.succeed(pattern)),
+      Effect.catchTag("NotAGitRepository", () => Effect.succeed(absolute)),
     );
   });
 
@@ -75,8 +77,14 @@ export const inspectFrom = (options: {
   ChildProcessSpawner.ChildProcessSpawner | FileSystem.FileSystem | Path.Path
 > =>
   Effect.gen(function* () {
-    const { cwd, report, patterns } = options;
-    const root = yield* repositoryRoot(cwd);
+    const { report, patterns } = options;
+    const root = yield* repositoryRoot(options.cwd);
+    // git reports the real path of the root, so a missing file under a
+    // symlinked `cwd` must resolve against the real `cwd` to stay inside it.
+    const fs = yield* FileSystem.FileSystem;
+    const cwd = yield* fs
+      .realPath(options.cwd)
+      .pipe(Effect.orElseSucceed(() => options.cwd));
     const requests = yield* Effect.forEach(patterns, (original) =>
       Effect.map(
         isGlob(original)

@@ -1,6 +1,6 @@
 import { NodeServices } from "@effect/platform-node";
 import { assert, layer } from "@effect/vitest";
-import { Effect, Path } from "effect";
+import { Effect, FileSystem, Path } from "effect";
 import { TestClock } from "effect/testing";
 
 import { analyze } from "../analyze/analyze.js";
@@ -26,19 +26,18 @@ const makeProject = Effect.gen(function* () {
   });
   const path = yield* Path.Path;
   const report = yield* analyze(analyzeOptionsFor(repo));
+  const inspectAt = (cwd: string, patterns: ReadonlyArray<string>) =>
+    inspectFrom({ cwd, report, patterns }).pipe(
+      Effect.map((result) => ({
+        matched: result.matches.map((entry) => entry.path),
+        unmatched: result.unmatched,
+      })),
+    );
   return {
     directory: repo.directory,
+    inspectAt,
     inspectIn: (subdirectory: string, patterns: ReadonlyArray<string>) =>
-      inspectFrom({
-        cwd: path.join(repo.directory, subdirectory),
-        report,
-        patterns,
-      }).pipe(
-        Effect.map((result) => ({
-          matched: result.matches.map((entry) => entry.path),
-          unmatched: result.unmatched,
-        })),
-      ),
+      inspectAt(path.join(repo.directory, subdirectory), patterns),
   };
 });
 
@@ -155,5 +154,47 @@ layer(NodeServices.layer)("inspectFrom unmatched paths", (it) => {
 
       assert.deepStrictEqual(result, { matched: ["src/a.ts"], unmatched: [] });
     }),
+  );
+});
+
+layer(NodeServices.layer)("inspectFrom through symlinks", (it) => {
+  it.effect(
+    "does not read a missing ./ path as repository-relative from a symlinked working directory",
+    () =>
+      Effect.gen(function* () {
+        const project = yield* makeProject;
+        const fs = yield* FileSystem.FileSystem;
+        const link = `${yield* fs.makeTempDirectoryScoped()}/repo`;
+        yield* fs.symlink(project.directory, link);
+
+        const result = yield* project.inspectAt(`${link}/pkg`, [
+          "./src/a.ts",
+          "./lib.ts",
+        ]);
+
+        assert.deepStrictEqual(result, {
+          matched: ["pkg/lib.ts"],
+          unmatched: ["./src/a.ts"],
+        });
+      }),
+  );
+
+  it.effect(
+    "does not answer with a repository file for a path that a symlink leads outside the repository",
+    () =>
+      Effect.gen(function* () {
+        const project = yield* makeProject;
+        const fs = yield* FileSystem.FileSystem;
+        const outside = yield* fs.makeTempDirectoryScoped();
+        yield* fs.writeFileString(`${outside}/a.ts`, "a\n");
+        yield* fs.symlink(outside, `${project.directory}/pkg/src`);
+
+        const result = yield* project.inspectIn("pkg", ["src/a.ts"]);
+
+        assert.deepStrictEqual(result, {
+          matched: [],
+          unmatched: ["src/a.ts"],
+        });
+      }),
   );
 });
