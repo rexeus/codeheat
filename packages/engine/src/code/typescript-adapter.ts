@@ -2,6 +2,8 @@
 // the caller injects, so the engine itself carries no parser dependency.
 import type { LanguageAdapter, SourceImports } from "./language-adapter.js";
 import { modulesInAst } from "./typescript-ast.js";
+import { exportedSymbols } from "./typescript-symbols.js";
+import type { StaticExports, StaticImports } from "./typescript-symbols.js";
 
 /**
  * The part of the result of oxc-parser's `parseSync` that the adapter reads,
@@ -11,18 +13,8 @@ import { modulesInAst } from "./typescript-ast.js";
 type ParsedModule = {
   readonly errors: ReadonlyArray<unknown>;
   readonly module: {
-    readonly staticImports: ReadonlyArray<{
-      readonly moduleRequest: { readonly value: string };
-      readonly entries: ReadonlyArray<{
-        readonly localName: { readonly value: string };
-      }>;
-    }>;
-    readonly staticExports: ReadonlyArray<{
-      readonly entries: ReadonlyArray<{
-        readonly moduleRequest: { readonly value: string } | null;
-        readonly localName: { readonly name: string | null };
-      }>;
-    }>;
+    readonly staticImports: StaticImports;
+    readonly staticExports: StaticExports;
     readonly dynamicImports: ReadonlyArray<{
       readonly moduleRequest: { readonly start: number; readonly end: number };
     }>;
@@ -154,16 +146,16 @@ const parseWithJsxFallback = (
     : parsed;
 };
 
-const readImports = (
+/** Applies `read` to the parse of `source`; undefined when it has syntax errors or the parser throws. */
+const readParsed = <A>(
   parse: ParseModule,
   file: string,
   source: string,
-): SourceImports | undefined => {
+  read: (parsed: ParsedModule) => A,
+): A | undefined => {
   try {
     const parsed = parseWithJsxFallback(parse, file, source);
-    return parsed.errors.length === 0
-      ? sourceImports(parsed, file, source)
-      : undefined;
+    return parsed.errors.length === 0 ? read(parsed) : undefined;
   } catch {
     return undefined;
   }
@@ -182,10 +174,23 @@ const readImports = (
  * an exported expression: the initializer of an exported variable, an
  * `export default` expression, `export =`, `module.exports = …`, `exports.x = …`
  * (see `handedOn`). Use inside the body of an exported function is not.
+ *
+ * `exports` lists the names the module record shows (`export * from` apart,
+ * see `SourceExports`). A file that also exports without ES syntax
+ * (`export =`, `module.exports`, `exports.x`) is unlistable, and so is one
+ * with syntax errors.
  */
 export const typescriptAdapter = (parse: ParseModule): LanguageAdapter => ({
   extensions: EXTENSIONS,
-  imports: (file, source) => readImports(parse, file, source),
+  imports: (file, source) =>
+    readParsed(parse, file, source, (parsed) =>
+      sourceImports(parsed, file, source),
+    ),
+  exports: (file, source) =>
+    // `program` is a lazy getter that materializes the whole AST: read it only where needed.
+    readParsed(parse, file, source, (parsed) =>
+      exportedSymbols(parsed.module, () => parsed.program, source),
+    ),
   canReexport: (source) =>
     MENTIONS_EXPORT.test(source) && MENTIONS_MODULE.test(source),
 });

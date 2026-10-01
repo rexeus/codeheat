@@ -32,8 +32,11 @@ const nameOf = (file: string): string => file.slice(file.lastIndexOf("/") + 1);
 /** The path without its extension, `.d.ts` included, so `dist/a.d.ts` and `src/a.ts` share a stem. */
 const stemOf = (file: string): string => file.replace(/(\.d)?\.[^./]+$/u, "");
 
+/** A tool's configuration (`eslint.config.mjs`): code, but neither interface nor implementation of a module. */
+export const isConfigFile = (file: string): boolean => CONFIG_FILE.test(file);
+
 const isManifestCode = (file: string): boolean =>
-  CODE_FILE.test(file) && !CONFIG_FILE.test(file);
+  CODE_FILE.test(file) && !isConfigFile(file);
 
 const isConventionalEntry = (module: string, file: string): boolean =>
   [module, joinPath(module, "src")].includes(directoryOf(file)) &&

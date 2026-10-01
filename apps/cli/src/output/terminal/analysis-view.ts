@@ -1,8 +1,9 @@
-// Owns the human view of `analyze`: top hotspots, couplings, the weakest modules, biggest changes, one hint.
+// Owns the human view of `analyze`: top hotspots, couplings, the weakest and shallowest modules, biggest changes, one hint.
 import type { Coupling, FileStats, Module, Report } from "@codeheat/engine";
 
 import { escapeForTerminal } from "../escape.js";
 import { changeLines } from "./changes-view.js";
+import { shallowestLines } from "./depth-view.js";
 import { day, percent } from "./format.js";
 import type { Style } from "./style.js";
 import { plain, renderTable } from "./table.js";
@@ -169,7 +170,8 @@ const leakyModules = (report: Report): ReadonlyArray<Module> =>
  * the five strongest couplings that are not test pairs, each with the
  * co-change probability in both directions (`shared / revisions(side)`), the
  * five least cohesive modules, the first five modules with a leaky interface,
- * and, when the report compares two windows, the biggest changes. The report
+ * the five shallowest ranked modules (fewest implementation lines per exported
+ * name; the section is left out when none has a depth), and, when the report compares two windows, the biggest changes. The report
  * must not be cut to `--limit`: test pairs could crowd out every other
  * coupling, and every coupled file must appear in `files`: rendering throws
  * otherwise.
@@ -184,6 +186,7 @@ export const renderAnalysis = (report: Report, style: Style): string => {
   const couplings = couplingLines(report.couplings, report.files, style);
   const modules = rankedModules(report);
   const leaky = leakyModules(report);
+  const shallow = shallowestLines(report, style);
   return [
     style.bold(summary),
     "",
@@ -207,6 +210,9 @@ export const renderAnalysis = (report: Report, style: Style): string => {
       ? leakageLines(leaky, style)
       : ["No module has a leaky interface."]),
     "",
+    ...(shallow.length === 0
+      ? []
+      : [style.bold("Shallowest modules"), ...shallow, ""]),
     ...changeLines(report, style),
     style.dim("Use --html for the treemap or --json for the full report."),
   ].join("\n");

@@ -39,6 +39,25 @@ export const makeImportProject = Effect.map(makeGitRepository, (repo) => {
 });
 
 /**
+ * Two packages that change together in five commits, so both are ranked.
+ * `lib` exports `run` and `stop` through `src/index.ts`, with four lines of
+ * implementation behind them; `app` has no entry point.
+ */
+export const makeDepthProject = Effect.map(makeGitRepository, (repo) => {
+  for (const day of [30, 20, 10, 5, 3]) {
+    repo.commit(day, {
+      "packages/lib/package.json":
+        '{ "name": "lib", "main": "src/index.ts" }\n',
+      "packages/lib/src/index.ts": `export { run, stop } from "./impl.js";\n// ${day}\n`,
+      "packages/lib/src/impl.ts": `export const run = ${day};\nexport const stop = 0;\nconst a = 1;\nconst b = 2;\n`,
+      "packages/app/package.json": '{ "name": "app" }\n',
+      "packages/app/src/main.ts": `export const main = ${day};\n`,
+    });
+  }
+  return repo;
+});
+
+/**
  * `a.ts` and its test change together most often, so they are the strongest
  * coupling; `b.ts` and `c.ts` change together just as often, as a weaker pair.
  */

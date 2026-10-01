@@ -17,14 +17,12 @@ import {
 } from "../git/repository.js";
 import type { HistoryOptions } from "../history/history.js";
 import { linkCouplings } from "../imports/link-couplings.js";
-import { detectModules } from "../modules/detect.js";
-import { findEntryPoints } from "../modules/entry-points.js";
-import { listPackageDirectories } from "../modules/package-directories.js";
+import { withDepths } from "../modules/depth.js";
 import type { Report } from "../report/report.js";
-import { inventory } from "../universe/inventory.js";
 import type { InvalidCompare, InvalidSince } from "./analysis-window.js";
 import { coupleHistory, measureWindows } from "./measure.js";
 import type { Universe } from "./measure.js";
+import { readUniverse } from "./read-universe.js";
 import {
   comparisonOf,
   noHistories,
@@ -62,8 +60,10 @@ export type AnalyzeOptions = {
    */
   readonly entry: ReadonlyArray<string>;
   /**
-   * The languages whose imports are read to tell hidden coupling from visible.
-   * A file no adapter reads leaves `Coupling.imports` null.
+   * The languages whose imports are read to tell hidden coupling from visible,
+   * and whose exports measure module depth. A file no adapter reads leaves
+   * `Coupling.imports` null, and a module with an entry point no adapter reads
+   * has no `depth`.
    */
   readonly adapters: ReadonlyArray<LanguageAdapter>;
   /** Written to `Report.tool.version`. */
@@ -123,30 +123,18 @@ const analyzeRepository = (
     const path = yield* Path.Path;
     const head = yield* readHead;
     const shallowBoundary = yield* readShallowBoundary(root);
-    const files = yield* inventory({
+    const { depths, ...universe } = yield* readUniverse({
+      ...options,
       root,
       scope,
-      include: options.include,
-      exclude: options.exclude,
     });
-    const packageDirectories = yield* listPackageDirectories(scope);
-    const modules = detectModules(
-      files.map((file) => file.path),
-      packageDirectories,
-    );
-    const entryPoints = yield* findEntryPoints(root, modules, options.entry);
     const { histories, oldestCommit } = yield* readTimeline(windows, {
       head,
       skipCommits: shallowBoundary ?? new Set(),
-      universe: new Set(files.map((file) => file.path)),
+      universe: new Set(universe.files.map((file) => file.path)),
     });
     const { commits, couplingCommits, thresholds, ...measured } =
-      yield* measureLinked(
-        options,
-        { root, scope },
-        { files, modules, entryPoints },
-        histories,
-      );
+      yield* measureLinked(options, { root, scope }, universe, histories);
     return {
       schemaVersion: 1,
       tool: { name: "codeheat", version: options.toolVersion },
@@ -166,6 +154,7 @@ const analyzeRepository = (
         modules: measured.modules.length,
       },
       ...measured,
+      modules: withDepths(measured.modules, depths),
     } satisfies Report;
   });
 

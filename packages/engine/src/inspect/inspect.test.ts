@@ -52,6 +52,7 @@ const modules: Report["modules"] = [
     implementationCommits: 4,
     leakage: null,
     leakyInterface: false,
+    depth: null,
     trend: null,
   },
   {
@@ -68,6 +69,7 @@ const modules: Report["modules"] = [
     implementationCommits: 20,
     leakage: 0.2,
     leakyInterface: false,
+    depth: null,
     trend: null,
   },
 ];

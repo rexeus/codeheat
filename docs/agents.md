@@ -15,7 +15,7 @@ Run `npx codeheat inspect <file> --json` (quote globs) before changing a file an
 - A partner with `imports: "none"` is hidden coupling: no import links the two files, so the compiler will not tell you when one side breaks the other. Check both files before changing either.
 - A low `rank` (1 is hottest) means the file is large or nested and changes often. Keep the change small, add tests first, and prefer extracting over adding more code to it.
 - `reasons` explains the rank in plain words; quote it when you explain your plan.
-- `modules` describes the module the file lives in (see below): a low `cohesion` means changes there usually reach into other modules.
+- `modules` describes the module the file lives in (see below): a low `cohesion` means changes there usually reach into other modules; a low `depth.linesPerExport` marks a shallow module, where a new export widens an interface with little behind it.
 
 For orientation in an unfamiliar repository, run `npx codeheat analyze --json` once: `files` are the top hotspots, `couplings` the strongest co-changing pairs, and `totals` the full size.
 ```
@@ -63,6 +63,19 @@ The files of a repository are grouped into modules: workspace packages (a direct
 - A coupling with `crossesModule: true` joins files of different modules. That is neutral information: an app changes with the library it uses. It is worth a look when the modules should not know each other.
 
 `codeheat analyze --json` lists every module in `modules`, bounded by `--limit` like `files` and `couplings`; `totals.modules` is the full count. The order is the ranking: first the modules with at least `thresholds.minModuleCommits` commits that are not `testOnly`, then the other modules with commits (each group least cohesive first, ties by more `commits`, then `path`), last the modules with `cohesion: null`. The first entries are therefore the ones worth reading, also under a small `--limit`.
+
+## Reading module depth
+
+`depth` on a module says how much implementation sits behind its interface:
+
+```json
+{ "exports": 6, "implementationLines": 3105, "linesPerExport": 517.5 }
+```
+
+- `exports` is the number of distinct names the module's entry points export (re-exports within the module followed; a name several entry points export counts once); `implementationLines` the lines of its other files, without tests and tool configuration. A low `linesPerExport` marks a shallow module: a wide interface with little behind it, where callers must learn much and gain little. A high one marks a deep module, which hides its work behind a narrow interface.
+- Before adding another export to a shallow module, ask whether the new symbol belongs behind an existing one. Before splitting a deep module, check that the split keeps its interface narrow.
+- `depth: null` means unknown, not zero: no entry points, another language than TypeScript or JavaScript, a file that does not parse, CommonJS or `export =`, an `export *` from a package or another module, one that resolves to several files, two bindings of a name that cannot be told apart, no exports, no implementation files, or no parser (stderr says so). A name taken by a named re-export (`export { x } from "./gone"`) counts even when its source is an excluded or missing file or an asset. Do not read `null` as shallow.
+- It measures size, not complexity, and it is read from the code as it is now, so it needs no window: `inspect` shows the depth of the module of each matched file under `modules`; `analyze` lists the shallowest ranked modules in the terminal.
 
 ## Reading hidden coupling
 
