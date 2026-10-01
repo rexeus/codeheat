@@ -1,19 +1,12 @@
 // Owns which module each universe file belongs to.
 import { splitByDirectory } from "./directory-split.js";
+import { packageOf } from "./package-directories.js";
 
 /** The module a file belongs to. */
 export type ModuleRef = {
   /** Repository-relative directory; "." for files at the repository root. */
   readonly path: string;
   readonly kind: "package" | "directory";
-};
-
-/** The directories above a file, nearest first, without the repository root. */
-const enclosingDirectories = (file: string): ReadonlyArray<string> => {
-  const parts = file.split("/").slice(0, -1);
-  return parts.map((_, index) =>
-    parts.slice(0, parts.length - index).join("/"),
-  );
 };
 
 const directoryModules = (
@@ -34,9 +27,7 @@ const packagesThenDirectories = (
   const assigned = new Map<string, ModuleRef>();
   const outside: Array<string> = [];
   for (const file of files) {
-    const home = enclosingDirectories(file).find((directory) =>
-      packages.has(directory),
-    );
+    const home = packageOf(file, packages);
     if (home === undefined) {
       outside.push(file);
     } else {

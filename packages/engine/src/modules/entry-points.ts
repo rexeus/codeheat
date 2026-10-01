@@ -107,7 +107,7 @@ const detectEntryPoints = (
 };
 
 /** The universe files of each module, with the kind of the module. */
-export const groupByModule = (
+const groupByModule = (
   modules: ReadonlyMap<string, ModuleRef>,
 ): ReadonlyMap<string, ModuleFiles> => {
   const grouped = new Map<

@@ -3,8 +3,8 @@
 import { Effect, Path } from "effect";
 import type { FileSystem } from "effect";
 
-import type { ModuleRef } from "../modules/detect.js";
-import { groupByModule, packageMainEntries } from "../modules/entry-points.js";
+import { packageMainEntries } from "../modules/entry-points.js";
+import { packageOf } from "../modules/package-directories.js";
 import { readManifestFacts } from "../modules/package-manifest.js";
 import { directoryOf } from "./relative-path.js";
 import type { WorkspacePackage } from "./resolve.js";
@@ -21,21 +21,31 @@ export type Workspace = {
 
 /**
  * Reads `manifestFiles`, repository-relative paths of `package.json` files.
- * The packages are those among them whose directory is a package module of
- * `modules` and which have a `name`, each with the files that importing it by
- * name reaches (see `packageMainEntries`). `--entry` and the report's entry
- * points play no part: they describe interfaces, not what an import resolves
- * to. `root` is the repository root the paths are relative to.
+ * The packages are those among them whose directory is in `packages`, owns a `universe` file, and
+ * which have a `name`, each with the files that importing it by name reaches
+ * (see `packageMainEntries`) among the `universe` files it owns, those whose
+ * nearest package it is. The report's modules play no part, so a package that
+ * is split into directory modules (or is the whole analysis) is still
+ * importable by name. `--entry` and the report's entry points play no part
+ * either: they describe interfaces, not what an import resolves to. `root` is
+ * the repository root the paths are relative to.
  */
 export const readWorkspace = (
   root: string,
-  modules: ReadonlyMap<string, ModuleRef>,
+  universe: Iterable<string>,
+  packages: ReadonlySet<string>,
   manifestFiles: ReadonlyArray<string>,
 ): Effect.Effect<Workspace, never, FileSystem.FileSystem | Path.Path> =>
   Effect.gen(function* () {
     const path = yield* Path.Path;
-    const grouped = groupByModule(modules);
-    const packages = new Map<string, WorkspacePackage>();
+    const owned = new Map<string, Array<string>>();
+    for (const file of universe) {
+      const home = packageOf(file, packages);
+      if (home !== undefined) {
+        owned.set(home, [...(owned.get(home) ?? []), file]);
+      }
+    }
+    const byName = new Map<string, WorkspacePackage>();
     const ambiguous = new Set<string>();
     const dependencies = new Set<string>();
     for (const manifestFile of manifestFiles) {
@@ -47,22 +57,21 @@ export const readWorkspace = (
         dependencies.add(dependency);
       }
       const directory = directoryOf(manifestFile);
-      const module = grouped.get(directory);
-      if (facts.name !== undefined && module?.kind === "package") {
-        if (packages.has(facts.name)) {
+      if (facts.name !== undefined && owned.has(directory)) {
+        if (byName.has(facts.name)) {
           ambiguous.add(facts.name);
         }
-        packages.set(facts.name, {
+        byName.set(facts.name, {
           directory,
           entryPoints: packageMainEntries(
             directory,
             facts.rootTargets,
-            module.files,
+            owned.get(directory) ?? [],
           ),
         });
       }
     }
-    return { packages, ambiguous, dependencies };
+    return { packages: byName, ambiguous, dependencies };
   });
 
 /**

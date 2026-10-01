@@ -83,7 +83,6 @@ const measureLinked = (
       {
         ...place,
         universe: new Set(universe.files.map((file) => file.path)),
-        modules: universe.modules,
         adapters: options.adapters,
       },
       coupled.couplings,
