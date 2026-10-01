@@ -1,6 +1,6 @@
 // Owns how often a module's interface changes against its implementation:
 // the history-based signal for shallow or leaky modules.
-import { MAX_COMMIT_FILES } from "../coupling/coupling.js";
+import { countedCommits } from "../coupling/coupling.js";
 import type { History } from "../history/history.js";
 import type { Module } from "../report/module.js";
 import { roundReported } from "../report/precision.js";
@@ -108,12 +108,12 @@ const countCommit = (
 };
 
 /**
- * Counts, per module, the counted commits (at most `MAX_COMMIT_FILES` files)
+ * Counts, per module, the counted commits (see `countedCommits`)
  * that touched its entry points (`interfaceCommits`) and those that touched any
  * other file that is not test code (`implementationCommits`), and the share of
  * the latter that also touched an entry point (`leakage`). Each commit of
- * `history` is the distinct ids of the files it touched, ids being indexes into
- * `history.paths`; `entryPoints` maps each module path to its entry-point files.
+ * `history` lists the distinct ids of the files whose current file it touched,
+ * ids being indexes into `history.paths`; `entryPoints` maps each module path to its entry-point files.
  */
 export const measureInterfaces = (
   { commits, paths }: Pick<History, "commits" | "paths">,
@@ -128,14 +128,12 @@ export const measureInterfaces = (
     ]),
   );
   const leakedEntryPoints = new Set<string>();
-  for (const commit of commits) {
-    if (commit.length <= MAX_COMMIT_FILES) {
-      countCommit(
-        touchedBy(commit, paths, refs, entryFiles),
-        tallies,
-        leakedEntryPoints,
-      );
-    }
+  for (const commit of countedCommits(commits)) {
+    countCommit(
+      touchedBy(commit.files, paths, refs, entryFiles),
+      tallies,
+      leakedEntryPoints,
+    );
   }
   return {
     byModule: new Map(

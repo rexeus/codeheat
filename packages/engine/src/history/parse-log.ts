@@ -1,10 +1,14 @@
-// Owns reading `git log -z --numstat` output, incrementally.
+// Owns reading `git log -z --raw --numstat` output, incrementally.
 //
 // The log is requested with `--format=%x01%H%x00%ct`. Each commit then
 // arrives as NUL-terminated tokens:
-//   \u0001<sha> NUL <unix time> NUL [\n]<added>\t<deleted>\t<path> NUL ...
-// A rename entry has an empty path after the counts and is followed by two
-// more tokens, the old and the new path. Binary files show `-` for counts.
+//   \u0001<sha> NUL <unix time> NUL [\n]<raw entries><numstat entries>
+// A raw entry is `:<modes> <ids> <status>` followed by one path token, or two
+// (old and new) for a rename or copy; it tells which files the commit adds and
+// deletes.
+// A numstat entry is `<added>\t<deleted>\t<path>`. A rename entry has an
+// empty path after the counts and is followed by two more tokens, the old and
+// the new path. Binary files show `-` for counts.
 
 /** One file touched by a commit. */
 type Change = {
@@ -12,6 +16,12 @@ type Change = {
   readonly path: string;
   /** Set when the commit renamed the file. */
   readonly renamedFrom?: string;
+  /** Set when the commit deletes the file; a rename's old path is not a deletion. */
+  readonly removed?: true;
+  /** Set when the commit adds the file; a rename's new path is not an addition. */
+  readonly created?: true;
+  /** The object id of the content a deletion removed or an addition created. */
+  readonly blob?: string;
   /** 0 for binary files. */
   readonly added: number;
   readonly deleted: number;
@@ -28,6 +38,9 @@ export type Commit = {
 export const LOG_FORMAT_ARGS = [
   "--no-merges",
   "-M",
+  "--raw",
+  // Full object ids: an abbreviated one gains `...` under GIT_PRINT_SHA1_ELLIPSIS.
+  "--no-abbrev",
   "--numstat",
   "-z",
   "--no-show-signature",
@@ -36,8 +49,10 @@ export const LOG_FORMAT_ARGS = [
 
 const COMMIT_MARKER = "\u0001";
 const NUMSTAT = /^(\d+|-)\t(\d+|-)\t(.*)$/su;
+const RAW_STATUS =
+  /^:\d+ \d+ ([0-9a-f]+)(?:\.{3})? ([0-9a-f]+)(?:\.{3})? ([A-Z])\d*$/u;
 
-type Phase = "entry" | "time" | "renamedFrom" | "renamedTo";
+type Phase = "entry" | "time" | "rawPath" | "renamedFrom" | "renamedTo";
 
 type OpenCommit = { sha: string; time: number; changes: Array<Change> };
 
@@ -54,6 +69,11 @@ export class LogParser {
   #open: OpenCommit | undefined;
   #counts = { added: 0, deleted: 0 };
   #renamedFrom = "";
+  /** What the open commit adds or deletes, per path, from its raw entries. */
+  #marks = new Map<string, Pick<Change, "removed" | "created" | "blob">>();
+  #rawPaths = 0;
+  #rawStatus = "";
+  #rawBlobs = { old: "", new: "" };
 
   /** Consumes the next piece of output and returns the commits it completed. */
   push(chunk: string): ReadonlyArray<Commit> {
@@ -72,6 +92,10 @@ export class LogParser {
   #consume(token: string): ReadonlyArray<Commit> {
     if (this.#phase === "time") {
       return this.#readTime(token);
+    }
+    if (this.#phase === "rawPath") {
+      this.#readRawPath(token);
+      return [];
     }
     if (this.#phase === "renamedFrom") {
       this.#renamedFrom = token;
@@ -105,6 +129,7 @@ export class LogParser {
   #begin(sha: string): ReadonlyArray<Commit> {
     const finished = this.#close();
     this.#open = { sha, time: 0, changes: [] };
+    this.#marks = new Map();
     this.#phase = "time";
     return finished;
   }
@@ -117,8 +142,30 @@ export class LogParser {
     return [];
   }
 
+  #readRawPath(path: string): void {
+    if (this.#rawStatus === "D") {
+      this.#marks.set(path, { removed: true, blob: this.#rawBlobs.old });
+    } else if (this.#rawStatus === "A") {
+      this.#marks.set(path, { created: true, blob: this.#rawBlobs.new });
+    }
+    this.#rawPaths -= 1;
+    if (this.#rawPaths === 0) {
+      this.#phase = "entry";
+    }
+  }
+
   #readEntry(token: string): ReadonlyArray<Commit> {
-    const match = NUMSTAT.exec(token.replace(/^\n/u, ""));
+    const entry = token.replace(/^\n/u, "");
+    const raw = RAW_STATUS.exec(entry);
+    const status = raw?.[3];
+    if (raw !== null && status !== undefined) {
+      this.#rawBlobs = { old: raw[1] ?? "", new: raw[2] ?? "" };
+      this.#rawStatus = status;
+      this.#rawPaths = status === "R" || status === "C" ? 2 : 1;
+      this.#phase = "rawPath";
+      return [];
+    }
+    const match = NUMSTAT.exec(entry);
     if (this.#open === undefined || match === null) {
       return [];
     }
@@ -127,7 +174,11 @@ export class LogParser {
     if (path === "") {
       this.#phase = "renamedFrom";
     } else {
-      this.#open.changes.push({ path, ...this.#counts });
+      this.#open.changes.push({
+        path,
+        ...this.#counts,
+        ...this.#marks.get(path),
+      });
     }
     return [];
   }

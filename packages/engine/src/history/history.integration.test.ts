@@ -28,8 +28,8 @@ const history = (
 
 /** Each commit's touched paths, sorted. */
 const pathsOfCommits = (result: History): Array<Array<string>> =>
-  result.commits.map((ids) =>
-    Array.from(ids, (id) => result.paths[id] ?? "").toSorted(),
+  result.commits.map(({ files }) =>
+    Array.from(files, (id) => result.paths[id] ?? "").toSorted(),
   );
 
 /** a.ts is created, edited, renamed to b.ts, edited, renamed to c.ts, edited. */
@@ -98,6 +98,152 @@ layer(NodeServices.layer)("readHistory", (it) => {
     }),
   );
 });
+
+layer(NodeServices.layer)("readHistory lives of a path", (it) => {
+  it.effect(
+    "starts a recreated path afresh and still counts the dead file's commits",
+    () =>
+      Effect.gen(function* () {
+        const repo = yield* makeTempRepository;
+        yield* repo.commit("2026-03-01T12:00:00Z", { "a.ts": tenLines });
+        yield* repo.commit("2026-03-02T12:00:00Z", {
+          "a.ts": `${tenLines}two\n`,
+        });
+        yield* repo.git("rm", "a.ts");
+        yield* repo.commit("2026-03-03T12:00:00Z");
+        yield* repo.commit("2026-03-04T12:00:00Z", { "a.ts": "new\n" });
+        yield* repo.commit("2026-03-05T12:00:00Z", { "a.ts": "new\nmore\n" });
+
+        const result = yield* history(repo, { universe: new Set(["a.ts"]) });
+
+        assert.deepStrictEqual(result.files.get("a.ts"), {
+          revisions: 2,
+          linesAdded: 2,
+          linesDeleted: 0,
+        });
+        assert.deepStrictEqual(pathsOfCommits(result), [
+          ["a.ts"],
+          ["a.ts"],
+          [],
+          [],
+          [],
+        ]);
+      }),
+  );
+
+  it.effect("treats deleting and adding a path in one commit as an edit", () =>
+    Effect.gen(function* () {
+      const repo = yield* makeTempRepository;
+      yield* repo.commit("2026-03-01T12:00:00Z", { "a.ts": tenLines });
+      yield* repo.git("rm", "a.ts");
+      yield* repo.commit("2026-03-02T12:00:00Z", { "a.ts": "replaced\n" });
+
+      const result = yield* history(repo, { universe: new Set(["a.ts"]) });
+
+      assert.deepStrictEqual(result.files.get("a.ts"), {
+        revisions: 2,
+        linesAdded: 11,
+        linesDeleted: 10,
+      });
+    }),
+  );
+});
+
+layer(NodeServices.layer)("readHistory lives of a path and renames", (it) => {
+  it.effect(
+    "starts a path at the file renamed onto it after the deletion",
+    () =>
+      Effect.gen(function* () {
+        const repo = yield* makeTempRepository;
+        yield* repo.commit("2026-03-01T12:00:00Z", { "a.ts": "dead\n" });
+        yield* repo.git("rm", "a.ts");
+        yield* repo.commit("2026-03-02T12:00:00Z");
+        yield* repo.commit("2026-03-03T12:00:00Z", { "b.ts": tenLines });
+        yield* repo.git("mv", "b.ts", "a.ts");
+        yield* repo.commit("2026-03-04T12:00:00Z");
+
+        const result = yield* history(repo, { universe: new Set(["a.ts"]) });
+
+        assert.deepStrictEqual(result.files.get("a.ts"), {
+          revisions: 2,
+          linesAdded: 10,
+          linesDeleted: 0,
+        });
+      }),
+  );
+
+  it.effect(
+    "keeps the history of a file created before the deletion of the path it is renamed onto",
+    () =>
+      Effect.gen(function* () {
+        const repo = yield* makeTempRepository;
+        yield* repo.commit("2026-03-01T12:00:00Z", { "b.ts": tenLines });
+        yield* repo.commit("2026-03-02T12:00:00Z", { "a.ts": "dead\n" });
+        yield* repo.git("rm", "a.ts");
+        yield* repo.commit("2026-03-03T12:00:00Z");
+        yield* repo.git("mv", "b.ts", "a.ts");
+        yield* repo.commit("2026-03-04T12:00:00Z");
+
+        const result = yield* history(repo, { universe: new Set(["a.ts"]) });
+
+        // b.ts's creation and its rename; the dead a.ts is a different file
+        assert.deepStrictEqual(result.files.get("a.ts"), {
+          revisions: 2,
+          linesAdded: 10,
+          linesDeleted: 0,
+        });
+      }),
+  );
+});
+
+layer(NodeServices.layer)(
+  "readHistory lives of a path by the name it had",
+  (it) => {
+    it.effect(
+      "ends a renamed file's history with its deletion under the new name",
+      () =>
+        Effect.gen(function* () {
+          const repo = yield* makeTempRepository;
+          yield* repo.commit("2026-03-01T12:00:00Z", { "q.ts": tenLines });
+          yield* repo.git("mv", "q.ts", "p.ts");
+          yield* repo.commit("2026-03-02T12:00:00Z");
+          yield* repo.git("rm", "p.ts");
+          yield* repo.commit("2026-03-03T12:00:00Z");
+          yield* repo.commit("2026-03-04T12:00:00Z", { "p.ts": "new\n" });
+
+          const result = yield* history(repo, { universe: new Set(["p.ts"]) });
+
+          assert.deepStrictEqual(result.files.get("p.ts"), {
+            revisions: 1,
+            linesAdded: 1,
+            linesDeleted: 0,
+          });
+        }),
+    );
+
+    it.effect(
+      "keeps a recreated file's history when it is renamed afterwards",
+      () =>
+        Effect.gen(function* () {
+          const repo = yield* makeTempRepository;
+          yield* repo.commit("2026-03-01T12:00:00Z", { "p.ts": "dead\n" });
+          yield* repo.git("rm", "p.ts");
+          yield* repo.commit("2026-03-02T12:00:00Z");
+          yield* repo.commit("2026-03-03T12:00:00Z", { "p.ts": tenLines });
+          yield* repo.git("mv", "p.ts", "r.ts");
+          yield* repo.commit("2026-03-04T12:00:00Z");
+
+          const result = yield* history(repo, { universe: new Set(["r.ts"]) });
+
+          assert.deepStrictEqual(result.files.get("r.ts"), {
+            revisions: 2,
+            linesAdded: 10,
+            linesDeleted: 0,
+          });
+        }),
+    );
+  },
+);
 
 layer(NodeServices.layer)("readHistory universe and window", (it) => {
   it.effect("drops paths outside the universe", () =>

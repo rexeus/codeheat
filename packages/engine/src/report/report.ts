@@ -12,7 +12,10 @@ const Rank = Schema.Int.check(Schema.isGreaterThanOrEqualTo(1));
 export const AnalysisWindow = Schema.Struct({
   since: Schema.String,
   until: Schema.String,
-  /** Non-merge commits in the window that touched at least one universe file. */
+  /**
+   * Non-merge commits in the window that touched at least one universe file,
+   * or a file deleted at a universe path (a path recreated later starts afresh).
+   */
   commits: Count,
   /** Commits small enough to count for coupling (see `Thresholds.maxCommitFiles`). */
   couplingCommits: Count,
@@ -25,8 +28,9 @@ const Comparison = Schema.Struct({
   previousUntil: Schema.String,
   /**
    * Non-merge commits in the previous window that touched at least one
-   * universe file. 0 means there is nothing to compare against: every trend is
-   * null, which is not the same as "nothing changed".
+   * universe file, counted as `window.commits` is. 0 means there is nothing
+   * to compare against: every trend is null, which is not the same as
+   * "nothing changed".
    */
   previousCommits: Count,
   /**

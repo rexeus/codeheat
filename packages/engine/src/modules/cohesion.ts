@@ -3,7 +3,7 @@
 // module records, adding the interface churn measured next to it.
 import { Order } from "effect";
 
-import { MAX_COMMIT_FILES } from "../coupling/coupling.js";
+import { countedCommits } from "../coupling/coupling.js";
 import type { History } from "../history/history.js";
 import type { Module } from "../report/module.js";
 import { roundReported } from "../report/precision.js";
@@ -125,8 +125,8 @@ const toModule = (
 };
 
 /**
- * Measures every module over the counted commits (at most `MAX_COMMIT_FILES`
- * files) of `history`; `refs` maps every universe file to its module, and
+ * Measures every module over the counted commits (see `countedCommits`) of
+ * `history`; `refs` maps every universe file to its module, and
  * `interfaces` maps every module path to its measured interface churn (see
  * `measureInterfaces`; a module missing there has none).
  *
@@ -142,10 +142,9 @@ export const measureModules = (
 ): ReadonlyArray<Module> => {
   const tallies = tallyFiles(refs);
   const moduleOfId = paths.map((path) => refs.get(path)?.path ?? ".");
-  const counted = commits.filter((commit) => commit.length <= MAX_COMMIT_FILES);
-  for (const commit of counted) {
+  for (const commit of countedCommits(commits)) {
     countCommit(
-      new Set(Array.from(commit, (id) => moduleOfId[id] ?? ".")),
+      new Set(Array.from(commit.files, (id) => moduleOfId[id] ?? ".")),
       tallies,
     );
   }

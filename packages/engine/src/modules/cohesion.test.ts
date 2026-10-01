@@ -19,9 +19,10 @@ const measure = (
   );
   return measureModules(
     {
-      commits: commits.map((files) =>
-        Uint32Array.from(files, (f) => paths.indexOf(f)),
-      ),
+      commits: commits.map((files) => ({
+        files: Uint32Array.from(files, (f) => paths.indexOf(f)),
+        size: files.length,
+      })),
       paths,
     },
     refs,
@@ -130,6 +131,30 @@ describe("measureModules partners", () => {
       { path: "p2", sharedCommits: 1 },
       { path: "p3", sharedCommits: 1 },
       { path: "p4", sharedCommits: 1 },
+    ]);
+  });
+});
+
+describe("measureModules commit size", () => {
+  it("leaves out a commit that touched more than 50 files, however few of them are left to count", () => {
+    const refs = new Map<string, ModuleRef>([
+      ["a/a.ts", { path: "a", kind: "directory" }],
+      ["b/b.ts", { path: "b", kind: "directory" }],
+    ]);
+    const touched = { files: Uint32Array.of(0, 1), size: 51 };
+
+    const modules = measureModules(
+      { commits: [touched, touched], paths: [...refs.keys()] },
+      refs,
+      5,
+      new Map(),
+    );
+
+    expect(
+      modules.map(({ commits, cohesion }) => [commits, cohesion]),
+    ).toStrictEqual([
+      [0, null],
+      [0, null],
     ]);
   });
 });

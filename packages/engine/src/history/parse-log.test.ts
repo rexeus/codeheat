@@ -75,12 +75,79 @@ describe("LogParser changes", () => {
   });
 });
 
+describe("LogParser deletions", () => {
+  // Real `git log -z --raw --numstat` output: the raw entries precede the numstat entries.
+  it("marks the file a commit deletes and the one it adds with the content, and not a modified or renamed one", () => {
+    const raw =
+      "\u0001d\u00007\0\n" +
+      ":100644 100644 f00c965 f00c965 R100\0old.ts\0new.ts\0" +
+      ":000000 100644 0000000 30bf1cc A\0added.ts\0" +
+      ":100644 000000 587be6b 0000000 D\0dir/gone.ts\0" +
+      ":100644 100644 3e75765 337b506 M\0edited.ts\0" +
+      "0\t0\t\0old.ts\0new.ts\0" +
+      "11\t0\tadded.ts\0" +
+      "0\t7\tdir/gone.ts\0" +
+      "1\t1\tedited.ts\0";
+
+    expect(parse([raw])[0]?.changes).toStrictEqual([
+      { path: "new.ts", renamedFrom: "old.ts", added: 0, deleted: 0 },
+      {
+        path: "added.ts",
+        added: 11,
+        deleted: 0,
+        created: true,
+        blob: "30bf1cc",
+      },
+      {
+        path: "dir/gone.ts",
+        added: 0,
+        deleted: 7,
+        removed: true,
+        blob: "587be6b",
+      },
+      { path: "edited.ts", added: 1, deleted: 1 },
+    ]);
+  });
+
+  it("does not carry a deletion or an addition over to the next commit's file of the same name", () => {
+    const raw =
+      "\u0001e\u00002\0\n:100644 000000 587be6b 0000000 D\0a.ts\0" +
+      "0\t3\ta.ts\0" +
+      "\u0001f\u00001\0\n:000000 100644 0000000 587be6b A\0a.ts\0" +
+      "3\t0\ta.ts\0";
+
+    expect(parse([raw]).map(({ changes }) => changes)).toStrictEqual([
+      [{ path: "a.ts", added: 0, deleted: 3, removed: true, blob: "587be6b" }],
+      [{ path: "a.ts", added: 3, deleted: 0, created: true, blob: "587be6b" }],
+    ]);
+  });
+
+  it("reads raw entries whose object ids end with an ellipsis", () => {
+    const raw =
+      "\u0001g\u00003\0\n" +
+      ":100644 000000 587be6b... 0000000... D\0gone.ts\0" +
+      ":100644 100644 3e75765... 337b506... M\0edited.ts\0" +
+      "0\t7\tgone.ts\0" +
+      "1\t1\tedited.ts\0";
+
+    expect(parse([raw])[0]?.changes).toStrictEqual([
+      { path: "gone.ts", added: 0, deleted: 7, removed: true, blob: "587be6b" },
+      { path: "edited.ts", added: 1, deleted: 1 },
+    ]);
+  });
+});
+
 describe("LogParser chunking", () => {
   it("yields the same commits however the output is split into chunks", () => {
     const raw =
-      "\u0001aaa\u0000200\0\n3\t1\tsrc/a.ts\0" +
+      "\u0001aaa\u0000200\0\n" +
+      ":100644 100644 3e75765 337b506 M\0src/a.ts\0" +
+      ":100644 100644 f00c965 f00c965 R100\0old.ts\0new.ts\0" +
+      "3\t1\tsrc/a.ts\0" +
       "2\t1\t\0old.ts\0new.ts\0" +
-      "\u0001bbb\u0000100\0\n-\t-\tlogo.png\0";
+      "\u0001bbb\u0000100\0\n" +
+      ":100644 000000 587be6b 0000000 D\0logo.png\0" +
+      "-\t-\tlogo.png\0";
 
     const whole = parse([raw]);
     const bySingleCharacters = parse(raw.split(""));

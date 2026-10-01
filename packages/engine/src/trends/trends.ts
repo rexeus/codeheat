@@ -8,7 +8,7 @@ import type { FileStats } from "../report/report.js";
 
 /** What one window's measurement says; a `Report`'s files and modules, plus its commit count. */
 type WindowMeasure = {
-  /** Commits in the window that touched the universe. */
+  /** Commits in the window that touched the universe (`window.commits`). */
   readonly commits: number;
   readonly files: ReadonlyArray<FileStats>;
   readonly modules: ReadonlyArray<Module>;
