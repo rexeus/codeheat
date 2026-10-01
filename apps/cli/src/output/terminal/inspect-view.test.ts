@@ -23,12 +23,21 @@ const entry: InspectResult["matches"][number] = {
       sharedCommits: 31,
       probability: 0.646,
       testPair: true,
+      crossesModule: false,
     },
     {
       path: "packages/billing/src/tax.ts",
       sharedCommits: 24,
       probability: 0.5,
       testPair: false,
+      crossesModule: false,
+    },
+    {
+      path: "packages/web/src/checkout.ts",
+      sharedCommits: 12,
+      probability: 0.25,
+      testPair: false,
+      crossesModule: true,
     },
   ],
 };
@@ -80,6 +89,7 @@ describe("renderInspect", () => {
         "co-change  shared  partner",
         "      65%      31  packages/billing/src/invoice.test.ts (test)",
         "      50%      24  packages/billing/src/tax.ts",
+        "      25%      12  packages/web/src/checkout.ts (other module)",
       ].join("\n"),
     );
   });

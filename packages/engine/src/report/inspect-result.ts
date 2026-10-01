@@ -14,6 +14,8 @@ const Partner = Schema.Struct({
   /** `sharedCommits / revisions(inspected file)`: how likely a change here also changes the partner; rounded to 4 decimals. */
   probability: UnitInterval,
   testPair: Schema.Boolean,
+  /** The partner belongs to a different module than the inspected file. */
+  crossesModule: Schema.Boolean,
 });
 
 /** One inspected file with its standing in the whole universe. */

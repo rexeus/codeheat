@@ -8,6 +8,13 @@ import { plain, renderTable } from "./table.js";
 
 type Entry = InspectResult["matches"][number];
 
+const partnerMarker = (partner: Entry["partners"][number]): string => {
+  if (partner.testPair) {
+    return " (test)";
+  }
+  return partner.crossesModule ? " (other module)" : "";
+};
+
 const partnerLines = (entry: Entry, style: Style): ReadonlyArray<string> =>
   entry.partners.length === 0
     ? ["No change coupling above the thresholds."]
@@ -20,10 +27,7 @@ const partnerLines = (entry: Entry, style: Style): ReadonlyArray<string> =>
         entry.partners.map((partner) => [
           plain(percent(partner.probability)),
           plain(String(partner.sharedCommits)),
-          plain(
-            escapeForTerminal(partner.path) +
-              (partner.testPair ? " (test)" : ""),
-          ),
+          plain(escapeForTerminal(partner.path) + partnerMarker(partner)),
         ]),
         style,
       );

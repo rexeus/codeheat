@@ -41,6 +41,7 @@ export const partnersOf = (
       sharedCommits: coupling.sharedCommits,
       probability: roundReported(coupling.sharedCommits / revisions),
       testPair: coupling.testPair,
+      crossesModule: coupling.crossesModule,
     }))
     .toSorted(
       (a, b) =>

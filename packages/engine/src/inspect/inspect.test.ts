@@ -21,15 +21,16 @@ const coupling = (
   a: string,
   b: string,
   sharedCommits: number,
-  testPair = false,
+  flags: Partial<Pick<Coupling, "testPair" | "crossesModule">> = {},
 ): Coupling => ({
   a,
   b,
   sharedCommits,
   degree: 0.5,
   distance: 0,
-  testPair,
+  testPair: false,
   crossesModule: false,
+  ...flags,
 });
 
 // Least cohesive first, as `analyze` reports them.
@@ -168,6 +169,7 @@ describe("inspect partners", () => {
       sharedCommits: 14,
       probability: 0.7,
       testPair: false,
+      crossesModule: false,
     });
   });
 
@@ -192,17 +194,31 @@ describe("inspect partners", () => {
     const [a, b] = inspect(report, ["*.ts"]).matches;
 
     expect(a?.partners).toStrictEqual([
-      { path: "b.ts", sharedCommits: 4, probability: 0.4, testPair: false },
+      {
+        path: "b.ts",
+        sharedCommits: 4,
+        probability: 0.4,
+        testPair: false,
+        crossesModule: false,
+      },
     ]);
     expect(b?.partners).toStrictEqual([
-      { path: "a.ts", sharedCommits: 4, probability: 1, testPair: false },
+      {
+        path: "a.ts",
+        sharedCommits: 4,
+        probability: 1,
+        testPair: false,
+        crossesModule: false,
+      },
     ]);
   });
+});
 
+describe("inspect partner marks", () => {
   it("marks a partner that is the file's test as a test pair", () => {
     const report = reportOf(
       [stats("src/a.ts", 1, 10)],
-      [coupling("src/a.test.ts", "src/a.ts", 5, true)],
+      [coupling("src/a.test.ts", "src/a.ts", 5, { testPair: true })],
     );
 
     const [entry] = inspect(report, ["src/a.ts"]).matches;
@@ -213,7 +229,21 @@ describe("inspect partners", () => {
         sharedCommits: 5,
         probability: 0.5,
         testPair: true,
+        crossesModule: false,
       },
+    ]);
+  });
+
+  it("marks a partner in another module", () => {
+    const report = reportOf(
+      [stats("src/a.ts", 1, 10)],
+      [coupling("lib/b.ts", "src/a.ts", 5, { crossesModule: true })],
+    );
+
+    const [entry] = inspect(report, ["src/a.ts"]).matches;
+
+    expect(entry?.partners.map(({ crossesModule }) => crossesModule)).toEqual([
+      true,
     ]);
   });
 });
