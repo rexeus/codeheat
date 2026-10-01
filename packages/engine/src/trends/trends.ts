@@ -1,5 +1,7 @@
 // Owns comparing two adjacent windows: how each file's score and each module's
-// cohesion moved. Both windows are measured with the same universe and thresholds.
+// cohesion moved. Both windows are measured over the same universe (the files
+// that exist now) and with the same fixed limits, such as `maxCommitFiles`;
+// the module floor `minModuleCommits` is the latest window's.
 import type { Module } from "../report/module.js";
 import { roundReported } from "../report/precision.js";
 import type { FileStats } from "../report/report.js";
@@ -23,13 +25,14 @@ const withFileTrends = (
   const before = new Map(previous.files.map((file) => [file.path, file]));
   return current.files.map((file) => {
     const previousScore = before.get(file.path)?.score ?? 0;
+    const previousRevisions = before.get(file.path)?.revisions ?? 0;
     return {
       ...file,
       trend: {
         previousScore,
+        previousRevisions,
         scoreDelta: roundReported(file.score - previousScore),
-        newlyActive:
-          file.revisions > 0 && (before.get(file.path)?.revisions ?? 0) === 0,
+        newlyActive: file.revisions > 0 && previousRevisions === 0,
       },
     };
   });
@@ -38,21 +41,27 @@ const withFileTrends = (
 const withModuleTrends = (
   current: ReadonlyArray<Module>,
   previous: ReadonlyArray<Module>,
+  minModuleCommits: number,
 ): ReadonlyArray<Module> => {
-  const previousCohesion = new Map(
-    previous.map((module) => [module.path, module.cohesion]),
-  );
+  const before = new Map(previous.map((module) => [module.path, module]));
   return current.map((module) => {
-    const before = previousCohesion.get(module.path) ?? null;
-    return module.cohesion === null || before === null
-      ? module
-      : {
-          ...module,
-          trend: {
-            previousCohesion: before,
-            cohesionDelta: roundReported(module.cohesion - before),
-          },
-        };
+    const earlier = before.get(module.path);
+    if (
+      earlier === undefined ||
+      module.cohesion === null ||
+      earlier.cohesion === null ||
+      module.commits < minModuleCommits ||
+      earlier.commits < minModuleCommits
+    ) {
+      return module;
+    }
+    return {
+      ...module,
+      trend: {
+        previousCohesion: earlier.cohesion,
+        cohesionDelta: roundReported(module.cohesion - earlier.cohesion),
+      },
+    };
   });
 };
 
@@ -63,13 +72,19 @@ const withModuleTrends = (
  * movement relative to each window's hottest file, not in absolute change.
  * A file with revisions only in `current` is `newlyActive`: its delta is its
  * score, which says it appeared, not that it warmed up.
- * A file has no trend when either window has no commit; a module has none
- * when it has no counted commit in either window.
+ * A file has no trend when either window has no commit. A module has none
+ * unless it has at least `minModuleCommits` counted commits in both windows:
+ * the cohesion of a handful of commits swings too much to call a change.
  */
 export const withTrends = (
   current: WindowMeasure,
   previous: WindowMeasure,
+  minModuleCommits: number,
 ): Pick<WindowMeasure, "files" | "modules"> => ({
   files: withFileTrends(current, previous),
-  modules: withModuleTrends(current.modules, previous.modules),
+  modules: withModuleTrends(
+    current.modules,
+    previous.modules,
+    minModuleCommits,
+  ),
 });

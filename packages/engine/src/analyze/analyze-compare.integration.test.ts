@@ -29,8 +29,8 @@ const fresh = "packages/a/fresh.ts";
  * P1 hot                     C1 hot     (exactly at the split: belongs to the latest window)
  * P2 hot                     C2 other, fresh (created here)
  * P3 hot, b                  C3 other
- * P4 hot, b
- * P5 other
+ * P4 hot, b                 C4 other
+ * P5 other                   C5 other
  */
 const buildHistory = (repo: TempRepository) =>
   Effect.gen(function* () {
@@ -53,13 +53,15 @@ const buildHistory = (repo: TempRepository) =>
       [fresh]: "0\n",
     });
     yield* repo.commit("2026-05-10T12:00:00Z", { [other]: "8\n" });
+    yield* repo.commit("2026-05-20T12:00:00Z", { [other]: "9\n" });
+    yield* repo.commit("2026-05-25T12:00:00Z", { [other]: "10\n" });
   });
 
-const moved = (previousScore: number, scoreDelta: number) => ({
-  previousScore,
-  scoreDelta,
-  newlyActive: false,
-});
+const moved = (
+  previousScore: number,
+  scoreDelta: number,
+  previousRevisions: number,
+) => ({ previousScore, previousRevisions, scoreDelta, newlyActive: false });
 
 const withoutTrends = (report: Report): Report => ({
   ...report,
@@ -89,14 +91,14 @@ layer(NodeServices.layer)("analyze --compare", (it) => {
         previousTruncated: false,
       });
       assert.strictEqual(report.window.since, "2026-03-01T12:00:00.000Z");
-      assert.strictEqual(report.window.commits, 3);
+      assert.strictEqual(report.window.commits, 5);
     }),
   );
 });
 
 layer(NodeServices.layer)("analyze --compare file trends", (it) => {
   // previous revisions: hot 4, b 2, other 1 -> 1, ln3/ln5 = 0.6826, ln2/ln5 = 0.4307
-  // latest revisions:   hot 1, other 2, fresh 1, b 0 -> ln2/ln3 = 0.6309, 1, 0.6309, 0
+  // latest revisions:   hot 1, other 4, fresh 1, b 0 -> ln2/ln5 = 0.4307, 1, 0.4307, 0
   // fresh has no previous revision, quiet none in either window
   it.effect("reports how each file's normalized score moved", () =>
     Effect.gen(function* () {
@@ -109,22 +111,27 @@ layer(NodeServices.layer)("analyze --compare file trends", (it) => {
       assert.deepStrictEqual(
         report.files.map(({ path, score, trend }) => [path, score, trend]),
         [
-          [other, 1, moved(0.4307, 0.5693)],
+          [other, 1, moved(0.4307, 0.5693, 1)],
           [
             fresh,
-            0.6309,
-            { previousScore: 0, scoreDelta: 0.6309, newlyActive: true },
+            0.4307,
+            {
+              previousScore: 0,
+              previousRevisions: 0,
+              scoreDelta: 0.4307,
+              newlyActive: true,
+            },
           ],
-          [hot, 0.6309, moved(1, -0.3691)],
-          [b, 0, moved(0.6826, -0.6826)],
-          [quiet, 0, moved(0, 0)],
+          [hot, 0.4307, moved(1, -0.5693, 4)],
+          [b, 0, moved(0.6826, -0.6826, 2)],
+          [quiet, 0, moved(0, 0, 0)],
         ],
       );
     }),
   );
 
   // previous: a has 5 commits, 3 of them local (0.6); b has 2, none local (0)
-  // latest:   a has 3 commits, all local (1); b has none
+  // latest:   a has 5 commits, all local (1); b has none
   it.effect(
     "reports how each module's cohesion moved and leaves a quiet module without trend",
     () =>
@@ -144,6 +151,54 @@ layer(NodeServices.layer)("analyze --compare file trends", (it) => {
           [
             ["packages/a", 1, { previousCohesion: 0.6, cohesionDelta: 0.4 }],
             ["packages/b", null, null],
+          ],
+        );
+      }),
+  );
+});
+
+layer(NodeServices.layer)("analyze --compare module trends", (it) => {
+  // c: 1 commit before, 5 now. d: 5 commits before, 1 now. The floor is 5 counted commits in both windows.
+  it.effect(
+    "gives a module no trend unless both windows reach minModuleCommits",
+    () =>
+      Effect.gen(function* () {
+        yield* setNow;
+        const repo = yield* makeTempRepository;
+        yield* repo.commit("2025-11-01T12:00:00Z", {
+          "packages/c/package.json": manifest("c"),
+          "packages/d/package.json": manifest("d"),
+          "packages/c/c.ts": "0\n",
+          "packages/d/d.ts": "0\n",
+        });
+        yield* repo.commit("2026-02-01T12:00:00Z", {
+          "packages/c/c.ts": "1\n",
+        });
+        for (const day of [1, 2, 3, 4, 5]) {
+          yield* repo.commit(`2025-12-0${day}T12:00:00Z`, {
+            "packages/d/d.ts": `${day}\n`,
+          });
+          yield* repo.commit(`2026-04-0${day}T12:00:00Z`, {
+            "packages/c/c.ts": `${day + 1}\n`,
+          });
+        }
+
+        yield* repo.commit("2026-05-01T12:00:00Z", {
+          "packages/d/d.ts": "9\n",
+        });
+
+        const report = yield* analyze(compareOptions(repo));
+
+        assert.strictEqual(report.thresholds.minModuleCommits, 5);
+        assert.deepStrictEqual(
+          report.modules.map(({ path, commits, trend }) => [
+            path,
+            commits,
+            trend,
+          ]),
+          [
+            ["packages/c", 5, null],
+            ["packages/d", 1, null],
           ],
         );
       }),

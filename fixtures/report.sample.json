@@ -64,6 +64,7 @@
       ],
       "trend": {
         "previousScore": 0.66,
+        "previousRevisions": 33,
         "scoreDelta": 0.31,
         "newlyActive": false
       }
@@ -89,6 +90,7 @@
       ],
       "trend": {
         "previousScore": 0.9213,
+        "previousRevisions": 36,
         "scoreDelta": -0.12,
         "newlyActive": false
       }
@@ -114,6 +116,7 @@
       ],
       "trend": {
         "previousScore": 0.7311,
+        "previousRevisions": 34,
         "scoreDelta": 0.05,
         "newlyActive": false
       }
@@ -139,6 +142,7 @@
       ],
       "trend": {
         "previousScore": 0.9092,
+        "previousRevisions": 24,
         "scoreDelta": -0.2,
         "newlyActive": false
       }
@@ -164,6 +168,7 @@
       ],
       "trend": {
         "previousScore": 0.5632,
+        "previousRevisions": 21,
         "scoreDelta": 0.14,
         "newlyActive": false
       }
@@ -189,6 +194,7 @@
       ],
       "trend": {
         "previousScore": 0.6946,
+        "previousRevisions": 22,
         "scoreDelta": 0.0,
         "newlyActive": false
       }
@@ -214,6 +220,7 @@
       ],
       "trend": {
         "previousScore": 0.7055,
+        "previousRevisions": 25,
         "scoreDelta": -0.08,
         "newlyActive": false
       }
@@ -239,6 +246,7 @@
       ],
       "trend": {
         "previousScore": 0.3245,
+        "previousRevisions": 10,
         "scoreDelta": 0.22,
         "newlyActive": false
       }
@@ -264,6 +272,7 @@
       ],
       "trend": {
         "previousScore": 0.6813,
+        "previousRevisions": 18,
         "scoreDelta": -0.15,
         "newlyActive": false
       }
@@ -289,6 +298,7 @@
       ],
       "trend": {
         "previousScore": 0.4103,
+        "previousRevisions": 11,
         "scoreDelta": 0.02,
         "newlyActive": false
       }
@@ -314,6 +324,7 @@
       ],
       "trend": {
         "previousScore": 0.1137,
+        "previousRevisions": 2,
         "scoreDelta": 0.31,
         "newlyActive": false
       }
@@ -339,6 +350,7 @@
       ],
       "trend": {
         "previousScore": 0.5363,
+        "previousRevisions": 12,
         "scoreDelta": -0.12,
         "newlyActive": false
       }
@@ -364,6 +376,7 @@
       ],
       "trend": {
         "previousScore": 0.3643,
+        "previousRevisions": 6,
         "scoreDelta": 0.05,
         "newlyActive": false
       }
@@ -389,6 +402,7 @@
       ],
       "trend": {
         "previousScore": 0.5996,
+        "previousRevisions": 9,
         "scoreDelta": -0.2,
         "newlyActive": false
       }
@@ -414,6 +428,7 @@
       ],
       "trend": {
         "previousScore": 0.2377,
+        "previousRevisions": 4,
         "scoreDelta": 0.14,
         "newlyActive": false
       }
@@ -439,6 +454,7 @@
       ],
       "trend": {
         "previousScore": 0.3671,
+        "previousRevisions": 5,
         "scoreDelta": 0.0,
         "newlyActive": false
       }
@@ -464,6 +480,7 @@
       ],
       "trend": {
         "previousScore": 0.416,
+        "previousRevisions": 6,
         "scoreDelta": -0.08,
         "newlyActive": false
       }
@@ -489,6 +506,7 @@
       ],
       "trend": {
         "previousScore": 0.1104,
+        "previousRevisions": 1,
         "scoreDelta": 0.22,
         "newlyActive": false
       }
@@ -514,6 +532,7 @@
       ],
       "trend": {
         "previousScore": 0.4771,
+        "previousRevisions": 6,
         "scoreDelta": -0.15,
         "newlyActive": false
       }
@@ -539,6 +558,7 @@
       ],
       "trend": {
         "previousScore": 0.3048,
+        "previousRevisions": 6,
         "scoreDelta": 0.02,
         "newlyActive": false
       }
@@ -564,6 +584,7 @@
       ],
       "trend": {
         "previousScore": 0,
+        "previousRevisions": 0,
         "scoreDelta": 0.2783,
         "newlyActive": true
       }
@@ -589,6 +610,7 @@
       ],
       "trend": {
         "previousScore": 0.3901,
+        "previousRevisions": 9,
         "scoreDelta": -0.12,
         "newlyActive": false
       }
@@ -614,6 +636,7 @@
       ],
       "trend": {
         "previousScore": 0.2114,
+        "previousRevisions": 3,
         "scoreDelta": 0.05,
         "newlyActive": false
       }
@@ -639,6 +662,7 @@
       ],
       "trend": {
         "previousScore": 0.461,
+        "previousRevisions": 16,
         "scoreDelta": -0.2,
         "newlyActive": false
       }
@@ -664,6 +688,7 @@
       ],
       "trend": {
         "previousScore": 0.113,
+        "previousRevisions": 1,
         "scoreDelta": 0.14,
         "newlyActive": false
       }
@@ -689,6 +714,7 @@
       ],
       "trend": {
         "previousScore": 0.2443,
+        "previousRevisions": 3,
         "scoreDelta": 0.0,
         "newlyActive": false
       }
@@ -714,6 +740,7 @@
       ],
       "trend": {
         "previousScore": 0.301,
+        "previousRevisions": 10,
         "scoreDelta": -0.08,
         "newlyActive": false
       }
@@ -739,6 +766,7 @@
       ],
       "trend": {
         "previousScore": 0,
+        "previousRevisions": 0,
         "scoreDelta": 0.2179,
         "newlyActive": true
       }
@@ -764,6 +792,7 @@
       ],
       "trend": {
         "previousScore": 0.3677,
+        "previousRevisions": 3,
         "scoreDelta": -0.15,
         "newlyActive": false
       }
@@ -789,6 +818,7 @@
       ],
       "trend": {
         "previousScore": 0.1908,
+        "previousRevisions": 2,
         "scoreDelta": 0.02,
         "newlyActive": false
       }
@@ -814,6 +844,7 @@
       ],
       "trend": {
         "previousScore": 0,
+        "previousRevisions": 0,
         "scoreDelta": 0.2093,
         "newlyActive": true
       }
@@ -839,6 +870,7 @@
       ],
       "trend": {
         "previousScore": 0.3169,
+        "previousRevisions": 3,
         "scoreDelta": -0.12,
         "newlyActive": false
       }
@@ -864,6 +896,7 @@
       ],
       "trend": {
         "previousScore": 0.0757,
+        "previousRevisions": 1,
         "scoreDelta": 0.05,
         "newlyActive": false
       }
@@ -886,6 +919,7 @@
       "reasons": ["no changes in the analysis window"],
       "trend": {
         "previousScore": 0,
+        "previousRevisions": 0,
         "scoreDelta": 0,
         "newlyActive": false
       }
@@ -908,6 +942,7 @@
       "reasons": ["no changes in the analysis window"],
       "trend": {
         "previousScore": 0,
+        "previousRevisions": 0,
         "scoreDelta": 0,
         "newlyActive": false
       }
@@ -930,6 +965,7 @@
       "reasons": ["no changes in the analysis window"],
       "trend": {
         "previousScore": 0,
+        "previousRevisions": 0,
         "scoreDelta": 0,
         "newlyActive": false
       }

@@ -88,7 +88,12 @@ describe("renderReportHtml with a comparison", () => {
     const compared = reportOf(
       [
         fileStats("src/a.ts", {
-          trend: { previousScore: 0.2, scoreDelta: 0.3, newlyActive: false },
+          trend: {
+            previousScore: 0.2,
+            previousRevisions: 3,
+            scoreDelta: 0.3,
+            newlyActive: false,
+          },
         }),
       ],
       [],

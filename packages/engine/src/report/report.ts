@@ -41,6 +41,8 @@ const Comparison = Schema.Struct({
 const FileTrend = Schema.Struct({
   /** The score the file had in the previous window, normalized within that window; rounded to 4 decimals. */
   previousScore: UnitInterval,
+  /** Revisions the file had in the previous window. */
+  previousRevisions: Count,
   /** `score - previousScore`, rounded to 4 decimals; positive means the file got hotter relative to its window's hottest. */
   scoreDelta: UnitDelta,
   /**

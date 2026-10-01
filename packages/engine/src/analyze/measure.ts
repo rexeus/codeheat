@@ -101,5 +101,8 @@ export const measureWindows = (
     return current;
   }
   const previous = measure(files, histories.previous, modules, entryPoints);
-  return { ...current, ...withTrends(current, previous) };
+  return {
+    ...current,
+    ...withTrends(current, previous, current.thresholds.minModuleCommits),
+  };
 };

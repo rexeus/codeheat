@@ -67,7 +67,12 @@ export const Module = Schema.Struct({
    * cohesion order, so look for this flag rather than for the first entries.
    */
   leakyInterface: Schema.Boolean,
-  /** Null without `--compare`, and when the module has no counted commit in either window. */
+  /**
+   * Null without `--compare`, and unless the module has at least
+   * `Thresholds.minModuleCommits` counted commits in both windows (so also
+   * when either window has none): the cohesion of a few commits swings too
+   * much to call a change.
+   */
   trend: Schema.NullOr(ModuleTrend),
 });
 export type Module = typeof Module.Type;

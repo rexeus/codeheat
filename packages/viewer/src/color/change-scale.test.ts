@@ -34,6 +34,7 @@ describe("comparableChange", () => {
     expect(
       comparableChange({
         previousScore: 0.5,
+        previousRevisions: 5,
         scoreDelta: -0.2,
         newlyActive: false,
       }),
@@ -44,6 +45,7 @@ describe("comparableChange", () => {
     expect(
       comparableChange({
         previousScore: 0,
+        previousRevisions: 0,
         scoreDelta: 0.9,
         newlyActive: true,
       }),
