@@ -1,15 +1,26 @@
 import { execFileSync, spawnSync } from "node:child_process";
-import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import {
+  mkdtempSync,
+  mkdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
+
+import { isolatedGitEnv } from "./git-environment.mjs";
 
 const repositoryRoot = new URL("..", import.meta.url).pathname;
 const fixtureRoots: string[] = [];
 
 const runGit = (directory: string, ...args: string[]) => {
-  execFileSync("git", ["-C", directory, ...args], { stdio: "ignore" });
+  execFileSync("git", ["-C", directory, ...args], {
+    env: isolatedGitEnv(),
+    stdio: "ignore",
+  });
 };
 
 const createProject = (
@@ -58,6 +69,7 @@ const verify = (projectRoot: string, checkout: string) =>
   });
 
 afterEach(() => {
+  vi.unstubAllEnvs();
   for (const fixtureRoot of fixtureRoots.splice(0)) {
     rmSync(fixtureRoot, { force: true, recursive: true });
   }
@@ -119,5 +131,26 @@ describe("Effect reference verification", () => {
     );
     expect(result.stderr).toContain("origin remote is missing or unreadable");
     expect(result.stderr).not.toContain("Error: Command failed");
+  });
+});
+
+describe("Effect reference verification inside a git hook", () => {
+  it("ignores git variables inherited from a surrounding repository", () => {
+    const projectRoot = createProject();
+    const checkout = createCheckout(projectRoot);
+    writeFileSync(join(checkout, "dirty.txt"), "changed\n");
+    const sentinel = join(projectRoot, "sentinel");
+    mkdirSync(sentinel);
+    runGit(sentinel, "init", "--quiet");
+    const configBefore = readFileSync(join(sentinel, ".git", "config"), "utf8");
+    vi.stubEnv("GIT_DIR", join(sentinel, ".git"));
+    vi.stubEnv("GIT_WORK_TREE", sentinel);
+
+    const result = verify(projectRoot, checkout);
+
+    expect(result.stderr).toContain("checkout has local changes");
+    expect(readFileSync(join(sentinel, ".git", "config"), "utf8")).toBe(
+      configBefore,
+    );
   });
 });

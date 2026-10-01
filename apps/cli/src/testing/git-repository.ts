@@ -6,13 +6,28 @@ import { dirname, join } from "node:path";
 
 import { Effect } from "effect";
 
-const isolatedEnv = (date: string): NodeJS.ProcessEnv => ({
-  ...process.env,
-  GIT_CONFIG_GLOBAL: "/dev/null",
-  GIT_CONFIG_NOSYSTEM: "1",
-  GIT_AUTHOR_DATE: date,
-  GIT_COMMITTER_DATE: date,
-});
+/** Repository-local variables git lists; a hook or `git rebase -x` exports them and they beat `-C`. */
+const repositoryLocalVariables = execFileSync(
+  "git",
+  ["rev-parse", "--local-env-vars"],
+  { encoding: "utf8" },
+)
+  .split("\n")
+  .filter((name) => name !== "");
+
+const isolatedEnv = (date: string): NodeJS.ProcessEnv => {
+  const env: NodeJS.ProcessEnv = {
+    ...process.env,
+    GIT_CONFIG_GLOBAL: "/dev/null",
+    GIT_CONFIG_NOSYSTEM: "1",
+    GIT_AUTHOR_DATE: date,
+    GIT_COMMITTER_DATE: date,
+  };
+  for (const name of repositoryLocalVariables) {
+    delete env[name];
+  }
+  return env;
+};
 
 export type GitRepository = {
   readonly root: string;
