@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   describeScoreTrend,
   formatPointChange,
+  formatRatio,
   formatScoreChange,
 } from "./format.js";
 
@@ -16,6 +17,14 @@ describe("formatScoreChange", () => {
     expect(formatScoreChange(0)).toBe("0.00");
     expect(formatScoreChange(0.004)).toBe("0.00");
     expect(formatScoreChange(-0.004)).toBe("0.00");
+  });
+});
+
+describe("formatRatio", () => {
+  it("keeps at most two decimals and separates thousands", () => {
+    expect(formatRatio(13.2895)).toBe("13.29");
+    expect(formatRatio(517.5)).toBe("517.5");
+    expect(formatRatio(3122)).toBe("3,122");
   });
 });
 

@@ -7,6 +7,11 @@ export const formatCount = (value: number): string => counts.format(value);
 /** The calendar day of an ISO timestamp, as `YYYY-MM-DD`. */
 export const formatDay = (timestamp: string): string => timestamp.slice(0, 10);
 
+const ratios = new Intl.NumberFormat("en", { maximumFractionDigits: 2 });
+
+/** A ratio with at most two decimals and thousands separators, e.g. `1234.5678` as `1,234.57`. */
+export const formatRatio = (value: number): string => ratios.format(value);
+
 export const formatScore = (score: number): string => score.toFixed(2);
 
 export const formatPercent = (share: number): string =>

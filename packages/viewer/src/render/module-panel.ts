@@ -3,7 +3,12 @@ import type { Module } from "@codeheat/engine";
 import { cohesionStep } from "../color/cohesion-scale.js";
 import { leastCohesive } from "../modules/least-cohesive.js";
 import { h, pathLabel, section } from "./dom.js";
-import { formatCount, formatPercent, formatPointChange } from "./format.js";
+import {
+  formatCount,
+  formatPercent,
+  formatPointChange,
+  formatRatio,
+} from "./format.js";
 
 const cohesionSwatch = (cohesion: number | null): HTMLElement => {
   const element = h("span", "swatch");
@@ -86,6 +91,26 @@ const leakageLine = (module: Module): HTMLElement =>
         ...(module.leakyInterface ? [h("span", "badge", "leaky")] : []),
       );
 
+/** How much implementation sits behind each exported symbol; a hint when it could not be measured. */
+const depthLine = ({ depth }: Module): HTMLElement =>
+  depth === null
+    ? h("p", "hint", "Depth could not be measured for this module.")
+    : h(
+        "div",
+        "score-line",
+        h("strong", "score", formatRatio(depth.linesPerExport)),
+        h(
+          "span",
+          "score-meta",
+          h("span", "", "implementation lines per exported symbol"),
+          h(
+            "span",
+            "",
+            `${formatCount(depth.exports)} exports over ${formatCount(depth.implementationLines)} lines`,
+          ),
+        ),
+      );
+
 const entryPointList = (entryPoints: readonly string[]): HTMLElement =>
   h(
     "ul",
@@ -104,7 +129,7 @@ const entryPointList = (entryPoints: readonly string[]): HTMLElement =>
       : []),
   );
 
-/** The module's entry points and how often its implementation commits change them too; nothing without entry points. */
+/** The module's entry points, how often its implementation commits change them too, and how deep it is; nothing without entry points. */
 const interfaceSection = (module: Module): HTMLElement[] =>
   module.entryPoints.length === 0
     ? []
@@ -112,6 +137,7 @@ const interfaceSection = (module: Module): HTMLElement[] =>
         section(
           "Interface",
           leakageLine(module),
+          depthLine(module),
           entryPointList(module.entryPoints),
         ),
       ];
