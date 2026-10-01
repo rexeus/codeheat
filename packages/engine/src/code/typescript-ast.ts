@@ -3,8 +3,10 @@
 import { Predicate } from "effect";
 
 import {
+  isImportMeta,
   isMember,
   isNamed,
+  isUrlOfImportMeta,
   plainString,
   requiredModule,
   walk,
@@ -31,12 +33,6 @@ export type AstModules = {
 
 /** What one AST node says about a module: it names it, or it loads some by expression. */
 type Finding = { readonly specifier: string } | { readonly computed: true };
-
-/** `import.meta`, which the AST shows as a meta property. */
-const isImportMeta = (node: unknown): boolean =>
-  Predicate.isObject(node) &&
-  node["type"] === "MetaProperty" &&
-  isNamed(node["meta"], "Identifier", "import");
 
 /** `import.meta.glob` and its relatives, `require.context`: they load whole sets of modules. */
 const isBundlerLoader = (callee: unknown): boolean =>
@@ -65,19 +61,6 @@ const isExportsAssignment = (node: Node): boolean => {
 
 const moduleFinding = (module: string | undefined): Finding =>
   module === undefined ? { computed: true } : { specifier: module };
-
-/** `new URL("./worker.ts", import.meta.url)`, which bundlers turn into a reference to that file. */
-const isUrlOfImportMeta = (node: Node): boolean => {
-  const args = node["arguments"];
-  return (
-    node["type"] === "NewExpression" &&
-    isNamed(node["callee"], "Identifier", "URL") &&
-    Array.isArray(args) &&
-    Predicate.isObject(args[1]) &&
-    args[1]["type"] === "MemberExpression" &&
-    isImportMeta(args[1]["object"])
-  );
-};
 
 const findingOf = (node: Node): Finding | undefined => {
   const args = node["arguments"];

@@ -20,11 +20,7 @@ type ParsedModule = {
     readonly staticExports: ReadonlyArray<{
       readonly entries: ReadonlyArray<{
         readonly moduleRequest: { readonly value: string } | null;
-        readonly localName: {
-          readonly kind: string;
-          readonly name: string | null;
-        };
-        readonly exportName: { readonly kind: string };
+        readonly localName: { readonly name: string | null };
       }>;
     }>;
     readonly dynamicImports: ReadonlyArray<{
@@ -47,7 +43,7 @@ const TYPESCRIPT_EXTENSIONS = new Set(["ts", "tsx", "mts", "cts"]);
 const PLAIN_JAVASCRIPT = /\.(?:js|mjs|cjs)$/u;
 /** Sources without this text have nothing the AST would add: no `require`, no `import.meta`, no `new URL(…)`, no `export =`. */
 const MENTIONS_AST_ONLY =
-  /\brequire\s*[(.]|\bimport\.meta\b|\bnew\s+URL\s*\(|\bexport\s*=|\bexports\b/u;
+  /\brequire\s*[(.]|\bimport\.meta\b|\bnew\s+URL\s*\(|\bexport\s*=|\bexport\s+import\b|\bexports\b/u;
 /** In TypeScript, `import("x").T` is a type that only the AST shows. */
 const MENTIONS_IMPORT_CALL = /\bimport\s*\(/u;
 /** A source without `export` or `exports` exports nothing. */

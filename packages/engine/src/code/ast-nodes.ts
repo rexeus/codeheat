@@ -53,6 +53,25 @@ export const requiredModule = (node: unknown): string | undefined => {
   return Array.isArray(args) ? plainString(args[0]) : undefined;
 };
 
+/** `import.meta`, which the AST shows as a meta property. */
+export const isImportMeta = (node: unknown): boolean =>
+  Predicate.isObject(node) &&
+  node["type"] === "MetaProperty" &&
+  isNamed(node["meta"], "Identifier", "import");
+
+/** `new URL("./worker.ts", import.meta.url)`, which bundlers turn into a reference to that file. */
+export const isUrlOfImportMeta = (node: Node): boolean => {
+  const args = node["arguments"];
+  return (
+    node["type"] === "NewExpression" &&
+    isNamed(node["callee"], "Identifier", "URL") &&
+    Array.isArray(args) &&
+    Predicate.isObject(args[1]) &&
+    args[1]["type"] === "MemberExpression" &&
+    isImportMeta(args[1]["object"])
+  );
+};
+
 /**
  * Calls `visit` for every node below and including `root`. An explicit stack
  * keeps deep trees and arrays of any width off the call stack.
