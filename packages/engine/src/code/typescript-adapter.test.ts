@@ -130,6 +130,53 @@ describe("typescript adapter unknown results", () => {
   });
 });
 
+const countingParser = () => {
+  const parsed: Array<string> = [];
+  const counting = typescriptAdapter((file, source) => {
+    parsed.push(file);
+    return parseSync(file, source);
+  });
+  return { counting, parsed };
+};
+
+describe("typescript adapter re-exports only", () => {
+  it("lists every form of re-export", () => {
+    const { counting } = countingParser();
+    const source = [
+      'export * from "./a";',
+      'export * as ns from "./b";',
+      'export type { T } from "./c";',
+      'export {\n  d,\n  e as f,\n} from "./d";',
+      'import { g } from "./g";',
+    ].join("\n");
+
+    expect(counting.reexports("barrel.ts", source)).toStrictEqual([
+      "./a",
+      "./b",
+      "./c",
+      "./d",
+    ]);
+  });
+
+  it("skips the parser for a source that cannot re-export", () => {
+    const { counting, parsed } = countingParser();
+
+    const found = counting.reexports(
+      "plain.ts",
+      'import { x } from "./x";\nexport const y = x;\nexport { y as z };\n',
+    );
+
+    expect(found).toStrictEqual([]);
+    expect(parsed).toStrictEqual([]);
+  });
+
+  it("is unknown for a source that looks like a barrel but does not parse", () => {
+    expect(
+      adapter.reexports("broken.ts", 'export * from "./a";\nexport const = ;'),
+    ).toBeUndefined();
+  });
+});
+
 describe("adapterFor", () => {
   it("selects by extension, ignoring case, and finds none for other languages", () => {
     const adapters = [adapter];

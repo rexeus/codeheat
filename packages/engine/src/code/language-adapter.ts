@@ -19,6 +19,15 @@ export type LanguageAdapter = {
    * an unparseable file has unknown dependencies, which is not the same as none.
    */
   readonly imports: (file: string, source: string) => SourceImports | undefined;
+  /**
+   * Only the `reexports` of `imports`, for a file that is read because another
+   * file imports it, where the rest is no use. An adapter may skip the
+   * expensive parse for a source that cannot re-export.
+   */
+  readonly reexports: (
+    file: string,
+    source: string,
+  ) => SourceImports["reexports"] | undefined;
 };
 
 /** The adapter that reads files with `path`'s extension, if any. */

@@ -3,7 +3,10 @@
 import { Effect, FileSystem, Path } from "effect";
 
 import { adapterFor } from "../code/language-adapter.js";
-import type { LanguageAdapter } from "../code/language-adapter.js";
+import type {
+  LanguageAdapter,
+  SourceImports,
+} from "../code/language-adapter.js";
 import type { Resolver } from "./resolve.js";
 
 /** Files read at once; bounds open file handles. */
@@ -24,10 +27,28 @@ export type LinkSources = {
   readonly resolve: Resolver;
 };
 
-/** The links of `file`; undefined when no adapter reads it, or it is unreadable or does not parse. */
+const sourceImports = (
+  adapter: LanguageAdapter,
+  file: string,
+  source: string,
+  reexportsOnly: boolean,
+): SourceImports | undefined => {
+  if (!reexportsOnly) {
+    return adapter.imports(file, source);
+  }
+  const reexports = adapter.reexports(file, source);
+  return reexports === undefined ? undefined : { imports: [], reexports };
+};
+
+/**
+ * The links of `file`; undefined when no adapter reads it, or it is unreadable
+ * or does not parse. With `reexportsOnly`, the file's imports are left out and
+ * only what it re-exports counts.
+ */
 const readLinks = (
   { root, adapters, resolve }: LinkSources,
   file: string,
+  reexportsOnly: boolean,
 ): Effect.Effect<
   ModuleLinks | undefined,
   never,
@@ -41,7 +62,7 @@ const readLinks = (
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
     const source = yield* fs.readFileString(path.join(root, file));
-    const found = adapter.imports(file, source);
+    const found = sourceImports(adapter, file, source, reexportsOnly);
     if (found === undefined) {
       return undefined;
     }
@@ -77,7 +98,7 @@ export const loadLinks = (
       }
       const loaded = yield* Effect.forEach(
         pending,
-        (file) => readLinks(sources, file),
+        (file) => readLinks(sources, file, !roots.has(file)),
         { concurrency: READ_CONCURRENCY },
       );
       const next = new Set<string>();

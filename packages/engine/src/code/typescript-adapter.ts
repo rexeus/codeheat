@@ -33,6 +33,9 @@ export type ParseModule = (filename: string, source: string) => ParsedModule;
 const EXTENSIONS = ["ts", "tsx", "mts", "cts", "js", "jsx", "mjs", "cjs"];
 /** Sources without this text have no `require()` call, so their AST stays unread. */
 const MENTIONS_REQUIRE = /\brequire\s*\(/u;
+/** Sources without `export * from`, `export { … } from`, or their `type` forms have no re-exports and need no parse. */
+const MENTIONS_REEXPORT =
+  /\bexport\s*(?:type\s+)?(?:\*|\{[^}]*\})(?:\s*as\s+[\w$]+)?\s*from\b/u;
 /** A string literal without escapes or template holes. */
 const PLAIN_LITERAL = /^(["'`])([^"'`$\\]*)\1$/u;
 
@@ -82,6 +85,11 @@ const requiredModules = (program: unknown): ReadonlyArray<string> => {
   return found;
 };
 
+/** The parser reports `export { a, b } from "x"` once per name. */
+const unique = (specifiers: ReadonlyArray<string>): ReadonlyArray<string> => [
+  ...new Set(specifiers),
+];
+
 const sourceImports = (parsed: ParsedModule, source: string): SourceImports => {
   const { staticImports, staticExports, dynamicImports } = parsed.module;
   const dynamic = dynamicImports.flatMap(({ moduleRequest }) => {
@@ -90,17 +98,34 @@ const sourceImports = (parsed: ParsedModule, source: string): SourceImports => {
     return specifier === undefined ? [] : [specifier];
   });
   return {
-    imports: [
+    imports: unique([
       ...staticImports.map(({ moduleRequest }) => moduleRequest.value),
       ...dynamic,
       ...(MENTIONS_REQUIRE.test(source) ? requiredModules(parsed.program) : []),
-    ],
-    reexports: staticExports.flatMap(({ entries }) =>
-      entries.flatMap(({ moduleRequest }) =>
-        moduleRequest === null ? [] : [moduleRequest.value],
+    ]),
+    reexports: unique(
+      staticExports.flatMap(({ entries }) =>
+        entries.flatMap(({ moduleRequest }) =>
+          moduleRequest === null ? [] : [moduleRequest.value],
+        ),
       ),
     ),
   };
+};
+
+const readImports = (
+  parse: ParseModule,
+  file: string,
+  source: string,
+): SourceImports | undefined => {
+  try {
+    const parsed = parse(file, source);
+    return parsed.errors.length === 0
+      ? sourceImports(parsed, source)
+      : undefined;
+  } catch {
+    return undefined;
+  }
 };
 
 /**
@@ -110,14 +135,9 @@ const sourceImports = (parsed: ParsedModule, source: string): SourceImports => {
  */
 export const typescriptAdapter = (parse: ParseModule): LanguageAdapter => ({
   extensions: EXTENSIONS,
-  imports: (file, source) => {
-    try {
-      const parsed = parse(file, source);
-      return parsed.errors.length === 0
-        ? sourceImports(parsed, source)
-        : undefined;
-    } catch {
-      return undefined;
-    }
-  },
+  imports: (file, source) => readImports(parse, file, source),
+  reexports: (file, source) =>
+    MENTIONS_REEXPORT.test(source)
+      ? readImports(parse, file, source)?.reexports
+      : [],
 });
