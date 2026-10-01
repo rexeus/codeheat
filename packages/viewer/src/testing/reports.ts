@@ -47,6 +47,10 @@ export const moduleStats = (
   localCommits: 6,
   cohesion: 0.6,
   partners: [],
+  entryPoints: [],
+  interfaceCommits: 0,
+  implementationCommits: 10,
+  leakage: null,
   ...overrides,
 });
 
@@ -72,6 +76,8 @@ export const reportOf = (
     hubMinRevisions: 5,
     hubTopShare: 0.05,
     minModuleCommits: 5,
+    minLeakage: 0.5,
+    minImplementationCommits: 5,
     minSharedCommits: 3,
     minDegree: 0.3,
     maxMeanLineLength: 300,

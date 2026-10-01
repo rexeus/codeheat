@@ -31,6 +31,11 @@ export type ReasonFacts = {
   readonly breadthRank: number | undefined;
   /** How many files are hub candidates. */
   readonly candidates: number;
+  /**
+   * For an entry point of a module whose interface leaks, the share of the
+   * module's implementation commits that also touched an entry point.
+   */
+  readonly interfaceLeakage: number | undefined;
 };
 
 /** A wide candidate among the widest `HUB_TOP_SHARE` of the candidates, at least one; ties at the cut-off all count. */
@@ -41,7 +46,8 @@ const isHub = (facts: ReasonFacts): boolean =>
 
 /**
  * Reasons in a fixed order: churn, complexity, then the strongest non-test
- * co-change partner, then the breadth of a hub. A signal at zero gives no reason.
+ * co-change partner, then the breadth of a hub, then a leaking interface. A
+ * signal at zero gives no reason.
  */
 export const describeFile = (facts: ReasonFacts): ReadonlyArray<string> => {
   const reasons: Array<string> = [];
@@ -65,6 +71,12 @@ export const describeFile = (facts: ReasonFacts): ReadonlyArray<string> => {
   }
   if (isHub(facts)) {
     reasons.push(`changes together with ${facts.breadth} different files`);
+  }
+  if (facts.interfaceLeakage !== undefined) {
+    const percent = Math.round(facts.interfaceLeakage * 100);
+    reasons.push(
+      `interface changed in ${percent}% of its module's implementation commits`,
+    );
   }
   return reasons;
 };

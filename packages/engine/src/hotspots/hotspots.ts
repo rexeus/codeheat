@@ -18,6 +18,8 @@ export type FileMeasure = {
   readonly complexity: Complexity;
   /** Distinct other universe files changed together with this one. */
   readonly breadth: number;
+  /** Set for an entry point of a module whose interface leaks: the module's leakage. */
+  readonly interfaceLeakage?: number | undefined;
 };
 
 /** `log(1 + value) / log(1 + max)`: 0..1, compressing outliers so one giant file does not flatten the rest. */
@@ -125,6 +127,7 @@ export const rankFiles = (
           breadth,
           breadthRank: hubs.rankOf(measure),
           candidates: hubs.candidates,
+          interfaceLeakage: measure.interfaceLeakage,
         }),
       };
     });

@@ -1,12 +1,16 @@
 // Owns how self-contained each module's changes are: counted commits that
-// stay inside it, and which other modules the rest pull in.
+// stay inside it, and which other modules the rest pull in. It assembles the
+// module records, adding the interface churn measured next to it.
 import { Order } from "effect";
 
 import { MAX_COMMIT_FILES } from "../coupling/coupling.js";
 import { isTestFile } from "../coupling/pair.js";
+import type { History } from "../history/history.js";
 import type { Module } from "../report/module.js";
 import { roundReported } from "../report/precision.js";
 import type { ModuleRef } from "./detect.js";
+import { measureInterfaces, NO_INTERFACE } from "./interface-churn.js";
+import type { InterfaceChurn } from "./interface-churn.js";
 
 const MIN_MODULE_COMMITS_FLOOR = 5;
 const MIN_MODULE_COMMITS_SHARE = 0.01;
@@ -102,7 +106,11 @@ const countCommit = (
   }
 };
 
-const toModule = (path: string, tally: Tally): Module => ({
+const toModule = (
+  path: string,
+  tally: Tally,
+  churn: InterfaceChurn,
+): Module => ({
   path,
   kind: tally.kind,
   files: tally.files,
@@ -119,35 +127,38 @@ const toModule = (path: string, tally: Tally): Module => ({
     .map(([partner, sharedCommits]) => ({ path: partner, sharedCommits }))
     .toSorted(byPartnerStrength)
     .slice(0, MAX_PARTNERS),
+  ...churn,
 });
 
 /**
  * Measures every module over the counted commits (at most `MAX_COMMIT_FILES`
- * files). Each commit is the distinct ids of the files it touched, ids being
- * indexes into `paths`; `refs` maps every one of those paths to its module.
+ * files) of `history`; `refs` maps every universe file to its module, and
+ * `entryPoints` maps every module path to its entry-point files.
  *
  * A module's cohesion is the share of its commits that touched no other
  * module. The order is the one documented on `Report.modules`; a module is
  * ranked when it has at least `minModuleCommits` commits and is not test-only.
  */
 export const measureModules = (
-  commits: ReadonlyArray<Uint32Array>,
-  paths: ReadonlyArray<string>,
+  { commits, paths }: Pick<History, "commits" | "paths">,
   refs: ReadonlyMap<string, ModuleRef>,
   minModuleCommits: number,
+  entryPoints: ReadonlyMap<string, ReadonlyArray<string>>,
 ): ReadonlyArray<Module> => {
   const tallies = tallyFiles(refs);
   const moduleOfId = paths.map((path) => refs.get(path)?.path ?? ".");
-  for (const commit of commits) {
-    if (commit.length <= MAX_COMMIT_FILES) {
-      countCommit(
-        new Set(Array.from(commit, (id) => moduleOfId[id] ?? ".")),
-        tallies,
-      );
-    }
+  const counted = commits.filter((commit) => commit.length <= MAX_COMMIT_FILES);
+  for (const commit of counted) {
+    countCommit(
+      new Set(Array.from(commit, (id) => moduleOfId[id] ?? ".")),
+      tallies,
+    );
   }
+  const interfaces = measureInterfaces(counted, paths, refs, entryPoints);
   return [...tallies]
-    .map(([path, tally]) => toModule(path, tally))
+    .map(([path, tally]) =>
+      toModule(path, tally, interfaces.get(path) ?? NO_INTERFACE),
+    )
     .toSorted(
       (a, b) =>
         groupOf(a, minModuleCommits) - groupOf(b, minModuleCommits) ||

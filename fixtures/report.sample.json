@@ -26,7 +26,9 @@
     "minSharedCommits": 3,
     "minDegree": 0.3,
     "maxMeanLineLength": 300,
-    "maxFileBytes": 1048576
+    "maxFileBytes": 1048576,
+    "minLeakage": 0.5,
+    "minImplementationCommits": 5
   },
   "totals": {
     "files": 36,
@@ -847,7 +849,11 @@
           "path": "packages/auth",
           "sharedCommits": 4
         }
-      ]
+      ],
+      "entryPoints": ["packages/shared/src/index.ts"],
+      "interfaceCommits": 6,
+      "implementationCommits": 29,
+      "leakage": 0.2069
     },
     {
       "path": "apps/cli",
@@ -866,7 +872,11 @@
           "path": "packages/billing",
           "sharedCommits": 3
         }
-      ]
+      ],
+      "entryPoints": [],
+      "interfaceCommits": 0,
+      "implementationCommits": 24,
+      "leakage": null
     },
     {
       "path": "packages/web",
@@ -889,7 +899,11 @@
           "path": "packages/shared",
           "sharedCommits": 5
         }
-      ]
+      ],
+      "entryPoints": [],
+      "interfaceCommits": 0,
+      "implementationCommits": 58,
+      "leakage": null
     },
     {
       "path": "packages/billing",
@@ -916,7 +930,11 @@
           "path": "apps/cli",
           "sharedCommits": 3
         }
-      ]
+      ],
+      "entryPoints": ["packages/billing/src/index.ts"],
+      "interfaceCommits": 9,
+      "implementationCommits": 71,
+      "leakage": 0.1268
     },
     {
       "path": "packages/auth",
@@ -939,7 +957,11 @@
           "path": "packages/shared",
           "sharedCommits": 4
         }
-      ]
+      ],
+      "entryPoints": ["packages/auth/src/index.ts"],
+      "interfaceCommits": 7,
+      "implementationCommits": 43,
+      "leakage": 0.1395
     }
   ]
 }

@@ -44,6 +44,10 @@ const modules: Report["modules"] = [
     localCommits: 1,
     cohesion: 0.25,
     partners: [{ path: "src", sharedCommits: 3 }],
+    entryPoints: [],
+    interfaceCommits: 0,
+    implementationCommits: 4,
+    leakage: null,
   },
   {
     path: "src",
@@ -54,6 +58,10 @@ const modules: Report["modules"] = [
     localCommits: 17,
     cohesion: 0.85,
     partners: [{ path: "lib", sharedCommits: 3 }],
+    entryPoints: ["src/index.ts"],
+    interfaceCommits: 4,
+    implementationCommits: 20,
+    leakage: 0.2,
   },
 ];
 
@@ -77,6 +85,8 @@ const reportOf = (
     hubMinRevisions: 5,
     hubTopShare: 0.05,
     minModuleCommits: 5,
+    minLeakage: 0.5,
+    minImplementationCommits: 5,
     minSharedCommits: 3,
     minDegree: 0.3,
     maxMeanLineLength: 300,

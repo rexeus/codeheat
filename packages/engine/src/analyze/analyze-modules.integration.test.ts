@@ -77,6 +77,10 @@ const expectedModules: Report["modules"] = [
       { path: "packages/b", sharedCommits: 3 },
       { path: "packages/c", sharedCommits: 2 },
     ],
+    entryPoints: [],
+    interfaceCommits: 0,
+    implementationCommits: 6,
+    leakage: null,
   },
   {
     path: "packages/b",
@@ -90,6 +94,10 @@ const expectedModules: Report["modules"] = [
       { path: "packages/a", sharedCommits: 3 },
       { path: "packages/c", sharedCommits: 1 },
     ],
+    entryPoints: [],
+    interfaceCommits: 0,
+    implementationCommits: 4,
+    leakage: null,
   },
   {
     path: "packages/c",
@@ -103,6 +111,10 @@ const expectedModules: Report["modules"] = [
       { path: "packages/a", sharedCommits: 2 },
       { path: "packages/b", sharedCommits: 1 },
     ],
+    entryPoints: [],
+    interfaceCommits: 0,
+    implementationCommits: 3,
+    leakage: null,
   },
   {
     path: "packages/d",
@@ -113,6 +125,10 @@ const expectedModules: Report["modules"] = [
     localCommits: 0,
     cohesion: null,
     partners: [],
+    entryPoints: [],
+    interfaceCommits: 0,
+    implementationCommits: 0,
+    leakage: null,
   },
 ];
 

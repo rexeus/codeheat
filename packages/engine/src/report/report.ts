@@ -34,6 +34,10 @@ const Thresholds = Schema.Struct({
    * `max(5, ceil(0.01 × window.couplingCommits))`, so the floor grows with the window.
    */
   minModuleCommits: Count,
+  /** Smallest `Module.leakage` at which a module's entry points get a reason line. */
+  minLeakage: UnitInterval,
+  /** Fewest `Module.implementationCommits` a module needs before its entry points get that reason line. */
+  minImplementationCommits: Count,
   maxMeanLineLength: Count,
   maxFileBytes: Count,
 });

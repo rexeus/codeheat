@@ -12,6 +12,9 @@ import {
   makeTestPairProject,
 } from "../testing/projects.js";
 
+const decode = (stdout: string) =>
+  Schema.decodeUnknownEffect(Report)(JSON.parse(stdout));
+
 // Real clock: the analysis window is resolved against now, and the commits are dated relative to it.
 describe("codeheat analyze against a git repository", () => {
   it.live(
@@ -71,6 +74,36 @@ describe("codeheat analyze against a git repository", () => {
           modules: 1,
         });
       }).pipe(Effect.scoped),
+  );
+});
+
+describe("codeheat analyze --entry", () => {
+  it.live("replaces the detected entry points with the given globs", () =>
+    Effect.gen(function* () {
+      const repo = yield* makeCoupledProject;
+
+      const detected = yield* journey({
+        args: ["analyze", "--json"],
+        cwd: repo.root,
+      });
+      const overridden = yield* journey({
+        args: ["analyze", "--json", "--entry", "src/a.ts", "--entry", "nope/*"],
+        cwd: repo.root,
+      });
+
+      expect((yield* decode(detected.stdout)).modules).toMatchObject([
+        { entryPoints: [], leakage: null },
+      ]);
+      // a.ts changes in all 4 commits, and b.ts or c.ts changes in each of them
+      expect((yield* decode(overridden.stdout)).modules).toMatchObject([
+        {
+          entryPoints: ["src/a.ts"],
+          interfaceCommits: 4,
+          implementationCommits: 4,
+          leakage: 1,
+        },
+      ]);
+    }).pipe(Effect.scoped),
   );
 });
 

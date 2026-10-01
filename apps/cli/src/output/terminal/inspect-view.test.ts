@@ -54,6 +54,10 @@ const billing: Module = {
     { path: "packages/web", sharedCommits: 20 },
     { path: "packages/auth", sharedCommits: 9 },
   ],
+  entryPoints: ["packages/billing/src/index.ts"],
+  interfaceCommits: 9,
+  implementationCommits: 71,
+  leakage: 0.1268,
 };
 
 const result = (

@@ -11,6 +11,7 @@ export const analyzeOptionsFor = (
   since: "12m",
   include: [],
   exclude: [],
+  entry: [],
   toolVersion: "0.0.0-test",
   ...overrides,
 });

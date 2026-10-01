@@ -13,3 +13,10 @@ export const sinceFlag = Flag.String("since").pipe(
   ),
   Flag.withDefault("12m"),
 );
+
+export const entryFlag = Flag.String("entry").pipe(
+  Flag.withDescription(
+    "Glob of the files that form a module's public interface instead of detecting them from package.json and index files; repeatable",
+  ),
+  Flag.atLeast(0),
+);

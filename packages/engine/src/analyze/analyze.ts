@@ -5,12 +5,6 @@ import { Effect, Path } from "effect";
 import type { FileSystem } from "effect";
 import type { ChildProcessSpawner } from "effect/process";
 
-import {
-  MAX_COMMIT_FILES,
-  MIN_DEGREE,
-  MIN_SHARED_COMMITS,
-  findCouplings,
-} from "../coupling/coupling.js";
 import type { GitError } from "../git/git-errors.js";
 import { Git } from "../git/git.js";
 import {
@@ -21,26 +15,14 @@ import {
 } from "../git/repository.js";
 import { readHistory } from "../history/history.js";
 import type { History } from "../history/history.js";
-import { rankFiles } from "../hotspots/hotspots.js";
-import type { FileMeasure } from "../hotspots/hotspots.js";
-import {
-  HUB_MIN_BREADTH,
-  HUB_MIN_REVISIONS,
-  HUB_TOP_SHARE,
-} from "../hotspots/reasons.js";
-import { measureModules, minModuleCommitsFor } from "../modules/cohesion.js";
 import { detectModules } from "../modules/detect.js";
-import type { ModuleRef } from "../modules/detect.js";
+import { findEntryPoints } from "../modules/entry-points.js";
 import { listPackageDirectories } from "../modules/package-directories.js";
 import type { Report } from "../report/report.js";
 import { inventory } from "../universe/inventory.js";
-import type { InventoryFile } from "../universe/inventory.js";
-import {
-  MAX_FILE_BYTES,
-  MAX_MEAN_LINE_LENGTH,
-} from "../universe/source-file.js";
 import { resolveTimeRange } from "./analysis-window.js";
 import type { InvalidSince, TimeRange } from "./analysis-window.js";
+import { measure } from "./measure.js";
 
 /** Every expected failure of `analyze`. */
 export type AnalyzeError = GitError | InvalidSince;
@@ -59,6 +41,11 @@ export type AnalyzeOptions = {
   readonly include: ReadonlyArray<string>;
   /** Globs removed from the universe after `include`. */
   readonly exclude: ReadonlyArray<string>;
+  /**
+   * Globs of the files that make up each module's interface; when non-empty
+   * they replace entry-point detection from `package.json` and conventions.
+   */
+  readonly entry: ReadonlyArray<string>;
   /** Written to `Report.tool.version`. */
   readonly toolVersion: string;
 };
@@ -67,68 +54,6 @@ const NO_HISTORY: History = {
   paths: [],
   commits: [],
   files: new Map(),
-};
-
-const thresholdsFor = (couplingCommits: number) =>
-  ({
-    maxCommitFiles: MAX_COMMIT_FILES,
-    hubMinBreadth: HUB_MIN_BREADTH,
-    hubMinRevisions: HUB_MIN_REVISIONS,
-    hubTopShare: HUB_TOP_SHARE,
-    minModuleCommits: minModuleCommitsFor(couplingCommits),
-    minSharedCommits: MIN_SHARED_COMMITS,
-    minDegree: MIN_DEGREE,
-    maxMeanLineLength: MAX_MEAN_LINE_LENGTH,
-    maxFileBytes: MAX_FILE_BYTES,
-  }) satisfies Report["thresholds"];
-
-/** Every universe file with the window's activity on it, none for untouched files. */
-const measureFiles = (
-  files: ReadonlyArray<InventoryFile>,
-  history: History,
-  breadth: ReadonlyMap<string, number>,
-  modules: ReadonlyMap<string, ModuleRef>,
-): ReadonlyArray<FileMeasure> =>
-  files.map(({ path, complexity }) => {
-    const activity = history.files.get(path);
-    return {
-      path,
-      module: modules.get(path)?.path ?? ".",
-      revisions: activity?.revisions ?? 0,
-      linesAdded: activity?.linesAdded ?? 0,
-      linesDeleted: activity?.linesDeleted ?? 0,
-      breadth: breadth.get(path) ?? 0,
-      complexity,
-    };
-  });
-
-/** Scores the files, couples them, and measures the modules; the pure part of an analysis. */
-const measure = (
-  files: ReadonlyArray<InventoryFile>,
-  history: History,
-  modules: ReadonlyMap<string, ModuleRef>,
-) => {
-  const { couplingCommits, couplings, breadth } = findCouplings(
-    history.commits,
-    history.paths,
-    new Map(
-      [...history.files].map(([file, activity]) => [file, activity.revisions]),
-    ),
-    modules,
-  );
-  const thresholds = thresholdsFor(couplingCommits);
-  return {
-    couplingCommits,
-    thresholds,
-    files: rankFiles(measureFiles(files, history, breadth, modules), couplings),
-    couplings,
-    modules: measureModules(
-      history.commits,
-      history.paths,
-      modules,
-      thresholds.minModuleCommits,
-    ),
-  };
 };
 
 const analyzeRepository = (
@@ -151,6 +76,7 @@ const analyzeRepository = (
       files.map((file) => file.path),
       yield* listPackageDirectories(scope),
     );
+    const entryPoints = yield* findEntryPoints(root, modules, options.entry);
     const history =
       head === null
         ? NO_HISTORY
@@ -163,6 +89,7 @@ const analyzeRepository = (
       files,
       history,
       modules,
+      entryPoints,
     );
     return {
       schemaVersion: 1,

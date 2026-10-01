@@ -31,10 +31,11 @@ layer(NodeServices.layer)("analyze breadth", (it) => {
 
         const barrel = report.files.find(({ path }) => path === "index.ts");
         assert.strictEqual(barrel?.breadth, 12);
-        assert.deepStrictEqual(
-          barrel?.reasons.at(-1),
+        // index.ts is also the module's entry point, which every commit touches
+        assert.deepStrictEqual(barrel?.reasons.slice(-2), [
           "changes together with 12 different files",
-        );
+          "interface changed in 100% of its module's implementation commits",
+        ]);
         assert.deepStrictEqual(report.couplings, []);
         const partner = report.files.find(({ path }) => path === "f0.ts");
         assert.strictEqual(partner?.breadth, 1);

@@ -117,6 +117,8 @@ layer(NodeServices.layer)("analyze report", (it) => {
           hubMinRevisions: 5,
           hubTopShare: 0.05,
           minModuleCommits: 5,
+          minLeakage: 0.5,
+          minImplementationCommits: 5,
           minSharedCommits: 3,
           minDegree: 0.3,
           maxMeanLineLength: 300,

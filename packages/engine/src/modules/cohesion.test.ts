@@ -18,10 +18,15 @@ const measure = (
     ]),
   );
   return measureModules(
-    commits.map((files) => Uint32Array.from(files, (f) => paths.indexOf(f))),
-    paths,
+    {
+      commits: commits.map((files) =>
+        Uint32Array.from(files, (f) => paths.indexOf(f)),
+      ),
+      paths,
+    },
     refs,
     minModuleCommits,
+    new Map(),
   );
 };
 

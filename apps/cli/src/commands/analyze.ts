@@ -10,7 +10,7 @@ import { renderAnalysis } from "../output/terminal/analysis-view.js";
 import { version } from "../version.js";
 import { WorkingDirectory } from "../working-directory.js";
 import { resolveAnalysisTarget } from "./analysis-target.js";
-import { jsonFlag, sinceFlag } from "./shared-flags.js";
+import { entryFlag, jsonFlag, sinceFlag } from "./shared-flags.js";
 
 const DEFAULT_LIMIT = 25;
 const DEFAULT_HTML_FILE = "codeheat-report.html";
@@ -36,6 +36,7 @@ export const analyzeCommand = Command.make(
       Flag.withDescription("Glob of files to leave out; repeatable"),
       Flag.atLeast(0),
     ),
+    entry: entryFlag,
     html: Flag.Boolean("html").pipe(
       Flag.withDescription(
         "Also write the treemap as a self-contained HTML file and open it",
@@ -66,7 +67,7 @@ export const analyzeCommand = Command.make(
     ),
   },
   Effect.fn(function* (flags) {
-    const { path, json, since, include, exclude, limit } = flags;
+    const { path, json, since, include, exclude, entry, limit } = flags;
     const cwd = yield* WorkingDirectory;
     // A path argument both locates the repository and narrows the universe,
     // so `codeheat analyze ../other-repo` works from anywhere.
@@ -76,6 +77,7 @@ export const analyzeCommand = Command.make(
       since,
       include,
       exclude,
+      entry,
       toolVersion: version,
     });
     yield* warnIfShallow(report);
