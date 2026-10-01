@@ -83,10 +83,65 @@ export const readManifestTargets = (
     manifest === undefined ? [] : targetsOf(manifest),
   );
 
-/** The `name` of the manifest; undefined when it is missing, unreadable, or not a string. */
-export const readManifestName = (
+const DEPENDENCY_FIELDS = [
+  "dependencies",
+  "devDependencies",
+  "peerDependencies",
+  "optionalDependencies",
+];
+
+/** The names a manifest declares in its dependency fields; fields of the wrong type declare none. */
+const dependenciesOf = (
+  manifest: Record<string, unknown>,
+): ReadonlyArray<string> =>
+  DEPENDENCY_FIELDS.flatMap((field) =>
+    Option.match(decodeObject(manifest[field]), {
+      onNone: () => [],
+      onSome: (declared) => Object.keys(declared),
+    }),
+  );
+
+/**
+ * The targets by which the package is imported by its bare name: what
+ * `exports` maps `"."` to (or `exports` itself when it holds no subpaths),
+ * else `main`, `module`, and `types`.
+ */
+const rootTargetsOf = (
+  manifest: Record<string, unknown>,
+): ReadonlyArray<string> => {
+  const exports = manifest["exports"];
+  const subpaths = decodeObject(exports);
+  const isSubpathMap =
+    Option.isSome(subpaths) &&
+    Object.keys(subpaths.value).some((key) => key.startsWith("."));
+  const exported = exportTargets(isSubpathMap ? subpaths.value["."] : exports);
+  return exported.length > 0
+    ? exported
+    : ["main", "module", "types"].flatMap((field) =>
+        Option.toArray(decodeString(manifest[field])),
+      );
+};
+
+/** What a `package.json` says about the package and what it depends on. */
+export type ManifestFacts = {
+  /** The package name; undefined when absent or not a string. */
+  readonly name: string | undefined;
+  /** The files that importing the package by its name reaches, as written, relative to the package directory. */
+  readonly rootTargets: ReadonlyArray<string>;
+  /** Names declared in `dependencies`, `devDependencies`, `peerDependencies`, and `optionalDependencies`. */
+  readonly dependencies: ReadonlyArray<string>;
+};
+
+/** The facts of the manifest; undefined when it is missing, unreadable, or not a JSON object. */
+export const readManifestFacts = (
   manifestFile: string,
-): Effect.Effect<string | undefined, never, FileSystem.FileSystem> =>
+): Effect.Effect<ManifestFacts | undefined, never, FileSystem.FileSystem> =>
   Effect.map(readManifest(manifestFile), (manifest) =>
-    Option.getOrUndefined(decodeString(manifest?.["name"])),
+    manifest === undefined
+      ? undefined
+      : {
+          name: Option.getOrUndefined(decodeString(manifest["name"])),
+          rootTargets: rootTargetsOf(manifest),
+          dependencies: dependenciesOf(manifest),
+        },
   );

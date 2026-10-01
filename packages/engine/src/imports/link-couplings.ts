@@ -4,6 +4,7 @@ import { Effect } from "effect";
 import type { FileSystem, Path } from "effect";
 
 import type { LanguageAdapter } from "../code/language-adapter.js";
+import type { ModuleRef } from "../modules/detect.js";
 import type { Coupling } from "../report/report.js";
 import { loadLinks, reachableFrom } from "./module-links.js";
 import type { ModuleLinks } from "./module-links.js";
@@ -15,10 +16,8 @@ export type LinkOptions = {
   readonly root: string;
   /** Every universe file; imports of other files link nothing. */
   readonly universe: ReadonlySet<string>;
-  /** Directories whose `package.json` names a package other files can import; see `listPackageDirectories`. */
-  readonly packageDirectories: ReadonlySet<string>;
-  /** Entry points per module path; what importing a package by name reaches. */
-  readonly entryPoints: ReadonlyMap<string, ReadonlyArray<string>>;
+  /** The module of every universe file; the packages among them can be imported by name. */
+  readonly modules: ReadonlyMap<string, ModuleRef>;
   readonly adapters: ReadonlyArray<LanguageAdapter>;
 };
 
@@ -69,11 +68,7 @@ export const linkCouplings = (
         adapters: options.adapters,
         resolve: createResolver(
           options.universe,
-          yield* readWorkspacePackages(
-            options.root,
-            options.packageDirectories,
-            options.entryPoints,
-          ),
+          yield* readWorkspacePackages(options.root, options.modules),
         ),
       },
       new Set(couplings.flatMap(({ a, b }) => [a, b])),

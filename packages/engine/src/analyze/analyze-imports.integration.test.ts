@@ -10,6 +10,7 @@ import { analyzeOptionsFor } from "../testing/analyze-options.js";
 import { makeTempRepository } from "../testing/temp-repository.js";
 import type { TempRepository } from "../testing/temp-repository.js";
 import { analyze } from "./analyze.js";
+import type { AnalyzeOptions } from "./analyze.js";
 
 const setNow = TestClock.setTime(Date.parse("2026-06-01T12:00:00Z"));
 
@@ -32,6 +33,7 @@ const sources = (version: number): Record<string, string> => ({
   "packages/core/src/index.ts": `export * from "./money.js";\n// ${version}\n`,
   "packages/core/src/money.ts": `export const money = 1;\n// ${version}\n`,
   "packages/core/src/ledger.ts": `export const ledger = 1;\n// ${version}\n`,
+  "packages/core/src/extra.ts": `export const extra = 1;\n// ${version}\n`,
   "packages/app/src/main.ts": `import { money } from "@acme/core";\nexport const main = money;\n// ${version}\n`,
 });
 
@@ -42,7 +44,8 @@ const buildHistory = (repo: TempRepository) =>
       ...sources(0),
       "packages/core/package.json": manifest({
         name: "@acme/core",
-        main: "src/index.ts",
+        main: "src/ledger.ts",
+        exports: { ".": "./src/index.ts", "./extra": "./src/extra.ts" },
       }),
       "packages/app/package.json": manifest({ name: "@acme/app" }),
     });
@@ -52,12 +55,19 @@ const buildHistory = (repo: TempRepository) =>
   });
 
 /** Analyzes the fixture history, reading imports unless `adapters` say otherwise. */
-const analyzeFixture = (adapters = [typescriptAdapter(parseSync)]) =>
+const analyzeFixture = (
+  adapters = [typescriptAdapter(parseSync)],
+  overrides: Partial<AnalyzeOptions> = {},
+) =>
   Effect.gen(function* () {
     yield* setNow;
     const repo = yield* makeTempRepository;
     yield* buildHistory(repo);
-    return yield* analyze({ ...analyzeOptionsFor(repo), adapters });
+    return yield* analyze({
+      ...analyzeOptionsFor(repo),
+      adapters,
+      ...overrides,
+    });
   });
 
 /** The `imports` of each pair, in the order given. */
@@ -81,8 +91,8 @@ layer(NodeServices.layer)("analyze hidden coupling", (it) => {
       Effect.gen(function* () {
         const report = yield* analyzeFixture();
 
-        // 12 files that all change in the same 3 commits: 66 pairs of degree 1
-        assert.strictEqual(report.couplings.length, 66);
+        // 13 files that all change in the same 3 commits: 78 pairs of degree 1
+        assert.strictEqual(report.couplings.length, 78);
         assert.deepStrictEqual(
           relationsOf(report, [
             ["src/alpha.ts", "src/beta.ts"],
@@ -95,7 +105,9 @@ layer(NodeServices.layer)("analyze hidden coupling", (it) => {
         );
       }),
   );
+});
 
+layer(NodeServices.layer)("analyze imports of workspace packages", (it) => {
   it.effect(
     "follows a workspace package name through its re-exporting entry point",
     () =>
@@ -114,6 +126,46 @@ layer(NodeServices.layer)("analyze hidden coupling", (it) => {
       }),
   );
 
+  it.effect(
+    "resolves a package name to what its exports map says for the root, not to every target",
+    () =>
+      Effect.gen(function* () {
+        const report = yield* analyzeFixture();
+
+        const main = "packages/app/src/main.ts";
+        // main.ts imports "@acme/core": exports["."] is index.ts; main (ledger.ts) and exports["./extra"] are not it
+        assert.deepStrictEqual(
+          relationsOf(report, [
+            [main, "packages/core/src/extra.ts"],
+            [main, "packages/core/src/ledger.ts"],
+          ]),
+          ["none", "none"],
+        );
+      }),
+  );
+
+  it.effect(
+    "resolves package names the same way with --entry, which only names interfaces",
+    () =>
+      Effect.gen(function* () {
+        const report = yield* analyzeFixture(undefined, {
+          entry: ["packages/core/src/extra.ts"],
+        });
+
+        const main = "packages/app/src/main.ts";
+        assert.deepStrictEqual(
+          relationsOf(report, [
+            [main, "packages/core/src/index.ts"],
+            [main, "packages/core/src/money.ts"],
+            [main, "packages/core/src/extra.ts"],
+          ]),
+          ["a→b", "a→b", "none"],
+        );
+      }),
+  );
+});
+
+layer(NodeServices.layer)("analyze unknown import relations", (it) => {
   it.effect(
     "leaves the relation unknown for a non-TypeScript or unparseable file",
     () =>
@@ -149,7 +201,7 @@ layer(NodeServices.layer)("analyze hidden coupling reasons", (it) => {
     Effect.gen(function* () {
       const report = yield* analyzeFixture([]);
 
-      assert.strictEqual(report.couplings.length, 66);
+      assert.strictEqual(report.couplings.length, 78);
       assert.isTrue(report.couplings.every(({ imports }) => imports === null));
       const gamma = report.files.find(({ path }) => path === "src/gamma.ts");
       assert.isFalse(gamma?.reasons.includes(HIDDEN_REASON));

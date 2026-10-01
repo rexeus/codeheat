@@ -75,19 +75,17 @@ const measureLinked = (
   root: string,
   inputs: {
     readonly universe: Universe;
-    readonly packageDirectories: ReadonlySet<string>;
     readonly histories: WindowHistories;
   },
 ) =>
   Effect.gen(function* () {
-    const { universe, packageDirectories, histories } = inputs;
+    const { universe, histories } = inputs;
     const coupled = coupleHistory(histories.current, universe.modules);
     const couplings = yield* linkCouplings(
       {
         root,
         universe: new Set(universe.files.map((file) => file.path)),
-        packageDirectories,
-        entryPoints: universe.entryPoints,
+        modules: universe.modules,
         adapters: options.adapters,
       },
       coupled.couplings,
@@ -131,7 +129,6 @@ const analyzeRepository = (
     const { commits, couplingCommits, thresholds, ...measured } =
       yield* measureLinked(options, root, {
         universe: { files, modules, entryPoints },
-        packageDirectories,
         histories,
       });
     return {
