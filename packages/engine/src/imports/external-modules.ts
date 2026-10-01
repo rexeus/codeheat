@@ -73,7 +73,8 @@ const typesPackageOf = (name: string): string =>
  * declared `@types/x` declares `x`), or a Node built-in (also with a subpath
  * such as `fs/promises`) written without `node:`. A bundler or tsconfig
  * `baseUrl` can make such a bare name mean local code, so it counts only when
- * no directory or file of the repository (`localNames`) carries its name.
+ * `localNames`, the names a bare specifier could resolve to in the repository
+ * (a directory, or a code file without its code extension), lack it.
  */
 export const isAccountedExternal = (
   specifier: string,
