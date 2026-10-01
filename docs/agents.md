@@ -29,7 +29,7 @@ For orientation in an unfamiliar repository, run `npx codeheat analyze --json` o
 | "Only this package, last quarter"                             | `codeheat analyze packages/billing --since 3m --json` | Same, scoped                         |
 | "Did the last quarter improve on the one before?"             | `codeheat analyze --compare 3m --json`                | Same, plus `trend` on files, modules |
 
-With `--compare`, a file's `trend.scoreDelta` means warming (positive) or cooling (negative) only where `trend.newlyActive` is false; a newly active file had no revisions in the previous window, so its delta is just its score.
+With `--compare`, a file's `trend.scoreDelta` means warming (positive) or cooling (negative) only where `trend.newlyActive` and `test` are both false: a newly active file had no revisions in the previous window, so its delta is just its score, and test files are left out of the terminal's rankings. Check `comparison.previousCommits` first: 0 means there was nothing to compare, and `previousTruncated` means the previous window is cut off at the start of the history.
 
 Every call analyzes the repository again (seconds on a repository with a few thousand commits). Call `analyze` once per task, and `inspect` per file you are about to change.
 
