@@ -2,7 +2,107 @@ import { describe, expect, it } from "vitest";
 
 import type { Module } from "../report/module.js";
 import type { ModuleRef } from "./detect.js";
-import { leakyEntryPoints, measureInterfaces } from "./interface-churn.js";
+import {
+  isLeakyInterface,
+  leakingEntryPoints,
+  measureInterfaces,
+} from "./interface-churn.js";
+
+describe("measureInterfaces", () => {
+  const files = [
+    "m/index.ts",
+    "m/src/index.ts",
+    "m/src/impl.ts",
+    "m/src/__tests__/api.ts",
+    "m/src/impl.test.ts",
+  ];
+  const refs = new Map<string, ModuleRef>(
+    files.map((file) => [file, { path: "m", kind: "package" }]),
+  );
+  const measure = (commits: ReadonlyArray<ReadonlyArray<string>>) =>
+    measureInterfaces(
+      {
+        commits: commits.map((commit) =>
+          Uint32Array.from(commit, (file) => files.indexOf(file)),
+        ),
+        paths: files,
+      },
+      refs,
+      new Map([["m", ["m/index.ts", "m/src/index.ts"]]]),
+    );
+
+  it("counts a commit of an entry point and test code only as interface, not implementation", () => {
+    const { byModule } = measure([
+      ["m/src/index.ts", "m/src/__tests__/api.ts"],
+      ["m/src/__tests__/api.ts", "m/src/impl.test.ts"],
+      ["m/src/impl.ts", "m/src/index.ts"],
+      ["m/src/impl.ts"],
+    ]);
+
+    // implementation: commits 3 and 4; interface: commits 1 and 3; leaked: commit 3
+    expect(byModule.get("m")).toStrictEqual({
+      entryPoints: ["m/index.ts", "m/src/index.ts"],
+      interfaceCommits: 2,
+      implementationCommits: 2,
+      leakage: 0.5,
+    });
+  });
+
+  it("names only the entry points that changed in a commit that also changed the implementation", () => {
+    const { leakedEntryPoints } = measure([
+      ["m/src/index.ts"],
+      ["m/src/impl.ts", "m/src/index.ts"],
+      ["m/src/impl.ts"],
+    ]);
+
+    // m/index.ts never changed; src/index.ts did, with impl.ts in the second commit
+    expect([...leakedEntryPoints]).toStrictEqual(["m/src/index.ts"]);
+  });
+
+  it("ignores commits above the counted size", () => {
+    const huge = Uint32Array.from({ length: 51 }, (_, id) => id % 5);
+    const small = Uint32Array.of(2, 1);
+
+    const { byModule } = measureInterfaces(
+      { commits: [huge, small], paths: files },
+      refs,
+      new Map([["m", ["m/src/index.ts"]]]),
+    );
+
+    expect(byModule.get("m")).toMatchObject({
+      interfaceCommits: 1,
+      implementationCommits: 1,
+    });
+  });
+});
+
+const churn = (leakage: number | null, implementationCommits: number) => ({
+  entryPoints: ["m/index.ts"],
+  interfaceCommits: 5,
+  implementationCommits,
+  leakage,
+});
+
+describe("isLeakyInterface", () => {
+  it("flags leakage at the threshold over enough implementation commits", () => {
+    expect(isLeakyInterface(churn(0.5, 5), false)).toBe(true);
+  });
+
+  it("does not flag leakage below the threshold", () => {
+    expect(isLeakyInterface(churn(0.4999, 50), false)).toBe(false);
+  });
+
+  it("does not flag a high share of too few implementation commits", () => {
+    expect(isLeakyInterface(churn(1, 4), false)).toBe(false);
+  });
+
+  it("does not flag a module without leakage data or a test-only one", () => {
+    expect([
+      isLeakyInterface(churn(null, 9), false),
+      isLeakyInterface(churn(1, 9), true),
+    ]).toStrictEqual([false, false]);
+  });
+});
 
 const module = (path: string, overrides: Partial<Module>): Module => ({
   path,
@@ -13,66 +113,23 @@ const module = (path: string, overrides: Partial<Module>): Module => ({
   localCommits: 5,
   cohesion: 0.5,
   partners: [],
-  entryPoints: [`${path}/index.ts`],
+  entryPoints: [`${path}/index.ts`, `${path}/src/index.ts`],
   interfaceCommits: 5,
   implementationCommits: 10,
-  leakage: 0.5,
+  leakage: 0.6,
+  leakyInterface: true,
   ...overrides,
 });
 
-describe("leakyEntryPoints", () => {
-  it("maps the entry points of a module at the leakage and commit thresholds to its leakage", () => {
-    const modules = [module("a", { leakage: 0.5, implementationCommits: 5 })];
+describe("leakingEntryPoints", () => {
+  it("maps the leaked entry points of leaky modules to their module's leakage", () => {
+    const modules = [module("a", {}), module("b", { leakyInterface: false })];
 
-    expect([...leakyEntryPoints(modules)]).toStrictEqual([["a/index.ts", 0.5]]);
-  });
+    const leaking = leakingEntryPoints(
+      modules,
+      new Set(["a/src/index.ts", "b/index.ts"]),
+    );
 
-  it("skips modules below the leakage threshold, with too few implementation commits, without data, or test-only", () => {
-    const modules = [
-      module("low", { leakage: 0.4999 }),
-      module("few", { leakage: 1, implementationCommits: 4 }),
-      module("none", { leakage: null }),
-      module("tests", { testOnly: true, leakage: 1 }),
-    ];
-
-    expect(leakyEntryPoints(modules).size).toBe(0);
-  });
-});
-
-describe("measureInterfaces", () => {
-  const files = [
-    "m/index.ts",
-    "m/src/impl.ts",
-    "m/src/__tests__/api.ts",
-    "m/src/impl.test.ts",
-  ];
-  const refs = new Map<string, ModuleRef>(
-    files.map((file) => [file, { path: "m", kind: "package" }]),
-  );
-  const measure = (commits: ReadonlyArray<ReadonlyArray<string>>) =>
-    measureInterfaces(
-      commits.map((commit) =>
-        Uint32Array.from(commit, (file) => files.indexOf(file)),
-      ),
-      files,
-      refs,
-      new Map([["m", ["m/index.ts"]]]),
-    ).get("m");
-
-  it("counts a commit of the entry point and test code only as interface, not implementation", () => {
-    const churn = measure([
-      ["m/index.ts", "m/src/__tests__/api.ts"],
-      ["m/src/__tests__/api.ts", "m/src/impl.test.ts"],
-      ["m/src/impl.ts", "m/index.ts"],
-      ["m/src/impl.ts"],
-    ]);
-
-    // implementation: commits 3 and 4; interface: commits 1 and 3; leaked: commit 3
-    expect(churn).toStrictEqual({
-      entryPoints: ["m/index.ts"],
-      interfaceCommits: 2,
-      implementationCommits: 2,
-      leakage: 0.5,
-    });
+    expect([...leaking]).toStrictEqual([["a/src/index.ts", 0.6]]);
   });
 });

@@ -91,14 +91,15 @@ layer(NodeServices.layer)("analyze interface churn", (it) => {
               module.interfaceCommits,
               module.implementationCommits,
               module.leakage,
+              module.leakyInterface,
             ],
           ]),
         );
         // leaky: 4 of its 7 implementation commits (8, 9, 11, 15) also touched index.ts
         assert.deepStrictEqual(Object.fromEntries(churn), {
-          "packages/stable": [[stableIndex], 1, 5, 0],
-          "packages/leaky": [[leakyIndex], 5, 7, 0.5714],
-          "packages/plain": [[], 0, 3, null],
+          "packages/stable": [[stableIndex], 1, 5, 0, false],
+          "packages/leaky": [[leakyIndex], 5, 7, 0.5714, true],
+          "packages/plain": [[], 0, 3, null, false],
         });
       }),
   );

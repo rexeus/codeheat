@@ -853,7 +853,8 @@
       "entryPoints": ["packages/shared/src/index.ts"],
       "interfaceCommits": 6,
       "implementationCommits": 29,
-      "leakage": 0.2069
+      "leakage": 0.2069,
+      "leakyInterface": false
     },
     {
       "path": "apps/cli",
@@ -876,7 +877,8 @@
       "entryPoints": [],
       "interfaceCommits": 0,
       "implementationCommits": 24,
-      "leakage": null
+      "leakage": null,
+      "leakyInterface": false
     },
     {
       "path": "packages/web",
@@ -903,7 +905,8 @@
       "entryPoints": [],
       "interfaceCommits": 0,
       "implementationCommits": 58,
-      "leakage": null
+      "leakage": null,
+      "leakyInterface": false
     },
     {
       "path": "packages/billing",
@@ -934,7 +937,8 @@
       "entryPoints": ["packages/billing/src/index.ts"],
       "interfaceCommits": 9,
       "implementationCommits": 71,
-      "leakage": 0.1268
+      "leakage": 0.1268,
+      "leakyInterface": false
     },
     {
       "path": "packages/auth",
@@ -961,7 +965,8 @@
       "entryPoints": ["packages/auth/src/index.ts"],
       "interfaceCommits": 7,
       "implementationCommits": 43,
-      "leakage": 0.1395
+      "leakage": 0.1395,
+      "leakyInterface": false
     }
   ]
 }

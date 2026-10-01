@@ -1,5 +1,7 @@
 // Owns how often a module's interface changes against its implementation:
 // the history-based signal for shallow or leaky modules.
+import { MAX_COMMIT_FILES } from "../coupling/coupling.js";
+import type { History } from "../history/history.js";
 import type { Module } from "../report/module.js";
 import { roundReported } from "../report/precision.js";
 import type { ModuleRef } from "./detect.js";
@@ -23,6 +25,14 @@ export const NO_INTERFACE: InterfaceChurn = {
   leakage: null,
 };
 
+/** What `measureInterfaces` found. */
+export type InterfaceMeasure = {
+  /** Churn of every module that has an entry in the `entryPoints` given. */
+  readonly byModule: ReadonlyMap<string, InterfaceChurn>;
+  /** Entry points that changed in at least one commit that also changed their module's implementation. */
+  readonly leakedEntryPoints: ReadonlySet<string>;
+};
+
 type Tally = {
   interfaceCommits: number;
   implementationCommits: number;
@@ -31,23 +41,27 @@ type Tally = {
 };
 
 type Touched = {
-  readonly entries: Set<string>;
+  /** The entry points a commit touched, per module. */
+  readonly entries: Map<string, Array<string>>;
+  /** The modules whose implementation (other files, test code excluded) it touched. */
   readonly implementations: Set<string>;
 };
 
-/** The modules whose entry points and whose implementation (other files, test code excluded) a commit touched. */
 const touchedBy = (
   commit: Uint32Array,
   paths: ReadonlyArray<string>,
   refs: ReadonlyMap<string, ModuleRef>,
   entryFiles: ReadonlySet<string>,
 ): Touched => {
-  const touched: Touched = { entries: new Set(), implementations: new Set() };
+  const touched: Touched = { entries: new Map(), implementations: new Set() };
   for (const id of commit) {
     const file = paths[id] ?? "";
     const module = refs.get(file)?.path ?? ".";
     if (entryFiles.has(file)) {
-      touched.entries.add(module);
+      touched.entries.set(module, [
+        ...(touched.entries.get(module) ?? []),
+        file,
+      ]);
     } else if (!isTestPath(file)) {
       touched.implementations.add(module);
     }
@@ -68,20 +82,44 @@ const toChurn = (
       : roundReported(tally.leakedCommits / tally.implementationCommits),
 });
 
+/** Credits one commit to the modules whose entry points or implementation it touched, and notes the entry points it leaked. */
+const countCommit = (
+  { entries, implementations }: Touched,
+  tallies: ReadonlyMap<string, Tally>,
+  leakedEntryPoints: Set<string>,
+): void => {
+  for (const module of entries.keys()) {
+    const tally = tallies.get(module);
+    if (tally !== undefined) {
+      tally.interfaceCommits += 1;
+    }
+  }
+  for (const module of implementations) {
+    const tally = tallies.get(module);
+    const leaked = entries.get(module) ?? [];
+    if (tally !== undefined) {
+      tally.implementationCommits += 1;
+      tally.leakedCommits += Number(leaked.length > 0);
+      for (const file of leaked) {
+        leakedEntryPoints.add(file);
+      }
+    }
+  }
+};
+
 /**
- * Counts, per module, the counted commits that touched its entry points
- * (`interfaceCommits`) and those that touched any other non-test file
- * (`implementationCommits`), and the share of the latter that also touched an
- * entry point (`leakage`). Commits are the distinct ids of the files they
- * touched, ids being indexes into `paths`; `entryPoints` maps each module path
- * to its entry-point files.
+ * Counts, per module, the counted commits (at most `MAX_COMMIT_FILES` files)
+ * that touched its entry points (`interfaceCommits`) and those that touched any
+ * other file that is not test code (`implementationCommits`), and the share of
+ * the latter that also touched an entry point (`leakage`). Each commit of
+ * `history` is the distinct ids of the files it touched, ids being indexes into
+ * `history.paths`; `entryPoints` maps each module path to its entry-point files.
  */
 export const measureInterfaces = (
-  commits: ReadonlyArray<Uint32Array>,
-  paths: ReadonlyArray<string>,
+  { commits, paths }: Pick<History, "commits" | "paths">,
   refs: ReadonlyMap<string, ModuleRef>,
   entryPoints: ReadonlyMap<string, ReadonlyArray<string>>,
-): ReadonlyMap<string, InterfaceChurn> => {
+): InterfaceMeasure => {
   const entryFiles = new Set([...entryPoints.values()].flat());
   const tallies = new Map<string, Tally>(
     [...entryPoints.keys()].map((module) => [
@@ -89,51 +127,58 @@ export const measureInterfaces = (
       { interfaceCommits: 0, implementationCommits: 0, leakedCommits: 0 },
     ]),
   );
+  const leakedEntryPoints = new Set<string>();
   for (const commit of commits) {
-    const { entries, implementations } = touchedBy(
-      commit,
-      paths,
-      refs,
-      entryFiles,
-    );
-    for (const module of entries) {
-      const tally = tallies.get(module);
-      if (tally !== undefined) {
-        tally.interfaceCommits += 1;
-      }
-    }
-    for (const module of implementations) {
-      const tally = tallies.get(module);
-      if (tally !== undefined) {
-        tally.implementationCommits += 1;
-        tally.leakedCommits += Number(entries.has(module));
-      }
+    if (commit.length <= MAX_COMMIT_FILES) {
+      countCommit(
+        touchedBy(commit, paths, refs, entryFiles),
+        tallies,
+        leakedEntryPoints,
+      );
     }
   }
-  return new Map(
-    [...tallies].map(([module, tally]) => [
-      module,
-      toChurn(entryPoints.get(module) ?? [], tally),
-    ]),
-  );
+  return {
+    byModule: new Map(
+      [...tallies].map(([module, tally]) => [
+        module,
+        toChurn(entryPoints.get(module) ?? [], tally),
+      ]),
+    ),
+    leakedEntryPoints,
+  };
 };
 
 /**
- * The entry-point files of the modules whose interface leaks (see
- * `MIN_LEAKAGE`, `MIN_IMPLEMENTATION_COMMITS`), each with its module's
- * leakage. Test-only modules have no interface worth calling out.
+ * Whether a module's interface leaks enough to call out: a leakage of at least
+ * `MIN_LEAKAGE` over at least `MIN_IMPLEMENTATION_COMMITS` implementation
+ * commits. A test-only module has no interface to judge.
  */
-export const leakyEntryPoints = (
+export const isLeakyInterface = (
+  { leakage, implementationCommits }: InterfaceChurn,
+  testOnly: boolean,
+): boolean =>
+  !testOnly &&
+  leakage !== null &&
+  leakage >= MIN_LEAKAGE &&
+  implementationCommits >= MIN_IMPLEMENTATION_COMMITS;
+
+/**
+ * The entry points that deserve the leak reason, each with its module's
+ * leakage: those of a leaky module (`Module.leakyInterface`) that changed in at
+ * least one commit that also changed the module's implementation. An entry
+ * point that never changes, such as a root stub re-exporting `src/index.ts`,
+ * has nothing to be blamed for.
+ */
+export const leakingEntryPoints = (
   modules: ReadonlyArray<Module>,
+  leakedEntryPoints: ReadonlySet<string>,
 ): ReadonlyMap<string, number> =>
   new Map(
-    modules.flatMap(
-      ({ entryPoints, implementationCommits, leakage, testOnly }) =>
-        !testOnly &&
-        leakage !== null &&
-        leakage >= MIN_LEAKAGE &&
-        implementationCommits >= MIN_IMPLEMENTATION_COMMITS
-          ? entryPoints.map((file): [string, number] => [file, leakage])
-          : [],
+    modules.flatMap(({ entryPoints, leakage, leakyInterface }) =>
+      leakyInterface && leakage !== null
+        ? entryPoints
+            .filter((file) => leakedEntryPoints.has(file))
+            .map((file): [string, number] => [file, leakage])
+        : [],
     ),
   );

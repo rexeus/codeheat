@@ -8,7 +8,7 @@ import type { History } from "../history/history.js";
 import type { Module } from "../report/module.js";
 import { roundReported } from "../report/precision.js";
 import type { ModuleRef } from "./detect.js";
-import { measureInterfaces, NO_INTERFACE } from "./interface-churn.js";
+import { isLeakyInterface, NO_INTERFACE } from "./interface-churn.js";
 import type { InterfaceChurn } from "./interface-churn.js";
 import { isTestPath } from "./test-path.js";
 
@@ -100,28 +100,33 @@ const toModule = (
   path: string,
   tally: Tally,
   churn: InterfaceChurn,
-): Module => ({
-  path,
-  kind: tally.kind,
-  files: tally.files,
-  testOnly: tally.testFiles === tally.files,
-  commits: tally.commits,
-  localCommits: tally.localCommits,
-  cohesion:
-    tally.commits === 0
-      ? null
-      : roundReported(tally.localCommits / tally.commits),
-  partners: [...tally.shared]
-    .map(([partner, sharedCommits]) => ({ path: partner, sharedCommits }))
-    .toSorted(byPartnerStrength)
-    .slice(0, MAX_PARTNERS),
-  ...churn,
-});
+): Module => {
+  const testOnly = tally.testFiles === tally.files;
+  return {
+    path,
+    kind: tally.kind,
+    files: tally.files,
+    testOnly,
+    commits: tally.commits,
+    localCommits: tally.localCommits,
+    cohesion:
+      tally.commits === 0
+        ? null
+        : roundReported(tally.localCommits / tally.commits),
+    partners: [...tally.shared]
+      .map(([partner, sharedCommits]) => ({ path: partner, sharedCommits }))
+      .toSorted(byPartnerStrength)
+      .slice(0, MAX_PARTNERS),
+    ...churn,
+    leakyInterface: isLeakyInterface(churn, testOnly),
+  };
+};
 
 /**
  * Measures every module over the counted commits (at most `MAX_COMMIT_FILES`
  * files) of `history`; `refs` maps every universe file to its module, and
- * `entryPoints` maps every module path to its entry-point files.
+ * `interfaces` maps every module path to its measured interface churn (see
+ * `measureInterfaces`; a module missing there has none).
  *
  * A module's cohesion is the share of its commits that touched no other
  * module. The order is the one documented on `Report.modules`; a module is
@@ -131,7 +136,7 @@ export const measureModules = (
   { commits, paths }: Pick<History, "commits" | "paths">,
   refs: ReadonlyMap<string, ModuleRef>,
   minModuleCommits: number,
-  entryPoints: ReadonlyMap<string, ReadonlyArray<string>>,
+  interfaces: ReadonlyMap<string, InterfaceChurn>,
 ): ReadonlyArray<Module> => {
   const tallies = tallyFiles(refs);
   const moduleOfId = paths.map((path) => refs.get(path)?.path ?? ".");
@@ -142,7 +147,6 @@ export const measureModules = (
       tallies,
     );
   }
-  const interfaces = measureInterfaces(counted, paths, refs, entryPoints);
   return [...tallies]
     .map(([path, tally]) =>
       toModule(path, tally, interfaces.get(path) ?? NO_INTERFACE),

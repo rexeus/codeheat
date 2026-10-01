@@ -51,6 +51,7 @@ export const moduleStats = (
   interfaceCommits: 0,
   implementationCommits: 10,
   leakage: null,
+  leakyInterface: false,
   ...overrides,
 });
 

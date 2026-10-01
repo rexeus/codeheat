@@ -5,7 +5,10 @@ import { rankFiles } from "../hotspots/hotspots.js";
 import type { FileMeasure } from "../hotspots/hotspots.js";
 import { measureModules } from "../modules/cohesion.js";
 import type { ModuleRef } from "../modules/detect.js";
-import { leakyEntryPoints } from "../modules/interface-churn.js";
+import {
+  leakingEntryPoints,
+  measureInterfaces,
+} from "../modules/interface-churn.js";
 import type { InventoryFile } from "../universe/inventory.js";
 import { thresholdsFor } from "./thresholds.js";
 
@@ -52,11 +55,12 @@ export const measure = (
     modules,
   );
   const thresholds = thresholdsFor(couplingCommits);
+  const interfaces = measureInterfaces(history, modules, entryPoints);
   const measuredModules = measureModules(
     history,
     modules,
     thresholds.minModuleCommits,
-    entryPoints,
+    interfaces.byModule,
   );
   return {
     couplingCommits,
@@ -65,7 +69,10 @@ export const measure = (
       measureFiles(files, history, {
         breadth,
         modules,
-        leakyInterfaces: leakyEntryPoints(measuredModules),
+        leakyInterfaces: leakingEntryPoints(
+          measuredModules,
+          interfaces.leakedEntryPoints,
+        ),
       }),
       couplings,
     ),

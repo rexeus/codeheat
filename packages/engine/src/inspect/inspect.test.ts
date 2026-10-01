@@ -48,6 +48,7 @@ const modules: Report["modules"] = [
     interfaceCommits: 0,
     implementationCommits: 4,
     leakage: null,
+    leakyInterface: false,
   },
   {
     path: "src",
@@ -62,6 +63,7 @@ const modules: Report["modules"] = [
     interfaceCommits: 4,
     implementationCommits: 20,
     leakage: 0.2,
+    leakyInterface: false,
   },
 ];
 

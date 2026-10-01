@@ -52,5 +52,12 @@ export const Module = Schema.Struct({
    * changing its public API. Null without entry points or implementation commits.
    */
   leakage: Schema.NullOr(UnitInterval),
+  /**
+   * The module's interface is called out as leaky: `leakage` is at least
+   * `Thresholds.minLeakage` over at least `Thresholds.minImplementationCommits`
+   * implementation commits, and the module is not `testOnly`. `modules` is in
+   * cohesion order, so look for this flag rather than for the first entries.
+   */
+  leakyInterface: Schema.Boolean,
 });
 export type Module = typeof Module.Type;
