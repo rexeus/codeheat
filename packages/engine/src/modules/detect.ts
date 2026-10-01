@@ -47,10 +47,75 @@ const packagesThenDirectories = (
 };
 
 /**
+ * A module that holds more than this percentage of the universe files is
+ * split by directory (see `splitDominant`). A module that big makes the
+ * module view useless: nearly every commit stays inside it, so its cohesion
+ * says nothing, and it has no partners worth naming.
+ */
+const DOMINANT_MODULE_PERCENT = 70;
+
+type ModuleFiles = {
+  readonly ref: ModuleRef;
+  readonly files: ReadonlyArray<string>;
+};
+
+const filesByModule = (
+  assigned: ReadonlyMap<string, ModuleRef>,
+): ReadonlyArray<ModuleFiles> => {
+  const grouped = new Map<string, { ref: ModuleRef; files: Array<string> }>();
+  for (const [file, ref] of assigned) {
+    const group = grouped.get(ref.path) ?? { ref, files: [] };
+    group.files.push(file);
+    grouped.set(ref.path, group);
+  }
+  return [...grouped.values()];
+};
+
+/**
+ * The module to split: the one holding more than the dominant share of the
+ * files. A package is spared when another package exists, because manifests
+ * are boundaries someone declared, and a package that merely is the largest
+ * of several is not a module to dissolve.
+ */
+const dominantModule = (
+  assigned: ReadonlyMap<string, ModuleRef>,
+): ModuleFiles | undefined => {
+  const modules = filesByModule(assigned);
+  const dominant = modules.find(
+    ({ files }) => 100 * files.length > DOMINANT_MODULE_PERCENT * assigned.size,
+  );
+  const hasOtherPackage = modules.some(
+    ({ ref }) => ref.path !== dominant?.ref.path && ref.kind === "package",
+  );
+  return dominant?.ref.kind === "package" && hasOtherPackage
+    ? undefined
+    : dominant;
+};
+
+/**
+ * Splits the module that holds more than the dominant share of the files with
+ * the directory rule, and again while one of the parts does, until none does
+ * or the dominant module has no directories to split by.
+ */
+const splitDominant = (
+  assigned: ReadonlyMap<string, ModuleRef>,
+): ReadonlyMap<string, ModuleRef> => {
+  const dominant = dominantModule(assigned);
+  if (dominant === undefined) {
+    return assigned;
+  }
+  const parts = directoryModules(dominant.files);
+  const splits = new Set([...parts.values()].map(({ path }) => path)).size > 1;
+  return splits ? splitDominant(new Map([...assigned, ...parts])) : assigned;
+};
+
+/**
  * Assigns every file to a module: its nearest enclosing package (a directory
  * in `packages`), otherwise a directory module. When that yields fewer than
  * two modules, all files are regrouped by directory instead, because a single
- * module is trivially cohesive and says nothing.
+ * module is trivially cohesive and says nothing. A module that still holds
+ * more than 70 % of the files is split by directory as well (see
+ * `splitDominant`), unless it is a package and other packages exist.
  */
 export const detectModules = (
   files: ReadonlyArray<string>,
@@ -59,5 +124,5 @@ export const detectModules = (
   const assigned = packagesThenDirectories(files, packages);
   const moduleCount = new Set([...assigned.values()].map(({ path }) => path))
     .size;
-  return moduleCount < 2 ? directoryModules(files) : assigned;
+  return splitDominant(moduleCount < 2 ? directoryModules(files) : assigned);
 };

@@ -52,7 +52,7 @@ const ModuleDepth = Schema.Struct({
 export const Module = Schema.Struct({
   /** Repository-relative POSIX directory; "." for files at the repository root. */
   path: Schema.String,
-  /** `package`: the directory has its own manifest (`package.json`, `go.mod`, …); `directory`: fallback grouping. */
+  /** `package`: the directory has its own manifest (`package.json`, `go.mod`, …); `directory`: fallback grouping, also of a lone package or other module that held most of the files and was split by directory. */
   kind: Schema.Literals(["package", "directory"]),
   /** Universe files in the module. */
   files: Count,
