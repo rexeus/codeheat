@@ -13,6 +13,8 @@ import type { WorkspacePackage } from "./resolve.js";
 export type Workspace = {
   /** Packages by name. */
   readonly packages: ReadonlyMap<string, WorkspacePackage>;
+  /** Package names that more than one manifest claims; an import of one cannot be told from the other. */
+  readonly ambiguous: ReadonlySet<string>;
   /** Every dependency name declared by any of the manifests. */
   readonly dependencies: ReadonlySet<string>;
 };
@@ -34,6 +36,7 @@ export const readWorkspace = (
     const path = yield* Path.Path;
     const grouped = groupByModule(modules);
     const packages = new Map<string, WorkspacePackage>();
+    const ambiguous = new Set<string>();
     const dependencies = new Set<string>();
     for (const manifestFile of manifestFiles) {
       const facts = yield* readManifestFacts(path.join(root, manifestFile));
@@ -46,6 +49,9 @@ export const readWorkspace = (
       const directory = directoryOf(manifestFile);
       const module = grouped.get(directory);
       if (facts.name !== undefined && module?.kind === "package") {
+        if (packages.has(facts.name)) {
+          ambiguous.add(facts.name);
+        }
         packages.set(facts.name, {
           directory,
           entryPoints: packageMainEntries(
@@ -56,7 +62,7 @@ export const readWorkspace = (
         });
       }
     }
-    return { packages, dependencies };
+    return { packages, ambiguous, dependencies };
   });
 
 /**

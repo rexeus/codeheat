@@ -12,6 +12,7 @@ const resolverFor = (
     universe: new Set(tracked.filter((file) => file.endsWith(".ts"))),
     tracked: new Set(tracked),
     packages: new Map(),
+    ambiguous: new Set(),
     dependencies: new Set(),
     ...rest,
   });
@@ -107,6 +108,23 @@ describe("specifiers that are not accounted for", () => {
     expect(resolve("src/main.ts", "./missing").resolved).toBe(false);
     expect(resolve("src/main.ts", "../../escape").resolved).toBe(false);
     expect(resolve("src/main.ts", "./style.css").resolved).toBe(false);
+  });
+});
+
+describe("workspace package names that are not accounted for", () => {
+  it("does not account for a package name that two workspace packages claim", () => {
+    const duplicated = resolverFor(["src/a.ts"], {
+      packages: new Map([
+        ["@acme/dup", { directory: "pkg", entryPoints: ["pkg/index.ts"] }],
+      ]),
+      ambiguous: new Set(["@acme/dup"]),
+      dependencies: new Set(["@acme/dup"]),
+    });
+
+    expect(duplicated("src/a.ts", "@acme/dup")).toStrictEqual({
+      files: [],
+      resolved: false,
+    });
   });
 
   it("does not account for a workspace package without entry points", () => {

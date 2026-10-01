@@ -41,6 +41,8 @@ export type ResolveWorld = {
   /** Every file git tracks in the analyzed scope, whether it is in the universe or not. */
   readonly tracked: ReadonlySet<string>;
   readonly packages: ReadonlyMap<string, WorkspacePackage>;
+  /** Package names two manifests claim: importing one leaves it open which was meant. */
+  readonly ambiguous: ReadonlySet<string>;
   /** Dependency names declared by the repository's manifests. */
   readonly dependencies: ReadonlySet<string>;
 };
@@ -49,7 +51,7 @@ const UNRESOLVED: Resolution = { files: [], resolved: false };
 const ACCOUNTED: Resolution = { files: [], resolved: true };
 
 export const createResolver = (world: ResolveWorld): Resolver => {
-  const { universe, tracked, packages, dependencies } = world;
+  const { universe, tracked, packages, ambiguous, dependencies } = world;
 
   /** The universe files that `base` stands for when imported by `from`; unresolved when only an excluded file or nothing exists. */
   const code = (from: string, base: string | undefined): Resolution => {
@@ -93,6 +95,9 @@ export const createResolver = (world: ResolveWorld): Resolver => {
       return relative(from, specifier);
     }
     const { name, subpath } = splitPackageName(specifier);
+    if (ambiguous.has(name)) {
+      return UNRESOLVED;
+    }
     const workspacePackage = packages.get(name);
     if (workspacePackage !== undefined) {
       return workspace(from, workspacePackage, subpath);

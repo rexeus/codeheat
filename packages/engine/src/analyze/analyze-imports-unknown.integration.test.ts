@@ -30,6 +30,7 @@ const sources = (version: number): Record<string, string> => ({
   "src/lazy.ts": `export const load = (name: string) => import(\`./pages/\${name}\`);\n// ${version}\n`,
   "src/user.ts": `import { one } from "./broken-barrel";\nexport const user = one;\n// ${version}\n`,
   "src/broken-barrel.ts": `export * from "./one";\nexport const = ${version};\n`,
+  "src/duplicate.ts": `import { x } from "@acme/dup";\nexport const duplicate = x;\n// ${version}\n`,
   "src/viaDist.ts": `import { built } from "../dist/barrel";\nexport const viaDist = built;\n// ${version}\n`,
 });
 
@@ -41,6 +42,10 @@ const analyzeFixture = Effect.gen(function* () {
     "package.json": '{ "devDependencies": { "react": "19.0.0" } }\n',
     "src/style.css": "a { color: red; }\n",
     "dist/barrel.ts": "export const built = 1;\n",
+    "packages/a/package.json": '{ "name": "@acme/dup" }\n',
+    "packages/a/index.ts": "export const x = 1;\n",
+    "packages/b/package.json": '{ "name": "@acme/dup" }\n',
+    "packages/b/index.ts": "export const x = 2;\n",
   });
   for (const version of [1, 2, 3]) {
     yield* repo.commit(day(version), sources(version));
@@ -70,7 +75,7 @@ layer(NodeServices.layer)("analyze imports that can be told", (it) => {
       Effect.gen(function* () {
         const report = yield* analyzeFixture;
 
-        assert.strictEqual(report.couplings.length, 66);
+        assert.strictEqual(report.couplings.length, 78);
         assert.strictEqual(relationOf(report, "one", "two"), "none");
         // react is declared by a manifest, node:fs is a built-in, style.css is a tracked asset
         assert.strictEqual(relationOf(report, "dep", "one"), "none");
@@ -98,6 +103,16 @@ layer(NodeServices.layer)("analyze imports that cannot be told", (it) => {
         assert.isNull(relationOf(report, "alias", "one"));
         assert.isNull(relationOf(report, "hash", "one"));
         assert.isNull(relationOf(report, "undeclared", "one"));
+      }),
+  );
+
+  it.effect(
+    "leaves an import of a package name that two manifests claim unknown",
+    () =>
+      Effect.gen(function* () {
+        const report = yield* analyzeFixture;
+
+        assert.isNull(relationOf(report, "duplicate", "one"));
       }),
   );
 

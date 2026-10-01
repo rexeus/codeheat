@@ -12,6 +12,7 @@ const resolverFor = (
     universe: new Set(files),
     tracked: new Set(files),
     packages: new Map(Object.entries(packages)),
+    ambiguous: new Set(),
     dependencies: new Set(),
   });
   return (from: string, specifier: string) => resolve(from, specifier).files;
