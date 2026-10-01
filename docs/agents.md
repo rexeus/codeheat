@@ -36,7 +36,7 @@ Every call analyzes the repository again (seconds on a repository with a few tho
 
 ## Reading module context
 
-The files of a repository are grouped into modules: workspace packages (a directory with its own `package.json`, `go.mod`, `Cargo.toml`, …) or, without manifests, directories. Before a change, read the module of the file you are about to edit, in `modules` of the `inspect` result (the file's own `module` names it):
+The files of a repository are grouped into modules: workspace packages (a directory with its own `package.json`, `go.mod`, `Cargo.toml`, …) or directories, for files outside any package and for a package that holds most of the code on its own, which is split by its directories. Before a change, read the module of the file you are about to edit, in `modules` of the `inspect` result (the file's own `module` names it):
 
 ```json
 {
