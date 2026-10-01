@@ -11,7 +11,7 @@ import {
   formatScore,
 } from "./format.js";
 import { fileModuleSection, leastCohesiveSection } from "./module-panel.js";
-import { overviewIntro } from "./overview-intro.js";
+import { overviewIntro, overviewTitles } from "./overview-intro.js";
 
 /** Side panel: an overview until a file is selected, then its reasons and partners. */
 export type Panel = {
@@ -213,10 +213,7 @@ export const createPanel = (
         .map((file) => hotspotRow(context, file));
       root.replaceChildren(
         ...(rows.length === 0
-          ? [
-              h("h2", "panel-title", "Hotspots"),
-              h("p", "hint", EMPTY_PANEL_NOTE),
-            ]
+          ? [...overviewTitles(), h("p", "hint", EMPTY_PANEL_NOTE)]
           : [
               ...overviewIntro(),
               h(
