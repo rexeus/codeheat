@@ -66,7 +66,14 @@ export const isRelative = (specifier: string): boolean =>
 export const withoutQuery = (specifier: string): string =>
   specifier.replace(/[?#].*$/u, "");
 
-/** Every directory name and every file name without extension in `paths`, for telling whether a bare specifier could mean local code. */
+/** A file name that ends in a code extension, which a bare specifier may leave out. */
+const CODE_FILE_NAME = /\.(?:d\.)?(?:[cm]?[jt]s|[jt]sx)$/u;
+
+/**
+ * The names a bare specifier could resolve to in `paths`: every directory
+ * name, and the name of every code file without its code extension
+ * (`events.ts`, `events.d.ts`, but not `events.spec.ts` or `events.css`).
+ */
 export const namesOf = (paths: Iterable<string>): ReadonlySet<string> => {
   const names = new Set<string>();
   for (const path of paths) {
@@ -75,7 +82,9 @@ export const namesOf = (paths: Iterable<string>): ReadonlySet<string> => {
     for (const segment of segments) {
       names.add(segment);
     }
-    names.add(file.split(".")[0] ?? file);
+    if (CODE_FILE_NAME.test(file)) {
+      names.add(file.replace(CODE_FILE_NAME, ""));
+    }
   }
   return names;
 };

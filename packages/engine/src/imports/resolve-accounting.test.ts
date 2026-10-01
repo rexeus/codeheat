@@ -163,3 +163,28 @@ describe("names that could mean Node built-ins or local code", () => {
     expect(resolve("src/a.ts", "./Page.svelte").resolved).toBe(false);
   });
 });
+
+describe("which names block a bare built-in specifier", () => {
+  const resolve = resolverFor([], {
+    universe: new Set([
+      "test/events.spec.ts",
+      "src/os.test.ts",
+      "src/util.css",
+      "src/stream.d.ts",
+      "src/http/index.ts",
+      "src/fs.mjs",
+    ]),
+  });
+
+  it("is not blocked by a test file, a stylesheet, or a file in another directory", () => {
+    expect(resolve("src/a.ts", "events").resolved).toBe(true);
+    expect(resolve("src/a.ts", "os").resolved).toBe(true);
+    expect(resolve("src/a.ts", "util").resolved).toBe(true);
+  });
+
+  it("is blocked by a directory, a declaration file, or a code file of that name", () => {
+    expect(resolve("src/a.ts", "stream").resolved).toBe(false);
+    expect(resolve("src/a.ts", "http").resolved).toBe(false);
+    expect(resolve("src/a.ts", "fs").resolved).toBe(false);
+  });
+});
