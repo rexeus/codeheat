@@ -141,14 +141,57 @@ layer(NodeServices.layer)(
     it.effect("maps a * in a dist target back to the sources", () =>
       Effect.gen(function* () {
         const entries = yield* entryPointsOf(
-          [file("src/a.ts"), file("src/nested/b.ts"), file("src/c.css")],
+          [file("src/a.ts"), file("src/nested/b.ts")],
           '{ "exports": { "./*": "./dist/*.js" } }',
         );
 
         assert.deepStrictEqual(entries, [
           file("src/a.ts"),
-          file("src/c.css"),
           file("src/nested/b.ts"),
+        ]);
+      }),
+    );
+  },
+);
+
+layer(NodeServices.layer)(
+  "findEntryPoints skips non-code files of patterns",
+  (it) => {
+    it.effect("leaves stylesheets out of a styles pattern", () =>
+      Effect.gen(function* () {
+        const entries = yield* entryPointsOf(
+          [
+            file("styles/_button.scss"),
+            file("styles/theme.css"),
+            file("styles/tokens.ts"),
+            file("src/index.ts"),
+          ],
+          '{ "exports": { "./styles/*": "./styles/*" } }',
+        );
+
+        assert.deepStrictEqual(entries, [
+          file("src/index.ts"),
+          file("styles/tokens.ts"),
+        ]);
+      }),
+    );
+
+    it.effect("leaves config files out of a schematics pattern", () =>
+      Effect.gen(function* () {
+        const entries = yield* entryPointsOf(
+          [
+            file("schematics/migrate.js"),
+            file("schematics/helper.d.ts"),
+            file("schematics/rollup.config.js"),
+            file("schematics/build.config.mjs"),
+            file("schematics/README.md"),
+          ],
+          '{ "exports": { "./schematics/*": { "default": "./schematics/*.js" }, "./all/*": "./schematics/*" } }',
+        );
+
+        assert.deepStrictEqual(entries, [
+          file("schematics/helper.d.ts"),
+          file("schematics/migrate.js"),
         ]);
       }),
     );

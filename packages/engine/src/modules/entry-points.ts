@@ -10,6 +10,9 @@ import { readManifestTargets } from "./package-manifest.js";
 /** `index` of the JavaScript family (not `index.test.ts`, not `index.html`), Rust and Python module roots. */
 const CONVENTIONAL_ENTRY =
   /^(index\.[cm]?[jt]sx?|mod\.rs|lib\.rs|__init__\.py)$/u;
+/** What a package.json can name as interface: JavaScript and TypeScript sources (declaration files included), not configuration. */
+const CODE_FILE = /\.[cm]?[jt]sx?$/u;
+const CONFIG_FILE = /\.config\.[cm]?[jt]s$/u;
 /** Where a manifest points at build output rather than at the source that produces it. */
 const BUILD_DIRECTORIES = ["dist/", "build/"];
 
@@ -28,6 +31,9 @@ const nameOf = (file: string): string => file.slice(file.lastIndexOf("/") + 1);
 
 /** The path without its extension, `.d.ts` included, so `dist/a.d.ts` and `src/a.ts` share a stem. */
 const stemOf = (file: string): string => file.replace(/(\.d)?\.[^./]+$/u, "");
+
+const isManifestCode = (file: string): boolean =>
+  CODE_FILE.test(file) && !CONFIG_FILE.test(file);
 
 const isConventionalEntry = (module: string, file: string): boolean =>
   [module, joinPath(module, "src")].includes(directoryOf(file)) &&
@@ -55,7 +61,7 @@ const matching = (
  * The module files a manifest target stands for: the files it names or, with a
  * `*`, matches; else the files with its stem (a target without extension); else,
  * for a target in `dist/` or `build/`, the sources with the same stem under the
- * module's `src/` (else its root).
+ * module's `src/` (else its root). `files` are the candidates it may name.
  */
 const resolveTarget = (
   module: string,
@@ -87,13 +93,15 @@ const detectEntryPoints = (
   module: string,
   files: ReadonlyArray<string>,
   targets: ReadonlyArray<string>,
-): ReadonlyArray<string> =>
-  [
+): ReadonlyArray<string> => {
+  const code = files.filter((file) => isManifestCode(file));
+  return [
     ...new Set([
-      ...targets.flatMap((target) => resolveTarget(module, target, files)),
+      ...targets.flatMap((target) => resolveTarget(module, target, code)),
       ...files.filter((file) => isConventionalEntry(module, file)),
     ]),
   ].toSorted(Order.String);
+};
 
 const groupByModule = (
   modules: ReadonlyMap<string, ModuleRef>,
@@ -116,7 +124,8 @@ const groupByModule = (
  * their modules; `root` is the repository root manifests are read under.
  *
  * Without `globs`, a package's entry points are the files its `package.json`
- * names in `exports`, `main`, `module`, and `types` (a target in `dist/` or
+ * names in `exports`, `main`, `module`, and `types`, as far as they are
+ * JavaScript or TypeScript files and no `*.config.*` files (a target in `dist/` or
  * `build/` stands for the same-stem source under the package's `src/` or root,
  * when one exists), plus `index.<ts|js|…>`, `mod.rs`, `lib.rs`, and `__init__.py` at
  * the module root or its `src/`. Directory modules use the conventional files
