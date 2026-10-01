@@ -63,18 +63,21 @@ npx codeheat inspect packages/billing/src/invoice.ts --json
           "sharedCommits": 31,
           "probability": 0.6458,
           "testPair": true,
+          "crossesModule": false,
         },
         {
           "path": "packages/billing/src/tax.ts",
           "sharedCommits": 24,
           "probability": 0.5,
           "testPair": false,
+          "crossesModule": false,
         },
         {
           "path": "packages/web/src/routes/invoices.tsx",
           "sharedCommits": 14,
           "probability": 0.2917,
           "testPair": false,
+          "crossesModule": true,
         },
       ],
     },
@@ -85,7 +88,7 @@ npx codeheat inspect packages/billing/src/invoice.ts --json
 
 The example shows an illustrative shop repository (the one in `fixtures/report.sample.json`).
 
-`probability` reads as: when this file changed, the partner changed too in that share of commits. Globs work, so `inspect "packages/*/src/index.ts"` shows how often public barrels change and what changes with them.
+`probability` reads as: when this file changed, the partner changed too in that share of commits. `crossesModule` marks a partner that lives in another module. Globs work, so `inspect "packages/*/src/index.ts"` shows how often public barrels change and what changes with them.
 
 [docs/agents.md](docs/agents.md) has a snippet for `AGENTS.md` / `CLAUDE.md` that makes agents use it.
 
@@ -99,7 +102,7 @@ The example shows an illustrative shop repository (the one in `fixtures/report.s
 | `--since <when>`                      | `12m`            | History window: `<n>d`, `<n>w`, `<n>m`, `<n>y`, or `YYYY-MM-DD`. Old churn says little about today.                                                   |
 | `--include <glob>`                    | language list    | Replaces the built-in list of ~50 source-code extensions. Repeatable.                                                                                 |
 | `--exclude <glob>`                    | —                | Removes matching files. Repeatable.                                                                                                                   |
-| `--limit <n>`                         | `25`             | Files and couplings in `--json`, each; `0` for all. `totals` always tells the full size.                                                              |
+| `--limit <n>`                         | `25`             | Files, couplings, and modules in `--json`, each; `0` for all. `totals` always tells the full size.                                                    |
 | `--json`                              | off              | One JSON document on stdout; everything else goes to stderr.                                                                                          |
 | `--html`, `--out <file>`, `--no-open` | off              | The treemap, see above.                                                                                                                               |
 
@@ -127,7 +130,7 @@ Paths or globs. A path without glob characters is absolute or relative to the wo
 - **Co-change probability** — `shared commits / revisions of one file`: how likely a change to that file also changes its partner. The `analyze` terminal table shows it in both directions (`a → b`, `b → a`); `inspect` shows it for the focused file.
 - **Test pairs** — `a.ts` with its test (`a.test.ts`, `a.spec.ts`, `a_test.go`, `a_spec.rb`) is expected coupling; it is marked, never counted as a smell.
 - **Breadth and hubs** — breadth is the number of co-changed files: distinct other files that shared a counted commit (at most 50 files) with this one, however rarely. A hub is a file changed at least 5 times, not a test, with a breadth of at least 10 among the widest 5% of such files (ties included); it gets a reason line even when no single pair is coupled strongly enough to report, as with barrels.
-- **Modules and cohesion** — a module is a package (a directory below the root with a tracked `package.json`, `go.mod`, `Cargo.toml`, `pyproject.toml`, `pom.xml`, `build.gradle`, `build.gradle.kts`, or `*.csproj`; a file belongs to its nearest package) or, outside packages, a directory, cut where the files first split into two or more directories. A repository that yields a single module is split by directory instead. A module's cohesion is the share of its counted commits (at most 50 files) that touched no other module; `partners` lists the modules the rest touched. Terminal views rank only modules with at least 5 counted commits. A coupling between files of different modules is marked `crossesModule`, neutrally: an app legitimately changes with the library it uses.
+- **Modules and cohesion** — a module is a package (a directory below the root with a tracked `package.json`, `go.mod`, `Cargo.toml`, `pyproject.toml`, `pom.xml`, `build.gradle`, `build.gradle.kts`, or `*.csproj`; a file belongs to its nearest package) or, outside packages, a directory, cut where the files first split into two or more directories (when no depth splits them, at the first level: `scripts/release.ts` and `scripts/lib/util.ts` are one module `scripts`). A repository that yields a single module is split by directory instead. A module's cohesion is the share of its counted commits (at most 50 files) that touched no other module; `partners` lists the modules the rest touched. Modules are ranked only when they have at least `max(5, 1% of the commits counted for coupling)` counted commits (`thresholds.minModuleCommits`) and are not test-only (`testOnly`: every file is a test, or the path has a `test`, `tests`, `__tests__`, `spec`, `specs`, `e2e`, `fixtures`, or `__fixtures__` segment). `modules` lists the ranked ones first, least cohesive first. A coupling between files of different modules is marked `crossesModule`, neutrally: an app legitimately changes with the library it uses.
 
 The report states every threshold under `thresholds`, and the JSON contract is versioned by `schemaVersion`: new fields may appear, but a field is never renamed or removed without a new version.
 

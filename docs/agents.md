@@ -48,10 +48,11 @@ The files of a repository are grouped into modules: workspace packages (a direct
 
 - `cohesion` is the share of the module's counted commits that touched nothing outside it. At 0.55, nearly half of the changes to `packages/billing` reach into another module, and `partners` says which ones, here `packages/web` in 20 of 74 commits. Plan to check those modules too, and say so when you leave them untouched.
 - A high `cohesion` means the module is usually safe to change alone.
-- `cohesion` is `null` when no counted commit touched the module: there is no signal, not perfect cohesion. Trust a module with few `commits` less (the terminal ranks only modules with at least `thresholds.minModuleCommits`).
+- `cohesion` is `null` when no counted commit touched the module: there is no signal, not perfect cohesion. Trust a module with few `commits` less (the ranking covers only modules with at least `thresholds.minModuleCommits`, which is `max(5, 1% of window.couplingCommits)`, and skips `testOnly` modules, whose files are all tests or whose path has a test directory segment).
+- A partner in `inspect` with `crossesModule: true` lives in another module than the inspected file.
 - A coupling with `crossesModule: true` joins files of different modules. That is neutral information: an app changes with the library it uses. It is worth a look when the modules should not know each other.
 
-`codeheat analyze --json` lists every module in `modules`, least cohesive first, bounded by `--limit` like `files` and `couplings`; `totals.modules` is the full count.
+`codeheat analyze --json` lists every module in `modules`, bounded by `--limit` like `files` and `couplings`; `totals.modules` is the full count. The order is the ranking: first the modules with at least `thresholds.minModuleCommits` commits that are not `testOnly`, then the other modules with commits (each group least cohesive first, ties by more `commits`, then `path`), last the modules with `cohesion: null`. The first entries are therefore the ones worth reading, also under a small `--limit`.
 
 ## Contract
 
