@@ -1,4 +1,8 @@
-import { changeStep, comparableChange } from "../color/change-scale.js";
+import {
+  changeStep,
+  comparableChange,
+  dominantChange,
+} from "../color/change-scale.js";
 import { cohesionStep } from "../color/cohesion-scale.js";
 import type { HeatScale } from "../color/heat-scale.js";
 import type { LeafNode } from "../layout/hierarchy.js";
@@ -7,6 +11,9 @@ import { GROUP_HEADER_HEIGHT } from "../layout/treemap.js";
 import type { PlacedGroup, PlacedLeaf } from "../layout/treemap.js";
 import type { SvgFactory } from "./dom.js";
 import { formatPercent, formatScore, formatScoreChange } from "./format.js";
+
+/** Id of the SVG pattern that hatches tiles without a change to show. */
+export const NO_DATA_PATTERN = "no-change-data";
 
 const LABEL_INDENT = 4;
 const MIN_LABEL_HEIGHT = 18;
@@ -24,10 +31,12 @@ const leafScore = ({ node }: PlacedLeaf): number =>
   node.kind === "file" ? node.file.score : node.score;
 
 /** The score change a leaf is colored by in change mode; see `comparableChange`. */
-const leafScoreDelta = ({ node }: PlacedLeaf): number | null =>
-  node.kind === "aggregate"
-    ? node.scoreDelta
-    : comparableChange(node.file.trend);
+const leafScoreDelta = ({ node }: PlacedLeaf): number | null => {
+  if (node.kind === "file") {
+    return comparableChange(node.file.trend);
+  }
+  return node.change === null ? null : dominantChange(node.change);
+};
 
 /** What the change line of a leaf says when it has no change to show. */
 const unchangedText = ({ node }: PlacedLeaf): string =>
@@ -61,6 +70,32 @@ export const drawGroup = (
   return [box, text];
 };
 
+/** The score line of a tile in each color mode; the stylesheet shows the one of the active mode. */
+const scoreLines = (
+  create: SvgFactory,
+  leaf: PlacedLeaf,
+  cohesion: number | null,
+): SVGElement[] => {
+  const position = { x: leaf.rect.x0 + LABEL_INDENT, y: leaf.rect.y0 + 26 };
+  const line = (className: string, text: string): SVGElement => {
+    const element = create("text", { class: className, ...position });
+    element.textContent = text;
+    return element;
+  };
+  const delta = leafScoreDelta(leaf);
+  return [
+    line("tile-score", formatScore(leafScore(leaf))),
+    line(
+      "tile-cohesion",
+      cohesion === null ? "no data" : formatPercent(cohesion),
+    ),
+    line(
+      "tile-change",
+      delta === null ? unchangedText(leaf) : formatScoreChange(delta),
+    ),
+  ];
+};
+
 /**
  * One tile: a rectangle with the file name and, when there is room, a score
  * line. It carries a step for each color mode (`data-step` for heat,
@@ -84,6 +119,18 @@ export const drawLeaf = (
     "data-change": changeStep(leafScoreDelta(leaf)),
   });
   tile.append(create("rect", { x: x0, y: y0, width, height }));
+  if (changeStep(leafScoreDelta(leaf)) === 0) {
+    // Only change mode shows it: "new or no data" must not pass for "unchanged".
+    tile.append(
+      create("rect", {
+        class: "hatch",
+        x: x0,
+        y: y0,
+        width,
+        height,
+      }),
+    );
+  }
   const title =
     height >= MIN_LABEL_HEIGHT
       ? fitLabel(leaf.node.name, width - 2 * LABEL_INDENT)
@@ -99,27 +146,7 @@ export const drawLeaf = (
   name.textContent = title;
   tile.append(name);
   if (height >= MIN_SCORE_LINE_HEIGHT) {
-    const score = create("text", {
-      class: "tile-score",
-      x: x0 + LABEL_INDENT,
-      y: y0 + 26,
-    });
-    score.textContent = formatScore(leafScore(leaf));
-    const share = create("text", {
-      class: "tile-cohesion",
-      x: x0 + LABEL_INDENT,
-      y: y0 + 26,
-    });
-    share.textContent = cohesion === null ? "no data" : formatPercent(cohesion);
-    const change = create("text", {
-      class: "tile-change",
-      x: x0 + LABEL_INDENT,
-      y: y0 + 26,
-    });
-    const delta = leafScoreDelta(leaf);
-    change.textContent =
-      delta === null ? unchangedText(leaf) : formatScoreChange(delta);
-    tile.append(score, share, change);
+    tile.append(...scoreLines(create, leaf, cohesion));
   }
   return tile;
 };

@@ -343,6 +343,13 @@ h1 {
 .app[data-mode="change"] [data-mode-only="cohesion"] {
   display: none;
 }
+.ramp .swatch[data-change="0"] {
+  background-image: repeating-linear-gradient(
+    45deg,
+    var(--muted) 0 1px,
+    transparent 1px 4px
+  );
+}
 .ramp .swatch[data-cohesion="0"],
 .ramp .swatch[data-change="0"] {
   border: 1px dashed var(--muted);
@@ -523,6 +530,19 @@ button:focus-visible {
 .app[data-mode="change"] .tile:not(:hover, [data-highlight="match"]) rect {
   stroke: var(--surface);
   stroke-width: 1.5;
+}
+/* Tiles without a change to show: a diagonal hatch over the neutral gray, so "new or no data" never reads as "unchanged". The pattern's id is NO_DATA_PATTERN in tiles.ts. */
+.tile .hatch {
+  display: none;
+  fill: url("#no-change-data");
+  pointer-events: none;
+}
+.app[data-mode="change"] .tile .hatch {
+  display: block;
+}
+.hatch-line {
+  stroke: var(--muted);
+  stroke-width: 1;
 }
 .tile:hover rect {
   stroke: var(--text);

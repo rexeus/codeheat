@@ -97,13 +97,11 @@ const aggregateContent = (node: AggregateNode): HTMLElement[] => [
   ),
   row(formatCount(node.loc), "lines of code combined"),
   row(formatScore(node.score), "highest hotspot score among them"),
-  ...(node.scoreDelta === null
+  ...(node.change === null
     ? []
     : [
-        row(
-          formatScoreChange(node.scoreDelta),
-          "largest score change among them",
-        ),
+        row(formatScoreChange(node.change.rise), "largest rise among them"),
+        row(formatScoreChange(node.change.drop), "largest drop among them"),
       ]),
 ];
 

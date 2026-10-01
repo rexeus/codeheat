@@ -35,3 +35,17 @@ export const changeStep = (delta: number | null): number => {
  */
 export const comparableChange = (trend: FileStats["trend"]): number | null =>
   trend === null || trend.newlyActive ? null : trend.scoreDelta;
+
+/** The largest rise and the largest drop among the files merged into one tile; each is 0 when no file moved that way. */
+export type TileChange = {
+  readonly rise: number;
+  readonly drop: number;
+};
+
+/**
+ * The change a merged tile is colored by: whichever of its largest rise and
+ * largest drop is bigger in absolute terms, so a strong cooling is not hidden
+ * behind a weak warming. A tie goes to the rise.
+ */
+export const dominantChange = ({ rise, drop }: TileChange): number =>
+  Math.abs(drop) > Math.abs(rise) ? drop : rise;

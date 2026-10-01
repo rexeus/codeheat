@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { changeStep, comparableChange } from "./change-scale.js";
+import {
+  changeStep,
+  comparableChange,
+  dominantChange,
+} from "./change-scale.js";
 
 describe("changeStep", () => {
   it("gives a file without comparison data its own step, apart from unchanged", () => {
@@ -54,5 +58,17 @@ describe("comparableChange", () => {
 
   it("is null without a trend", () => {
     expect(comparableChange(null)).toBeNull();
+  });
+});
+
+describe("dominantChange", () => {
+  it("is the larger move in absolute terms, so a strong cooling is not hidden behind a weak warming", () => {
+    expect(dominantChange({ rise: 0.05, drop: -0.3 })).toBe(-0.3);
+    expect(dominantChange({ rise: 0.4, drop: -0.1 })).toBe(0.4);
+  });
+
+  it("goes to the rise on a tie and stays 0 when nothing moved", () => {
+    expect(dominantChange({ rise: 0.2, drop: -0.2 })).toBe(0.2);
+    expect(dominantChange({ rise: 0, drop: 0 })).toBe(0);
   });
 });

@@ -9,6 +9,17 @@ import { formatCount, formatDay } from "./format.js";
 
 const SHORT_SHA_LENGTH = 7;
 
+/** A caveat on the previous window: no commits means there is nothing to compare, cut off means less history. */
+const comparisonCaveat = ({
+  previousCommits,
+  previousTruncated,
+}: NonNullable<Report["comparison"]>): string => {
+  if (previousCommits === 0) {
+    return " (no commits: nothing to compare)";
+  }
+  return previousTruncated ? " (cut off at the start of the history)" : "";
+};
+
 const summaryParts = ({
   repository,
   window,
@@ -19,7 +30,7 @@ const summaryParts = ({
   ...(comparison === null
     ? []
     : [
-        `compared with ${formatDay(comparison.previousSince)} → ${formatDay(comparison.previousUntil)}`,
+        `compared with ${formatDay(comparison.previousSince)} → ${formatDay(comparison.previousUntil)}${comparisonCaveat(comparison)}`,
       ]),
   `${formatCount(window.commits)} commits`,
   `${formatCount(files.length)} files`,

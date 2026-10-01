@@ -95,7 +95,7 @@ describe("buildTree above 8,000 files", () => {
         ),
         loc: 8000,
         score: 0.4,
-        scoreDelta: null,
+        change: null,
       },
     ]);
   });
@@ -129,7 +129,7 @@ describe("buildTree above 8,000 files", () => {
 });
 
 describe("buildTree aggregates in a comparison", () => {
-  it("carries the largest score change among the merged files that were active before", () => {
+  it("carries the largest rise and drop among the merged files that were active before", () => {
     // index 5 is new: its change is its whole score, so it must not count
     const trends = new Map([
       [3, { scoreDelta: -0.3, newlyActive: false }],
@@ -147,7 +147,10 @@ describe("buildTree aggregates in a comparison", () => {
     const src = childNamed(buildTree(files, noKeep), "src");
 
     expect(src.kind === "directory" && src.children).toContainEqual(
-      expect.objectContaining({ kind: "aggregate", scoreDelta: 0.05 }),
+      expect.objectContaining({
+        kind: "aggregate",
+        change: { rise: 0.05, drop: -0.3 },
+      }),
     );
   });
 });
