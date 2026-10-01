@@ -23,9 +23,9 @@ export const Module = Schema.Struct({
   /** Universe files in the module. */
   files: Count,
   /**
-   * Every universe file in the module is a test file, or the module path has a
-   * segment named test, tests, __tests__, spec, specs, e2e, fixtures, or
-   * __fixtures__. Test-only modules are never ranked.
+   * Every universe file in the module is test code: it has a test suffix or
+   * lies below a directory named test, tests, __tests__, spec, specs, e2e,
+   * fixtures, or __fixtures__. Test-only modules are never ranked.
    */
   testOnly: Schema.Boolean,
   /** Counted commits (at most `Thresholds.maxCommitFiles` files) that touched the module. */
@@ -44,7 +44,7 @@ export const Module = Schema.Struct({
   entryPoints: Schema.Array(Schema.String),
   /** Counted commits that touched an entry point. */
   interfaceCommits: Count,
-  /** Counted commits that touched a module file that is neither an entry point nor a test. */
+  /** Counted commits that touched a module file that is neither an entry point nor test code (see `testOnly`). */
   implementationCommits: Count,
   /**
    * Share of the `implementationCommits` that also touched an entry point,

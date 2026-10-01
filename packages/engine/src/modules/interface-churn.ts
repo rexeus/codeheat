@@ -1,9 +1,9 @@
 // Owns how often a module's interface changes against its implementation:
 // the history-based signal for shallow or leaky modules.
-import { isTestFile } from "../coupling/pair.js";
 import type { Module } from "../report/module.js";
 import { roundReported } from "../report/precision.js";
 import type { ModuleRef } from "./detect.js";
+import { isTestPath } from "./test-path.js";
 
 /** Smallest leakage at which a module's interface is called out. */
 export const MIN_LEAKAGE = 0.5;
@@ -35,7 +35,7 @@ type Touched = {
   readonly implementations: Set<string>;
 };
 
-/** The modules whose entry points and whose implementation (other files, tests excluded) a commit touched. */
+/** The modules whose entry points and whose implementation (other files, test code excluded) a commit touched. */
 const touchedBy = (
   commit: Uint32Array,
   paths: ReadonlyArray<string>,
@@ -48,7 +48,7 @@ const touchedBy = (
     const module = refs.get(file)?.path ?? ".";
     if (entryFiles.has(file)) {
       touched.entries.add(module);
-    } else if (!isTestFile(file)) {
+    } else if (!isTestPath(file)) {
       touched.implementations.add(module);
     }
   }

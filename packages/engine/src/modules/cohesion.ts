@@ -4,27 +4,17 @@
 import { Order } from "effect";
 
 import { MAX_COMMIT_FILES } from "../coupling/coupling.js";
-import { isTestFile } from "../coupling/pair.js";
 import type { History } from "../history/history.js";
 import type { Module } from "../report/module.js";
 import { roundReported } from "../report/precision.js";
 import type { ModuleRef } from "./detect.js";
 import { measureInterfaces, NO_INTERFACE } from "./interface-churn.js";
 import type { InterfaceChurn } from "./interface-churn.js";
+import { isTestPath } from "./test-path.js";
 
 const MIN_MODULE_COMMITS_FLOOR = 5;
 const MIN_MODULE_COMMITS_SHARE = 0.01;
 const MAX_PARTNERS = 5;
-const TEST_DIRECTORY_NAMES = new Set([
-  "test",
-  "tests",
-  "__tests__",
-  "spec",
-  "specs",
-  "e2e",
-  "fixtures",
-  "__fixtures__",
-]);
 
 /**
  * Fewest counted commits a module needs to be ranked by its cohesion: 1% of
@@ -78,7 +68,7 @@ const tallyFiles = (
       shared: new Map(),
     };
     tally.files += 1;
-    tally.testFiles += isTestFile(file) ? 1 : 0;
+    tally.testFiles += isTestPath(file) ? 1 : 0;
     tallies.set(path, tally);
   }
   return tallies;
@@ -114,9 +104,7 @@ const toModule = (
   path,
   kind: tally.kind,
   files: tally.files,
-  testOnly:
-    tally.testFiles === tally.files ||
-    path.split("/").some((segment) => TEST_DIRECTORY_NAMES.has(segment)),
+  testOnly: tally.testFiles === tally.files,
   commits: tally.commits,
   localCommits: tally.localCommits,
   cohesion:

@@ -52,7 +52,7 @@ The files of a repository are grouped into modules: workspace packages (a direct
 
 - `cohesion` is the share of the module's counted commits that touched nothing outside it. At 0.55, nearly half of the changes to `packages/billing` reach into another module, and `partners` says which ones, here `packages/web` in 20 of 74 commits. Plan to check those modules too, and say so when you leave them untouched.
 - A high `cohesion` means the module is usually safe to change alone.
-- `cohesion` is `null` when no counted commit touched the module: there is no signal, not perfect cohesion. Trust a module with few `commits` less (the ranking covers only modules with at least `thresholds.minModuleCommits`, which is `max(5, 1% of window.couplingCommits)`, and skips `testOnly` modules, whose files are all tests or whose path has a test directory segment).
+- `cohesion` is `null` when no counted commit touched the module: there is no signal, not perfect cohesion. Trust a module with few `commits` less (the ranking covers only modules with at least `thresholds.minModuleCommits`, which is `max(5, 1% of window.couplingCommits)`, and skips `testOnly` modules, whose files are all test code).
 - A partner in `inspect` with `crossesModule: true` lives in another module than the inspected file.
 - `leakage` is the share of the module's implementation commits that also touched an entry point: a leaky interface (the entry points' reasons say so) means changes inside usually change the public API too, so check the callers of the module.
 - A coupling with `crossesModule: true` joins files of different modules. That is neutral information: an app changes with the library it uses. It is worth a look when the modules should not know each other.
