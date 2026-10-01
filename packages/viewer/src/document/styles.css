@@ -700,9 +700,13 @@ button:focus-visible {
   background: var(--coupling);
   border-radius: 3px;
 }
-.module-name .badge {
+.module-name .badge,
+.score-line .badge {
   border-style: solid;
   border-color: var(--hairline-strong);
+}
+.score-line .badge {
+  margin-left: auto;
 }
 .badge.cross-module {
   border-style: dotted;

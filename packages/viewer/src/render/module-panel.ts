@@ -1,6 +1,7 @@
 import type { Module } from "@codeheat/engine";
 
 import { cohesionStep } from "../color/cohesion-scale.js";
+import { isLeakyInterface } from "../modules/leaky-interface.js";
 import { leastCohesive } from "../modules/least-cohesive.js";
 import { h, pathLabel, section } from "./dom.js";
 import { formatCount, formatPercent } from "./format.js";
@@ -53,12 +54,76 @@ const cohesionLine = ({
         ),
       );
 
+/** Entry points listed before the rest collapse into a count. */
+const SHOWN_ENTRY_POINTS = 5;
+
+type InterfaceThresholds = {
+  readonly minLeakage: number;
+  readonly minImplementationCommits: number;
+};
+
+const leakageLine = (module: Module, leaky: boolean): HTMLElement =>
+  module.leakage === null
+    ? h("p", "hint", "No implementation commit touched this module.")
+    : h(
+        "div",
+        "score-line",
+        h("strong", "score", formatPercent(module.leakage)),
+        h(
+          "span",
+          "score-meta",
+          h("span", "", "of implementation commits also change it"),
+          h(
+            "span",
+            "",
+            `${formatCount(module.implementationCommits)} implementation commits`,
+          ),
+        ),
+        ...(leaky ? [h("span", "badge", "leaky")] : []),
+      );
+
+const entryPointList = (entryPoints: readonly string[]): HTMLElement =>
+  h(
+    "ul",
+    "list module-partners",
+    ...entryPoints
+      .slice(0, SHOWN_ENTRY_POINTS)
+      .map((path) => h("li", "module-partner", pathLabel(path))),
+    ...(entryPoints.length > SHOWN_ENTRY_POINTS
+      ? [
+          h(
+            "li",
+            "muted",
+            `and ${formatCount(entryPoints.length - SHOWN_ENTRY_POINTS)} more`,
+          ),
+        ]
+      : []),
+  );
+
+/** The module's entry points and how often its implementation commits change them too; nothing without entry points. */
+const interfaceSection = (
+  module: Module,
+  thresholds: InterfaceThresholds,
+): HTMLElement[] =>
+  module.entryPoints.length === 0
+    ? []
+    : [
+        section(
+          "Interface",
+          leakageLine(module, isLeakyInterface(module, thresholds)),
+          entryPointList(module.entryPoints),
+        ),
+      ];
+
 /**
  * The panel sections that place a selected file in its module: the module,
- * how many of its changes stay inside, and the modules it changes with.
- * Nothing when the report does not list the module.
+ * how many of its changes stay inside, its interface, and the modules it
+ * changes with. Nothing when the report does not list the module.
  */
-export const fileModuleSection = (module: Module | undefined): HTMLElement[] =>
+export const fileModuleSection = (
+  module: Module | undefined,
+  thresholds: InterfaceThresholds,
+): HTMLElement[] =>
   module === undefined
     ? []
     : [
@@ -72,6 +137,7 @@ export const fileModuleSection = (module: Module | undefined): HTMLElement[] =>
           ),
           cohesionLine(module),
         ),
+        ...interfaceSection(module, thresholds),
         ...(module.partners.length === 0
           ? []
           : [
