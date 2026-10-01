@@ -14,9 +14,9 @@ import {
 import type { GitError } from "../git/git-errors.js";
 import { Git } from "../git/git.js";
 import {
-  locateRepository,
   readHead,
   readShallowBoundary,
+  repositoryRoot,
   repositoryScope,
 } from "../git/repository.js";
 import { readHistory } from "../history/history.js";
@@ -143,9 +143,7 @@ export const analyze = (
 > =>
   Effect.gen(function* () {
     const range = yield* resolveTimeRange(options.since);
-    const root = yield* locateRepository(options.cwd).pipe(
-      Effect.provide(Git.layer(options.cwd)),
-    );
+    const root = yield* repositoryRoot(options.cwd);
     const scope =
       options.scope === undefined
         ? "."

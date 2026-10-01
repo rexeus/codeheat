@@ -51,3 +51,41 @@ describe("codeheat inspect against a git repository", () => {
     }).pipe(Effect.scoped),
   );
 });
+
+const inspectedPaths = (stdout: string) =>
+  Schema.decodeUnknownEffect(InspectResult)(JSON.parse(stdout)).pipe(
+    Effect.map(({ matches }) => matches.map(({ path }) => path)),
+  );
+
+// How paths resolve is the engine's concern (inspect-from.integration.test.ts);
+// these journeys prove the CLI hands over its working directory and the spelling.
+describe("codeheat inspect with exact paths", () => {
+  it.live("resolves a path relative to the working directory", () =>
+    Effect.gen(function* () {
+      const repo = yield* makeCoupledProject;
+
+      const result = yield* journey({
+        args: ["inspect", "b.ts", "--json"],
+        cwd: `${repo.root}/src`,
+      });
+
+      expect(result.exitCode).toBe(0);
+      expect(yield* inspectedPaths(result.stdout)).toStrictEqual(["src/b.ts"]);
+    }).pipe(Effect.scoped),
+  );
+
+  it.live("names an unmatched path as it was typed", () =>
+    Effect.gen(function* () {
+      const repo = yield* makeCoupledProject;
+
+      const result = yield* journey({
+        args: ["inspect", "./a.ts", "--json"],
+        cwd: repo.root,
+      });
+
+      expect(result.exitCode).toBe(4);
+      expect(result.stdout).toBe("");
+      expect(result.stderr).toContain('"./a.ts"');
+    }).pipe(Effect.scoped),
+  );
+});

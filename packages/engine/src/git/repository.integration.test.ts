@@ -6,13 +6,13 @@ import { makeTempRepository } from "../testing/temp-repository.js";
 import { NotAGitRepository } from "./git-errors.js";
 import { Git } from "./git.js";
 import {
-  locateRepository,
   readHead,
   readShallowBoundary,
+  repositoryRoot,
   repositoryScope,
 } from "./repository.js";
 
-layer(NodeServices.layer)("locateRepository", (it) => {
+layer(NodeServices.layer)("repositoryRoot", (it) => {
   it.effect("finds the work tree root from a subdirectory", () =>
     Effect.gen(function* () {
       const path = yield* Path.Path;
@@ -23,9 +23,7 @@ layer(NodeServices.layer)("locateRepository", (it) => {
       });
       const subdirectory = path.join(repo.directory, "packages", "a");
 
-      const root = yield* locateRepository(subdirectory).pipe(
-        Effect.provide(Git.layer(subdirectory)),
-      );
+      const root = yield* repositoryRoot(subdirectory);
 
       assert.strictEqual(root, yield* fs.realPath(repo.directory));
     }),
@@ -38,11 +36,7 @@ layer(NodeServices.layer)("locateRepository", (it) => {
         const fs = yield* FileSystem.FileSystem;
         const directory = yield* fs.makeTempDirectoryScoped();
 
-        const failure = yield* Effect.flip(
-          locateRepository(directory).pipe(
-            Effect.provide(Git.layer(directory)),
-          ),
-        );
+        const failure = yield* Effect.flip(repositoryRoot(directory));
 
         assert.deepStrictEqual(
           failure,
@@ -57,9 +51,7 @@ layer(NodeServices.layer)("locateRepository", (it) => {
       Effect.gen(function* () {
         const missing = "/nonexistent/codeheat-test";
 
-        const failure = yield* Effect.flip(
-          locateRepository(missing).pipe(Effect.provide(Git.layer(missing))),
-        );
+        const failure = yield* Effect.flip(repositoryRoot(missing));
 
         assert.deepStrictEqual(
           failure,

@@ -1,4 +1,4 @@
-import { analyze, inspect } from "@codeheat/engine";
+import { analyze, inspectFrom } from "@codeheat/engine";
 import { Console, Effect } from "effect";
 import { Argument, Command } from "effect/cli";
 
@@ -16,7 +16,7 @@ export const inspectCommand = Command.make(
   {
     patterns: Argument.String("file-or-glob").pipe(
       Argument.withDescription(
-        "Repository-relative path or glob, quoted so the shell leaves it alone",
+        "Path (absolute, relative to the working directory, or repository-relative) or repository-relative glob, quoted so the shell leaves it alone",
       ),
       Argument.variadic({ min: 1 }),
     ),
@@ -24,15 +24,16 @@ export const inspectCommand = Command.make(
     since: sinceFlag,
   },
   Effect.fn(function* ({ patterns, json, since }) {
+    const cwd = yield* WorkingDirectory;
     const report = yield* analyze({
-      cwd: yield* WorkingDirectory,
+      cwd,
       since,
       include: [],
       exclude: [],
       toolVersion: version,
     });
     yield* warnIfShallow(report);
-    const result = inspect(report, patterns);
+    const result = yield* inspectFrom({ cwd, report, patterns });
     if (result.matches.length === 0) {
       return yield* new NothingMatched({ patterns: result.unmatched });
     }

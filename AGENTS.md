@@ -51,11 +51,11 @@ The CLI embeds the viewer from `packages/viewer/dist/assets.js`, which only `pnp
 
 ## Architecture rules
 
-| Package                 | Owns                                                                  | Public API                                   |
-| ----------------------- | --------------------------------------------------------------------- | -------------------------------------------- |
-| `@codeheat/engine`      | which files count, git history, metrics, scoring, the report contract | `analyze`, `inspect`, report schemas, errors |
-| `@codeheat/viewer`      | the treemap and the self-contained HTML document                      | `renderReportHtml`                           |
-| `codeheat` (`apps/cli`) | arguments, terminal and JSON output, exit codes, opening the browser  | none — only the `bin`                        |
+| Package                 | Owns                                                                  | Public API                                       |
+| ----------------------- | --------------------------------------------------------------------- | ------------------------------------------------ |
+| `@codeheat/engine`      | which files count, git history, metrics, scoring, the report contract | `analyze`, `inspectFrom`, report schemas, errors |
+| `@codeheat/viewer`      | the treemap and the self-contained HTML document                      | `renderReportHtml`                               |
+| `codeheat` (`apps/cli`) | arguments, terminal and JSON output, exit codes, opening the browser  | none — only the `bin`                            |
 
 - The engine imports no workspace package and no `node:` builtin; it reaches the platform through Effect services (`FileSystem`, `Path`, `ChildProcessSpawner`).
 - The viewer is plain browser code: no Effect, no `node:`, and engine **types** only (`import type`).
