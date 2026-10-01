@@ -23,18 +23,23 @@ const outline = (
     "stroke-width": strokeWidth,
   });
 
-const outlineClass = ({ crossesModule, testPair }: Partner): string => {
+const lineStyle = ({ crossesModule, testPair }: Partner): string => {
   if (crossesModule) {
-    return "outline partner cross-module";
+    return " cross-module";
   }
-  return testPair ? "outline partner test-pair" : "outline partner";
+  return testPair ? " test-pair" : "";
 };
+
+const outlineClass = (partner: Partner): string =>
+  `outline partner${lineStyle(partner)}${partner.hidden ? " hidden-coupling" : ""}`;
 
 /**
  * Outline rectangles for the selected file and its partners, drawn above the
  * tiles. A partner's stroke grows with its coupling degree, and a test pair is
  * dashed. A partner in another module is dotted, so cross-module coupling
- * reads at a glance; a test pair that also crosses a module stays dotted.
+ * reads at a glance; a test pair that also crosses a module stays dotted. A
+ * partner that no import links to the selected file (hidden coupling) takes
+ * its own color, whatever its line style.
  * Returns nothing without a selection.
  */
 export const drawOutlines = (

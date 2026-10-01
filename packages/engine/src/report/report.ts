@@ -69,6 +69,11 @@ const Thresholds = Schema.Struct({
    * `max(5, ceil(0.01 × window.couplingCommits))`, so the floor grows with the window.
    */
   minModuleCommits: Count,
+  /**
+   * Smallest `Partner.probability` at which a partner that no import links to
+   * the file (hidden coupling) gets a reason line.
+   */
+  minHiddenProbability: UnitInterval,
   /** Smallest `Module.leakage` at which a module's entry points get a reason line. */
   minLeakage: UnitInterval,
   /** Fewest `Module.implementationCommits` a module needs before its entry points get that reason line. */
@@ -131,6 +136,19 @@ export const Coupling = Schema.Struct({
   testPair: Schema.Boolean,
   /** The files belong to different modules. Neutral: an app legitimately changes with the library it uses. */
   crossesModule: Schema.Boolean,
+  /**
+   * Whether a static import links the files, directly or through the
+   * re-exports of the module it imports: `a→b` means `a` imports `b`. `none`
+   * is hidden coupling: the files change together without referring to each
+   * other, and every module they and their re-exporting barrels load is
+   * accounted for (a universe file, a Node built-in, a declared dependency, a
+   * workspace package, an asset). Null when the relation is unknown: a file
+   * is not TypeScript or JavaScript, does not parse, no parser was available,
+   * or an import could not be resolved (tsconfig path aliases, `#` subpath
+   * imports, undeclared packages, code outside the universe, modules loaded by
+   * an expression). Unknown is not `none`.
+   */
+  imports: Schema.NullOr(Schema.Literals(["a→b", "b→a", "both", "none"])),
 });
 export type Coupling = typeof Coupling.Type;
 

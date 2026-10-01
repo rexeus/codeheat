@@ -5,6 +5,7 @@ import { Effect, Path } from "effect";
 import type { FileSystem } from "effect";
 import type { ChildProcessSpawner } from "effect/process";
 
+import type { LanguageAdapter } from "../code/language-adapter.js";
 import type { GitError } from "../git/git-errors.js";
 import { Git } from "../git/git.js";
 import {
@@ -14,20 +15,23 @@ import {
   repositoryRoot,
   repositoryScope,
 } from "../git/repository.js";
+import type { HistoryOptions } from "../history/history.js";
+import { linkCouplings } from "../imports/link-couplings.js";
 import { detectModules } from "../modules/detect.js";
 import { findEntryPoints } from "../modules/entry-points.js";
 import { listPackageDirectories } from "../modules/package-directories.js";
 import type { Report } from "../report/report.js";
 import { inventory } from "../universe/inventory.js";
 import type { InvalidCompare, InvalidSince } from "./analysis-window.js";
-import { measureWindows } from "./measure.js";
+import { coupleHistory, measureWindows } from "./measure.js";
+import type { Universe } from "./measure.js";
 import {
   comparisonOf,
   noHistories,
   readWindows,
   resolveWindows,
 } from "./windows.js";
-import type { Windows } from "./windows.js";
+import type { WindowHistories, Windows } from "./windows.js";
 
 /** Every expected failure of `analyze`. */
 export type AnalyzeError = GitError | InvalidSince | InvalidCompare;
@@ -57,9 +61,57 @@ export type AnalyzeOptions = {
    * they replace entry-point detection from `package.json` and conventions.
    */
   readonly entry: ReadonlyArray<string>;
+  /**
+   * The languages whose imports are read to tell hidden coupling from visible.
+   * A file no adapter reads leaves `Coupling.imports` null.
+   */
+  readonly adapters: ReadonlyArray<LanguageAdapter>;
   /** Written to `Report.tool.version`. */
   readonly toolVersion: string;
 };
+
+/** Measures the windows; the latest window's couplings come with their import relations. */
+const measureLinked = (
+  options: AnalyzeOptions,
+  place: { readonly root: string; readonly scope: string },
+  universe: Universe,
+  histories: WindowHistories,
+) =>
+  Effect.gen(function* () {
+    const coupled = coupleHistory(histories.current, universe.modules);
+    const couplings = yield* linkCouplings(
+      {
+        ...place,
+        universe: new Set(universe.files.map((file) => file.path)),
+        modules: universe.modules,
+        adapters: options.adapters,
+      },
+      coupled.couplings,
+    );
+    return measureWindows(universe, histories, { ...coupled, couplings });
+  });
+
+/** The history of each window and, when comparing, the time of the oldest commit; both are empty for a repository without commits. */
+const readTimeline = (
+  windows: Windows,
+  {
+    head,
+    ...options
+  }: Omit<HistoryOptions, "since" | "until"> & {
+    readonly head: string | null;
+  },
+) =>
+  Effect.gen(function* () {
+    const histories =
+      head === null
+        ? noHistories(windows)
+        : yield* readWindows(windows, options);
+    const oldestCommit =
+      head === null || windows.previous === null
+        ? null
+        : yield* readOldestCommitTime;
+    return { histories, oldestCommit };
+  });
 
 const analyzeRepository = (
   options: AnalyzeOptions,
@@ -77,24 +129,24 @@ const analyzeRepository = (
       include: options.include,
       exclude: options.exclude,
     });
+    const packageDirectories = yield* listPackageDirectories(scope);
     const modules = detectModules(
       files.map((file) => file.path),
-      yield* listPackageDirectories(scope),
+      packageDirectories,
     );
     const entryPoints = yield* findEntryPoints(root, modules, options.entry);
-    const histories =
-      head === null
-        ? noHistories(windows)
-        : yield* readWindows(windows, {
-            skipCommits: shallowBoundary ?? new Set(),
-            universe: new Set(files.map((file) => file.path)),
-          });
-    const oldestCommit =
-      head === null || windows.previous === null
-        ? null
-        : yield* readOldestCommitTime;
+    const { histories, oldestCommit } = yield* readTimeline(windows, {
+      head,
+      skipCommits: shallowBoundary ?? new Set(),
+      universe: new Set(files.map((file) => file.path)),
+    });
     const { commits, couplingCommits, thresholds, ...measured } =
-      measureWindows(files, histories, modules, entryPoints);
+      yield* measureLinked(
+        options,
+        { root, scope },
+        { files, modules, entryPoints },
+        histories,
+      );
     return {
       schemaVersion: 1,
       tool: { name: "codeheat", version: options.toolVersion },

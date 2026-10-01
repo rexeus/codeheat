@@ -1,8 +1,17 @@
 // Runs the real `runCli` in-process with captured output, as TESTING.md's CLI journeys do.
 import { NodeServices } from "@effect/platform-node";
-import { ConfigProvider, Console, Effect, Layer, Runtime, Stdio } from "effect";
+import {
+  ConfigProvider,
+  Console,
+  Effect,
+  Layer,
+  Runtime,
+  Stdio,
+  identity,
+} from "effect";
 
 import { runCli } from "../cli.js";
+import { LanguageAdapters } from "../languages/language-adapters.js";
 import { WorkingDirectory } from "../working-directory.js";
 
 export type JourneyOptions = {
@@ -14,6 +23,8 @@ export type JourneyOptions = {
   readonly env?: Record<string, string>;
   /** Whether standard output looks like a terminal; defaults to false. */
   readonly stdoutIsTerminal?: boolean;
+  /** Replaces loading the real parser, e.g. with a failure for a missing binding. */
+  readonly languageAdapters?: typeof LanguageAdapters.Service;
 };
 
 export type JourneyResult = {
@@ -54,6 +65,9 @@ export const journey = (
     const exit = yield* runCli(options.args).pipe(
       Effect.provideService(Console.Console, captured),
       Effect.provideService(WorkingDirectory, options.cwd ?? process.cwd()),
+      options.languageAdapters === undefined
+        ? identity
+        : Effect.provideService(LanguageAdapters, options.languageAdapters),
       Effect.provide(environment),
       Effect.exit,
     );

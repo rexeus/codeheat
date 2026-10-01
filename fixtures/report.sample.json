@@ -33,6 +33,7 @@
     "minDegree": 0.3,
     "maxMeanLineLength": 300,
     "maxFileBytes": 1048576,
+    "minHiddenProbability": 0.5,
     "minLeakage": 0.5,
     "minImplementationCommits": 5
   },
@@ -60,6 +61,7 @@
       "reasons": [
         "changed in 48 commits (#1 of 36)",
         "indentation complexity 1900 (#2 of 36)",
+        "co-changes with packages/billing/src/tax.ts in 50% of its commits",
         "changes together with 14 different files"
       ],
       "trend": {
@@ -87,7 +89,8 @@
       },
       "reasons": [
         "changed in 31 commits (#3 of 36)",
-        "indentation complexity 1100 (#4 of 36)"
+        "indentation complexity 1100 (#4 of 36)",
+        "co-changes with packages/billing/src/invoice.ts in 77% of its commits"
       ],
       "trend": {
         "previousScore": 0.9213,
@@ -141,7 +144,8 @@
       },
       "reasons": [
         "changed in 19 commits (#7 of 36)",
-        "indentation complexity 1300 (#3 of 36)"
+        "indentation complexity 1300 (#3 of 36)",
+        "changes with packages/billing/src/invoice.ts in 74% of its commits without an import between them"
       ],
       "trend": {
         "previousScore": 0.9092,
@@ -168,7 +172,8 @@
       },
       "reasons": [
         "changed in 26 commits (#4 of 36)",
-        "indentation complexity 640 (#7 of 36)"
+        "indentation complexity 640 (#7 of 36)",
+        "co-changes with packages/shared/src/config.ts in 35% of its commits"
       ],
       "trend": {
         "previousScore": 0.5632,
@@ -195,7 +200,8 @@
       },
       "reasons": [
         "changed in 22 commits (#5 of 36)",
-        "indentation complexity 820 (#5 of 36)"
+        "indentation complexity 820 (#5 of 36)",
+        "co-changes with packages/web/src/hooks/use-session.ts in 41% of its commits"
       ],
       "trend": {
         "previousScore": 0.6946,
@@ -249,7 +255,8 @@
       },
       "reasons": [
         "changed in 17 commits (#8 of 36)",
-        "indentation complexity 300 (#22 of 36)"
+        "indentation complexity 300 (#22 of 36)",
+        "co-changes with apps/cli/src/commands/analyze.ts in 53% of its commits"
       ],
       "trend": {
         "previousScore": 0.3245,
@@ -303,7 +310,8 @@
       },
       "reasons": [
         "changed in 12 commits (#10 of 36)",
-        "indentation complexity 160 (#30 of 36)"
+        "indentation complexity 160 (#30 of 36)",
+        "co-changes with packages/auth/src/session.ts in 75% of its commits"
       ],
       "trend": {
         "previousScore": 0.4103,
@@ -681,7 +689,8 @@
       },
       "reasons": [
         "changed in 9 commits (#11 of 36)",
-        "indentation complexity 30 (#35 of 36)"
+        "indentation complexity 30 (#35 of 36)",
+        "changes with packages/auth/src/index.ts in 67% of its commits without an import between them"
       ],
       "trend": {
         "previousScore": 0.461,
@@ -762,7 +771,8 @@
       },
       "reasons": [
         "changed in 7 commits (#14 of 36)",
-        "indentation complexity 24 (#36 of 36)"
+        "indentation complexity 24 (#36 of 36)",
+        "changes with packages/billing/src/index.ts in 86% of its commits without an import between them"
       ],
       "trend": {
         "previousScore": 0.301,
@@ -1015,7 +1025,8 @@
       "degree": 0.75,
       "distance": 4,
       "testPair": false,
-      "crossesModule": true
+      "crossesModule": true,
+      "imports": "none"
     },
     {
       "a": "packages/billing/src/invoice.ts",
@@ -1024,7 +1035,8 @@
       "degree": 0.738,
       "distance": 0,
       "testPair": true,
-      "crossesModule": false
+      "crossesModule": false,
+      "imports": "b→a"
     },
     {
       "a": "packages/billing/src/tax.ts",
@@ -1033,7 +1045,8 @@
       "degree": 0.679,
       "distance": 0,
       "testPair": true,
-      "crossesModule": false
+      "crossesModule": false,
+      "imports": "b→a"
     },
     {
       "a": "packages/auth/src/session.ts",
@@ -1042,7 +1055,8 @@
       "degree": 0.667,
       "distance": 0,
       "testPair": true,
-      "crossesModule": false
+      "crossesModule": false,
+      "imports": "b→a"
     },
     {
       "a": "packages/billing/src/invoice.ts",
@@ -1051,7 +1065,8 @@
       "degree": 0.608,
       "distance": 0,
       "testPair": false,
-      "crossesModule": false
+      "crossesModule": false,
+      "imports": "a→b"
     },
     {
       "a": "packages/auth/src/session.ts",
@@ -1060,7 +1075,8 @@
       "degree": 0.529,
       "distance": 5,
       "testPair": false,
-      "crossesModule": true
+      "crossesModule": true,
+      "imports": "b→a"
     },
     {
       "a": "packages/shared/src/config.ts",
@@ -1069,7 +1085,8 @@
       "degree": 0.419,
       "distance": 7,
       "testPair": false,
-      "crossesModule": true
+      "crossesModule": true,
+      "imports": "b→a"
     },
     {
       "a": "packages/billing/src/invoice.ts",
@@ -1078,7 +1095,8 @@
       "degree": 0.418,
       "distance": 5,
       "testPair": false,
-      "crossesModule": true
+      "crossesModule": true,
+      "imports": "none"
     }
   ],
   "modules": [

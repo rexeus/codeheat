@@ -103,7 +103,8 @@ const detectEntryPoints = (
   ].toSorted(Order.String);
 };
 
-const groupByModule = (
+/** The universe files of each module, with the kind of the module. */
+export const groupByModule = (
   modules: ReadonlyMap<string, ModuleRef>,
 ): ReadonlyMap<string, ModuleFiles> => {
   const grouped = new Map<
@@ -116,6 +117,28 @@ const groupByModule = (
     grouped.set(path, group);
   }
   return grouped;
+};
+
+/**
+ * The files that importing the package of `module` by its bare name reaches:
+ * what `rootTargets` (see `ManifestFacts`) resolve to among `files`, else the
+ * conventional `index` files; empty when neither exists. Unlike
+ * `findEntryPoints`, it knows nothing of `--entry`.
+ */
+export const packageMainEntries = (
+  module: string,
+  rootTargets: ReadonlyArray<string>,
+  files: ReadonlyArray<string>,
+): ReadonlyArray<string> => {
+  const code = files.filter((file) => isManifestCode(file));
+  const named = rootTargets.flatMap((target) =>
+    resolveTarget(module, target, code),
+  );
+  const found =
+    named.length > 0
+      ? named
+      : files.filter((file) => isConventionalEntry(module, file));
+  return [...new Set(found)].toSorted(Order.String);
 };
 
 /**

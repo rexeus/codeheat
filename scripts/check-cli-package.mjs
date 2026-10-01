@@ -1,6 +1,7 @@
 // Proves the packed `codeheat` package works the way `npx codeheat` will run it:
-// one bundled file, no runtime dependencies, installable with npm and pnpm, and
-// able to analyze a real git repository. Run after `pnpm --filter codeheat build`.
+// one bundled file whose only runtime dependency is the pinned oxc-parser,
+// installable with npm and pnpm, loading that parser, and able to analyze a
+// real git repository. Run after `pnpm --filter codeheat build`.
 import { execFileSync, spawnSync } from "node:child_process";
 import {
   existsSync,
@@ -15,22 +16,9 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
 import { isolatedGitEnv } from "./git-environment.mjs";
+import { expectBundledArtifact, fieldOf } from "./lib/packed-package.mjs";
 
 const repository = resolve(import.meta.dirname, "..");
-
-/**
- * Reads one field of a JSON object without trusting its shape.
- * @param {string} json
- * @param {string} field
- * @returns {unknown}
- */
-const fieldOf = (json, field) => {
-  /** @type {unknown} */
-  const value = JSON.parse(json);
-  return typeof value === "object" && value !== null && field in value
-    ? Object.getOwnPropertyDescriptor(value, field)?.value
-    : undefined;
-};
 
 const expectedVersion = fieldOf(
   readFileSync(join(repository, "apps/cli/package.json"), "utf8"),
@@ -76,64 +64,7 @@ const pack = () => {
   return join(destination, tarballs[0]);
 };
 
-/** @param {string} tarball */
-const expectBundledArtifact = (tarball) => {
-  const listing = execFileSync("tar", ["-tzf", tarball], { encoding: "utf8" });
-  const files = listing.trim().split("\n").toSorted();
-  const expected = new Set([
-    "package/dist/codeheat.js",
-    "package/package.json",
-  ]);
-  const unexpected = files.filter(
-    (file) =>
-      !expected.has(file) &&
-      !/^package\/(README|LICENSE|CHANGELOG)/u.test(file),
-  );
-  const required = [
-    "package/dist/codeheat.js",
-    "package/LICENSE",
-    "package/README.md",
-  ];
-  if (required.some((file) => !files.includes(file)) || unexpected.length > 0) {
-    throw new Error(`Unexpected package contents:\n${files.join("\n")}`);
-  }
-  // npm resolves relative links against the package directory, where the
-  // repository's docs do not exist; the packed README must link absolutely.
-  const packedReadme = execFileSync(
-    "tar",
-    ["-xOzf", tarball, "package/README.md"],
-    { encoding: "utf8" },
-  );
-  const relativeLinks = packedReadme.match(
-    /\]\((?!https?:|#|mailto:)[^)\s]+\)/gu,
-  );
-  if (relativeLinks !== null) {
-    throw new Error(
-      `The packed README has relative links: ${relativeLinks.join(", ")}`,
-    );
-  }
-  // The build copies the repository LICENSE into apps/cli; the packed copy must match it.
-  const packedLicense = execFileSync(
-    "tar",
-    ["-xOzf", tarball, "package/LICENSE"],
-    { encoding: "utf8" },
-  );
-  if (packedLicense !== readFileSync(join(repository, "LICENSE"), "utf8")) {
-    throw new Error("The packed LICENSE differs from the repository LICENSE.");
-  }
-  const packed = execFileSync(
-    "tar",
-    ["-xOzf", tarball, "package/package.json"],
-    { encoding: "utf8" },
-  );
-  if (fieldOf(packed, "dependencies") !== undefined) {
-    throw new Error(
-      "The packed manifest declares runtime dependencies; the CLI must stay bundled.",
-    );
-  }
-};
-
-/** A tiny repository with two files that always change together. */
+/** A tiny repository with two files that always change together and never import each other. */
 const makeRepository = () => {
   const root = join(temporary, "repository");
   mkdirSync(root);
@@ -196,11 +127,75 @@ const expectWorkingInstall = (applicationRoot, installer, repositoryRoot) => {
       `codeheat from ${installer} did not analyze the repository:\n${analysis.stdout}${analysis.stderr}`,
     );
   }
+  // `none` instead of null proves that the installed package loaded oxc-parser and parsed both files.
+  if (fieldOf(JSON.stringify(couplings[0]), "imports") !== "none") {
+    throw new Error(
+      `codeheat from ${installer} could not read imports; is oxc-parser installed with its native binding?\n${analysis.stderr}`,
+    );
+  }
+};
+
+/**
+ * Without the parser's native binding (`npm install --omit=optional`), codeheat
+ * still analyzes: it exits 0, says once on stderr that the parser is
+ * unavailable, and reports `imports: null`.
+ * @param {string} applicationRoot
+ * @param {string} repositoryRoot
+ */
+const expectDegradedRun = (applicationRoot, repositoryRoot) => {
+  const bin = join(applicationRoot, "node_modules", ".bin", binName);
+  const analysis = spawnSync(bin, ["analyze", "--json"], {
+    cwd: repositoryRoot,
+    encoding: "utf8",
+  });
+  const couplings = fieldOf(
+    analysis.status === 0 ? analysis.stdout : "{}",
+    "couplings",
+  );
+  const notes = analysis.stderr.trim().split("\n");
+  if (
+    !Array.isArray(couplings) ||
+    couplings.length !== 1 ||
+    fieldOf(JSON.stringify(couplings[0]), "imports") !== null ||
+    notes.length !== 1 ||
+    !(notes[0] ?? "").startsWith("codeheat: the code parser is unavailable")
+  ) {
+    throw new Error(
+      `codeheat without the parser binding did not degrade gracefully (exit ${analysis.status}):\n${analysis.stdout}${analysis.stderr}`,
+    );
+  }
+};
+
+/**
+ * @param {string} name
+ * @param {ReadonlyArray<string>} extraArguments
+ * @param {string} tarball
+ */
+const installWithNpm = (name, extraArguments, tarball) => {
+  const application = join(temporary, name);
+  mkdirSync(application);
+  writeFileSync(
+    join(application, "package.json"),
+    JSON.stringify({ name: "consumer", private: true }),
+  );
+  run(
+    npm,
+    [
+      "install",
+      "--ignore-scripts",
+      "--no-audit",
+      "--no-fund",
+      ...extraArguments,
+      tarball,
+    ],
+    application,
+  );
+  return application;
 };
 
 try {
   const tarball = pack();
-  expectBundledArtifact(tarball);
+  expectBundledArtifact(tarball, repository);
   const repositoryRoot = makeRepository();
 
   const pnpmApplication = join(temporary, "application-pnpm");
@@ -213,24 +208,22 @@ try {
   expectWorkingInstall(pnpmApplication, "pnpm", repositoryRoot);
 
   // npm (and therefore npx) resolves dependencies differently from pnpm.
-  const npmApplication = join(temporary, "application-npm");
-  mkdirSync(npmApplication);
-  writeFileSync(
-    join(npmApplication, "package.json"),
-    JSON.stringify({ name: "consumer", private: true }),
-  );
-  run(
-    npm,
-    ["install", "--ignore-scripts", "--no-audit", "--no-fund", tarball],
-    npmApplication,
-  );
+  const npmApplication = installWithNpm("application-npm", [], tarball);
   if (existsSync(join(npmApplication, "node_modules", "effect"))) {
     throw new Error("npm installed effect; the bundle must not need it.");
   }
+  if (!existsSync(join(npmApplication, "node_modules", "oxc-parser"))) {
+    throw new Error("npm did not install the oxc-parser dependency.");
+  }
   expectWorkingInstall(npmApplication, "npm", repositoryRoot);
 
+  expectDegradedRun(
+    installWithNpm("application-without-binding", ["--omit=optional"], tarball),
+    repositoryRoot,
+  );
+
   console.log(
-    `Package verified: codeheat v${expectedVersion} installs and runs with pnpm and npm.`,
+    `Package verified: codeheat v${expectedVersion} installs and runs with pnpm and npm, and degrades without the parser binding.`,
   );
 } finally {
   rmSync(temporary, { recursive: true, force: true });

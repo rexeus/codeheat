@@ -23,6 +23,22 @@ export const makeCoupledProject = Effect.map(makeGitRepository, (repo) => {
 });
 
 /**
+ * `ui.ts` imports `api.ts`; `config.ts` imports nothing and nothing imports it.
+ * All three always change together, so each pair is coupled. Unlike the other
+ * projects, the files are valid code, because the import graph parses them.
+ */
+export const makeImportProject = Effect.map(makeGitRepository, (repo) => {
+  for (const day of [30, 20, 10, 5]) {
+    repo.commit(day, {
+      "src/api.ts": `export const api = ${day};\n`,
+      "src/ui.ts": `import { api } from "./api.js";\nexport const ui = api + ${day};\n`,
+      "src/config.ts": `export const config = ${day};\n`,
+    });
+  }
+  return repo;
+});
+
+/**
  * `a.ts` and its test change together most often, so they are the strongest
  * coupling; `b.ts` and `c.ts` change together just as often, as a weaker pair.
  */

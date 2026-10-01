@@ -22,6 +22,7 @@
   --hairline-strong: #c3c2b7;
   --group: rgb(11 11 11 / 0.03);
   --coupling: #2a78d6;
+  --hidden-coupling: #b4237a;
   --focus: #2a78d6;
   --shadow: 0 6px 20px rgb(11 11 11 / 0.14);
 
@@ -86,6 +87,7 @@
     --hairline-strong: #454542;
     --group: rgb(255 255 255 / 0.04);
     --coupling: #5aa0f0;
+    --hidden-coupling: #ff7ab8;
     --focus: #5aa0f0;
     --shadow: 0 6px 20px rgb(0 0 0 / 0.5);
 
@@ -372,6 +374,9 @@ h1 {
 .outline-sample.cross-module {
   border-style: dotted;
 }
+.outline-sample.hidden-coupling {
+  border-color: var(--hidden-coupling);
+}
 
 .toolbar {
   display: flex;
@@ -587,6 +592,9 @@ button:focus-visible {
 }
 .outline.partner {
   stroke: var(--coupling);
+}
+.outline.hidden-coupling {
+  stroke: var(--hidden-coupling);
 }
 .outline.test-pair {
   stroke-dasharray: 5 3;
@@ -864,6 +872,11 @@ button:focus-visible {
   color: var(--text-2);
   border: 1px dashed var(--coupling);
   border-radius: 999px;
+}
+.badge.hidden-coupling {
+  color: var(--text);
+  border-style: solid;
+  border-color: var(--hidden-coupling);
 }
 
 @media (max-width: 900px) {

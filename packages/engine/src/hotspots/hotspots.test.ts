@@ -33,6 +33,7 @@ const coupling = (
   distance: 0,
   testPair,
   crossesModule: false,
+  imports: null,
 });
 
 describe("rankFiles", () => {
@@ -171,6 +172,74 @@ describe("rankFiles reasons", () => {
     expect(byPath.get("b.ts")?.at(-1)).toBe(
       "co-changes with a.ts in 100% of its commits",
     );
+  });
+});
+
+const hidden = (a: string, b: string, sharedCommits: number): Coupling => ({
+  ...coupling(a, b, sharedCommits),
+  imports: "none",
+});
+
+describe("rankFiles hidden coupling reason", () => {
+  const files = [
+    measure("a.ts", 7, 100, 3),
+    measure("b.ts", 3, 100, 15),
+    measure("x.ts", 4, 100, 3),
+    measure("p.ts", 4, 100, 3),
+    measure("q.ts", 2, 100, 3),
+  ];
+  const reasonsFor = (
+    path: string,
+    couplings: ReadonlyArray<Coupling>,
+  ): ReadonlyArray<string> | undefined =>
+    rankFiles(files, couplings).find((stats) => stats.path === path)?.reasons;
+
+  it("replaces the co-change reason when the strongest partner is hidden", () => {
+    const reasons = reasonsFor("b.ts", [hidden("a.ts", "b.ts", 3)]);
+
+    expect(reasons?.slice(2)).toStrictEqual([
+      "changes with a.ts in 100% of its commits without an import between them",
+    ]);
+  });
+
+  it("stays silent below 50%, where the partner is only a co-change", () => {
+    const reasons = reasonsFor("a.ts", [hidden("a.ts", "b.ts", 3)]);
+
+    expect(reasons?.slice(2)).toStrictEqual([
+      "co-changes with b.ts in 43% of its commits",
+    ]);
+  });
+
+  it("does not call an imported pair or a pair with unknown imports hidden", () => {
+    const imported = {
+      ...coupling("a.ts", "b.ts", 3),
+      imports: "a→b",
+    } as const;
+    const unknown = coupling("a.ts", "b.ts", 3);
+
+    expect(reasonsFor("b.ts", [imported])?.at(-1)).toBe(
+      "co-changes with a.ts in 100% of its commits",
+    );
+    expect(reasonsFor("b.ts", [unknown])?.at(-1)).toBe(
+      "co-changes with a.ts in 100% of its commits",
+    );
+  });
+
+  it("does not call a file's test hidden", () => {
+    const testPair = { ...hidden("a.ts", "b.ts", 3), testPair: true };
+
+    expect(reasonsFor("b.ts", [testPair])?.slice(2)).toStrictEqual([]);
+  });
+
+  it("words only the strongest non-test partner, so a weaker hidden one stays a co-change", () => {
+    const reasons = reasonsFor("x.ts", [
+      { ...coupling("p.ts", "x.ts", 4), imports: "a→b" },
+      hidden("q.ts", "x.ts", 2),
+    ]);
+
+    expect(reasons?.slice(2)).toStrictEqual([
+      "co-changes with p.ts in 100% of its commits",
+    ]);
   });
 });
 

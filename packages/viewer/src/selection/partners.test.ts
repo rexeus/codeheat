@@ -42,8 +42,36 @@ describe("indexPartners", () => {
         sharedCommits: 20,
         distance: 0,
         crossesModule: false,
+        imports: null,
+        hidden: false,
       },
     ]);
+  });
+
+  it("marks a partner without an import as hidden, but never a test pair", () => {
+    const marked = indexPartners([
+      coupling("src/a.ts", "src/b.ts", { imports: "none" }),
+      coupling("src/c.ts", "src/c.test.ts", {
+        imports: "none",
+        testPair: true,
+      }),
+    ]);
+
+    expect(marked.get("src/a.ts")?.[0]?.hidden).toBe(true);
+    expect(marked.get("src/b.ts")?.[0]?.hidden).toBe(true);
+    expect(marked.get("src/c.ts")?.[0]?.hidden).toBe(false);
+  });
+
+  it("reads the import direction from the side of the file the partners belong to", () => {
+    const imported = indexPartners([
+      coupling("src/a.ts", "src/b.ts", { imports: "a→b" }),
+      coupling("src/c.ts", "src/d.ts", { imports: "none" }),
+    ]);
+
+    expect(imported.get("src/a.ts")?.[0]?.imports).toBe("file→partner");
+    expect(imported.get("src/b.ts")?.[0]?.imports).toBe("partner→file");
+    expect(imported.get("src/c.ts")?.[0]?.imports).toBe("none");
+    expect(imported.get("src/d.ts")?.[0]?.imports).toBe("none");
   });
 
   it("has no entry for a file without couplings", () => {

@@ -3,6 +3,7 @@ import { Effect, Option } from "effect";
 import { Argument, Command, Flag } from "effect/cli";
 
 import { FlagsConflict } from "../errors/flags-conflict.js";
+import { loadLanguageAdapters } from "../languages/load-language-adapters.js";
 import { warnIfEntryMatchedNothing } from "../output/entry-warning.js";
 import { writeHtmlReport } from "../output/html/write-html-report.js";
 import { limitReport } from "../output/limit-report.js";
@@ -96,6 +97,7 @@ export const analyzeCommand = Command.make(
       include,
       exclude,
       entry,
+      adapters: yield* loadLanguageAdapters,
       toolVersion: version,
     });
     yield* warnIfShallow(report);
