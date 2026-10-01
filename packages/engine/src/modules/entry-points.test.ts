@@ -105,6 +105,56 @@ layer(NodeServices.layer)("findEntryPoints from package.json", (it) => {
   );
 });
 
+layer(NodeServices.layer)(
+  "findEntryPoints from patterns and bare targets",
+  (it) => {
+    it.effect("expands a * in an exports target to the files it matches", () =>
+      Effect.gen(function* () {
+        const entries = yield* entryPointsOf(
+          [
+            file("src/features/a.ts"),
+            file("src/features/deep/b.ts"),
+            file("src/features/c.js"),
+            file("src/other.ts"),
+          ],
+          '{ "exports": { "./features/*": "./src/features/*.ts" } }',
+        );
+
+        assert.deepStrictEqual(entries, [
+          file("src/features/a.ts"),
+          file("src/features/deep/b.ts"),
+        ]);
+      }),
+    );
+
+    it.effect("finds the file of a main without extension", () =>
+      Effect.gen(function* () {
+        const entries = yield* entryPointsOf(
+          [file("lib/main.ts"), file("lib/main.test.ts"), file("lib/other.ts")],
+          '{ "main": "./lib/main" }',
+        );
+
+        assert.deepStrictEqual(entries, [file("lib/main.ts")]);
+      }),
+    );
+
+    it.effect("maps a * in a dist target back to the sources", () =>
+      Effect.gen(function* () {
+        const entries = yield* entryPointsOf(
+          [file("src/a.ts"), file("src/nested/b.ts"), file("src/c.css")],
+          '{ "exports": { "./*": "./dist/*.js" } }',
+        );
+
+        assert.deepStrictEqual(entries, [
+          file("src/a.ts"),
+          file("src/c.css"),
+          file("src/nested/b.ts"),
+        ]);
+      }),
+    );
+  },
+);
+
 layer(NodeServices.layer)("findEntryPoints from built targets", (it) => {
   it.effect("prefers a built file that is itself in the universe", () =>
     Effect.gen(function* () {

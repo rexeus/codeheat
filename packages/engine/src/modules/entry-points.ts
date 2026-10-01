@@ -33,9 +33,28 @@ const isConventionalEntry = (module: string, file: string): boolean =>
   [module, joinPath(module, "src")].includes(directoryOf(file)) &&
   CONVENTIONAL_ENTRY.test(nameOf(file));
 
+const escapeRegExp = (text: string): string =>
+  text.replaceAll(/[.+?^${}()|[\]\\]/gu, String.raw`\$&`);
+
+/** The files among `candidates` that equal `pattern`, or match it when it holds a `*`, which, as in `exports`, stands for any characters, `/` included. */
+const matching = (
+  pattern: string,
+  candidates: ReadonlyArray<string>,
+): ReadonlyArray<string> => {
+  const wildcard = new RegExp(
+    `^${pattern
+      .split("*")
+      .map((part) => escapeRegExp(part))
+      .join(".*")}$`,
+    "u",
+  );
+  return candidates.filter((candidate) => wildcard.test(candidate));
+};
+
 /**
- * The module files a manifest target stands for: the file itself, or, for a
- * target in `dist/` or `build/`, the sources with the same stem under the
+ * The module files a manifest target stands for: the files it names or, with a
+ * `*`, matches; else the files with its stem (a target without extension); else,
+ * for a target in `dist/` or `build/`, the sources with the same stem under the
  * module's `src/` (else its root).
  */
 const resolveTarget = (
@@ -44,22 +63,24 @@ const resolveTarget = (
   files: ReadonlyArray<string>,
 ): ReadonlyArray<string> => {
   const relative = target.replace(/^\.\//u, "");
-  const direct = joinPath(module, relative);
-  if (files.includes(direct)) {
-    return [direct];
+  const named = matching(joinPath(module, relative), files);
+  if (named.length > 0) {
+    return named;
   }
   const build = BUILD_DIRECTORIES.find((directory) =>
     relative.startsWith(directory),
   );
-  if (build === undefined) {
-    return [];
-  }
-  const stem = stemOf(relative.slice(build.length));
-  const sourceStems = [joinPath(module, `src/${stem}`), joinPath(module, stem)];
-  const sources = sourceStems.map((sourceStem) =>
-    files.filter((file) => stemOf(file) === sourceStem),
+  const builtStem = stemOf(relative.slice((build ?? "").length));
+  const stems = [
+    joinPath(module, relative),
+    ...(build === undefined
+      ? []
+      : [joinPath(module, `src/${builtStem}`), joinPath(module, builtStem)]),
+  ];
+  const stemmed = stems.map((stem) =>
+    files.filter((file) => matching(stem, [stemOf(file)]).length > 0),
   );
-  return sources.find((matches) => matches.length > 0) ?? [];
+  return stemmed.find((matches) => matches.length > 0) ?? [];
 };
 
 const detectEntryPoints = (
