@@ -12,7 +12,7 @@ export type Resolution =
       readonly kind: "binding";
       /** Equal ids are the same binding. */
       readonly id: string;
-      /** The id names the binding where it is declared; otherwise it names the last hop that could be followed, and may differ from the id of the same binding reached another way. */
+      /** The id names the binding where it is declared. Otherwise the chain was cut (a file that was not loaded, a specifier that names no single file) and the id names the hop it was cut at, which may differ from the id of the same binding reached another way. */
       readonly exact: boolean;
     }
   | { readonly kind: "ambiguous" }
@@ -75,7 +75,8 @@ const resolveBinding = (
   }
   const target = world.fileOf(file, origin.specifier);
   if (target === undefined) {
-    return UNKNOWN;
+    // An asset, a missing or excluded file: the name is certain, only what it stands for is out of sight.
+    return binding(`${file}\0${origin.specifier}#${origin.name}`, false);
   }
   return origin.name === "*"
     ? binding(`${target}#*`, true)

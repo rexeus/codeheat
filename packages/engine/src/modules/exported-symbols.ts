@@ -86,9 +86,40 @@ const referencedFiles = (
 };
 
 /**
+ * Lists the file of a visit and the files it refers to. A file that cannot be
+ * listed or forwards what cannot be followed aborts the whole count when the
+ * visit is required; otherwise it is left out, its names staying unknown to
+ * the importer, which is no reason to give up.
+ */
+const readVisit = (
+  sources: SymbolSources,
+  module: string,
+  { file, required }: Visit,
+): Effect.Effect<
+  | { readonly listed: SourceExports; readonly next: ReadonlyArray<Visit> }
+  | "abort"
+  | "left out",
+  never,
+  FileSystem.FileSystem | Path.Path
+> =>
+  Effect.gen(function* () {
+    const listed = yield* listExports(sources, file);
+    const next =
+      listed === undefined
+        ? undefined
+        : referencedFiles(sources, module, file, listed);
+    if (listed === undefined || next === undefined) {
+      return required ? "abort" : "left out";
+    }
+    return { listed, next };
+  });
+
+/**
  * The exports of `entryPoints` and of every file of `module` they reach by
  * re-exporting; undefined when a file that `export *` forwards cannot be
- * listed, or a forwarded specifier does not name exactly one file of the module.
+ * listed, or a forwarded specifier does not name exactly one file of the
+ * module. A file that only a named re-export reaches is left out when it
+ * cannot be listed or forwards what cannot be followed.
  */
 const loadExports = (
   sources: SymbolSources,
@@ -117,19 +148,16 @@ const loadExports = (
       if (loaded.has(visit.file) || failed.has(visit.file)) {
         continue;
       }
-      const listed = yield* listExports(sources, visit.file);
-      if (listed === undefined) {
-        failed.add(visit.file);
-        if (visit.required) {
-          return undefined;
-        }
-        continue;
-      }
-      loaded.set(visit.file, listed);
-      const next = referencedFiles(sources, module, visit.file, listed);
-      if (next === undefined) {
+      const read = yield* readVisit(sources, module, visit);
+      if (read === "abort") {
         return undefined;
       }
+      if (read === "left out") {
+        failed.add(visit.file);
+        continue;
+      }
+      const { listed, next } = read;
+      loaded.set(visit.file, listed);
       pending.push(...next);
     }
     return loaded;
