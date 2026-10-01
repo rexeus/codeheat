@@ -37,16 +37,24 @@ describe("renderAnalysis", () => {
     );
   });
 
+  it("ends with one hint about the other output modes", () => {
+    expect(plainView().split("\n").at(-1)).toBe(
+      "Use --html for the treemap or --json for the full report.",
+    );
+  });
+});
+
+describe("renderAnalysis coupling table", () => {
   it("lists the five strongest couplings and leaves test pairs out", () => {
     const couplings = section(plainView(), "Change coupling");
 
     expect(couplings).toEqual([
-      "degree  shared  distance  a → b  b → a  files",
-      "   75%       6         4    67%    86%  packages/billing/src/index.ts <-> packages/auth/src/index.ts",
-      "   61%      24         0    50%    77%  packages/billing/src/invoice.ts <-> packages/billing/src/tax.ts",
-      "   53%       9         5    41%    75%  packages/auth/src/session.ts <-> packages/web/src/hooks/use-session.ts",
-      "   42%       9         7    53%    35%  packages/shared/src/config.ts <-> apps/cli/src/commands/analyze.ts",
-      "   42%      14         5    29%    74%  packages/billing/src/invoice.ts <-> packages/web/src/routes/invoices.tsx",
+      "degree  shared  distance  a → b  b → a  imports  files",
+      "   75%       6         4    67%    86%  hidden   packages/billing/src/index.ts <-> packages/auth/src/index.ts",
+      "   61%      24         0    50%    77%  a→b      packages/billing/src/invoice.ts <-> packages/billing/src/tax.ts",
+      "   53%       9         5    41%    75%  b→a      packages/auth/src/session.ts <-> packages/web/src/hooks/use-session.ts",
+      "   42%       9         7    53%    35%  b→a      packages/shared/src/config.ts <-> apps/cli/src/commands/analyze.ts",
+      "   42%      14         5    29%    74%  hidden   packages/billing/src/invoice.ts <-> packages/web/src/routes/invoices.tsx",
     ]);
   });
 
@@ -66,7 +74,7 @@ describe("renderAnalysis", () => {
     };
 
     expect(section(plainView(adjusted), "Change coupling")[1]).toBe(
-      "   75%       6         4    75%    50%  packages/billing/src/index.ts <-> packages/auth/src/index.ts",
+      "   75%       6         4    75%    50%  hidden   packages/billing/src/index.ts <-> packages/auth/src/index.ts",
     );
   });
 
@@ -77,9 +85,24 @@ describe("renderAnalysis", () => {
     expect(() => plainView(cut)).toThrow(/missing from the report's files/u);
   });
 
-  it("ends with one hint about the other output modes", () => {
-    expect(plainView().split("\n").at(-1)).toBe(
-      "Use --html for the treemap or --json for the full report.",
+  it("shows an unknown import relation as a dash and emphasizes hidden coupling in color", () => {
+    const report = sampleReport();
+    const couplings = report.couplings.map((coupling) => {
+      if (coupling.a === "packages/billing/src/index.ts") {
+        return { ...coupling, imports: null };
+      }
+      return coupling.b === "packages/billing/src/tax.ts"
+        ? { ...coupling, imports: "none" as const }
+        : coupling;
+    });
+
+    expect(
+      renderAnalysis({ ...report, couplings }, makeStyle(false)),
+    ).toContain(
+      "   75%       6         4    67%    86%  -        packages/billing",
+    );
+    expect(renderAnalysis({ ...report, couplings }, makeStyle(true))).toContain(
+      "   61%      24         0    50%    77%  \u001B[1mhidden \u001B[0m  packages/billing/src/invoice.ts",
     );
   });
 });

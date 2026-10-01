@@ -5,6 +5,7 @@ import { escapeForTerminal } from "../escape.js";
 import { day, percent, twoDecimals } from "./format.js";
 import type { Style } from "./style.js";
 import { plain, renderTable } from "./table.js";
+import type { Cell } from "./table.js";
 
 type Entry = InspectResult["matches"][number];
 
@@ -15,6 +16,27 @@ const partnerMarker = (partner: Entry["partners"][number]): string => {
   return partner.crossesModule ? " (other module)" : "";
 };
 
+type PartnerImports = NonNullable<Entry["partners"][number]["imports"]>;
+
+const IMPORT_LABELS: Readonly<Record<PartnerImports, string>> = {
+  "file→partner": "imports",
+  "partner→file": "imported by",
+  both: "both",
+  none: "hidden",
+};
+
+/** What the inspected file does with its partner; no import at all is hidden coupling, which stands out. */
+const importsCell = (
+  { imports }: Entry["partners"][number],
+  style: Style,
+): Cell => {
+  if (imports === null) {
+    return plain("-");
+  }
+  const text = IMPORT_LABELS[imports];
+  return imports === "none" ? { text, paint: style.bold } : plain(text);
+};
+
 const partnerLines = (entry: Entry, style: Style): ReadonlyArray<string> =>
   entry.partners.length === 0
     ? ["No change coupling above the thresholds."]
@@ -22,11 +44,13 @@ const partnerLines = (entry: Entry, style: Style): ReadonlyArray<string> =>
         [
           { header: "co-change", align: "right" },
           { header: "shared", align: "right" },
+          { header: "import", align: "left" },
           { header: "partner", align: "left" },
         ],
         entry.partners.map((partner) => [
           plain(percent(partner.probability)),
           plain(String(partner.sharedCommits)),
+          importsCell(partner, style),
           plain(escapeForTerminal(partner.path) + partnerMarker(partner)),
         ]),
         style,

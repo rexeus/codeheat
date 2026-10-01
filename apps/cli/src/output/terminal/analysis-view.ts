@@ -6,6 +6,7 @@ import { changeLines } from "./changes-view.js";
 import { day, percent } from "./format.js";
 import type { Style } from "./style.js";
 import { plain, renderTable } from "./table.js";
+import type { Cell } from "./table.js";
 
 const TOP_HOTSPOTS = 10;
 const TOP_COUPLINGS = 5;
@@ -43,6 +44,12 @@ const hotspotLines = (
     style,
   );
 
+/** Which of the two files imports the other; no import at all is hidden coupling, which stands out. */
+const importsCell = ({ imports }: Coupling, style: Style): Cell =>
+  imports === "none"
+    ? { text: "hidden", paint: style.bold }
+    : plain(imports ?? "-");
+
 const couplingLines = (
   couplings: ReadonlyArray<Coupling>,
   files: ReadonlyArray<FileStats>,
@@ -65,6 +72,7 @@ const couplingLines = (
       { header: "distance", align: "right" },
       { header: "a → b", align: "right" },
       { header: "b → a", align: "right" },
+      { header: "imports", align: "left" },
       { header: "files", align: "left" },
     ],
     couplings
@@ -76,6 +84,7 @@ const couplingLines = (
         plain(String(coupling.distance)),
         plain(coChange(coupling, coupling.a)),
         plain(coChange(coupling, coupling.b)),
+        importsCell(coupling, style),
         plain(
           `${escapeForTerminal(coupling.a)} <-> ${escapeForTerminal(coupling.b)}`,
         ),

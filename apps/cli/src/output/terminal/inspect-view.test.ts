@@ -26,7 +26,7 @@ const entry: InspectResult["matches"][number] = {
       probability: 0.646,
       testPair: true,
       crossesModule: false,
-      imports: null,
+      imports: "both",
     },
     {
       path: "packages/billing/src/tax.ts",
@@ -34,7 +34,7 @@ const entry: InspectResult["matches"][number] = {
       probability: 0.5,
       testPair: false,
       crossesModule: false,
-      imports: null,
+      imports: "file→partner",
     },
     {
       path: "packages/web/src/checkout.ts",
@@ -42,7 +42,7 @@ const entry: InspectResult["matches"][number] = {
       probability: 0.25,
       testPair: false,
       crossesModule: true,
-      imports: null,
+      imports: "none",
     },
   ],
 };
@@ -97,10 +97,10 @@ describe("renderInspect", () => {
         "- changed in 48 commits (#1 of 36)",
         "",
         "Changes together with",
-        "co-change  shared  partner",
-        "      65%      31  packages/billing/src/invoice.test.ts (test)",
-        "      50%      24  packages/billing/src/tax.ts",
-        "      25%      12  packages/web/src/checkout.ts (other module)",
+        "co-change  shared  import   partner",
+        "      65%      31  both     packages/billing/src/invoice.test.ts (test)",
+        "      50%      24  imports  packages/billing/src/tax.ts",
+        "      25%      12  hidden   packages/web/src/checkout.ts (other module)",
       ].join("\n"),
     );
   });
@@ -178,6 +178,28 @@ describe("renderInspect modules", () => {
     expect(view).toContain("module packages/billing: 55%");
     expect(view).toContain(
       "module packages/web: 50% of 10 commits stay inside\n",
+    );
+  });
+});
+
+describe("renderInspect import relations", () => {
+  it("shows an unknown import relation as a dash and an imported file as imported by", () => {
+    const relations = [null, "partner→file", null] as const;
+    const partners = entry.partners.map((partner, index) => ({
+      ...partner,
+      imports: relations[index] ?? null,
+    }));
+
+    const view = renderInspect(
+      result([{ ...entry, partners }]),
+      makeStyle(false),
+    );
+
+    expect(view).toContain(
+      "      65%      31  -            packages/billing/src/invoice.test.ts (test)",
+    );
+    expect(view).toContain(
+      "      50%      24  imported by  packages/billing/src/tax.ts",
     );
   });
 });

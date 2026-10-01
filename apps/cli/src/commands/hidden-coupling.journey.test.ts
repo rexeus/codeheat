@@ -35,6 +35,21 @@ describe("codeheat finds hidden coupling", () => {
     }).pipe(Effect.scoped),
   );
 
+  it.live("shows the import column in the terminal view of analyze", () =>
+    Effect.gen(function* () {
+      const repo = yield* makeImportProject;
+
+      const result = yield* journey({ args: ["analyze"], cwd: repo.root });
+
+      expect(result.stdout).toContain(
+        "100%       4         0   100%   100%  hidden   src/api.ts <-> src/config.ts",
+      );
+      expect(result.stdout).toContain(
+        "100%       4         0   100%   100%  b→a      src/api.ts <-> src/ui.ts",
+      );
+    }).pipe(Effect.scoped),
+  );
+
   it.live("marks the partners of an inspected file from its own side", () =>
     Effect.gen(function* () {
       const repo = yield* makeImportProject;
