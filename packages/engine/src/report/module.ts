@@ -30,7 +30,9 @@ const ModuleDepth = Schema.Struct({
    * `export * as ns from` add their names. As in ECMAScript, a file's own
    * export wins over `export *`, `export *` never forwards `default`, and a
    * name that two `export *` sources export as different bindings is exported
-   * by neither (the same binding reached twice counts once). A name that
+   * by neither (the same binding reached twice counts once). A name taken by
+   * a named re-export counts even when its source is out of sight (an excluded
+   * or missing file, an asset). A name that
    * several entry points export counts once. A type counts like a value,
    * `default` like a name.
    */
