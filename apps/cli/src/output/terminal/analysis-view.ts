@@ -171,7 +171,7 @@ const leakyModules = (report: Report): ReadonlyArray<Module> =>
  * co-change probability in both directions (`shared / revisions(side)`), the
  * five least cohesive modules, the first five modules with a leaky interface,
  * the five shallowest ranked modules (fewest implementation lines per exported
- * symbol), and, when the report compares two windows, the biggest changes. The report
+ * name; the section is left out when none has a depth), and, when the report compares two windows, the biggest changes. The report
  * must not be cut to `--limit`: test pairs could crowd out every other
  * coupling, and every coupled file must appear in `files`: rendering throws
  * otherwise.
@@ -186,6 +186,7 @@ export const renderAnalysis = (report: Report, style: Style): string => {
   const couplings = couplingLines(report.couplings, report.files, style);
   const modules = rankedModules(report);
   const leaky = leakyModules(report);
+  const shallow = shallowestLines(report, style);
   return [
     style.bold(summary),
     "",
@@ -209,9 +210,9 @@ export const renderAnalysis = (report: Report, style: Style): string => {
       ? leakageLines(leaky, style)
       : ["No module has a leaky interface."]),
     "",
-    style.bold("Shallowest modules"),
-    ...shallowestLines(report, style),
-    "",
+    ...(shallow.length === 0
+      ? []
+      : [style.bold("Shallowest modules"), ...shallow, ""]),
     ...changeLines(report, style),
     style.dim("Use --html for the treemap or --json for the full report."),
   ].join("\n");

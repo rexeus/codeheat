@@ -64,7 +64,7 @@ const pack = () => {
   return join(destination, tarballs[0]);
 };
 
-/** A tiny repository with two files that always change together and never import each other. */
+/** A tiny repository with two files that always change together and never import each other, and an `index.ts` that makes the one module export a single name over four lines of implementation. */
 const makeRepository = () => {
   const root = join(temporary, "repository");
   mkdirSync(root);
@@ -79,6 +79,7 @@ const makeRepository = () => {
   for (const round of [1, 2, 3]) {
     writeFileSync(join(root, "a.ts"), `if (a) {\n  run(${round});\n}\n`);
     writeFileSync(join(root, "b.ts"), `b(${round});\n`);
+    writeFileSync(join(root, "index.ts"), "export const entry = 1;\n");
     git("add", "--all");
     git(
       "-c",
@@ -133,12 +134,22 @@ const expectWorkingInstall = (applicationRoot, installer, repositoryRoot) => {
       `codeheat from ${installer} could not read imports; is oxc-parser installed with its native binding?\n${analysis.stderr}`,
     );
   }
+  // The same parser reads the exports behind the module's depth.
+  const modules = fieldOf(json, "modules");
+  const depth = Array.isArray(modules)
+    ? JSON.stringify(fieldOf(JSON.stringify(modules[0]), "depth"))
+    : undefined;
+  if (depth !== '{"exports":1,"implementationLines":4,"linesPerExport":4}') {
+    throw new Error(
+      `codeheat from ${installer} reports the module depth ${depth}, not one export over four lines.\n${analysis.stdout}`,
+    );
+  }
 };
 
 /**
  * Without the parser's native binding (`npm install --omit=optional`), codeheat
  * still analyzes: it exits 0, says once on stderr that the parser is
- * unavailable, and reports `imports: null`.
+ * unavailable, and reports `imports: null` and `depth: null` on every module.
  * @param {string} applicationRoot
  * @param {string} repositoryRoot
  */
@@ -152,11 +163,20 @@ const expectDegradedRun = (applicationRoot, repositoryRoot) => {
     analysis.status === 0 ? analysis.stdout : "{}",
     "couplings",
   );
+  const modules = fieldOf(
+    analysis.status === 0 ? analysis.stdout : "{}",
+    "modules",
+  );
   const notes = analysis.stderr.trim().split("\n");
   if (
     !Array.isArray(couplings) ||
     couplings.length !== 1 ||
     fieldOf(JSON.stringify(couplings[0]), "imports") !== null ||
+    !Array.isArray(modules) ||
+    modules.length === 0 ||
+    !modules.every(
+      (module) => fieldOf(JSON.stringify(module), "depth") === null,
+    ) ||
     notes.length !== 1 ||
     !(notes[0] ?? "").startsWith("codeheat: the code parser is unavailable")
   ) {

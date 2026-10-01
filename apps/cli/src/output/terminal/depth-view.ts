@@ -38,8 +38,9 @@ export const describeDepth = (depth: Depth): string =>
   `${depth.exports} exports over ${depth.implementationLines} lines, ${twoDecimals(depth.linesPerExport)} lines per export`;
 
 /**
- * The lines of the "Shallowest modules" section: a table, or the reason that
- * there is none.
+ * The lines of the "Shallowest modules" section: a table, or none when no
+ * ranked module has a depth (a repository without TypeScript or JavaScript
+ * entry points, or without the parser, has nothing to rank).
  */
 export const shallowestLines = (
   report: Report,
@@ -47,7 +48,7 @@ export const shallowestLines = (
 ): ReadonlyArray<string> => {
   const modules = shallowestModules(report);
   return modules.length === 0
-    ? ["No ranked module has a measurable depth."]
+    ? []
     : renderTable(
         [
           { header: "lines/export", align: "right" },

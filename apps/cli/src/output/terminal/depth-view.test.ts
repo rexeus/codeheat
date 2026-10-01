@@ -68,12 +68,24 @@ describe("renderAnalysis shallowest modules", () => {
     ]);
   });
 
-  it("says so when no ranked module has a depth", () => {
+  it("leaves the section out when no ranked module has a depth", () => {
     const report = withModules(sampleReport(), () => ({ depth: null }));
 
-    expect(shallowest(report)).toEqual([
-      "No ranked module has a measurable depth.",
-    ]);
+    const view = renderAnalysis(report, makeStyle(false));
+
+    expect(view).not.toContain("Shallowest modules");
+    expect(view).not.toContain("measurable depth");
+    expect(view).toContain(
+      "Leaky interfaces\nNo module has a leaky interface.\n\n",
+    );
+  });
+
+  it("leaves the section out when the only modules with a depth are below the commit floor", () => {
+    const report = withModules(sampleReport(), () => ({ commits: 1 }));
+
+    expect(renderAnalysis(report, makeStyle(false))).not.toContain(
+      "Shallowest modules",
+    );
   });
 
   it("escapes control characters in module paths", () => {
