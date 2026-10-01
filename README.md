@@ -49,16 +49,32 @@ npx codeheat inspect packages/billing/src/invoice.ts --json
     {
       "path": "packages/billing/src/invoice.ts",
       "rank": 1,
-      "of": 36,
       "score": 0.97,
       "revisions": 48,
+      "linesAdded": 384,
+      "linesDeleted": 672,
+      "breadth": 14,
+      "test": false,
+      "module": "packages/billing",
       "loc": 964,
-      "complexity": { "total": 1900, "mean": 1.97, "max": 9 },
+      "complexity": {
+        "total": 1900,
+        "mean": 1.97,
+        "max": 9,
+      },
       "reasons": [
         "changed in 48 commits (#1 of 36)",
         "indentation complexity 1900 (#2 of 36)",
-        "changes with packages/billing/src/tax.ts in 50% of its commits without an import between them",
+        "co-changes with packages/billing/src/tax.ts in 50% of its commits",
+        "changes together with 14 different files",
       ],
+      "trend": {
+        "previousScore": 0.66,
+        "previousRevisions": 33,
+        "scoreDelta": 0.31,
+        "newlyActive": false,
+      },
+      "of": 36,
       "partners": [
         {
           "path": "packages/billing/src/invoice.test.ts",
@@ -66,6 +82,7 @@ npx codeheat inspect packages/billing/src/invoice.ts --json
           "probability": 0.6458,
           "testPair": true,
           "crossesModule": false,
+          "imports": "partner→file",
         },
         {
           "path": "packages/billing/src/tax.ts",
@@ -73,6 +90,7 @@ npx codeheat inspect packages/billing/src/invoice.ts --json
           "probability": 0.5,
           "testPair": false,
           "crossesModule": false,
+          "imports": "file→partner",
         },
         {
           "path": "packages/web/src/routes/invoices.tsx",
@@ -80,9 +98,40 @@ npx codeheat inspect packages/billing/src/invoice.ts --json
           "probability": 0.2917,
           "testPair": false,
           "crossesModule": true,
-          "imports": "partner→file",
+          "imports": "none",
         },
       ],
+    },
+  ],
+  "modules": [
+    {
+      "path": "packages/billing",
+      "kind": "package",
+      "files": 9,
+      "testOnly": false,
+      "commits": 74,
+      "localCommits": 41,
+      "cohesion": 0.5541,
+      "partners": [
+        {
+          "path": "packages/web",
+          "sharedCommits": 20,
+        },
+        {
+          "path": "packages/auth",
+          "sharedCommits": 9,
+        },
+        // … 2 more modules
+      ],
+      "entryPoints": ["packages/billing/src/index.ts"],
+      "interfaceCommits": 9,
+      "implementationCommits": 71,
+      "leakage": 0.1268,
+      "leakyInterface": false,
+      "trend": {
+        "previousCohesion": 0.5241,
+        "cohesionDelta": 0.03,
+      },
     },
   ],
   "unmatched": [],
@@ -133,7 +182,7 @@ Paths or globs. A path without glob characters is absolute or relative to the wo
 - **Score** — `norm(revisions) × norm(weighted lines)`, where weighted lines are lines plus indentation levels and `norm(x) = ln(1+x) / ln(1+max)` over the repository. 0..1, relative to this repository: a 0.8 here says nothing about a 0.8 elsewhere.
 - **Coupling degree** — `shared commits / mean(revisions of both)`. Pairs need 3 shared commits and a degree of 0.3. Commits touching more than 50 files (formatting runs, mass renames) are ignored for coupling.
 - **Co-change probability** — `shared commits / revisions of one file`: how likely a change to that file also changes its partner. The `analyze` terminal table shows it in both directions (`a → b`, `b → a`); `inspect` shows it for the focused file.
-- **Hidden coupling** — every coupling in `analyze --json` has `imports`: `a→b` when file `a` imports file `b`, `b→a`, `both`, or `none` when neither does; `inspect` partners carry it seen from the inspected file (`file→partner`, `partner→file`, `both`, `none`). The terminal shows the same in an import column (`hidden` for `none`). An import counts when it is static (`import` and `export … from`, type-only included), a dynamic `import("…")` with a plain string, a `require("…")`, or the `import("…")` of a TypeScript type; importing a module also reaches what that module re-exports (`export * from`, `export { x } from`), so a file that imports a barrel imports what the barrel exports. Relative specifiers resolve as TypeScript does (extension, `index` file, `.js` for `.ts`); the name of a workspace package (`name` in its `package.json`) resolves to the files its manifest maps `"."` to (else `main`, `module`, `types`, else its `index` file), whatever `--entry` says. `none` is only reported when every module involved is accounted for: the two files and every file their imports re-export through must parse and load nothing unresolved. Accounted for are universe files, Node built-ins, packages some `package.json` declares (or its `@types`), workspace packages, and tracked assets such as `.css` or `.json`. Otherwise `imports` is `null` (unknown): a file that is not TypeScript or JavaScript (`.ts .tsx .mts .cts .js .jsx .mjs .cjs`), does not parse, or the parser could not be loaded, and any import through a tsconfig `paths` alias, a `#` subpath import, a bundler alias, code outside the universe, an undeclared package, or an expression such as `import(name)`. A file whose strongest non-test co-change partner has no import and a probability of at least `thresholds.minHiddenProbability` gets a reason line.
+- **Hidden coupling** — every coupling in `analyze --json` has `imports`: `a→b` when file `a` imports file `b`, `b→a`, `both`, or `none` when neither does; `inspect` partners carry it seen from the inspected file (`file→partner`, `partner→file`, `both`, `none`). The terminal shows the same in an import column (`hidden` for `none`). An import counts when it is static (`import` and `export … from`, type-only included), a dynamic `import("…")` with a plain string, a `require("…")`, or the `import("…")` of a TypeScript type; importing a module also reaches what that module hands on: what it re-exports with `export … from`, the imported bindings it exports (`import a from "./a"; export default a;`), and, when it assigns `module.exports`, `exports.x`, or `export =`, or exports a default expression, everything it imports or requires. So a file that imports a barrel imports what the barrel hands on. A `new URL("./worker.ts", import.meta.url)` is an import of that file. Relative specifiers resolve as TypeScript does (extension, `index` file, `.js` for `.ts` in TypeScript files; a specifier that stands for both a declaration file and a runtime file links both); the name of a workspace package (`name` in its `package.json`) resolves to the files its manifest maps `"."` to (else `main`, `module`, `types`, else its `index` file), whatever `--entry` says. `none` is only reported when every module involved is accounted for: the two files and every file their imports re-export through must parse and load nothing unresolved. Accounted for are universe files, Node built-ins, packages some `package.json` declares (or its `@types`), workspace packages, and tracked assets such as `.css` or `.json`. Otherwise `imports` is `null` (unknown): a file that is not TypeScript or JavaScript (`.ts .tsx .mts .cts .js .jsx .mjs .cjs`), does not parse, or the parser could not be loaded, and any import through a tsconfig `paths` alias, a `#` subpath import, a bundler alias or plugin scheme (`virtual:`), code outside the universe, an undeclared package or one whose name two manifests claim, or modules loaded by an expression (`import(name)`, `import.meta.glob()`, `require.context()`). A file whose strongest non-test co-change partner has no import and a probability of at least `thresholds.minHiddenProbability` gets a reason line.
 - **Test pairs** — `a.ts` with its test (`a.test.ts`, `a.spec.ts`, `a_test.go`, `a_spec.rb`) is expected coupling; it is marked, never counted as a smell.
 - **Breadth and hubs** — breadth is the number of co-changed files: distinct other files that shared a counted commit (at most 50 files) with this one, however rarely. A hub is a file changed at least 5 times, not a test, with a breadth of at least 10 among the widest 5% of such files (ties included); it gets a reason line even when no single pair is coupled strongly enough to report, as with barrels.
 - **Modules and cohesion** — a module is a package (a directory below the root with a tracked `package.json`, `go.mod`, `Cargo.toml`, `pyproject.toml`, `pom.xml`, `build.gradle`, `build.gradle.kts`, or `*.csproj`; a file belongs to its nearest package) or, outside packages, a directory, cut where the files first split into two or more directories (when no depth splits them, at the first level: `scripts/release.ts` and `scripts/lib/util.ts` are one module `scripts`). A repository that yields a single module is split by directory instead. A module's cohesion is the share of its counted commits (at most 50 files) that touched no other module; `partners` lists the modules the rest touched. Modules are ranked only when they have at least `max(5, 1% of the commits counted for coupling)` counted commits (`thresholds.minModuleCommits`) and are not test-only (`testOnly`: every file is test code, by a test suffix or a `test`, `tests`, `__tests__`, `spec`, `specs`, `e2e`, `fixtures`, or `__fixtures__` directory). `modules` lists the ranked ones first, least cohesive first. A coupling between files of different modules is marked `crossesModule`, neutrally: an app legitimately changes with the library it uses.
