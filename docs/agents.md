@@ -66,12 +66,12 @@ The files of a repository are grouped into modules: workspace packages (a direct
 
 ## Reading hidden coupling
 
-A coupling or partner carries `imports`, and a file gets a reason ("changes with X in 70% of its commits without an import between them") when its strongest partner is hidden:
+A coupling or partner carries `imports`, and a file gets a reason ("changes with X in 70% of its commits without an import between them") when its strongest non-test partner is hidden:
 
 - `imports: "none"` in a coupling (`a`, `b`) means neither file imports the other, directly or through a barrel it imports. The files change together for another reason: duplicated logic, a wire protocol, a schema, or configuration read in two places. **Check both files before changing either**, and say in your plan what ties them.
 - In an `inspect` partner, `imports` is seen from the inspected file: `file→partner` (it imports the partner), `partner→file`, `both`, `none`. In a coupling it is `a→b`, `b→a`, `both`, `none`, where `a` is the lexicographically smaller path.
-- `imports: null` means unknown, never "none": the file is not TypeScript or JavaScript, does not parse, or no parser was available (stderr says so). Do not treat it as hidden coupling.
-- `none` can overstate hidden coupling where imports go through tsconfig `paths` or other aliases, which codeheat does not resolve. If a pair is full of alias imports, trust the code over the flag.
+- `imports: null` means unknown, never "none": the file is not TypeScript or JavaScript, does not parse, no parser was available (stderr says so), or one of its imports is not accounted for (a tsconfig `paths` alias, a `#` subpath import, an undeclared package, code outside the analyzed files, a module loaded by an expression). Do not treat it as hidden coupling; read both files.
+- `none` means every import of both files, and of the barrels they import through, was resolved and none links the pair. It does not see ties that are not imports.
 - `thresholds.minHiddenProbability` is the co-change probability from which a hidden partner gets its reason line.
 
 ## Contract

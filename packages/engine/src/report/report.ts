@@ -140,11 +140,13 @@ export const Coupling = Schema.Struct({
    * Whether a static import links the files, directly or through the
    * re-exports of the module it imports: `a→b` means `a` imports `b`. `none`
    * is hidden coupling: the files change together without referring to each
-   * other. Null when the relation is unknown: a file is not TypeScript or
-   * JavaScript, does not parse, or no parser was available. Specifiers that
-   * resolve to no universe file (installed packages, tsconfig path aliases)
-   * link nothing, so `none` can overstate hidden coupling in repositories that
-   * rely on aliases.
+   * other, and every module they and their re-exporting barrels load is
+   * accounted for (a universe file, a Node built-in, a declared dependency, a
+   * workspace package, an asset). Null when the relation is unknown: a file
+   * is not TypeScript or JavaScript, does not parse, no parser was available,
+   * or an import could not be resolved (tsconfig path aliases, `#` subpath
+   * imports, undeclared packages, code outside the universe, modules loaded by
+   * an expression). Unknown is not `none`.
    */
   imports: Schema.NullOr(Schema.Literals(["a→b", "b→a", "both", "none"])),
 });
