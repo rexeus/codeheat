@@ -40,7 +40,6 @@ layer(NodeServices.layer)("Git", (it) => {
       Effect.gen(function* () {
         const repo = yield* makeTempRepository;
         const git = yield* Git.make(repo.directory);
-        yield* setScopedEnv({ LC_ALL: "C" });
 
         const failure = yield* Effect.flip(
           Stream.runCollect(
