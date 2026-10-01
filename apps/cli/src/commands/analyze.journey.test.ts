@@ -237,6 +237,38 @@ describe("codeheat analyze --compare", () => {
   );
 });
 
+describe("codeheat analyze --compare beyond the history", () => {
+  it.live(
+    "says there is no comparison data when --compare reaches back past the first commit",
+    () =>
+      Effect.gen(function* () {
+        const repo = yield* makeCoupledProject;
+
+        const terminal = yield* journey({
+          args: ["analyze", "--compare", "15y"],
+          cwd: repo.root,
+        });
+        const json = yield* journey({
+          args: ["analyze", "--compare", "15y", "--json"],
+          cwd: repo.root,
+        });
+
+        expect(terminal.stdout).toContain(
+          "No comparison data: the previous window has no commits.",
+        );
+        expect(terminal.stdout).toContain("Note: the previous window reaches");
+        const report = yield* Schema.decodeUnknownEffect(Report)(
+          JSON.parse(json.stdout),
+        );
+        expect(report.comparison).toMatchObject({
+          previousCommits: 0,
+          previousTruncated: true,
+        });
+        expect(report.files.every((file) => file.trend === null)).toBe(true);
+      }).pipe(Effect.scoped),
+  );
+});
+
 describe("codeheat analyze a shallow clone", () => {
   it.live(
     "warns once on stderr about a shallow clone and keeps stdout to the JSON",
@@ -258,6 +290,30 @@ describe("codeheat analyze a shallow clone", () => {
           JSON.parse(result.stdout),
         );
         expect(report.repository.shallow).toBe(true);
+      }).pipe(Effect.scoped),
+  );
+
+  it.live(
+    "also warns that a comparison reaching past the oldest fetched commit is incomplete",
+    () =>
+      Effect.gen(function* () {
+        const repo = yield* makeCoupledProject;
+        const clone = yield* makeShallowClone(repo, 2);
+
+        const result = yield* journey({
+          args: ["analyze", "--compare", "2w", "--json"],
+          cwd: clone,
+        });
+
+        expect(result.exitCode).toBe(0);
+        expect(result.stderr.split("\n")).toStrictEqual([
+          "codeheat: shallow clone: history before its oldest fetched commit is missing; run git fetch --unshallow for full results",
+          "codeheat: shallow clone: the previous window reaches past the oldest fetched commit, so the comparison is incomplete",
+        ]);
+        const report = yield* Schema.decodeUnknownEffect(Report)(
+          JSON.parse(result.stdout),
+        );
+        expect(report.comparison?.previousTruncated).toBe(true);
       }).pipe(Effect.scoped),
   );
 

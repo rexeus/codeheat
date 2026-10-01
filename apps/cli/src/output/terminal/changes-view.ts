@@ -122,11 +122,26 @@ const moduleLines = (report: Report, style: Style) => {
       );
 };
 
+const TRUNCATED_NOTE =
+  "Note: the previous window reaches back past the oldest commit of this repository (or of its shallow clone), so it covers less history than the latest one.";
+
+/** Why there is nothing to compare, or `undefined` when both windows have commits. */
+const noDataReason = ({ comparison, window }: Report): string | undefined => {
+  if (comparison?.previousCommits === 0) {
+    return "No comparison data: the previous window has no commits.";
+  }
+  return window.commits === 0
+    ? "No comparison data: the latest window has no commits."
+    : undefined;
+};
+
 /**
  * The lines of the "Biggest changes" section: the five source files active in
  * both windows that got hotter most, the three highest-ranked source files that
- * became active, and the five modules whose cohesion moved most, each against the
- * previous window. Empty without `report.comparison`.
+ * became active, and the five modules whose cohesion moved most, each against
+ * the previous window. A window without commits has nothing to compare, which
+ * the section says instead of listing nothing; a previous window cut off at the
+ * start of the history carries a note. Empty without `report.comparison`.
  */
 export const changeLines = (
   report: Report,
@@ -136,10 +151,17 @@ export const changeLines = (
   if (comparison === null) {
     return [];
   }
+  const heading = style.bold(
+    `Biggest changes against ${day(comparison.previousSince)} to ${day(comparison.previousUntil)}`,
+  );
+  const truncated = comparison.previousTruncated ? [TRUNCATED_NOTE] : [];
+  const reason = noDataReason(report);
+  if (reason !== undefined) {
+    return [heading, reason, ...truncated, ""];
+  }
   return [
-    style.bold(
-      `Biggest changes against ${day(comparison.previousSince)} to ${day(comparison.previousUntil)}`,
-    ),
+    heading,
+    ...truncated,
     style.dim(
       "Warming files (active in both windows; scores are normalized per window)",
     ),
