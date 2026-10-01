@@ -22,8 +22,18 @@ const APPENDED_EXTENSIONS = [
   ".mjs",
   ".cjs",
 ];
-/** Extensions of files that hold code a parser reads; any other file is an asset. */
-const CODE_EXTENSIONS = new Set(APPENDED_EXTENSIONS.map((e) => e.slice(1)));
+/**
+ * Extensions of files that hold code; any other file is an asset. Component
+ * formats (`.vue`, `.svelte`, `.astro`, `.mdx`) are code that no adapter reads
+ * but that can import, so they are not assets.
+ */
+const CODE_EXTENSIONS = new Set([
+  ...APPENDED_EXTENSIONS.map((e) => e.slice(1)),
+  "vue",
+  "svelte",
+  "astro",
+  "mdx",
+]);
 
 /** Joins POSIX segments, resolving `.` and `..`; undefined when the result leaves the repository. */
 export const joinPath = (
@@ -55,6 +65,20 @@ export const isRelative = (specifier: string): boolean =>
 /** The specifier without the `?query` or `#fragment` that bundlers read (`./icon.svg?url`). */
 export const withoutQuery = (specifier: string): string =>
   specifier.replace(/[?#].*$/u, "");
+
+/** Every directory name and every file name without extension in `paths`, for telling whether a bare specifier could mean local code. */
+export const namesOf = (paths: Iterable<string>): ReadonlySet<string> => {
+  const names = new Set<string>();
+  for (const path of paths) {
+    const segments = path.split("/");
+    const file = segments.pop() ?? "";
+    for (const segment of segments) {
+      names.add(segment);
+    }
+    names.add(file.split(".")[0] ?? file);
+  }
+  return names;
+};
 
 /** Whether `path` has an extension that is not a code file's: an image, a stylesheet, JSON. */
 export const isAssetPath = (path: string): boolean => {

@@ -137,3 +137,29 @@ describe("workspace package names that are not accounted for", () => {
     expect(empty("src/a.ts", "@acme/empty").resolved).toBe(false);
   });
 });
+
+describe("names that could mean Node built-ins or local code", () => {
+  const resolve = resolverFor([
+    "src/constants/index.ts",
+    "src/events.ts",
+    "src/a.ts",
+    "src/Comp.vue",
+    "src/Page.svelte",
+  ]);
+
+  it("accounts for a built-in that no file or directory of the repository is named after", () => {
+    expect(resolve("src/a.ts", "fs").resolved).toBe(true);
+    expect(resolve("src/a.ts", "fs/promises").resolved).toBe(true);
+    expect(resolve("src/a.ts", "node:events").resolved).toBe(true);
+  });
+
+  it("does not account for a built-in name that a directory or a file also carries", () => {
+    expect(resolve("src/a.ts", "constants").resolved).toBe(false);
+    expect(resolve("src/a.ts", "events").resolved).toBe(false);
+  });
+
+  it("does not take a component file for an asset, even though it is tracked", () => {
+    expect(resolve("src/a.ts", "./Comp.vue").resolved).toBe(false);
+    expect(resolve("src/a.ts", "./Page.svelte").resolved).toBe(false);
+  });
+});

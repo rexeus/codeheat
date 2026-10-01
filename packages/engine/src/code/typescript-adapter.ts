@@ -50,9 +50,10 @@ const MENTIONS_AST_ONLY =
   /\brequire\s*[(.]|\bimport\.meta\b|\bnew\s+URL\s*\(|\bexport\s*=|\bexports\b/u;
 /** In TypeScript, `import("x").T` is a type that only the AST shows. */
 const MENTIONS_IMPORT_CALL = /\bimport\s*\(/u;
-/** A source that has no `export` or nothing to export from cannot forward another module. */
+/** A source without `export` or `exports` exports nothing. */
 const MENTIONS_EXPORT = /\bexport/u;
-const MENTIONS_SOURCE = /\bfrom\b|\brequire\s*\(/u;
+/** A source without any of these loads no module, so it has none to forward. */
+const MENTIONS_MODULE = /\b(?:import|require|from)\b|\bnew\s+URL\b/u;
 /** A string literal without escapes or template holes. */
 const PLAIN_LITERAL = /^(["'`])([^"'`$\\]*)\1$/u;
 
@@ -64,8 +65,20 @@ const unique = (specifiers: ReadonlyArray<string>): ReadonlyArray<string> => [
   ...new Set(specifiers),
 ];
 
-const needsAst = (file: string, source: string): boolean =>
+/** Whether the module record leaves open what the file hands on: it exports something it did not import, and loads something. */
+const mayHandOn = (module: ParsedModule["module"]): boolean =>
+  (module.staticImports.length > 0 || module.dynamicImports.length > 0) &&
+  module.staticExports.some(({ entries }) =>
+    entries.some(({ moduleRequest }) => moduleRequest === null),
+  );
+
+const needsAst = (
+  parsed: ParsedModule,
+  file: string,
+  source: string,
+): boolean =>
   MENTIONS_AST_ONLY.test(source) ||
+  mayHandOn(parsed.module) ||
   (TYPESCRIPT_EXTENSIONS.has(extensionOf(file)) &&
     MENTIONS_IMPORT_CALL.test(source));
 
@@ -92,17 +105,6 @@ const reexportedBindings = (module: ParsedModule["module"]): Array<string> => {
   );
 };
 
-/** `export default <expression>`, which may hand on anything the file imports. */
-const exportsDefaultExpression = (module: ParsedModule["module"]): boolean =>
-  module.staticExports.some(({ entries }) =>
-    entries.some(
-      ({ moduleRequest, localName, exportName }) =>
-        moduleRequest === null &&
-        localName.kind === "None" &&
-        exportName.kind === "Default",
-    ),
-  );
-
 const sourceImports = (
   parsed: ParsedModule,
   file: string,
@@ -115,27 +117,31 @@ const sourceImports = (
         source.slice(moduleRequest.start, moduleRequest.end).trim(),
       )?.[2],
   );
-  const fromAst = needsAst(file, source)
-    ? modulesInAst(parsed.program)
-    : { specifiers: [], computed: false, assignsExports: false };
-  const imports = unique([
-    ...staticImports.map(({ moduleRequest }) => moduleRequest.value),
-    ...dynamic.filter((specifier) => specifier !== undefined),
-    ...fromAst.specifiers,
-  ]);
-  const reexports = unique([
-    ...staticExports.flatMap(({ entries }) =>
-      entries.flatMap(({ moduleRequest }) =>
-        moduleRequest === null ? [] : [moduleRequest.value],
+  const imported = new Map(
+    staticImports.flatMap(({ moduleRequest, entries }) =>
+      entries.map(
+        ({ localName }) => [localName.value, moduleRequest.value] as const,
       ),
     ),
-    ...reexportedBindings(parsed.module),
-  ]);
-  const handsOnEverything =
-    fromAst.assignsExports || exportsDefaultExpression(parsed.module);
+  );
+  const fromAst = needsAst(parsed, file, source)
+    ? modulesInAst(parsed.program, imported)
+    : { specifiers: [], computed: false, handedOn: [] };
   return {
-    imports,
-    reexports: handsOnEverything ? imports : reexports,
+    imports: unique([
+      ...staticImports.map(({ moduleRequest }) => moduleRequest.value),
+      ...dynamic.filter((specifier) => specifier !== undefined),
+      ...fromAst.specifiers,
+    ]),
+    reexports: unique([
+      ...staticExports.flatMap(({ entries }) =>
+        entries.flatMap(({ moduleRequest }) =>
+          moduleRequest === null ? [] : [moduleRequest.value],
+        ),
+      ),
+      ...reexportedBindings(parsed.module),
+      ...fromAst.handedOn,
+    ]),
     computed: fromAst.computed || dynamic.includes(undefined),
   };
 };
@@ -176,14 +182,14 @@ const readImports = (
  * or `require.context()`.
  *
  * A file re-exports a module when it says `export … from`, exports a binding
- * it imported (`import a from "x"; export default a;`), or exports something
- * it computes: after `export default <expression>`, `module.exports = …`,
- * `exports.x = …`, or `export = …`, everything the file imports counts as
- * re-exported, since any of it may be what the file hands on.
+ * it imported (`import a from "x"; export default a;`), or hands it on inside
+ * an exported expression: the initializer of an exported variable, an
+ * `export default` expression, `export =`, `module.exports = …`, `exports.x = …`
+ * (see `handedOn`). Use inside the body of an exported function is not.
  */
 export const typescriptAdapter = (parse: ParseModule): LanguageAdapter => ({
   extensions: EXTENSIONS,
   imports: (file, source) => readImports(parse, file, source),
   canReexport: (source) =>
-    MENTIONS_EXPORT.test(source) && MENTIONS_SOURCE.test(source),
+    MENTIONS_EXPORT.test(source) && MENTIONS_MODULE.test(source),
 });

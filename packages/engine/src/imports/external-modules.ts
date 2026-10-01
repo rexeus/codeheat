@@ -68,20 +68,24 @@ const typesPackageOf = (name: string): string =>
 
 /**
  * Whether `specifier` names a module that is not repository code but is
- * accounted for: a Node built-in (also with a subpath such as `fs/promises`),
- * a protocol import, or a package in `declared`, the names the repository's
- * manifests declare as dependencies (a declared `@types/x` declares `x`).
+ * accounted for: a `node:`, `npm:`, `jsr:` or http import, a package in
+ * `declared`, the names the repository's manifests declare as dependencies (a
+ * declared `@types/x` declares `x`), or a Node built-in (also with a subpath
+ * such as `fs/promises`) written without `node:`. A bundler or tsconfig
+ * `baseUrl` can make such a bare name mean local code, so it counts only when
+ * no directory or file of the repository (`localNames`) carries its name.
  */
 export const isAccountedExternal = (
   specifier: string,
   declared: ReadonlySet<string>,
+  localNames: ReadonlySet<string>,
 ): boolean => {
   if (PROTOCOL.test(specifier)) {
     return true;
   }
   const { name } = splitPackageName(specifier);
   return (
-    NODE_BUILTINS.has(name) ||
+    (NODE_BUILTINS.has(name) && !localNames.has(name)) ||
     declared.has(name) ||
     declared.has(typesPackageOf(name))
   );

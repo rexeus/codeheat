@@ -2,6 +2,16 @@
 // module record does not cover: module names that only show in the AST.
 import { Predicate } from "effect";
 
+import {
+  isMember,
+  isNamed,
+  plainString,
+  requiredModule,
+  walk,
+} from "./ast-nodes.js";
+import type { Node } from "./ast-nodes.js";
+import { handedOn } from "./typescript-exports.js";
+
 /** Modules the AST names beyond the module record. */
 export type AstModules = {
   /**
@@ -15,53 +25,12 @@ export type AstModules = {
    * or `require.context()`.
    */
   readonly computed: boolean;
-  /**
-   * The file assigns what it exports outside `export` statements:
-   * `module.exports = …`, `exports.x = …`, or `export = …`. What the file
-   * requires may be what it exports.
-   */
-  readonly assignsExports: boolean;
+  /** The specifiers among all of the file's whose modules the file exports, see `handedOn`. */
+  readonly handedOn: ReadonlyArray<string>;
 };
 
-type Node = { readonly [key: PropertyKey]: unknown };
-
-/** What one AST node says: a module it names, that it loads some by expression, or that it assigns exports. */
-type Finding =
-  | { readonly specifier: string }
-  | { readonly computed: true }
-  | { readonly assignsExports: true };
-
-/** The text of a string literal or of a template literal without holes. */
-const plainString = (node: unknown): string | undefined => {
-  if (!Predicate.isObject(node)) {
-    return undefined;
-  }
-  if (node["type"] === "Literal" && typeof node["value"] === "string") {
-    return node["value"];
-  }
-  const { quasis, expressions } = node;
-  const first: unknown = Array.isArray(quasis) ? quasis[0] : undefined;
-  if (
-    node["type"] !== "TemplateLiteral" ||
-    !Array.isArray(expressions) ||
-    expressions.length > 0 ||
-    !Predicate.isObject(first) ||
-    !Predicate.isObject(first["value"])
-  ) {
-    return undefined;
-  }
-  const cooked = first["value"]["cooked"];
-  return typeof cooked === "string" ? cooked : undefined;
-};
-
-const isNamed = (node: unknown, type: string, name: string): boolean =>
-  Predicate.isObject(node) && node["type"] === type && node["name"] === name;
-
-const isMember = (node: unknown, object: string, property: string): boolean =>
-  Predicate.isObject(node) &&
-  node["type"] === "MemberExpression" &&
-  isNamed(node["object"], "Identifier", object) &&
-  isNamed(node["property"], "Identifier", property);
+/** What one AST node says about a module: it names it, or it loads some by expression. */
+type Finding = { readonly specifier: string } | { readonly computed: true };
 
 /** `import.meta`, which the AST shows as a meta property. */
 const isImportMeta = (node: unknown): boolean =>
@@ -82,6 +51,7 @@ const isBundlerLoader = (callee: unknown): boolean =>
 const isExportsObject = (node: unknown): boolean =>
   isNamed(node, "Identifier", "exports") || isMember(node, "module", "exports");
 
+/** `module.exports = …`, `exports.x = …`, or `module.exports.x = …`. */
 const isExportsAssignment = (node: Node): boolean => {
   const target = node["left"];
   return (
@@ -118,7 +88,7 @@ const findingOf = (node: Node): Finding | undefined => {
       return { computed: true };
     }
     return isNamed(node["callee"], "Identifier", "require")
-      ? moduleFinding(plainString(first))
+      ? moduleFinding(requiredModule(node))
       : undefined;
   }
   if (isUrlOfImportMeta(node)) {
@@ -131,37 +101,38 @@ const findingOf = (node: Node): Finding | undefined => {
   ) {
     return moduleFinding(plainString(reference["expression"]));
   }
-  if (node["type"] === "TSImportType") {
-    return moduleFinding(plainString(node["source"]));
-  }
-  return node["type"] === "TSExportAssignment" || isExportsAssignment(node)
-    ? { assignsExports: true }
+  return node["type"] === "TSImportType"
+    ? moduleFinding(plainString(node["source"]))
     : undefined;
 };
 
 /**
  * Walks `program` (an ESTree AST) for the modules it names outside the module
- * record. An explicit stack keeps deep trees off the call stack.
+ * record, and for the imports it hands on (see `handedOn`). `imported` maps
+ * the local names of the file's static imports to their specifiers.
  */
-export const modulesInAst = (program: unknown): AstModules => {
+export const modulesInAst = (
+  program: unknown,
+  imported: ReadonlyMap<string, string>,
+): AstModules => {
   const specifiers: Array<string> = [];
+  const assigned: Array<unknown> = [];
   let computed = false;
-  let assignsExports = false;
-  const pending: Array<unknown> = [program];
-  for (let node = pending.pop(); node !== undefined; node = pending.pop()) {
-    if (Array.isArray(node)) {
-      pending.push(...(node as ReadonlyArray<unknown>));
-    } else if (Predicate.isObject(node)) {
-      const finding = findingOf(node);
-      if (finding !== undefined && "specifier" in finding) {
-        specifiers.push(finding.specifier);
-      } else if (finding !== undefined && "computed" in finding) {
-        computed = true;
-      } else if (finding !== undefined) {
-        assignsExports = true;
-      }
-      pending.push(...Object.values(node));
+  walk(program, (node) => {
+    const finding = findingOf(node);
+    if (finding !== undefined && "specifier" in finding) {
+      specifiers.push(finding.specifier);
+    } else if (finding !== undefined) {
+      computed = true;
     }
-  }
-  return { specifiers, computed, assignsExports };
+    if (isExportsAssignment(node)) {
+      assigned.push(node["right"]);
+    }
+  });
+  const body: unknown = Predicate.isObject(program) ? program["body"] : [];
+  return {
+    specifiers,
+    computed,
+    handedOn: handedOn(Array.isArray(body) ? body : [], imported, assigned),
+  };
 };

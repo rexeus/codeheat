@@ -11,6 +11,7 @@ import {
   isAssetPath,
   isRelative,
   isTypeScriptFile,
+  namesOf,
   joinPath,
   withoutQuery,
 } from "./relative-path.js";
@@ -52,6 +53,7 @@ const ACCOUNTED: Resolution = { files: [], resolved: true };
 
 export const createResolver = (world: ResolveWorld): Resolver => {
   const { universe, tracked, packages, ambiguous, dependencies } = world;
+  const localNames = namesOf(universe);
 
   /** The universe files that `base` stands for when imported by `from`; unresolved when only an excluded file or nothing exists. */
   const code = (from: string, base: string | undefined): Resolution => {
@@ -102,7 +104,7 @@ export const createResolver = (world: ResolveWorld): Resolver => {
     if (workspacePackage !== undefined) {
       return workspace(from, workspacePackage, subpath);
     }
-    return isAccountedExternal(specifier, dependencies)
+    return isAccountedExternal(specifier, dependencies, localNames)
       ? ACCOUNTED
       : UNRESOLVED;
   };

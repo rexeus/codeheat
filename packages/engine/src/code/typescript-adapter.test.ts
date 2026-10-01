@@ -16,7 +16,7 @@ describe("typescript adapter ES module syntax", () => {
         'import { type B, C } from "./b";',
         'import d from "./d";',
         'import "./side-effect";',
-        "export const used: [A, B] = [C, d] as never;",
+        "export function used(): [A, B] { return [C, d] as never; }",
       ].join("\n"),
     );
 
