@@ -31,43 +31,49 @@ Requires Node.js 22 or newer and `git` on your PATH. Works for any language.
 Run `inspect` right before editing a file:
 
 ```bash
-npx codeheat inspect packages/interpret/src/line-work.ts --json
+npx codeheat inspect packages/billing/src/invoice.ts --json
 ```
 
 ```jsonc
 {
   "schemaVersion": 1,
   "window": {
-    "since": "2025-09-30T06:19:31.076Z",
-    "until": "2026-09-30T06:19:31.076Z",
-    "commits": 210,
-    "couplingCommits": 210,
+    "since": "2025-09-29T12:00:00.000Z",
+    "until": "2026-09-29T12:00:00.000Z",
+    "commits": 212,
+    "couplingCommits": 198,
   },
   "matches": [
     {
-      "path": "packages/interpret/src/line-work.ts",
-      "rank": 3,
-      "of": 273,
-      "score": 0.7699,
-      "revisions": 17,
-      "loc": 221,
-      "complexity": { "total": 261, "mean": 1.181, "max": 6 },
+      "path": "packages/billing/src/invoice.ts",
+      "rank": 1,
+      "of": 36,
+      "score": 0.97,
+      "revisions": 48,
+      "loc": 964,
+      "complexity": { "total": 1900, "mean": 1.97, "max": 9 },
       "reasons": [
-        "changed in 17 commits (#3 of 273)",
-        "indentation complexity 261 (#81 of 273)",
-        "co-changes with packages/interpret/src/constants.ts in 71% of its commits",
+        "changed in 48 commits (#1 of 36)",
+        "indentation complexity 1900 (#2 of 36)",
+        "co-changes with packages/billing/src/tax.ts in 50% of its commits",
       ],
       "partners": [
         {
-          "path": "packages/interpret/src/constants.ts",
-          "sharedCommits": 12,
-          "probability": 0.7059,
+          "path": "packages/billing/src/invoice.test.ts",
+          "sharedCommits": 31,
+          "probability": 0.6458,
+          "testPair": true,
+        },
+        {
+          "path": "packages/billing/src/tax.ts",
+          "sharedCommits": 24,
+          "probability": 0.5,
           "testPair": false,
         },
         {
-          "path": "packages/interpret/src/line-network.ts",
-          "sharedCommits": 10,
-          "probability": 0.5882,
+          "path": "packages/web/src/routes/invoices.tsx",
+          "sharedCommits": 14,
+          "probability": 0.2917,
           "testPair": false,
         },
       ],
@@ -76,6 +82,8 @@ npx codeheat inspect packages/interpret/src/line-work.ts --json
   "unmatched": [],
 }
 ```
+
+The example shows an illustrative shop repository (the one in `fixtures/report.sample.json`).
 
 `probability` reads as: when this file changed, the partner changed too in that share of commits. Globs work, so `inspect "packages/*/src/index.ts"` shows how often public barrels change and what changes with them.
 
