@@ -95,6 +95,9 @@ const partnerRow = (context: Context, partner: Partner): HTMLElement => {
   if (partner.crossesModule) {
     meta.append(h("span", "badge cross-module", "other module"));
   }
+  if (partner.imports === "none") {
+    meta.append(h("span", "badge hidden-coupling", "no import"));
+  }
   return h(
     "li",
     "",

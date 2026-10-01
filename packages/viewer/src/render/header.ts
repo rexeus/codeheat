@@ -140,6 +140,7 @@ export const renderLegend = (legend: HTMLElement): void => {
       h("span", "muted", "Partners"),
       outlineSample("partner", "same module"),
       outlineSample("partner cross-module", "other module"),
+      outlineSample("partner hidden-coupling", "no import"),
     ),
   );
 };
