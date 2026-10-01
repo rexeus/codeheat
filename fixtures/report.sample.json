@@ -1131,6 +1131,11 @@
       "implementationCommits": 29,
       "leakage": 0.2069,
       "leakyInterface": false,
+      "depth": {
+        "exports": 38,
+        "implementationLines": 505,
+        "linesPerExport": 13.2895
+      },
       "trend": {
         "previousCohesion": 0.28,
         "cohesionDelta": 0.12
@@ -1159,6 +1164,7 @@
       "implementationCommits": 24,
       "leakage": null,
       "leakyInterface": false,
+      "depth": null,
       "trend": {
         "previousCohesion": 0.58,
         "cohesionDelta": -0.08
@@ -1191,6 +1197,7 @@
       "implementationCommits": 58,
       "leakage": null,
       "leakyInterface": false,
+      "depth": null,
       "trend": {
         "previousCohesion": 0.7345,
         "cohesionDelta": -0.2
@@ -1227,6 +1234,11 @@
       "implementationCommits": 71,
       "leakage": 0.1268,
       "leakyInterface": false,
+      "depth": {
+        "exports": 6,
+        "implementationLines": 3105,
+        "linesPerExport": 517.5
+      },
       "trend": {
         "previousCohesion": 0.5241,
         "cohesionDelta": 0.03
@@ -1259,6 +1271,11 @@
       "implementationCommits": 43,
       "leakage": 0.1395,
       "leakyInterface": false,
+      "depth": {
+        "exports": 9,
+        "implementationLines": 1029,
+        "linesPerExport": 114.3333
+      },
       "trend": {
         "previousCohesion": 0.6636,
         "cohesionDelta": -0.05

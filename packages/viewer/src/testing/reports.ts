@@ -55,6 +55,7 @@ export const moduleStats = (
   implementationCommits: 10,
   leakage: null,
   leakyInterface: false,
+  depth: null,
   trend: null,
   ...overrides,
 });

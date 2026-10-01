@@ -22,6 +22,25 @@ const ModuleTrend = Schema.Struct({
   cohesionDelta: UnitDelta,
 });
 
+/** How much implementation sits behind a module's public interface. */
+const ModuleDepth = Schema.Struct({
+  /**
+   * Distinct symbols the module's entry points export, following
+   * `export * from`, `export { x } from`, and `export * as ns from` within the
+   * module. A type counts like a value, `default` like a name.
+   */
+  exports: Schema.Int.check(Schema.isGreaterThanOrEqualTo(1)),
+  /** Non-blank lines of the module's files that are neither entry points nor test code. At least 1. */
+  implementationLines: Schema.Int.check(Schema.isGreaterThanOrEqualTo(1)),
+  /**
+   * `implementationLines / exports`, rounded to 4 decimals. A low value is a
+   * shallow module (a wide interface with little behind it), a high one a deep
+   * module. It depends on how the code is divided into files, and on entry
+   * points holding code of their own, whose lines count for neither side.
+   */
+  linesPerExport: Schema.Finite.check(Schema.isGreaterThanOrEqualTo(0)),
+});
+
 /** A unit of the codebase and how self-contained its changes are. */
 export const Module = Schema.Struct({
   /** Repository-relative POSIX directory; "." for files at the repository root. */
@@ -67,6 +86,18 @@ export const Module = Schema.Struct({
    * cohesion order, so look for this flag rather than for the first entries.
    */
   leakyInterface: Schema.Boolean,
+  /**
+   * Implementation size against interface width, read from the code as it is
+   * now (not from the window). Null whenever it cannot be told exactly: the
+   * module has no entry points, one of them is not TypeScript or JavaScript or
+   * does not parse (or no parser was available), it exports in a way that
+   * cannot be listed (`export =`, CommonJS), an `export * from` cannot be
+   * followed within the module (an external package, an unresolved specifier,
+   * a file of another module), it exports nothing, or no file is left to
+   * count as implementation (all code sits in the entry points, or the module
+   * is `testOnly`). Null is never a depth of zero.
+   */
+  depth: Schema.NullOr(ModuleDepth),
   /**
    * Null without `--compare`, and unless the module has at least
    * `Thresholds.minModuleCommits` counted commits in both windows (so also

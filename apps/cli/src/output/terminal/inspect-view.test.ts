@@ -64,6 +64,7 @@ const billing: Module = {
   implementationCommits: 71,
   leakage: 0.1268,
   leakyInterface: false,
+  depth: null,
   trend: null,
 };
 

@@ -119,6 +119,7 @@ const toModule = (
       .slice(0, MAX_PARTNERS),
     ...churn,
     leakyInterface: isLeakyInterface(churn, testOnly),
+    depth: null,
     trend: null,
   };
 };
