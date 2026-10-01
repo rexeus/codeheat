@@ -123,16 +123,21 @@ const bindingOf = (
  * forwards with `export * from`; undefined when an entry is not understood, or
  * when the file also exports in a way the record lacks (`export =`, CommonJS:
  * see `exportsOutsideRecord`), because the list would then be incomplete.
+ * `program` is called only for a source that mentions such an export, since
+ * the parser builds the AST on first access.
  */
 export const exportedSymbols = (
   record: {
     readonly staticImports: StaticImports;
     readonly staticExports: StaticExports;
   },
-  program: unknown,
+  program: () => unknown,
   source: string,
 ): SourceExports | undefined => {
-  if (MENTIONS_UNLISTED_EXPORT.test(source) && exportsOutsideRecord(program)) {
+  if (
+    MENTIONS_UNLISTED_EXPORT.test(source) &&
+    exportsOutsideRecord(program())
+  ) {
     return undefined;
   }
   const imports = readImports(record.staticImports);

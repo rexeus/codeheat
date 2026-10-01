@@ -169,6 +169,34 @@ describe("typescript adapter exports of odd input", () => {
   });
 });
 
+/** Counts how often the AST is read; the parser builds it on first access. */
+const astReads = (source: string): number => {
+  let reads = 0;
+  const counting = typescriptAdapter((file, text, options) => {
+    const parsed = parseSync(file, text, options);
+    return {
+      errors: parsed.errors,
+      module: parsed.module,
+      get program() {
+        reads += 1;
+        return parsed.program;
+      },
+    };
+  });
+  counting.exports("a.ts", source);
+  return reads;
+};
+
+describe("typescript adapter exports and the AST", () => {
+  it("leaves the AST alone for a file without a CommonJS or export-assignment form", () => {
+    expect(astReads('export * from "./a";\nexport const b = 1;')).toBe(0);
+  });
+
+  it("reads the AST of a file that mentions exports in a way the record may lack", () => {
+    expect(astReads("export const a = 1;\nmodule.exports.b = 2;")).toBe(1);
+  });
+});
+
 describe("typescript adapter exports it cannot list", () => {
   it.each([
     ["export =", "const api = {};\nexport = api;", "api.ts"],

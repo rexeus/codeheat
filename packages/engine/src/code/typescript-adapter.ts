@@ -187,8 +187,9 @@ export const typescriptAdapter = (parse: ParseModule): LanguageAdapter => ({
       sourceImports(parsed, file, source),
     ),
   exports: (file, source) =>
-    readParsed(parse, file, source, ({ module, program }) =>
-      exportedSymbols(module, program, source),
+    // `program` is a lazy getter that materializes the whole AST: read it only where needed.
+    readParsed(parse, file, source, (parsed) =>
+      exportedSymbols(parsed.module, () => parsed.program, source),
     ),
   canReexport: (source) =>
     MENTIONS_EXPORT.test(source) && MENTIONS_MODULE.test(source),
