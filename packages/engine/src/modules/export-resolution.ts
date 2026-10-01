@@ -40,13 +40,18 @@ const binding = (id: string, exact: boolean): Resolution => ({
 /** Merges what the `export *` sources of one file say about a name. */
 const combine = (results: ReadonlyArray<Resolution>): Resolution => {
   const found = results.filter(({ kind }) => kind !== "missing");
+  const bindings = found.filter((result) => result.kind === "binding");
+  const exactIds = new Set(
+    bindings.filter(({ exact }) => exact).map(({ id }) => id),
+  );
+  // Two exact bindings that differ settle it, whatever else the sources say;
+  // checking this first keeps the answer independent of the order of visits.
+  if (found.some(({ kind }) => kind === "ambiguous") || exactIds.size > 1) {
+    return AMBIGUOUS;
+  }
   if (found.some(({ kind }) => kind === "unknown")) {
     return UNKNOWN;
   }
-  if (found.some(({ kind }) => kind === "ambiguous")) {
-    return AMBIGUOUS;
-  }
-  const bindings = found.filter((result) => result.kind === "binding");
   const [first] = bindings;
   if (first === undefined) {
     return MISSING;

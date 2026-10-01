@@ -191,6 +191,27 @@ describe("resolveExport with a chain that was cut", () => {
   });
 });
 
+describe("resolveExport when cut and exact sources meet", () => {
+  it("calls a name ambiguous once two exact bindings differ, whichever source is cut and in whatever order", () => {
+    const sources = ["./cut", "./a", "./d"];
+    const listings = {
+      "./cut": { names: { x: taken("./unread", "x") } },
+      "./a": { names: { x: local("x") } },
+      "./d": { names: { x: local("x") } },
+    };
+
+    for (const forwarded of [sources, sources.toReversed()]) {
+      const world = worldOf({ "./index": { forwarded }, ...listings }, [
+        "./unread",
+      ]);
+
+      expect(resolveExport(world, "./index", "x")).toStrictEqual({
+        kind: "ambiguous",
+      });
+    }
+  });
+});
+
 describe("resolveExport of default, cycles, and hops out of sight", () => {
   it("does not forward default through export-star, but resolves a file's own", () => {
     const world = worldOf({
