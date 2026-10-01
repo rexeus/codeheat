@@ -1,5 +1,6 @@
 import type { PlacedLeaf } from "../layout/treemap.js";
 import type { Selection } from "../selection/highlight.js";
+import type { Partner } from "../selection/partners.js";
 import type { SvgFactory } from "./dom.js";
 
 const SELECTED_WIDTH = 3;
@@ -22,10 +23,19 @@ const outline = (
     "stroke-width": strokeWidth,
   });
 
+const outlineClass = ({ crossesModule, testPair }: Partner): string => {
+  if (crossesModule) {
+    return "outline partner cross-module";
+  }
+  return testPair ? "outline partner test-pair" : "outline partner";
+};
+
 /**
  * Outline rectangles for the selected file and its partners, drawn above the
  * tiles. A partner's stroke grows with its coupling degree, and a test pair is
- * dashed. Returns nothing without a selection.
+ * dashed. A partner in another module is dotted, so cross-module coupling
+ * reads at a glance; a test pair that also crosses a module stays dotted.
+ * Returns nothing without a selection.
  */
 export const drawOutlines = (
   create: SvgFactory,
@@ -46,9 +56,7 @@ export const drawOutlines = (
     if (partner === undefined) {
       return [];
     }
-    const className = partner.testPair
-      ? "outline partner test-pair"
-      : "outline partner";
+    const className = outlineClass(partner);
     return [
       outline(
         create,

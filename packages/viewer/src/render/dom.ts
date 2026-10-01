@@ -1,3 +1,5 @@
+import { splitPath } from "./format.js";
+
 type Child = Node | string;
 
 /**
@@ -49,3 +51,20 @@ export const svgFactory =
     }
     return element;
   };
+
+/** A path with its directory receding and its last segment emphasized. */
+export const pathLabel = (path: string): HTMLElement => {
+  const { dir, name } = splitPath(path);
+  return h(
+    "span",
+    "path",
+    h("span", "path-dir", dir),
+    h("strong", "path-name", name),
+  );
+};
+
+/** A titled block of the side panel. */
+export const section = (
+  title: string,
+  ...content: readonly Node[]
+): HTMLElement => h("section", "panel-section", h("h3", "", title), ...content);

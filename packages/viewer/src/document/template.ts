@@ -22,7 +22,7 @@ export const renderReportHtml = (report: Report): string => `<!doctype html>
 <style>${viewerStyles}</style>
 </head>
 <body>
-<div class="app">
+<div id="app" class="app" data-mode="heat">
   <header class="header">
     <div class="heading">
       <h1 id="repository"></h1>
@@ -31,12 +31,17 @@ export const renderReportHtml = (report: Report): string => `<!doctype html>
     <div id="legend" class="legend"></div>
   </header>
   <div class="toolbar">
+    <fieldset id="mode-switch" class="mode-switch">
+      <legend>Color by</legend>
+      <label><input type="radio" name="color-mode" value="heat" checked><span>Heat</span></label>
+      <label><input type="radio" name="color-mode" value="cohesion"><span>Cohesion</span></label>
+    </fieldset>
     <input id="filter" type="search" autocomplete="off" spellcheck="false" aria-label="Filter files" placeholder="Filter by path or glob, e.g. billing or src/**/*.ts">
     <span id="filter-count" class="filter-count"></span>
   </div>
   <main class="content">
     <div id="stage" class="stage">
-      <svg id="treemap" role="img" aria-label="Treemap of files: area is lines of code, color is hotspot score"></svg>
+      <svg id="treemap" role="img" aria-label="Treemap of files: area is lines of code, color is hotspot score or module cohesion"></svg>
       <div id="tooltip" class="tooltip" hidden></div>
     </div>
     <aside id="panel" class="panel" aria-live="polite"></aside>

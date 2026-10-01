@@ -1,4 +1,4 @@
-import type { Coupling, FileStats, Report } from "@codeheat/engine";
+import type { Coupling, FileStats, Module, Report } from "@codeheat/engine";
 
 /** A file with the given path; every metric can be overridden. */
 export const fileStats = (
@@ -34,10 +34,26 @@ export const coupling = (
   ...overrides,
 });
 
+/** A package module with the given path; every measure can be overridden. */
+export const moduleStats = (
+  path: string,
+  overrides: Partial<Module> = {},
+): Module => ({
+  path,
+  kind: "package",
+  files: 2,
+  commits: 10,
+  localCommits: 6,
+  cohesion: 0.6,
+  partners: [],
+  ...overrides,
+});
+
 /** A minimal valid report around the given files and couplings. */
 export const reportOf = (
   files: readonly FileStats[],
   couplings: readonly Coupling[] = [],
+  modules: readonly Module[] = [],
 ): Report => ({
   schemaVersion: 1,
   tool: { name: "codeheat", version: "0.0.0" },
@@ -60,8 +76,12 @@ export const reportOf = (
     maxMeanLineLength: 300,
     maxFileBytes: 1048576,
   },
-  totals: { files: files.length, couplings: couplings.length, modules: 0 },
+  totals: {
+    files: files.length,
+    couplings: couplings.length,
+    modules: modules.length,
+  },
   files,
   couplings,
-  modules: [],
+  modules,
 });

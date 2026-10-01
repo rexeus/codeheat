@@ -31,6 +31,14 @@ describe("renderReportHtml", () => {
     expect(html).toContain("</html>");
   });
 
+  it("offers the heat and cohesion color modes as radio buttons, heat first", () => {
+    const html = renderReportHtml(report);
+
+    expect(html).toMatch(
+      /name="color-mode" value="heat" checked>.*name="color-mode" value="cohesion">/su,
+    );
+  });
+
   it("embeds the whole report so it round-trips through JSON", () => {
     expect(embeddedReport(renderReportHtml(report))).toEqual(report);
   });

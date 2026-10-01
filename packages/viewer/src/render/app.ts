@@ -2,7 +2,10 @@ import type { FileStats, Report } from "@codeheat/engine";
 
 import { makeHeatScale } from "../color/heat-scale.js";
 import { buildTree } from "../layout/hierarchy.js";
+import type { LeafNode } from "../layout/hierarchy.js";
 import { layoutTreemap } from "../layout/treemap.js";
+import { indexModules } from "../modules/module-index.js";
+import type { ModuleIndex } from "../modules/module-index.js";
 import { createPathMatcher } from "../selection/filter.js";
 import type { PathMatcher } from "../selection/filter.js";
 import { highlightOf, selectionOf } from "../selection/highlight.js";
@@ -12,12 +15,15 @@ import { byId } from "./dom.js";
 import { showEmptyNotice } from "./empty-report.js";
 import { formatCount } from "./format.js";
 import { renderHeader, renderLegend } from "./header.js";
+import { mountModeSwitch } from "./mode-switch.js";
 import { OVERVIEW_HOTSPOTS, createPanel } from "./panel.js";
 import { createTooltip } from "./tooltip.js";
 import { createTreemapView } from "./treemap-view.js";
 
 /** The skeleton elements the page template provides. */
 const findPage = () => ({
+  app: byId("app", HTMLElement),
+  modeSwitch: byId("mode-switch", HTMLFieldSetElement),
   stage: byId("stage", HTMLElement),
   filterInput: byId("filter", HTMLInputElement),
   filterCount: byId("filter-count", HTMLElement),
@@ -31,10 +37,16 @@ type Page = ReturnType<typeof findPage>;
 /** Builds the tooltip, panel and treemap; every selection change goes to `select`. */
 const createParts = (
   report: Report,
+  modules: ModuleIndex,
   page: Page,
   select: (path: string | null) => void,
 ) => {
-  const tooltip = createTooltip(page.tooltip, page.stage, report.files.length);
+  const tooltip = createTooltip(
+    page.tooltip,
+    page.stage,
+    report.files.length,
+    modules,
+  );
   const heat = makeHeatScale(report.files.map(({ score }) => score));
   const panel = createPanel(
     page.panel,
@@ -42,6 +54,8 @@ const createParts = (
       files: new Map(report.files.map((file) => [file.path, file])),
       hotspots: report.files,
       heat,
+      modules: report.modules,
+      moduleOf: modules.moduleOf,
       thresholds: report.thresholds,
     },
     {
@@ -51,7 +65,12 @@ const createParts = (
       },
     },
   );
-  const view = createTreemapView(page.treemap, heat, {
+  const colors = {
+    heat,
+    cohesion: (node: LeafNode) =>
+      modules.cohesionOf(node.kind === "file" ? [node.path] : node.paths),
+  };
+  const view = createTreemapView(page.treemap, colors, {
     hover: (leaf, event) => {
       if (leaf === null) {
         tooltip.hide();
@@ -72,6 +91,18 @@ const matchSummary = (
     ? ""
     : `${formatCount(files.filter(({ path }) => matcher(path)).length)} of ${formatCount(files.length)} files match`;
 
+/** The heading, the legend and the color-mode switch. */
+const mountChrome = (report: Report, page: Page): void => {
+  renderHeader(
+    report,
+    byId("repository", HTMLElement),
+    byId("summary", HTMLElement),
+  );
+  renderLegend(byId("legend", HTMLElement));
+  mountModeSwitch(page.app, page.modeSwitch);
+  showEmptyNotice(report, page.stage);
+};
+
 /**
  * Renders `report` into the skeleton the page template provides and wires
  * hover, selection, the filter and resizing. Every path reaches the DOM as text.
@@ -90,9 +121,14 @@ export const mountViewer = (report: Report): void => {
   let selection: Selection | null = null;
   let matcher: PathMatcher | null = null;
 
-  const { panel, view } = createParts(report, page, (path) => {
-    select(path);
-  });
+  const { panel, view } = createParts(
+    report,
+    indexModules(report.files, report.modules),
+    page,
+    (path) => {
+      select(path);
+    },
+  );
 
   const paint = (): void => {
     view.paint(({ node }) => {
@@ -120,13 +156,7 @@ export const mountViewer = (report: Report): void => {
     paint();
   };
 
-  renderHeader(
-    report,
-    byId("repository", HTMLElement),
-    byId("summary", HTMLElement),
-  );
-  renderLegend(byId("legend", HTMLElement));
-  showEmptyNotice(report, page.stage);
+  mountChrome(report, page);
   panel.showOverview();
   draw();
 

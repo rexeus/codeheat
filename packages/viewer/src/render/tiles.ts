@@ -1,13 +1,22 @@
+import { cohesionStep } from "../color/cohesion-scale.js";
 import type { HeatScale } from "../color/heat-scale.js";
+import type { LeafNode } from "../layout/hierarchy.js";
 import { fitLabel } from "../layout/label.js";
 import { GROUP_HEADER_HEIGHT } from "../layout/treemap.js";
 import type { PlacedGroup, PlacedLeaf } from "../layout/treemap.js";
 import type { SvgFactory } from "./dom.js";
-import { formatScore } from "./format.js";
+import { formatPercent, formatScore } from "./format.js";
 
 const LABEL_INDENT = 4;
 const MIN_LABEL_HEIGHT = 18;
 const MIN_SCORE_LINE_HEIGHT = 42;
+
+/** How a tile gets its color in each color mode. */
+export type TileColors = {
+  readonly heat: HeatScale;
+  /** The cohesion a leaf is colored by in cohesion mode; `null` means no data. */
+  readonly cohesion: (node: LeafNode) => number | null;
+};
 
 /** The score a leaf is colored by; an aggregate shows its hottest file. */
 const leafScore = ({ node }: PlacedLeaf): number =>
@@ -40,21 +49,25 @@ export const drawGroup = (
 };
 
 /**
- * One tile: a rectangle colored by score, with the file name and score when
- * there is room. `index` lets event handlers find the leaf again.
+ * One tile: a rectangle with the file name and, when there is room, a score
+ * line. It carries a step for each color mode (`data-step` for heat,
+ * `data-cohesion` for cohesion) and both score lines; the stylesheet shows the
+ * ones of the active mode. `index` lets event handlers find the leaf again.
  */
 export const drawLeaf = (
   create: SvgFactory,
   leaf: PlacedLeaf,
   index: number,
-  heat: HeatScale,
+  colors: TileColors,
 ): SVGElement => {
   const { x0, y0, x1, y1 } = leaf.rect;
   const [width, height] = [x1 - x0, y1 - y0];
+  const cohesion = colors.cohesion(leaf.node);
   const tile = create("g", {
     class: "tile",
     "data-index": index,
-    "data-step": heat(leafScore(leaf)),
+    "data-step": colors.heat(leafScore(leaf)),
+    "data-cohesion": cohesionStep(cohesion),
   });
   tile.append(create("rect", { x: x0, y: y0, width, height }));
   const title =
@@ -78,7 +91,13 @@ export const drawLeaf = (
       y: y0 + 26,
     });
     score.textContent = formatScore(leafScore(leaf));
-    tile.append(score);
+    const share = create("text", {
+      class: "tile-cohesion",
+      x: x0 + LABEL_INDENT,
+      y: y0 + 26,
+    });
+    share.textContent = cohesion === null ? "no data" : formatPercent(cohesion);
+    tile.append(score, share);
   }
   return tile;
 };

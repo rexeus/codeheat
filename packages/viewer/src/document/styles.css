@@ -2,6 +2,10 @@
  * Heat ramp: one orange hue, stepped in OKLCH lightness like the documented
  * sequential ramp. Light appearance runs pale to dark; dark appearance flips
  * the anchor so "little heat" recedes into the surface and "hot" glows.
+ * Cohesion ramp: one violet hue on its own scale, steps 1 (least cohesive,
+ * the attention end) to 6 (most cohesive, calm). It follows the same rule:
+ * attention is the dark end on a light surface and the bright end on a dark
+ * one; the calm end stays at least 2:1 against the surface.
  */
 :root {
   color-scheme: light dark;
@@ -37,6 +41,19 @@
   --ink-6: var(--ink-light);
   --ink-7: var(--ink-light);
   --ink-8: var(--ink-light);
+
+  --cohesion-1: #502684;
+  --cohesion-2: #6938a7;
+  --cohesion-3: #7f51c1;
+  --cohesion-4: #956ed2;
+  --cohesion-5: #aa8dde;
+  --cohesion-6: #bfaae8;
+  --cohesion-ink-1: var(--ink-light);
+  --cohesion-ink-2: var(--ink-light);
+  --cohesion-ink-3: var(--ink-light);
+  --cohesion-ink-4: var(--ink-dark);
+  --cohesion-ink-5: var(--ink-dark);
+  --cohesion-ink-6: var(--ink-dark);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -71,6 +88,19 @@
     --ink-6: var(--ink-dark);
     --ink-7: var(--ink-dark);
     --ink-8: var(--ink-dark);
+
+    --cohesion-1: #d5baff;
+    --cohesion-2: #bf9bfc;
+    --cohesion-3: #a87eeb;
+    --cohesion-4: #9065d0;
+    --cohesion-5: #7750b1;
+    --cohesion-6: #5f3d8e;
+    --cohesion-ink-1: var(--ink-dark);
+    --cohesion-ink-2: var(--ink-dark);
+    --cohesion-ink-3: var(--ink-dark);
+    --cohesion-ink-4: var(--ink-dark);
+    --cohesion-ink-5: var(--ink-light);
+    --cohesion-ink-6: var(--ink-light);
   }
 }
 
@@ -109,6 +139,41 @@
 [data-step="8"] {
   --fill: var(--heat-8);
   --ink: var(--ink-8);
+}
+.swatch[data-cohesion="0"],
+.app[data-mode="cohesion"] .tile[data-cohesion="0"] {
+  --fill: var(--heat-0);
+  --ink: var(--ink-0);
+}
+.swatch[data-cohesion="1"],
+.app[data-mode="cohesion"] .tile[data-cohesion="1"] {
+  --fill: var(--cohesion-1);
+  --ink: var(--cohesion-ink-1);
+}
+.swatch[data-cohesion="2"],
+.app[data-mode="cohesion"] .tile[data-cohesion="2"] {
+  --fill: var(--cohesion-2);
+  --ink: var(--cohesion-ink-2);
+}
+.swatch[data-cohesion="3"],
+.app[data-mode="cohesion"] .tile[data-cohesion="3"] {
+  --fill: var(--cohesion-3);
+  --ink: var(--cohesion-ink-3);
+}
+.swatch[data-cohesion="4"],
+.app[data-mode="cohesion"] .tile[data-cohesion="4"] {
+  --fill: var(--cohesion-4);
+  --ink: var(--cohesion-ink-4);
+}
+.swatch[data-cohesion="5"],
+.app[data-mode="cohesion"] .tile[data-cohesion="5"] {
+  --fill: var(--cohesion-5);
+  --ink: var(--cohesion-ink-5);
+}
+.swatch[data-cohesion="6"],
+.app[data-mode="cohesion"] .tile[data-cohesion="6"] {
+  --fill: var(--cohesion-6);
+  --ink: var(--cohesion-ink-6);
 }
 
 * {
@@ -196,10 +261,86 @@ h1 {
   margin-right: 4px;
 }
 
+.app[data-mode="heat"] [data-mode-only="cohesion"],
+.app[data-mode="cohesion"] [data-mode-only="heat"] {
+  display: none;
+}
+.ramp .swatch[data-cohesion="0"] {
+  border: 1px dashed var(--muted);
+}
+.ramp-gap {
+  width: 10px;
+}
+.outline-key {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.outline-sample {
+  display: inline-block;
+  width: 22px;
+  height: 10px;
+  border: 2px solid var(--coupling);
+  border-radius: 2px;
+}
+.outline-sample.cross-module {
+  border-style: dotted;
+}
+
 .toolbar {
   display: flex;
   align-items: center;
   gap: 14px;
+}
+.mode-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 0;
+  margin: 0;
+  border: 0;
+}
+.mode-switch legend {
+  float: left;
+  padding: 0;
+  margin-right: 8px;
+  color: var(--muted);
+}
+.mode-switch label {
+  position: relative;
+  display: inline-block;
+}
+.mode-switch input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.mode-switch span {
+  display: block;
+  padding: 7px 14px;
+  color: var(--text-2);
+  font-weight: 500;
+  background: var(--surface);
+  border: 1px solid var(--hairline-strong);
+}
+.mode-switch label:first-of-type span {
+  border-radius: 8px 0 0 8px;
+}
+.mode-switch label:last-of-type span {
+  margin-left: -1px;
+  border-radius: 0 8px 8px 0;
+}
+.mode-switch input:checked + span {
+  color: var(--page);
+  background: var(--text);
+  border-color: var(--text);
+}
+.mode-switch input:focus-visible + span {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
 }
 #filter {
   width: min(460px, 100%);
@@ -290,6 +431,10 @@ button:focus-visible {
 .tile rect {
   fill: var(--fill);
 }
+.app[data-mode="cohesion"] .tile:not(:hover, [data-highlight="match"]) rect {
+  stroke: var(--surface);
+  stroke-width: 1.5;
+}
 .tile:hover rect {
   stroke: var(--text);
   stroke-width: 1.5;
@@ -300,6 +445,16 @@ button:focus-visible {
   pointer-events: none;
 }
 .tile-score {
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.8;
+}
+.tile-cohesion,
+.app[data-mode="cohesion"] .tile-score {
+  display: none;
+}
+.app[data-mode="cohesion"] .tile-cohesion {
+  display: block;
   font-size: 10px;
   font-variant-numeric: tabular-nums;
   opacity: 0.8;
@@ -323,6 +478,10 @@ button:focus-visible {
 }
 .outline.test-pair {
   stroke-dasharray: 5 3;
+}
+.outline.cross-module {
+  stroke-dasharray: 0 7;
+  stroke-linecap: round;
 }
 
 .tooltip {
@@ -540,6 +699,47 @@ button:focus-visible {
   content: "";
   background: var(--coupling);
   border-radius: 3px;
+}
+.module-name .badge {
+  border-style: solid;
+  border-color: var(--hairline-strong);
+}
+.badge.cross-module {
+  border-style: dotted;
+}
+.module-name {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0 0 10px;
+}
+.module-partner {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 0;
+}
+.module-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 7px 8px;
+}
+.module-row .swatch {
+  margin-top: 3px;
+}
+.overview-sections {
+  display: flex;
+  flex-direction: column;
+}
+.app[data-mode="heat"] [data-overview="hotspots"],
+.app[data-mode="cohesion"] [data-overview="modules"] {
+  order: 1;
+}
+.app[data-mode="heat"] [data-overview="modules"],
+.app[data-mode="cohesion"] [data-overview="hotspots"] {
+  order: 2;
 }
 .badge {
   padding: 0 6px;

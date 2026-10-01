@@ -1,9 +1,9 @@
-import type { HeatScale } from "../color/heat-scale.js";
 import type { PlacedLeaf, Size, TreemapLayout } from "../layout/treemap.js";
 import type { Highlight, Selection } from "../selection/highlight.js";
 import { svgFactory } from "./dom.js";
 import { drawOutlines } from "./outlines.js";
 import { drawGroup, drawLeaf } from "./tiles.js";
+import type { TileColors } from "./tiles.js";
 
 /** What the treemap reports back to the page. */
 export type TreemapHandlers = {
@@ -24,7 +24,7 @@ export type TreemapView = {
 
 export const createTreemapView = (
   svg: SVGSVGElement,
-  heat: HeatScale,
+  colors: TileColors,
   handlers: TreemapHandlers,
 ): TreemapView => {
   const create = svgFactory(svg);
@@ -58,7 +58,9 @@ export const createTreemapView = (
   return {
     draw: (layout, { width, height }) => {
       leaves = layout.leaves;
-      tiles = leaves.map((leaf, index) => drawLeaf(create, leaf, index, heat));
+      tiles = leaves.map((leaf, index) =>
+        drawLeaf(create, leaf, index, colors),
+      );
       overlay = create("g", { class: "overlay" });
       svg.setAttribute("width", String(width));
       svg.setAttribute("height", String(height));

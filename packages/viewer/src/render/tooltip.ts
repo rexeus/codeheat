@@ -1,7 +1,13 @@
 import type { AggregateNode, FileNode } from "../layout/hierarchy.js";
 import type { PlacedLeaf } from "../layout/treemap.js";
+import type { ModuleIndex } from "../modules/module-index.js";
 import { h } from "./dom.js";
-import { formatCount, formatScore, splitPath } from "./format.js";
+import {
+  formatCount,
+  formatPercent,
+  formatScore,
+  splitPath,
+} from "./format.js";
 
 /** Metrics readout that follows the pointer over the treemap. */
 export type Tooltip = {
@@ -25,9 +31,24 @@ const pathLine = (path: string): HTMLElement => {
   );
 };
 
+/** The file's module and how many of its changes stay inside; nothing when the module is unknown. */
+const moduleRows = (path: string, modules: ModuleIndex): HTMLElement[] => {
+  const module = modules.moduleOf(path);
+  if (module === undefined) {
+    return [];
+  }
+  return [
+    row(
+      module.cohesion === null ? "no data" : formatPercent(module.cohesion),
+      `of changes to ${module.path} stay inside`,
+    ),
+  ];
+};
+
 const fileContent = (
   { file, path }: FileNode,
   totalFiles: number,
+  modules: ModuleIndex,
 ): HTMLElement[] => [
   pathLine(path),
   row(
@@ -44,6 +65,7 @@ const fileContent = (
     `+${formatCount(file.linesAdded)} / −${formatCount(file.linesDeleted)}`,
     "lines changed",
   ),
+  ...moduleRows(path, modules),
 ];
 
 const aggregateContent = (node: AggregateNode): HTMLElement[] => [
@@ -61,6 +83,7 @@ export const createTooltip = (
   element: HTMLElement,
   stage: HTMLElement,
   totalFiles: number,
+  modules: ModuleIndex,
 ): Tooltip => {
   const place = (event: PointerEvent): void => {
     const bounds = stage.getBoundingClientRect();
@@ -82,7 +105,7 @@ export const createTooltip = (
     show: ({ node }, event) => {
       element.replaceChildren(
         ...(node.kind === "file"
-          ? fileContent(node, totalFiles)
+          ? fileContent(node, totalFiles, modules)
           : aggregateContent(node)),
       );
       element.hidden = false;
