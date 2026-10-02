@@ -28,11 +28,11 @@ const isBlob = ({ mode }: { readonly mode: string }): boolean =>
 
 /**
  * Repository-relative paths of the regular files git tracks under `scope`
- * ("." for all), without symlinks, submodules, and files that ignore rules
- * match. Tracked-but-ignored files are left out because `.gitignore` states
- * they are not part of the project.
+ * ("." for all), without symlinks and submodules, whatever the ignore rules
+ * say. Manifests are read from this list: a tracked manifest is part of the
+ * project even when a pattern such as `*.json` matches it.
  */
-export const listTrackedFiles = (
+export const listTrackedBlobs = (
   scope: string,
 ): Effect.Effect<ReadonlyArray<string>, GitError, Git> =>
   Effect.gen(function* () {
@@ -43,6 +43,25 @@ export const listTrackedFiles = (
       "--stage",
       ...pathspec(scope),
     ]);
+    const paths = splitNul(tracked)
+      .map((entry) => parseStagedEntry(entry))
+      .filter((entry) => isBlob(entry))
+      .map(({ path }) => path);
+    return [...new Set(paths)];
+  });
+
+/**
+ * Repository-relative paths of the regular files git tracks under `scope`
+ * ("." for all), without symlinks, submodules, and files that ignore rules
+ * match. Tracked-but-ignored files are left out because `.gitignore` states
+ * they are not part of the project.
+ */
+export const listTrackedFiles = (
+  scope: string,
+): Effect.Effect<ReadonlyArray<string>, GitError, Git> =>
+  Effect.gen(function* () {
+    const git = yield* Git;
+    const blobs = yield* listTrackedBlobs(scope);
     const ignored = yield* git.text([
       "ls-files",
       "-z",
@@ -52,11 +71,7 @@ export const listTrackedFiles = (
       ...pathspec(scope),
     ]);
     const ignoredPaths = new Set(splitNul(ignored));
-    const paths = splitNul(tracked)
-      .map((entry) => parseStagedEntry(entry))
-      .filter((entry) => isBlob(entry))
-      .map(({ path }) => path);
-    return [...new Set(paths)].filter((path) => !ignoredPaths.has(path));
+    return blobs.filter((path) => !ignoredPaths.has(path));
   });
 
 /** Attribute values git reports for an attribute that is switched on. */

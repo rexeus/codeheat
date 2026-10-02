@@ -8,7 +8,10 @@ import type { GitError } from "../git/git-errors.js";
 import type { Git } from "../git/git.js";
 import { packageDirectoriesOf } from "../modules/package-directories.js";
 import type { Coupling } from "../report/report.js";
-import { listTrackedFiles } from "../universe/tracked-files.js";
+import {
+  listTrackedBlobs,
+  listTrackedFiles,
+} from "../universe/tracked-files.js";
 import { loadLinks, reachableFrom } from "./module-links.js";
 import type { ModuleLinks, Reach } from "./module-links.js";
 import { createResolver } from "./resolve.js";
@@ -81,11 +84,12 @@ export const linkCouplings = (
       return couplings;
     }
     const tracked = yield* listTrackedFiles(options.scope);
+    const manifests = yield* listTrackedBlobs(options.scope);
     const workspace = yield* readWorkspace(
       options.root,
       options.universe,
-      packageDirectoriesOf(tracked),
-      manifestFilesFor(options.scope, tracked),
+      packageDirectoriesOf(manifests),
+      manifestFilesFor(options.scope, manifests),
     );
     const links = yield* loadLinks(
       {
