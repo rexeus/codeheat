@@ -220,6 +220,7 @@ describe("renderInspect copy family", () => {
         similarity: { min: 0.6, max: 0.6 },
         sharedChanges: 7,
         changesToAll: 7,
+        testOnly: false,
       },
     };
 

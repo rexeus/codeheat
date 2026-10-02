@@ -90,6 +90,34 @@ describe("familiesOf similarity", () => {
   });
 });
 
+describe("familiesOf test code", () => {
+  it("marks a family testOnly when every member is test code, not when one is production code", () => {
+    const families = familiesFor({
+      "a.test.ts test/b.ts": 0.7,
+      "c.ts test/d.ts": 0.7,
+    });
+
+    expect(families.map(({ files, testOnly }) => [files, testOnly])).toEqual([
+      [["c.ts", "test/d.ts"], false],
+      [["a.test.ts", "test/b.ts"], true],
+    ]);
+  });
+
+  it("ranks a family of test code only after the others, however often it changed", () => {
+    const families = familiesFor(
+      { "a.test.ts b.test.ts": 0.9, "d.ts e.ts": 0.6 },
+      historyOf(...Array.from({ length: 4 }, () => commit([0, 1]))),
+    );
+
+    expect(families.map(({ files, testOnly }) => [files[0], testOnly])).toEqual(
+      [
+        ["d.ts", false],
+        ["a.test.ts", true],
+      ],
+    );
+  });
+});
+
 describe("familiesOf changes", () => {
   const table = { "a.ts b.ts": 0.7, "b.ts c.ts": 0.7 };
 

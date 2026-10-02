@@ -25,41 +25,58 @@ const pathNote = (files: ReadonlyArray<string>): string => {
   return hidden > 0 ? `${shown.join(", ")} +${hidden} more` : shown.join(", ");
 };
 
+const familyRows = (
+  families: ReadonlyArray<Family>,
+  style: Style,
+): ReadonlyArray<string> => [
+  ...renderTable(
+    [
+      { header: "copies", align: "right" },
+      { header: "similar", align: "right" },
+      { header: "shared", align: "right" },
+      { header: "all", align: "right" },
+      { header: "files", align: "left" },
+    ],
+    families
+      .slice(0, TOP_FAMILIES)
+      .map((family) => [
+        plain(String(family.files.length)),
+        plain(similarityNote(family.similarity)),
+        plain(String(family.sharedChanges)),
+        plain(String(family.changesToAll)),
+        plain(pathNote(family.files)),
+      ]),
+    style,
+  ),
+  style.dim(
+    "shared: commits that touched two or more copies; all: commits that touched every copy",
+  ),
+];
+
 /**
- * The lines of the "Copies" section: a table of the five families that had
- * the most commits touching every copy, with a note on what its counts mean,
- * or none when the report has no family.
+ * The lines of the "Copies" section: a table of the five families with
+ * production code that had the most commits touching every copy, with a note
+ * on what its counts mean, and a note counting the families of test code only,
+ * which the table leaves out (they stay in `--json`). None when the report has
+ * no family.
  */
 export const copyLines = (
   report: Report,
   style: Style,
-): ReadonlyArray<string> =>
-  report.copyFamilies.length === 0
-    ? []
-    : [
-        ...renderTable(
-          [
-            { header: "copies", align: "right" },
-            { header: "similar", align: "right" },
-            { header: "shared", align: "right" },
-            { header: "all", align: "right" },
-            { header: "files", align: "left" },
-          ],
-          report.copyFamilies
-            .slice(0, TOP_FAMILIES)
-            .map((family) => [
-              plain(String(family.files.length)),
-              plain(similarityNote(family.similarity)),
-              plain(String(family.sharedChanges)),
-              plain(String(family.changesToAll)),
-              plain(pathNote(family.files)),
-            ]),
-          style,
-        ),
-        style.dim(
-          "shared: commits that touched two or more copies; all: commits that touched every copy",
-        ),
-      ];
+): ReadonlyArray<string> => {
+  const production = report.copyFamilies.filter(({ testOnly }) => !testOnly);
+  const leftOut = report.copyFamilies.length - production.length;
+  return [
+    ...(production.length === 0 ? [] : familyRows(production, style)),
+    ...(leftOut === 0
+      ? []
+      : [
+          style.dim(
+            `${leftOut === 1 ? "1 family" : `${leftOut} families`} of test code only left out; see copyFamilies in --json`,
+          ),
+        ]),
+  ];
+};
 
 /**
  * The one-line note of an inspected file's copy family: how many copies it has

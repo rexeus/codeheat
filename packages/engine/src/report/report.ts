@@ -244,7 +244,9 @@ export const Report = Schema.Struct({
   /**
    * Groups of files with largely the same content that change in the same
    * commits, found among the coupled pairs (test pairs excluded) of the
-   * analysis window. Most fixes applied to all members first.
+   * analysis window. Families with production code come first, then those of
+   * test code only (`testOnly`); within each, most fixes applied to all
+   * members first.
    */
   copyFamilies: Schema.Array(CopyFamily),
 });

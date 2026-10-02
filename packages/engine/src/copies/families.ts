@@ -3,6 +3,7 @@ import { Order } from "effect";
 
 import { countedCommits } from "../coupling/coupling.js";
 import type { History } from "../history/history.js";
+import { isTestPath } from "../modules/test-path.js";
 import type { CopyFamily } from "../report/copy-family.js";
 import { roundReported } from "../report/precision.js";
 
@@ -95,6 +96,7 @@ const countChanges = (
 };
 
 const byImportance = (a: CopyFamily, b: CopyFamily): number =>
+  Number(a.testOnly) - Number(b.testOnly) ||
   b.changesToAll - a.changesToAll ||
   b.sharedChanges - a.sharedChanges ||
   b.files.length - a.files.length ||
@@ -102,8 +104,9 @@ const byImportance = (a: CopyFamily, b: CopyFamily): number =>
 
 /**
  * The copy families among `links`: the connected components of the files
- * they join, most fixes applied to all members first, then most shared
- * changes, most members, and path. A family's `similarity` range covers all
+ * they join, families with production code before those of test code only,
+ * then most fixes applied to all members, most shared changes, most members,
+ * and path. A family's `similarity` range covers all
  * pairs of its members, so its minimum can lie below the threshold that
  * linked them (A is like B, B like C, A not like C). `history` is the window
  * whose counted commits (see `countedCommits`) tell how often the members
@@ -120,6 +123,7 @@ export const familiesOf = (
     .map((files, index) => ({
       files,
       similarity: similarityRange(files, similarityOf),
+      testOnly: files.every((file) => isTestPath(file)),
       sharedChanges: changes[index]?.shared ?? 0,
       changesToAll: changes[index]?.all ?? 0,
     }))

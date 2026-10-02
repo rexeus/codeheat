@@ -22,6 +22,7 @@ const stats = (path: string, rank: number): FileStats => ({
 const family = {
   files: ["lib/c.ts", "src/a.ts"],
   similarity: { min: 0.6, max: 0.6 },
+  testOnly: false,
   sharedChanges: 4,
   changesToAll: 3,
 };

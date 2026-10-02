@@ -22,6 +22,13 @@ export const CopyFamily = Schema.Struct({
    * below `Thresholds.minCopySimilarity`: two members may share little.
    */
   similarity: Schema.Struct({ min: UnitInterval, max: UnitInterval }),
+  /**
+   * Every member is test code (a test suffix or a test directory, as
+   * `FileStats.test`). Such families rank after the others and stay out of the
+   * terminal's list: tests that repeat each other are rarely the design
+   * problem.
+   */
+  testOnly: Schema.Boolean,
   /** Counted commits that touched at least two members. */
   sharedChanges: Count,
   /** Counted commits that touched every member: the fixes applied to all copies. */

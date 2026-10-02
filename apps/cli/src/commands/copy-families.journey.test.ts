@@ -73,6 +73,7 @@ describe("codeheat reports copy families as JSON", () => {
           similarity: { min: 0.697, max: 0.697 },
           sharedChanges: 4,
           changesToAll: 4,
+          testOnly: false,
         },
       ]);
       expect(result.matches[0]?.copyFamily).toStrictEqual(

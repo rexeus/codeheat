@@ -1375,6 +1375,7 @@
     {
       "files": ["packages/auth/src/index.ts", "packages/billing/src/index.ts"],
       "similarity": { "min": 0.58, "max": 0.58 },
+      "testOnly": false,
       "sharedChanges": 6,
       "changesToAll": 6
     }

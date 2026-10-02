@@ -110,6 +110,7 @@ A copy family is a group of files whose content is largely the same and that cha
 {
   "files": ["packages/auth/src/index.ts", "packages/billing/src/index.ts"],
   "similarity": { "min": 0.58, "max": 0.58 },
+  "testOnly": false,
   "sharedChanges": 6,
   "changesToAll": 6
 }
@@ -117,6 +118,7 @@ A copy family is a group of files whose content is largely the same and that cha
 
 - **When you change one member, change all of them** in the same edit, or say why a copy stays as it is. `sharedChanges` counts the commits that touched at least two members, `changesToAll` the commits that touched every member: a high `changesToAll` means the copies have always been fixed together, so a fix that reaches only one of them is probably incomplete.
 - `similarity` is the Jaccard index of the files' five-word runs (identifiers, keywords, and the shape of literals; comments, whitespace, and punctuation do not count), 0..1; a family is built from pairs that are both coupled and at least `thresholds.minCopySimilarity` alike, so the family is connected through those pairs, while `min` and `max` are the weakest and strongest similarity over all pairs of its members. A `min` below the threshold means two members share little: read each member before applying the same edit to it.
+- `testOnly: true` marks a family whose members are all test code. Such families come last in `copyFamilies` and are not listed by the terminal; tests that repeat each other are rarely the design problem, so weigh them less.
 - A family means "these files change in lockstep", not "something is wrong". One adapter per entity or one config per environment is duplication on purpose; when the same fix keeps landing in all copies, the design move is to extract the shared abstraction. Do not report a family as a bug.
 - Only files that already change together are compared, and only from the work tree as it is now: copies that never changed together, files too small to compare, and a coupling between a file and its own test are not families.
 
