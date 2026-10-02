@@ -3,7 +3,7 @@ import { Effect } from "effect";
 
 import type { GitError } from "../git/git-errors.js";
 import type { Git } from "../git/git.js";
-import { listTrackedFiles } from "../universe/tracked-files.js";
+import { listTrackedBlobs } from "../universe/tracked-files.js";
 
 const MANIFEST_NAMES = new Set([
   "package.json",
@@ -35,12 +35,13 @@ export const packageDirectoriesOf = (
 /**
  * The directories, other than the repository root, that contain a manifest.
  * Manifests are not code, so they are read from the tracked files rather
- * than the universe. Git must run in the repository root.
+ * than the universe, and a tracked manifest counts even when an ignore rule
+ * matches it. Git must run in the repository root.
  */
 export const listPackageDirectories = (
   scope: string,
 ): Effect.Effect<ReadonlySet<string>, GitError, Git> =>
-  Effect.map(listTrackedFiles(scope), packageDirectoriesOf);
+  Effect.map(listTrackedBlobs(scope), packageDirectoriesOf);
 
 /** The package a file belongs to: its nearest enclosing directory in `packages`; undefined outside every package. */
 export const packageOf = (
