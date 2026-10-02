@@ -21,14 +21,18 @@ export type Workspace = {
 
 /**
  * Reads `manifestFiles`, repository-relative paths of `package.json` files.
- * The packages are those among them whose directory is in `packages`, owns a `universe` file, and
- * which have a `name`, each with the files that importing it by name reaches
- * (see `packageMainEntries`) among the `universe` files it owns, those whose
- * nearest package it is. The report's modules play no part, so a package that
- * is split into directory modules (or is the whole analysis) is still
- * importable by name. `--entry` and the report's entry points play no part
- * either: they describe interfaces, not what an import resolves to. `root` is
- * the repository root the paths are relative to.
+ * The packages are those among them that have a `name` and `universe` files
+ * below their directory. Importing a package by
+ * name reaches the files its manifest names (see `packageMainEntries`) among
+ * the `universe` files it owns, those whose nearest package it is; a package
+ * that owns none (a workspace folder above its sub-packages) resolves its
+ * targets among every `universe` file below its directory instead, so its
+ * `main` may point into a sub-package. The repository root package owns
+ * nothing by name and is not registered. The report's modules play no part,
+ * so a package that is split into directory modules (or is the whole
+ * analysis) is still importable by name. `--entry` and the report's entry
+ * points play no part either: they describe interfaces, not what an import
+ * resolves to. `root` is the repository root the paths are relative to.
  */
 export const readWorkspace = (
   root: string,
@@ -45,6 +49,12 @@ export const readWorkspace = (
         owned.set(home, [...(owned.get(home) ?? []), file]);
       }
     }
+    const universeFiles = [...universe];
+    const filesOf = (directory: string): ReadonlyArray<string> =>
+      owned.get(directory) ??
+      (directory === "."
+        ? []
+        : universeFiles.filter((file) => file.startsWith(`${directory}/`)));
     const byName = new Map<string, WorkspacePackage>();
     const ambiguous = new Set<string>();
     const dependencies = new Set<string>();
@@ -57,17 +67,14 @@ export const readWorkspace = (
         dependencies.add(dependency);
       }
       const directory = directoryOf(manifestFile);
-      if (facts.name !== undefined && owned.has(directory)) {
+      const files = filesOf(directory);
+      if (facts.name !== undefined && files.length > 0) {
         if (byName.has(facts.name)) {
           ambiguous.add(facts.name);
         }
         byName.set(facts.name, {
           directory,
-          entryPoints: packageMainEntries(
-            directory,
-            facts.rootTargets,
-            owned.get(directory) ?? [],
-          ),
+          entryPoints: packageMainEntries(directory, facts.rootTargets, files),
         });
       }
     }
