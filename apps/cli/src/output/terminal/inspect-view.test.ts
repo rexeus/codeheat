@@ -18,6 +18,7 @@ const entry: InspectResult["matches"][number] = {
   complexity: { total: 1900, mean: 1.97, max: 9 },
   reasons: ["changed in 48 commits (#1 of 36)"],
   trend: null,
+  copyFamily: null,
   of: 36,
   partners: [
     {
@@ -204,6 +205,30 @@ describe("renderInspect modules", () => {
     expect(view).toContain(
       "module packages/web: 50% of 10 commits stay inside\n",
     );
+  });
+});
+
+describe("renderInspect copy family", () => {
+  it("names the copies of a file right after its reasons", () => {
+    const copied = {
+      ...entry,
+      copyFamily: {
+        files: [
+          "packages/billing/src/invoice.ts",
+          "packages/web/src/invoice.ts",
+        ],
+        similarity: { min: 0.6, max: 0.6 },
+        sharedChanges: 7,
+        changesToAll: 7,
+      },
+    };
+
+    const lines = renderInspect(result([copied]), makeStyle(false)).split("\n");
+
+    expect(lines.slice(7, 9)).toEqual([
+      "- changed in 48 commits (#1 of 36)",
+      "changes with its 1 copy: packages/web/src/invoice.ts (7 commits touched both)",
+    ]);
   });
 });
 

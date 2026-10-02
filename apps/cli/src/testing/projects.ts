@@ -88,6 +88,26 @@ export const makeTestPairProject = Effect.map(makeGitRepository, (repo) => {
   return repo;
 });
 
+/** Eight statements of four words; `owner` is the one word in which two copies differ (23 of their 33 runs of five words are shared). */
+const handler = (owner: string, day: number): string =>
+  `${Array.from(
+    { length: 8 },
+    (_, index) =>
+      `export const ${index === 3 ? owner : `step${index}`} = value${index};`,
+  ).join("\n")}\n// ${day}\n`;
+
+/** Three copies of one handler in different directories, changed together in four commits. */
+export const makeCopyProject = Effect.map(makeGitRepository, (repo) => {
+  for (const day of [30, 20, 10, 5]) {
+    repo.commit(day, {
+      "lib/billing/handler.ts": handler("billing", day),
+      "src/orders/handler.ts": handler("orders", day),
+      "src/users/handler.ts": handler("users", day),
+    });
+  }
+  return repo;
+});
+
 /** Sets PATH for the scope and restores it afterwards; spawned programs resolve against it. */
 export const withPath = (value: string) =>
   Effect.acquireRelease(

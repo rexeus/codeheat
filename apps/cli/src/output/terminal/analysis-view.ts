@@ -10,6 +10,7 @@ import {
   partnerName,
   ubiquitousLines,
 } from "./contract-view.js";
+import { copyLines } from "./copies-view.js";
 import { shallowestLines } from "./depth-view.js";
 import { day, percent } from "./format.js";
 import type { Style } from "./style.js";
@@ -180,7 +181,9 @@ const leakyModules = (report: Report): ReadonlyArray<Module> =>
  * the five strongest couplings that are neither test pairs nor pairs of two
  * contract files, each with the co-change probability in both directions
  * (`shared / revisions(side)`) and a contract file marked `(contract)`, the
- * five least cohesive modules, the first five modules with a leaky interface,
+ * five copy families with the most commits touching every copy (the section
+ * is left out when there is none), the five least cohesive modules, the first
+ * five modules with a leaky interface,
  * the five shallowest ranked modules (fewest implementation lines per exported
  * name; the section is left out when none has a depth), and, when the report compares two windows, the biggest changes. The report
  * must not be cut to `--limit`: test pairs could crowd out every other
@@ -200,6 +203,7 @@ export const renderAnalysis = (report: Report, style: Style): string => {
     report.contracts,
     style,
   );
+  const copies = copyLines(report, style);
   const modules = rankedModules(report);
   const leaky = leakyModules(report);
   const shallow = shallowestLines(report, style);
@@ -215,6 +219,13 @@ export const renderAnalysis = (report: Report, style: Style): string => {
       : ["No change coupling above the thresholds."]),
     ...ubiquitousLines(report).map((line) => style.dim(line)),
     "",
+    ...(copies.length === 0
+      ? []
+      : [
+          style.bold("Copies (similar files that change in lockstep)"),
+          ...copies,
+          "",
+        ]),
     style.bold("Least cohesive modules"),
     ...(modules.length > 0
       ? moduleLines(modules, style)

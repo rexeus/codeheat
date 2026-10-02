@@ -3,6 +3,7 @@ import type { InspectResult, Module } from "@codeheat/engine";
 
 import { escapeForTerminal } from "../escape.js";
 import { partnerName } from "./contract-view.js";
+import { copyFamilyLine } from "./copies-view.js";
 import { describeDepth } from "./depth-view.js";
 import { day, percent, twoDecimals } from "./format.js";
 import type { Style } from "./style.js";
@@ -108,6 +109,7 @@ const entryLines = (
   `indentation complexity ${entry.complexity.total} (mean ${twoDecimals(entry.complexity.mean)}, max ${entry.complexity.max})`,
   ...moduleLine(modules.find(({ path }) => path === entry.module)),
   ...entry.reasons.map((reason) => `- ${escapeForTerminal(reason)}`),
+  ...copyFamilyLine(entry.path, entry.copyFamily),
   "",
   style.bold("Changes together with"),
   ...partnerLines(entry, style),
