@@ -56,7 +56,9 @@ describe("contractHomes", () => {
       ["api.tsp", "."],
     ]);
   });
+});
 
+describe("contractHomes outside the modules", () => {
   it("houses a contract in its own directory when code lies below every directory above it", () => {
     const modules = new Map([
       ["spec/gen/a.ts", directory("spec/gen")],
@@ -66,5 +68,24 @@ describe("contractHomes", () => {
     const homes = contractHomes(["spec/api.graphql"], modules);
 
     expect(pathsOf(homes)).toStrictEqual([["spec/api.graphql", "spec"]]);
+  });
+
+  it("lets the root module house only the contracts at the top of the repository", () => {
+    const modules = new Map([
+      ["eslint.config.js", directory(".")],
+      ["packages/api/src/handler.ts", pkg("packages/api")],
+      ["packages/web/src/page.ts", pkg("packages/web")],
+    ]);
+
+    const homes = contractHomes(
+      ["openapi.yaml", "spec/models.tsp", "packages/api/openapi.yaml"],
+      modules,
+    );
+
+    expect(pathsOf(homes)).toStrictEqual([
+      ["openapi.yaml", "."],
+      ["spec/models.tsp", "spec"],
+      ["packages/api/openapi.yaml", "packages/api"],
+    ]);
   });
 });

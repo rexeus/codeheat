@@ -21,7 +21,9 @@ export const ContractFile = Schema.Struct({
   path: Schema.String,
   /**
    * `path` of the module the contract lives in: the nearest module above it.
-   * A contract outside every module, such as a `spec/` folder beside two
+   * The root module `.` counts only for a contract at the top of the
+   * repository, not for every contract that no other module encloses. A
+   * contract outside every module, such as a `spec/` folder beside two
    * packages, lives in the highest directory above it that holds no code (its
    * own directory when every one does), which is no entry of `Report.modules`.
    * It counts for the module's cohesion and partners, never for its size.

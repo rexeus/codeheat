@@ -15,19 +15,28 @@ const directoriesAbove = (path: string): ReadonlyArray<string> => {
   return [".", ...parts.map((_, index) => parts.slice(0, index + 1).join("/"))];
 };
 
-/** The nearest module at or above `directory`, if any. */
+/**
+ * The nearest module at or above `directory`, below the root. The root module
+ * (the files that sit at the top of the repository) houses only the contracts
+ * that sit there too: it is not "everything above".
+ */
 const enclosingModule = (
   directory: string,
   byPath: ReadonlyMap<string, ModuleRef>,
-): ModuleRef | undefined =>
-  byPath.get(directory) ??
-  (directory === "."
-    ? undefined
-    : enclosingModule(parentOf(directory), byPath));
+): ModuleRef | undefined => {
+  for (let current = directory; current !== "."; current = parentOf(current)) {
+    const module = byPath.get(current);
+    if (module !== undefined) {
+      return module;
+    }
+  }
+  return directory === "." ? byPath.get(".") : undefined;
+};
 
 /**
  * Maps every contract file to the nearest module that lies above it (a
- * module's path is the directory of its package or its directory module). A
+ * module's path is the directory of its package or its directory module); the
+ * root module `.` counts only for a contract at the top of the repository. A
  * contract outside every module, such as a `spec/` folder beside two
  * packages, lives in the highest directory above it that holds no code, or in
  * its own directory when every one of them does; no module is made of it.
