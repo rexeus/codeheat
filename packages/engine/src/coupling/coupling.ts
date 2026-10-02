@@ -26,7 +26,17 @@ export const countedCommits = (
 const kindOf = (path: string, contracts: ReadonlySet<string>): FileKind =>
   contracts.has(path) ? "contract" : "code";
 
+const isContractPair = ({ kinds }: Coupling): boolean =>
+  kinds.a === "contract" && kinds.b === "contract";
+
+/**
+ * Pairs with a code side first, contract pairs after them: the files of one
+ * API definition change together far more often than any two pieces of code,
+ * and would fill every limited list. Within each group, by degree, shared
+ * commits, then path.
+ */
 const byStrength = (a: Coupling, b: Coupling): number =>
+  Number(isContractPair(a)) - Number(isContractPair(b)) ||
   b.degree - a.degree ||
   b.sharedCommits - a.sharedCommits ||
   Order.String(a.a, b.a) ||
@@ -99,7 +109,8 @@ export type Couplings = {
  *
  * Every coupling comes back with `imports: null`; the import graph fills it in.
  * `couplingCommits` is the number of commits small enough to count. Pairs
- * are sorted by their reported (rounded) degree, then shared commits, then path.
+ * with a code side come before pairs of two contract files, each group sorted
+ * by its reported (rounded) degree, then shared commits, then path.
  * `breadth` maps every path in `paths` to the number of distinct other files it
  * shares a counted commit with, whatever the pair's strength. `places` says
  * where every path lives, which decides `crossesModule`, and which paths are

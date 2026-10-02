@@ -223,7 +223,12 @@ export const Report = Schema.Struct({
    * own commits and this lists the latest window's.
    */
   ubiquitousFiles: Schema.Array(UbiquitousFile),
-  /** Sorted by degree, descending. */
+  /**
+   * First the pairs with at least one code side, then the pairs of two contract
+   * files (`kinds`), so a limit keeps code pairs: the files of one API
+   * definition change together far more often than code does. Each group is
+   * sorted by degree, descending, then shared commits, then path.
+   */
   couplings: Schema.Array(Coupling),
   /**
    * The ranking order, which terminal and viewer keep. First the ranked

@@ -3,7 +3,12 @@ import type { Coupling, FileStats, Module, Report } from "@codeheat/engine";
 
 import { escapeForTerminal } from "../escape.js";
 import { changeLines } from "./changes-view.js";
-import { contractNote, coupledPath, ubiquitousLines } from "./contract-view.js";
+import {
+  contractNote,
+  coupledPath,
+  isContractPair,
+  ubiquitousLines,
+} from "./contract-view.js";
 import { shallowestLines } from "./depth-view.js";
 import { day, percent } from "./format.js";
 import type { Style } from "./style.js";
@@ -81,7 +86,7 @@ const couplingLines = (
       { header: "files", align: "left" },
     ],
     couplings
-      .filter((coupling) => !coupling.testPair)
+      .filter((coupling) => !coupling.testPair && !isContractPair(coupling))
       .slice(0, TOP_COUPLINGS)
       .map((coupling) => [
         plain(percent(coupling.degree)),
@@ -171,8 +176,9 @@ const leakyModules = (report: Report): ReadonlyArray<Module> =>
 
 /**
  * Renders the terminal view of an `analyze` report: the ten hottest files,
- * the five strongest couplings that are not test pairs, each with the
- * co-change probability in both directions (`shared / revisions(side)`), the
+ * the five strongest couplings that are neither test pairs nor pairs of two
+ * contract files, each with the co-change probability in both directions
+ * (`shared / revisions(side)`) and a contract file marked `(contract)`, the
  * five least cohesive modules, the first five modules with a leaky interface,
  * the five shallowest ranked modules (fewest implementation lines per exported
  * name; the section is left out when none has a depth), and, when the report compares two windows, the biggest changes. The report
@@ -202,7 +208,7 @@ export const renderAnalysis = (report: Report, style: Style): string => {
     style.bold("Hotspots"),
     ...hotspots,
     "",
-    style.bold("Change coupling (test pairs excluded)"),
+    style.bold("Change coupling (test pairs and contract pairs excluded)"),
     ...(couplings.length > 1
       ? couplings
       : ["No change coupling above the thresholds."]),

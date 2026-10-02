@@ -1,4 +1,4 @@
-import type { Module, Report } from "@codeheat/engine";
+import type { Coupling, Module, Report } from "@codeheat/engine";
 import { describe, expect, it } from "vitest";
 
 import { sampleReport } from "../../testing/sample-report.js";
@@ -313,6 +313,40 @@ describe("renderAnalysis contract files", () => {
 
     expect(couplings[3]).toBe(
       "   58%      22         2    79%    46%  -        packages/billing/api/billing.tsp (contract) <-> packages/billing/src/invoice.ts",
+    );
+  });
+
+  it("leaves out pairs of two contract files, like test pairs, and says so in the header", () => {
+    const report = sampleReport();
+    const siblings = report.couplings.slice(0, 1).map((coupling): Coupling =>
+      Object.assign({}, coupling, {
+        a: "api/a.tsp",
+        b: "api/b.tsp",
+        degree: 1,
+        kinds: { a: "contract" as const, b: "contract" as const },
+      }),
+    );
+    const extraContracts = report.contracts
+      .slice(0, 1)
+      .flatMap((contract) =>
+        ["api/a.tsp", "api/b.tsp"].map((path) =>
+          Object.assign({}, contract, { path }),
+        ),
+      );
+    const crowded: Report = {
+      ...report,
+      contracts: [...report.contracts, ...extraContracts],
+      couplings: [...siblings, ...report.couplings],
+    };
+
+    const view = plainView(crowded);
+
+    expect(view).toContain(
+      "Change coupling (test pairs and contract pairs excluded)",
+    );
+    expect(view).not.toContain("api/a.tsp");
+    expect(section(view, "Change coupling")).toEqual(
+      section(plainView(), "Change coupling"),
     );
   });
 });

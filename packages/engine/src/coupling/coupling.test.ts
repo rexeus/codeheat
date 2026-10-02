@@ -259,9 +259,45 @@ describe("findCouplings contract files", () => {
     expect(
       couplings.map(({ a, b, kinds }) => [a, b, kinds.a, kinds.b]),
     ).toStrictEqual([
-      ["api/main.tsp", "api/types.proto", "contract", "contract"],
       ["api/main.tsp", "src/api.ts", "contract", "code"],
       ["api/types.proto", "src/api.ts", "contract", "code"],
+      ["api/main.tsp", "api/types.proto", "contract", "contract"],
+    ]);
+  });
+
+  it("lists pairs with a code side before pairs of two contracts, however strong", () => {
+    const siblings = Array.from(
+      { length: 6 },
+      (_, index) => `api/m${index}.tsp`,
+    );
+    const commits = [
+      ...repeat(5, siblings),
+      ...repeat(3, ["packages/a/x.ts", "packages/b/y.ts"]),
+      ...repeat(3, ["packages/a/p.ts", "packages/b/q.ts"]),
+    ];
+    const revisions = new Map<string, number>([
+      ...siblings.map((path): [string, number] => [path, 5]),
+      ["packages/a/x.ts", 10],
+      ["packages/b/y.ts", 10],
+      ["packages/a/p.ts", 6],
+      ["packages/b/q.ts", 6],
+    ]);
+
+    const { couplings } = findCouplings(
+      commits,
+      revisions,
+      new Map(),
+      new Set(siblings),
+    );
+
+    // the 15 sibling pairs have degree 1; the code pairs have 0.3 and 0.5
+    expect(couplings).toHaveLength(17);
+    expect(
+      couplings.slice(0, 3).map(({ a, b, degree }) => [a, b, degree]),
+    ).toStrictEqual([
+      ["packages/a/p.ts", "packages/b/q.ts", 0.5],
+      ["packages/a/x.ts", "packages/b/y.ts", 0.3],
+      ["api/m0.tsp", "api/m1.tsp", 1],
     ]);
   });
 });
