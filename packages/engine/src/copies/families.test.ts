@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 
 import type { History, HistoryCommit } from "../history/history.js";
-import { isTestPath } from "../modules/test-path.js";
 import { familiesOf } from "./families.js";
 
 const PATHS = ["a.ts", "b.ts", "c.ts", "d.ts", "e.ts", "f.ts"];
@@ -36,13 +35,11 @@ const linksOf = (
 const familiesFor = (
   table: Readonly<Record<string, number>>,
   history: History = historyOf(),
-) => familiesOf(linksOf(table), history, similarities(table), isTestPath);
+) => familiesOf(linksOf(table), history, similarities(table));
 
 describe("familiesOf membership", () => {
   it("is empty without links", () => {
-    expect(
-      familiesOf([], historyOf(commit([0, 1])), () => 0, isTestPath),
-    ).toEqual([]);
+    expect(familiesOf([], historyOf(commit([0, 1])), () => 0)).toEqual([]);
   });
 
   it("joins a chain of links into one family with its sorted members", () => {
@@ -86,7 +83,6 @@ describe("familiesOf similarity", () => {
       ],
       historyOf(),
       similarities({ "a.ts b.ts": 0.6, "b.ts c.ts": 0.8, "a.ts c.ts": 0.1 }),
-      isTestPath,
     );
 
     expect(family?.files).toEqual(["a.ts", "b.ts", "c.ts"]);
@@ -107,15 +103,18 @@ describe("familiesOf test code", () => {
     ]);
   });
 
-  it("leaves it to the caller what counts as test code", () => {
-    const [family] = familiesOf(
-      [{ a: "test/a.ts", b: "test/b.ts" }],
-      historyOf(),
-      () => 0.7,
-      (path) => path === "test/a.ts",
-    );
+  it("does not take contract files in a spec directory for test code, but tests there", () => {
+    const families = familiesFor({
+      "spec/a.tsp spec/b.tsp": 0.7,
+      "spec/c.test.ts spec/d.test.ts": 0.7,
+    });
 
-    expect(family?.testOnly).toBe(false);
+    expect(families.map(({ files, testOnly }) => [files[0], testOnly])).toEqual(
+      [
+        ["spec/a.tsp", false],
+        ["spec/c.test.ts", true],
+      ],
+    );
   });
 
   it("ranks a family of test code only after the others, however often it changed", () => {

@@ -2,7 +2,6 @@
 import { Effect, FileSystem, Path } from "effect";
 
 import type { History } from "../history/history.js";
-import { isTestPath } from "../modules/test-path.js";
 import type { CopyFamily } from "../report/copy-family.js";
 import type { Coupling } from "../report/report.js";
 import { familiesOf } from "./families.js";
@@ -67,20 +66,5 @@ export const findCopyFamilies = (
     const links = candidates.filter(
       ({ a, b }): boolean => similarityOf(a, b) >= MIN_COPY_SIMILARITY,
     );
-    // A contract lies in a `spec` or `specs` directory as a matter of course: it is no test.
-    const contracts = new Set<string>();
-    for (const { a, b, kinds } of candidates) {
-      if (kinds.a === "contract") {
-        contracts.add(a);
-      }
-      if (kinds.b === "contract") {
-        contracts.add(b);
-      }
-    }
-    return familiesOf(
-      links,
-      history,
-      similarityOf,
-      (path) => !contracts.has(path) && isTestPath(path),
-    );
+    return familiesOf(links, history, similarityOf);
   });
