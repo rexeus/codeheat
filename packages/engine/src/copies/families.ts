@@ -6,17 +6,13 @@ import type { History } from "../history/history.js";
 import type { CopyFamily } from "../report/copy-family.js";
 import { roundReported } from "../report/precision.js";
 
-/** Two coupled files and how alike their content is. */
-export type SimilarPair = {
-  readonly a: string;
-  readonly b: string;
-  readonly similarity: number;
-};
+/** Two coupled files whose content is alike enough to be copies. */
+export type Link = { readonly a: string; readonly b: string };
 
-/** The pairs of each connected component of the graph that `pairs` draw over files. */
+/** The sorted members of each connected component of the graph that `links` draw over files. */
 const componentsOf = (
-  pairs: ReadonlyArray<SimilarPair>,
-): ReadonlyArray<ReadonlyArray<SimilarPair>> => {
+  links: ReadonlyArray<Link>,
+): ReadonlyArray<ReadonlyArray<string>> => {
   const parent = new Map<string, string>();
   const rootOf = (file: string): string => {
     let root = file;
@@ -29,17 +25,34 @@ const componentsOf = (
     }
     return root;
   };
-  for (const { a, b } of pairs) {
+  for (const { a, b } of links) {
     parent.set(rootOf(a), rootOf(b));
   }
-  const components = new Map<string, Array<SimilarPair>>();
-  for (const pair of pairs) {
-    const root = rootOf(pair.a);
-    const component = components.get(root) ?? [];
-    component.push(pair);
-    components.set(root, component);
+  const components = new Map<string, Set<string>>();
+  for (const { a, b } of links) {
+    const root = rootOf(a);
+    components.set(root, (components.get(root) ?? new Set()).add(a).add(b));
   }
-  return [...components.values()];
+  return [...components.values()].map((members) =>
+    [...members].toSorted(Order.String),
+  );
+};
+
+/** The weakest and the strongest similarity over every pair of `files`, not only the linked ones: a change to the family reaches all of them. */
+const similarityRange = (
+  files: ReadonlyArray<string>,
+  similarityOf: (a: string, b: string) => number,
+): { readonly min: number; readonly max: number } => {
+  let min = 1;
+  let max = 0;
+  for (const [index, a] of files.entries()) {
+    for (const b of files.slice(index + 1)) {
+      const similarity = similarityOf(a, b);
+      min = Math.min(min, similarity);
+      max = Math.max(max, similarity);
+    }
+  }
+  return { min: roundReported(min), max: roundReported(max) };
 };
 
 /** How many members of each family a commit touched, for the families it touched at all. */
@@ -88,34 +101,27 @@ const byImportance = (a: CopyFamily, b: CopyFamily): number =>
   Order.String(a.files[0] ?? "", b.files[0] ?? "");
 
 /**
- * The copy families among `pairs`: the connected components of the files
+ * The copy families among `links`: the connected components of the files
  * they join, most fixes applied to all members first, then most shared
- * changes, most members, and path. `history` is the window whose counted
- * commits (see `countedCommits`) tell how often the members changed together.
+ * changes, most members, and path. A family's `similarity` range covers all
+ * pairs of its members, so its minimum can lie below the threshold that
+ * linked them (A is like B, B like C, A not like C). `history` is the window
+ * whose counted commits (see `countedCommits`) tell how often the members
+ * changed together.
  */
 export const familiesOf = (
-  pairs: ReadonlyArray<SimilarPair>,
+  links: ReadonlyArray<Link>,
   history: History,
+  similarityOf: (a: string, b: string) => number,
 ): ReadonlyArray<CopyFamily> => {
-  const components = componentsOf(pairs);
-  const members = components.map((component) =>
-    [...new Set(component.flatMap(({ a, b }) => [a, b]))].toSorted(
-      Order.String,
-    ),
-  );
+  const members = componentsOf(links);
   const changes = countChanges(members, history);
-  return components
-    .map((component, index) => {
-      const similarities = component.map(({ similarity }) => similarity);
-      return {
-        files: members[index] ?? [],
-        similarity: {
-          min: roundReported(similarities.reduce((a, b) => Math.min(a, b))),
-          max: roundReported(similarities.reduce((a, b) => Math.max(a, b))),
-        },
-        sharedChanges: changes[index]?.shared ?? 0,
-        changesToAll: changes[index]?.all ?? 0,
-      };
-    })
+  return members
+    .map((files, index) => ({
+      files,
+      similarity: similarityRange(files, similarityOf),
+      sharedChanges: changes[index]?.shared ?? 0,
+      changesToAll: changes[index]?.all ?? 0,
+    }))
     .toSorted(byImportance);
 };

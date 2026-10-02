@@ -5,7 +5,6 @@ import type { History } from "../history/history.js";
 import type { CopyFamily } from "../report/copy-family.js";
 import type { Coupling } from "../report/report.js";
 import { familiesOf } from "./families.js";
-import type { SimilarPair } from "./families.js";
 import { jaccard, shinglesOf } from "./similarity.js";
 import { tokenize } from "./tokenize.js";
 
@@ -29,8 +28,9 @@ const readShingles = (root: string, file: string) =>
 /**
  * The copy families of a window: groups of files joined by couplings whose
  * contents are at least `MIN_COPY_SIMILARITY` alike, read from the work tree
- * under `root`. Only coupled files are compared, never all pairs, and a
- * coupling between a file and its own test never counts. A file that cannot
+ * under `root`. Only coupled files are compared to find families (never all
+ * pairs of files), though a family's similarity range covers all pairs of its
+ * members; a coupling between a file and its own test never counts. A file that cannot
  * be read, or is too small, is no member.
  */
 export const findCopyFamilies = (
@@ -56,14 +56,15 @@ export const findCopyFamilies = (
         { concurrency: READ_CONCURRENCY },
       ),
     );
-    const pairs = candidates.flatMap(({ a, b }): ReadonlyArray<SimilarPair> => {
+    const similarityOf = (a: string, b: string): number => {
       const shinglesA = shingles.get(a);
       const shinglesB = shingles.get(b);
-      if (shinglesA === undefined || shinglesB === undefined) {
-        return [];
-      }
-      const similarity = jaccard(shinglesA, shinglesB);
-      return similarity >= MIN_COPY_SIMILARITY ? [{ a, b, similarity }] : [];
-    });
-    return familiesOf(pairs, history);
+      return shinglesA === undefined || shinglesB === undefined
+        ? 0
+        : jaccard(shinglesA, shinglesB);
+    };
+    const links = candidates.filter(
+      ({ a, b }): boolean => similarityOf(a, b) >= MIN_COPY_SIMILARITY,
+    );
+    return familiesOf(links, history, similarityOf);
   });

@@ -17,7 +17,9 @@ export const CopyFamily = Schema.Struct({
   /**
    * The weakest and the strongest content similarity (Jaccard index over
    * shingles of five consecutive words, see `Thresholds.minCopySimilarity`)
-   * among the coupled pairs that make the family; rounded to 4 decimals.
+   * over every pair of members, coupled or not; rounded to 4 decimals. The
+   * family is connected through pairs at least that alike, so `min` can lie
+   * below `Thresholds.minCopySimilarity`: two members may share little.
    */
   similarity: Schema.Struct({ min: UnitInterval, max: UnitInterval }),
   /** Counted commits that touched at least two members. */

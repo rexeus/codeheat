@@ -17,17 +17,34 @@ const historyOf = (...commits: ReadonlyArray<HistoryCommit>): History => ({
   commits,
 });
 
-describe("familiesOf membership", () => {
-  it("is empty without similar pairs", () => {
-    expect(familiesOf([], historyOf(commit([0, 1])))).toEqual([]);
+/** The similarity of every pair named as `"a.ts b.ts"`, in either order; 0 for any other. */
+const similarities =
+  (table: Readonly<Record<string, number>>) =>
+  (a: string, b: string): number =>
+    table[`${a} ${b}`] ?? table[`${b} ${a}`] ?? 0;
+
+/** The pairs of `table` as links, the way the finder links files that are alike enough. */
+const linksOf = (
+  table: Readonly<Record<string, number>>,
+): ReadonlyArray<{ a: string; b: string }> =>
+  Object.keys(table).map((key) => {
+    const [a = "", b = ""] = key.split(" ");
+    return { a, b };
   });
 
-  it("joins a chain of similar pairs into one family with its sorted members", () => {
-    const families = familiesOf(
-      [
-        { a: "c.ts", b: "b.ts", similarity: 0.8 },
-        { a: "a.ts", b: "b.ts", similarity: 0.6 },
-      ],
+const familiesFor = (
+  table: Readonly<Record<string, number>>,
+  history: History = historyOf(),
+) => familiesOf(linksOf(table), history, similarities(table));
+
+describe("familiesOf membership", () => {
+  it("is empty without links", () => {
+    expect(familiesOf([], historyOf(commit([0, 1])), () => 0)).toEqual([]);
+  });
+
+  it("joins a chain of links into one family with its sorted members", () => {
+    const families = familiesFor(
+      { "c.ts b.ts": 0.8, "a.ts b.ts": 0.6 },
       historyOf(commit([0, 1, 2])),
     );
 
@@ -37,43 +54,48 @@ describe("familiesOf membership", () => {
   });
 
   it("keeps unconnected pairs as separate families", () => {
-    const families = familiesOf(
-      [
-        { a: "a.ts", b: "b.ts", similarity: 0.7 },
-        { a: "d.ts", b: "e.ts", similarity: 0.9 },
-      ],
-      historyOf(),
-    );
+    const families = familiesFor({ "a.ts b.ts": 0.7, "d.ts e.ts": 0.9 });
 
     expect(families.map(({ files }) => files)).toEqual([
       ["a.ts", "b.ts"],
       ["d.ts", "e.ts"],
     ]);
   });
+});
 
+describe("familiesOf similarity", () => {
   it("reports the weakest and strongest similarity among the pairs of a family, rounded", () => {
-    const [family] = familiesOf(
-      [
-        { a: "a.ts", b: "b.ts", similarity: 0.512_349 },
-        { a: "b.ts", b: "c.ts", similarity: 0.9 },
-        { a: "a.ts", b: "c.ts", similarity: 0.7 },
-      ],
-      historyOf(),
-    );
+    const [family] = familiesFor({
+      "a.ts b.ts": 0.512_349,
+      "b.ts c.ts": 0.9,
+      "a.ts c.ts": 0.7,
+    });
 
     expect(family?.similarity).toEqual({ min: 0.5123, max: 0.9 });
+  });
+
+  it("measures every pair of members, so a chain's ends that share little pull the minimum down", () => {
+    // a is like b and b like c, which links all three; a and c are alike by 0.1 only
+    const [family] = familiesOf(
+      [
+        { a: "a.ts", b: "b.ts" },
+        { a: "b.ts", b: "c.ts" },
+      ],
+      historyOf(),
+      similarities({ "a.ts b.ts": 0.6, "b.ts c.ts": 0.8, "a.ts c.ts": 0.1 }),
+    );
+
+    expect(family?.files).toEqual(["a.ts", "b.ts", "c.ts"]);
+    expect(family?.similarity).toEqual({ min: 0.1, max: 0.8 });
   });
 });
 
 describe("familiesOf changes", () => {
-  const pairs = [
-    { a: "a.ts", b: "b.ts", similarity: 0.7 },
-    { a: "b.ts", b: "c.ts", similarity: 0.7 },
-  ];
+  const table = { "a.ts b.ts": 0.7, "b.ts c.ts": 0.7 };
 
   it("counts the commits that touched two members and the commits that touched all of them", () => {
-    const [family] = familiesOf(
-      pairs,
+    const [family] = familiesFor(
+      table,
       historyOf(
         commit([0, 1, 2]),
         commit([0, 1, 2, 5]),
@@ -87,8 +109,8 @@ describe("familiesOf changes", () => {
   });
 
   it("ignores commits above maxCommitFiles", () => {
-    const [family] = familiesOf(
-      [{ a: "a.ts", b: "b.ts", similarity: 0.7 }],
+    const [family] = familiesFor(
+      { "a.ts b.ts": 0.7 },
       historyOf(commit([0, 1]), commit([0, 1], 51)),
     );
 
@@ -96,11 +118,8 @@ describe("familiesOf changes", () => {
   });
 
   it("ranks the family with more fixes applied to all members first", () => {
-    const families = familiesOf(
-      [
-        { a: "a.ts", b: "b.ts", similarity: 0.9 },
-        { a: "d.ts", b: "e.ts", similarity: 0.6 },
-      ],
+    const families = familiesFor(
+      { "a.ts b.ts": 0.9, "d.ts e.ts": 0.6 },
       historyOf(commit([0, 1]), commit([3, 4]), commit([3, 4]), commit([3, 4])),
     );
 
