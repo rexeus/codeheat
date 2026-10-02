@@ -118,6 +118,7 @@ layer(NodeServices.layer)("analyze report", (it) => {
           hubTopShare: 0.05,
           minModuleCommits: 5,
           minHiddenProbability: 0.5,
+          minCopySimilarity: 0.5,
           minLeakage: 0.5,
           minImplementationCommits: 5,
           minSharedCommits: 3,

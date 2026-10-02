@@ -36,6 +36,7 @@
     "maxMeanLineLength": 300,
     "maxFileBytes": 1048576,
     "minHiddenProbability": 0.5,
+    "minCopySimilarity": 0.5,
     "minLeakage": 0.5,
     "minImplementationCommits": 5
   },
@@ -1368,6 +1369,14 @@
         "previousCohesion": 0.6636,
         "cohesionDelta": -0.05
       }
+    }
+  ],
+  "copyFamilies": [
+    {
+      "files": ["packages/auth/src/index.ts", "packages/billing/src/index.ts"],
+      "similarity": { "min": 0.58, "max": 0.58 },
+      "sharedChanges": 6,
+      "changesToAll": 6
     }
   ]
 }

@@ -6,6 +6,7 @@ import type { FileSystem } from "effect";
 import type { ChildProcessSpawner } from "effect/process";
 
 import type { LanguageAdapter } from "../code/language-adapter.js";
+import { findCopyFamilies } from "../copies/find-copy-families.js";
 import type { GitError } from "../git/git-errors.js";
 import { Git } from "../git/git.js";
 import {
@@ -92,7 +93,15 @@ const measureLinked = (
       },
       coupled.couplings,
     );
-    return measureWindows(universe, histories, { ...coupled, couplings });
+    const copyFamilies = yield* findCopyFamilies(
+      place.root,
+      couplings,
+      histories.current,
+    );
+    return {
+      ...measureWindows(universe, histories, { ...coupled, couplings }),
+      copyFamilies,
+    };
   });
 
 /** The history of each window and, when comparing, the time of the oldest commit; both are empty for a repository without commits. */
