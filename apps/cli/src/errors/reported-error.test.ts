@@ -8,10 +8,26 @@ import { toReportedError, toUnexpectedError } from "./reported-error.js";
 describe("toReportedError", () => {
   it("maps unmatched inspect patterns to exit code 4", () => {
     const error = toReportedError(
-      new NothingMatched({ patterns: ["a.ts", "src/*.md"] }),
+      new NothingMatched({ patterns: ["a.ts", "src/*.md"], contracts: [] }),
     );
 
     expect(error.message).toBe('no file matches "a.ts", "src/*.md"');
+    expect(error.exitCode).toBe(4);
+  });
+});
+
+describe("toReportedError for a contract file", () => {
+  it("tells an inspect of a contract file to inspect the code instead, escaped, with exit code 4", () => {
+    const error = toReportedError(
+      new NothingMatched({
+        patterns: ["gone.ts"],
+        contracts: ["api/a\nb.tsp"],
+      }),
+    );
+
+    expect(error.message).toBe(
+      '"api/a\\u000ab.tsp" is a contract file; inspect the code that changes with it; no file matches "gone.ts"',
+    );
     expect(error.exitCode).toBe(4);
   });
 });
@@ -51,14 +67,19 @@ describe("toReportedError for parse failures and unsafe text", () => {
 
   it("escapes control characters that came from user input", () => {
     const error = toReportedError(
-      new NothingMatched({ patterns: ["\u001B[31mred\nline"] }),
+      new NothingMatched({
+        patterns: ["\u001B[31mred\nline"],
+        contracts: [],
+      }),
     );
 
     expect(error.message).toBe('no file matches "\\u001b[31mred\\u000aline"');
   });
 
   it("tells the runtime the exit code and that the error is already reported", () => {
-    const error = toReportedError(new NothingMatched({ patterns: ["a.ts"] }));
+    const error = toReportedError(
+      new NothingMatched({ patterns: ["a.ts"], contracts: [] }),
+    );
 
     expect(Runtime.getErrorExitCode(error)).toBe(4);
     expect(Runtime.getErrorReported(error)).toBe(false);

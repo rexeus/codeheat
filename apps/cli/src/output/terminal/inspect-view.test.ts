@@ -84,6 +84,7 @@ const result = (
   },
   matches,
   modules,
+  contractFiles: [],
   unmatched: [],
 });
 

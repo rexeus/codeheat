@@ -46,7 +46,13 @@ export const InspectResult = Schema.Struct({
   matches: Schema.Array(InspectEntry),
   /** The modules of the matched files, in report order: where a change would land and what it tends to pull in. */
   modules: Schema.Array(Module),
-  /** Requested paths or globs that matched no universe file. */
+  /**
+   * Contract files the patterns matched, sorted. A contract has no score and
+   * no entry in `matches`: inspect the code that changes with it, which lists
+   * the contract among its partners.
+   */
+  contractFiles: Schema.Array(Schema.String),
+  /** Requested paths or globs that matched no universe file; one that matched only contract files is not listed here. */
   unmatched: Schema.Array(Schema.String),
 });
 export type InspectResult = typeof InspectResult.Type;

@@ -91,3 +91,39 @@ describe("codeheat shows contract partners and honors exclude", () => {
     }).pipe(Effect.scoped),
   );
 });
+
+describe("codeheat inspect of a contract file", () => {
+  it.live("says to inspect the code that changes with it and exits 4", () =>
+    Effect.gen(function* () {
+      const repo = yield* makeContractProject;
+
+      const result = yield* journey({
+        args: ["inspect", "api/orders.tsp"],
+        cwd: repo.root,
+      });
+
+      expect(result.exitCode).toBe(4);
+      expect(result.stderr).toContain(
+        '"api/orders.tsp" is a contract file; inspect the code that changes with it',
+      );
+      expect(result.stderr).not.toContain("no file matches");
+    }).pipe(Effect.scoped),
+  );
+
+  it.live(
+    "notes a contract next to the code it inspects and still succeeds",
+    () =>
+      Effect.gen(function* () {
+        const repo = yield* makeContractProject;
+
+        const result = yield* journey({
+          args: ["inspect", "src/orders.ts", "api/orders.tsp"],
+          cwd: repo.root,
+        });
+
+        expect(result.exitCode).toBe(0);
+        expect(result.stderr).toContain('"api/orders.tsp" is a contract file');
+        expect(result.stdout).toContain("src/orders.ts");
+      }).pipe(Effect.scoped),
+  );
+});

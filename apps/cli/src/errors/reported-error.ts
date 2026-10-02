@@ -7,6 +7,7 @@ import { escapeForTerminal } from "../output/escape.js";
 import type { HtmlWriteFailed } from "../output/html/html-write-failed.js";
 import type { FlagsConflict } from "./flags-conflict.js";
 import type { MisplacedHtmlOutput } from "./misplaced-html-output.js";
+import { contractFileMessage } from "./nothing-matched.js";
 import type { NothingMatched } from "./nothing-matched.js";
 import type { PathNotFound } from "./path-not-found.js";
 
@@ -129,8 +130,16 @@ const engineFailure = (
       exitCode: UNEXPECTED,
     };
   }
+  const unmatched =
+    error.patterns.length === 0
+      ? []
+      : [
+          `no file matches ${error.patterns.map((pattern) => `"${pattern}"`).join(", ")}`,
+        ];
   return {
-    message: `no file matches ${error.patterns.map((pattern) => `"${pattern}"`).join(", ")}`,
+    message: [...error.contracts.map(contractFileMessage), ...unmatched].join(
+      "; ",
+    ),
     exitCode: NOTHING_MATCHED,
   };
 };

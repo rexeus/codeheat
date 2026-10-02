@@ -354,3 +354,28 @@ describe("inspect contract partners", () => {
     );
   });
 });
+
+const withContracts = (paths: ReadonlyArray<string>): Report => ({
+  ...reportOf([stats("src/a.ts", 1, 10)]),
+  contracts: paths.map((path) => ({
+    path,
+    module: ".",
+    revisions: 3,
+    linesAdded: 1,
+    linesDeleted: 0,
+  })),
+});
+
+describe("inspect contract files", () => {
+  it("reports a matched contract file apart, without an entry, and not as unmatched", () => {
+    const result = inspect(withContracts(["api/b.tsp", "api/a.tsp"]), [
+      "api/*.tsp",
+      "src/a.ts",
+      "nope.ts",
+    ]);
+
+    expect(result.matches.map(({ path }) => path)).toEqual(["src/a.ts"]);
+    expect(result.contractFiles).toEqual(["api/a.tsp", "api/b.tsp"]);
+    expect(result.unmatched).toEqual(["nope.ts"]);
+  });
+});
