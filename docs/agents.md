@@ -47,7 +47,9 @@ The files of a repository are grouped into modules: workspace packages (a direct
   "commits": 74,
   "localCommits": 41,
   "cohesion": 0.5541,
-  "partners": [{ "path": "packages/web", "sharedCommits": 20 }],
+  "partners": [
+    { "path": "packages/web", "sharedCommits": 20, "contractsOnly": false }
+  ],
   "entryPoints": ["packages/billing/src/index.ts"],
   "interfaceCommits": 9,
   "implementationCommits": 71,
@@ -59,6 +61,7 @@ The files of a repository are grouped into modules: workspace packages (a direct
 - `cohesion` is the share of the module's counted commits that touched nothing outside it. At 0.55, nearly half of the changes to `packages/billing` reach into another module, and `partners` says which ones, here `packages/web` in 20 of 74 commits. Plan to check those modules too, and say so when you leave them untouched.
 - A high `cohesion` means the module is usually safe to change alone.
 - `cohesion` is `null` when no counted commit touched the module: there is no signal, not perfect cohesion. Trust a module with few `commits` less (the ranking covers only modules with at least `thresholds.minModuleCommits`, which is `max(5, 1% of window.couplingCommits)`, and skips `testOnly` modules, whose files are all test code).
+- A module partner with `contractsOnly: true` is no module but a place that holds only contract files, such as a code-free `spec/` folder: the module loses cohesion to a contract that lives outside every module. Read the contracts there before changing the module.
 - A partner in `inspect` with `crossesModule: true` lives in another module than the inspected file.
 - `leakage` is the share of the module's implementation commits that also touched an entry point. `leakyInterface: true` means changes inside usually change the public API too, so check the callers of the module. `modules` is in cohesion order, so look for `leakyInterface` instead of the first entries, and use `--limit 0` to see all modules. Low leakage behind an `export *` barrel does not prove a stable API.
 - A coupling with `crossesModule: true` joins files of different modules. That is neutral information: an app changes with the library it uses. It is worth a look when the modules should not know each other.
@@ -86,7 +89,7 @@ Interface definitions and schemas (`.tsp`, `.proto`, `.graphql`, `.gql`, `.avsc`
 - `analyze` lists every contract file in `contracts` (`path`, `module`, `revisions`, `linesAdded`, `linesDeleted`; `totals.contracts` is the full count). They have no `score`, `rank`, or `complexity`, are not in `files`, and count for no module's size, leakage, or depth; they count as a touch of the module they live in for `cohesion` and `partners`.
 - A contract's `imports` is always `null`: do not read it as hidden coupling.
 - `ubiquitousFiles` lists contract files that changed in more than `thresholds.ubiquitousShare` of the counted commits (and in at least `thresholds.ubiquitousMinCommits`), such as a central schema every change touches. They are left out of couplings, `breadth`, and module cohesion, so a missing coupling to one of them says nothing; check `ubiquitousFiles` before concluding a file is independent of the API description.
-- `inspect <contract>` matches nothing: inspect the code, not the contract. `--exclude` removes contract files; generated output (`tsp-output/`, `generated/`, `__generated__/`) is never read.
+- `inspect <contract>` lists the file in `contractFiles` and shows no entry (the terminal says to inspect the code that changes with it, exit code 4 when nothing else matched): inspect the code, not the contract. `couplings` list pairs with a code side first and pairs of two contract files after them, so a limited list keeps code pairs. A commit that touched only contract files counts in `window.commits` and `window.couplingCommits`. `--exclude` removes contract files; generated output (`tsp-output/`, `generated/`, `__generated__/`) is never read.
 
 ## Reading hidden coupling
 
