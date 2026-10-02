@@ -1,3 +1,7 @@
+import {
+  UBIQUITOUS_MIN_COMMITS,
+  UBIQUITOUS_SHARE,
+} from "../contracts/ubiquitous.js";
 // Owns the noise limits an analysis applies, reported so consumers see them.
 import {
   MAX_COMMIT_FILES,
@@ -34,6 +38,8 @@ export const thresholdsFor = (couplingCommits: number) =>
     minImplementationCommits: MIN_IMPLEMENTATION_COMMITS,
     minSharedCommits: MIN_SHARED_COMMITS,
     minDegree: MIN_DEGREE,
+    ubiquitousShare: UBIQUITOUS_SHARE,
+    ubiquitousMinCommits: UBIQUITOUS_MIN_COMMITS,
     maxMeanLineLength: MAX_MEAN_LINE_LENGTH,
     maxFileBytes: MAX_FILE_BYTES,
   }) satisfies Report["thresholds"];

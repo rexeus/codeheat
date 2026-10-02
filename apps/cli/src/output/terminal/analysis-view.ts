@@ -3,6 +3,7 @@ import type { Coupling, FileStats, Module, Report } from "@codeheat/engine";
 
 import { escapeForTerminal } from "../escape.js";
 import { changeLines } from "./changes-view.js";
+import { contractNote, coupledPath, ubiquitousLines } from "./contract-view.js";
 import { shallowestLines } from "./depth-view.js";
 import { day, percent } from "./format.js";
 import type { Style } from "./style.js";
@@ -18,14 +19,6 @@ const BAR_WIDTH = 10;
 const scoreBar = (score: number): string => {
   const filled = Math.round(score * BAR_WIDTH);
   return "█".repeat(filled) + "░".repeat(BAR_WIDTH - filled);
-};
-
-/** How many contract files the analysis also read; nothing without any. */
-const contractNote = (report: Report): string => {
-  const { contracts } = report.totals;
-  return contracts === 0
-    ? ""
-    : `, ${contracts} contract ${contracts === 1 ? "file" : "files"}`;
 };
 
 const hotspotLines = (
@@ -58,10 +51,6 @@ const importsCell = ({ imports }: Coupling, style: Style): Cell =>
   imports === "none"
     ? { text: "hidden", paint: style.bold }
     : plain(imports ?? "-");
-
-/** A coupled file's path, marked when it is a contract (an interface definition or schema, which has no hotspot score). */
-const coupledPath = (path: string, kind: Coupling["kinds"]["a"]): string =>
-  escapeForTerminal(path) + (kind === "contract" ? " (contract)" : "");
 
 const couplingLines = (
   couplings: ReadonlyArray<Coupling>,
@@ -217,6 +206,7 @@ export const renderAnalysis = (report: Report, style: Style): string => {
     ...(couplings.length > 1
       ? couplings
       : ["No change coupling above the thresholds."]),
+    ...ubiquitousLines(report).map((line) => style.dim(line)),
     "",
     style.bold("Least cohesive modules"),
     ...(modules.length > 0

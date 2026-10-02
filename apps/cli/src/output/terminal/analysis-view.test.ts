@@ -18,7 +18,7 @@ const section = (view: string, heading: string): ReadonlyArray<string> => {
 describe("renderAnalysis", () => {
   it("summarizes the repository, window and universe size", () => {
     expect(plainView().split("\n")[0]).toBe(
-      "acme-shop  2025-09-29 to 2026-09-29  212 commits, 36 files, 1 contract file",
+      "acme-shop  2025-09-29 to 2026-09-29  212 commits, 36 files, 2 contract files",
     );
   });
 
@@ -55,6 +55,7 @@ describe("renderAnalysis coupling table", () => {
       "   58%      22         2    79%    46%  -        packages/billing/api/billing.tsp (contract) <-> packages/billing/src/invoice.ts",
       "   53%       9         5    41%    75%  b→a      packages/auth/src/session.ts <-> packages/web/src/hooks/use-session.ts",
       "   42%       9         7    53%    35%  b→a      packages/shared/src/config.ts <-> apps/cli/src/commands/analyze.ts",
+      "Left out for changing in over 30% of commits: api/openapi.yaml (44%)",
     ]);
   });
 

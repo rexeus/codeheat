@@ -22,7 +22,7 @@ describe("limitReport", () => {
   it("keeps the totals of the untruncated report", () => {
     expect(limitReport(sampleReport(), 3).totals).toEqual({
       files: 36,
-      contracts: 1,
+      contracts: 2,
       couplings: 9,
       modules: 5,
     });

@@ -31,6 +31,8 @@
     "minModuleCommits": 5,
     "minSharedCommits": 3,
     "minDegree": 0.3,
+    "ubiquitousShare": 0.3,
+    "ubiquitousMinCommits": 10,
     "maxMeanLineLength": 300,
     "maxFileBytes": 1048576,
     "minHiddenProbability": 0.5,
@@ -39,7 +41,7 @@
   },
   "totals": {
     "files": 36,
-    "contracts": 1,
+    "contracts": 2,
     "couplings": 9,
     "modules": 5
   },
@@ -1020,11 +1022,25 @@
   ],
   "contracts": [
     {
+      "path": "api/openapi.yaml",
+      "module": ".",
+      "revisions": 93,
+      "linesAdded": 1204,
+      "linesDeleted": 890
+    },
+    {
       "path": "packages/billing/api/billing.tsp",
       "module": "packages/billing",
       "revisions": 28,
       "linesAdded": 410,
       "linesDeleted": 236
+    }
+  ],
+  "ubiquitousFiles": [
+    {
+      "path": "api/openapi.yaml",
+      "commits": 88,
+      "share": 0.4444
     }
   ],
   "couplings": [

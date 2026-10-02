@@ -3,8 +3,9 @@ import { Order } from "effect";
 
 import type { HistoryCommit } from "../history/history.js";
 import type { ModuleRef } from "../modules/detect.js";
+import type { FileKind } from "../report/contract-file.js";
 import { roundReported } from "../report/precision.js";
-import type { Coupling, FileKind } from "../report/report.js";
+import type { Coupling } from "../report/report.js";
 import { directoryDistance, isTestPair } from "./pair.js";
 
 /** Commits touching more files than this say nothing about coupling. */

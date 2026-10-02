@@ -23,6 +23,7 @@ import type { InvalidCompare, InvalidSince } from "./analysis-window.js";
 import { coupleHistory, measureWindows } from "./measure.js";
 import type { Universe } from "./measure.js";
 import { readUniverse } from "./read-universe.js";
+import { setAsideUbiquitous } from "./set-aside-ubiquitous.js";
 import {
   comparisonOf,
   noHistories,
@@ -131,7 +132,7 @@ const analyzeRepository = (
       root,
       scope,
     });
-    const { histories, oldestCommit } = yield* readTimeline(windows, {
+    const timeline = yield* readTimeline(windows, {
       head,
       skipCommits: shallowBoundary ?? new Set(),
       universe: new Set([
@@ -139,6 +140,10 @@ const analyzeRepository = (
         ...universe.contracts.keys(),
       ]),
     });
+    const { histories, ubiquitousFiles } = setAsideUbiquitous(
+      timeline.histories,
+      new Set(universe.contracts.keys()),
+    );
     const { commits, couplingCommits, thresholds, ...measured } =
       yield* measureLinked(options, { root, scope }, universe, histories);
     return {
@@ -152,7 +157,7 @@ const analyzeRepository = (
         shallow: shallowBoundary !== undefined,
       },
       window: { ...windows.current, commits, couplingCommits },
-      comparison: comparisonOf(windows, histories, oldestCommit),
+      comparison: comparisonOf(windows, histories, timeline.oldestCommit),
       thresholds,
       totals: {
         files: measured.files.length,
@@ -161,6 +166,7 @@ const analyzeRepository = (
         modules: measured.modules.length,
       },
       ...measured,
+      ubiquitousFiles,
       modules: withDepths(measured.modules, depths),
     } satisfies Report;
   });

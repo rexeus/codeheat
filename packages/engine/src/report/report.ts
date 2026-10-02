@@ -3,6 +3,7 @@
 // Additive fields keep schemaVersion 1; renaming or removing a field bumps it.
 import { Schema } from "effect";
 
+import { ContractFile, FileKind, UbiquitousFile } from "./contract-file.js";
 import { Module } from "./module.js";
 import { Count, UnitDelta, UnitInterval } from "./scalars.js";
 
@@ -82,6 +83,13 @@ const Thresholds = Schema.Struct({
   minLeakage: UnitInterval,
   /** Fewest `Module.implementationCommits` a module needs before its entry points get that reason line. */
   minImplementationCommits: Count,
+  /**
+   * A contract file that changed in more than this share of the counted
+   * commits is ubiquitous (see `Report.ubiquitousFiles`).
+   */
+  ubiquitousShare: UnitInterval,
+  /** Fewest counted commits a contract file needs to be ubiquitous. */
+  ubiquitousMinCommits: Count,
   maxMeanLineLength: Count,
   maxFileBytes: Count,
 });
@@ -127,33 +135,6 @@ export const FileStats = Schema.Struct({
   trend: Schema.NullOr(FileTrend),
 });
 export type FileStats = typeof FileStats.Type;
-
-/** What a universe file is: code is scored, a contract (interface definition or schema) only couples. */
-export const FileKind = Schema.Literals(["code", "contract"]);
-export type FileKind = typeof FileKind.Type;
-
-/**
- * A contract file: an IDL or schema file (`.tsp`, `.proto`, `.graphql`,
- * `.gql`, `.avsc`, `.thrift`, `.smithy`), a JSON Schema (`*.schema.json`), or
- * an OpenAPI, AsyncAPI, or Swagger description (`openapi.*`, `asyncapi.*`,
- * `swagger.*` in YAML or JSON). It takes part in coupling but has no score,
- * rank, or complexity, and is never listed in `files`.
- */
-export const ContractFile = Schema.Struct({
-  /** Repository-relative POSIX path. */
-  path: Schema.String,
-  /**
-   * `path` of the module the contract lives in: the nearest module above it,
-   * or "." when none is. It counts for the module's cohesion and partners, never
-   * for its size.
-   */
-  module: Schema.String,
-  /** Commits of the window that touched the file, large ones included. */
-  revisions: Count,
-  linesAdded: Count,
-  linesDeleted: Count,
-});
-export type ContractFile = typeof ContractFile.Type;
 
 /** Two files that keep changing in the same commits. */
 export const Coupling = Schema.Struct({
@@ -232,6 +213,16 @@ export const Report = Schema.Struct({
    * They have no score; they appear in `couplings` with `kinds`.
    */
   contracts: Schema.Array(ContractFile),
+  /**
+   * The contract files that changed in more than `Thresholds.ubiquitousShare`
+   * of the counted commits, and in at least `Thresholds.ubiquitousMinCommits`
+   * of them, most commits first. A central schema or API description that
+   * every change touches would couple to everything, so they join no
+   * `couplings` pair, no `breadth`, and no module's cohesion or partners; they
+   * stay in `contracts`. With `--compare` the previous window is judged on its
+   * own commits and this lists the latest window's.
+   */
+  ubiquitousFiles: Schema.Array(UbiquitousFile),
   /** Sorted by degree, descending. */
   couplings: Schema.Array(Coupling),
   /**

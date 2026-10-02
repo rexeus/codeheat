@@ -90,6 +90,8 @@ export const reportOf = (
     minImplementationCommits: 5,
     minSharedCommits: 3,
     minDegree: 0.3,
+    ubiquitousShare: 0.3,
+    ubiquitousMinCommits: 10,
     maxMeanLineLength: 300,
     maxFileBytes: 1048576,
   },
@@ -101,6 +103,7 @@ export const reportOf = (
   },
   files,
   contracts: [],
+  ubiquitousFiles: [],
   couplings,
   modules,
 });
