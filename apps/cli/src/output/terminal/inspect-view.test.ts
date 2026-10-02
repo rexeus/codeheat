@@ -59,8 +59,8 @@ const billing: Module = {
   localCommits: 41,
   cohesion: 0.5541,
   partners: [
-    { path: "packages/web", sharedCommits: 20 },
-    { path: "packages/auth", sharedCommits: 9 },
+    { path: "packages/web", sharedCommits: 20, contractsOnly: false },
+    { path: "packages/auth", sharedCommits: 9, contractsOnly: false },
   ],
   entryPoints: ["packages/billing/src/index.ts"],
   interfaceCommits: 9,
@@ -275,5 +275,18 @@ describe("renderInspect contract partners", () => {
     );
 
     expect(view).toContain("-       api/orders.tsp (contract)");
+  });
+});
+
+describe("renderInspect contract-only partners", () => {
+  it("marks a module partner that holds only contract files", () => {
+    const module: Module = {
+      ...billing,
+      partners: [{ path: "spec", sharedCommits: 20, contractsOnly: true }],
+    };
+
+    const view = renderInspect(result([entry], [module]), makeStyle(false));
+
+    expect(view).toContain("most often with spec (contracts) (20)");
   });
 });

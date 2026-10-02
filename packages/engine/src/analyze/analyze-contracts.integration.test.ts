@@ -125,7 +125,7 @@ layer(NodeServices.layer)("analyze contract modules and reasons", (it) => {
           [2, 6, 1],
         );
         assert.deepStrictEqual(moduleA?.partners, [
-          { path: "packages/b", sharedCommits: 5 },
+          { path: "packages/b", sharedCommits: 5, contractsOnly: false },
         ]);
         // only the first commit changed a's implementation; the contract commits did not
         assert.deepStrictEqual(

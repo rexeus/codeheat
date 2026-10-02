@@ -7,6 +7,7 @@ import {
   contractNote,
   coupledPath,
   isContractPair,
+  partnerName,
   ubiquitousLines,
 } from "./contract-view.js";
 import { shallowestLines } from "./depth-view.js";
@@ -123,7 +124,7 @@ const moduleLines = (
         plain(
           partner === undefined
             ? ""
-            : `${escapeForTerminal(partner.path)} (${partner.sharedCommits})`,
+            : `${partnerName(partner)} (${partner.sharedCommits})`,
         ),
       ];
     }),

@@ -27,6 +27,18 @@ export const coupledPath = (
   escapeForTerminal(path) + (kind === "contract" ? " (contract)" : "");
 
 /**
+ * A module partner's name, marked when it is no module but a place that holds
+ * only contract files (a code-free `spec/` folder): why a design-first module
+ * changes with something outside every module.
+ */
+export const partnerName = (partner: {
+  readonly path: string;
+  readonly contractsOnly: boolean;
+}): string =>
+  escapeForTerminal(partner.path) +
+  (partner.contractsOnly ? " (contracts)" : "");
+
+/**
  * The contract files that were left out of coupling for changing in most
  * commits, with their share; no lines when there are none.
  */

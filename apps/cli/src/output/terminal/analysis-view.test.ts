@@ -350,3 +350,27 @@ describe("renderAnalysis contract files", () => {
     );
   });
 });
+
+describe("renderAnalysis contract-only partners", () => {
+  it("marks a module partner that holds only contract files", () => {
+    const report = sampleReport();
+    const modules = report.modules.map((module) =>
+      module.path === "packages/shared"
+        ? Object.assign({}, module, {
+            partners: [
+              { path: "spec", sharedCommits: 11, contractsOnly: true },
+            ],
+          })
+        : module,
+    );
+
+    const table = section(
+      plainView({ ...report, modules }),
+      "Least cohesive modules",
+    );
+
+    expect(table[1]).toBe(
+      "     40%       30  packages/shared   spec (contracts) (11)",
+    );
+  });
+});

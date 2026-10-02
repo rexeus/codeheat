@@ -12,6 +12,12 @@ const ModulePartner = Schema.Struct({
   path: Schema.String,
   /** Counted commits that touched both modules. */
   sharedCommits: Count,
+  /**
+   * `path` is no module of the report but a place that holds only contract
+   * files, such as a code-free `spec/` folder: the module changes with an
+   * interface definition that lives outside every module.
+   */
+  contractsOnly: Schema.Boolean,
 });
 
 /** How a module's cohesion changed against the window before (`analyze --compare`). */

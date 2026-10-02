@@ -135,11 +135,11 @@ describe("measureModules partners", () => {
     );
 
     expect(hub?.partners).toStrictEqual([
-      { path: "p7", sharedCommits: 2 },
-      { path: "p1", sharedCommits: 1 },
-      { path: "p2", sharedCommits: 1 },
-      { path: "p3", sharedCommits: 1 },
-      { path: "p4", sharedCommits: 1 },
+      { path: "p7", sharedCommits: 2, contractsOnly: false },
+      { path: "p1", sharedCommits: 1, contractsOnly: false },
+      { path: "p2", sharedCommits: 1, contractsOnly: false },
+      { path: "p3", sharedCommits: 1, contractsOnly: false },
+      { path: "p4", sharedCommits: 1, contractsOnly: false },
     ]);
   });
 });
@@ -189,14 +189,14 @@ describe("measureModules commit size", () => {
         files: 1,
         commits: 2,
         localCommits: 0,
-        partners: [{ path: "a", sharedCommits: 2 }],
+        partners: [{ path: "a", sharedCommits: 2, contractsOnly: false }],
       },
       {
         path: "a",
         files: 1,
         commits: 3,
         localCommits: 1,
-        partners: [{ path: "b", sharedCommits: 2 }],
+        partners: [{ path: "b", sharedCommits: 2, contractsOnly: false }],
       },
     ]);
   });

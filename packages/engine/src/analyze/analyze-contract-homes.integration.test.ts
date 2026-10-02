@@ -20,7 +20,7 @@ const HANDLER = "packages/api/src/handler.ts";
  * A design-first workspace: `spec/` holds a contract and no code, two
  * packages implement it, and a root config file makes `.` a module. The
  * handler follows the contract in twelve commits; one commit touches the root
- * file alone.
+ * file alone, and thirty more change the web package.
  */
 const designFirstWorkspace = (repo: TempRepository) =>
   Effect.gen(function* () {
@@ -39,6 +39,15 @@ const designFirstWorkspace = (repo: TempRepository) =>
       });
     }
     yield* repo.commit(day(14), { "eslint.config.js": "export default [1]\n" });
+    // enough other work that the contract is no ubiquitous file (13 of 44 commits)
+    for (let index = 1; index <= 30; index += 1) {
+      yield* repo.commit(
+        `2026-04-${String(index).padStart(2, "0")}T12:00:00Z`,
+        {
+          "packages/web/src/page.ts": `export const p = ${index}\n`,
+        },
+      );
+    }
   });
 
 layer(NodeServices.layer)("analyze contract homes", (it) => {
@@ -59,6 +68,15 @@ layer(NodeServices.layer)("analyze contract homes", (it) => {
         const root = report.modules.find((module) => module.path === ".");
         // the first commit touched every module; the root file's own commit is local
         assert.deepStrictEqual([root?.commits, root?.localCommits], [2, 1]);
+        // a design-first module changes with a folder that holds only contracts
+        const api = report.modules.find(
+          (module) => module.path === "packages/api",
+        );
+        assert.deepStrictEqual(api?.partners, [
+          { path: "spec", sharedCommits: 13, contractsOnly: true },
+          { path: ".", sharedCommits: 1, contractsOnly: false },
+          { path: "packages/web", sharedCommits: 1, contractsOnly: false },
+        ]);
       }),
   );
 });

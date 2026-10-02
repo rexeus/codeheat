@@ -1183,19 +1183,23 @@
       "partners": [
         {
           "path": "apps/cli",
-          "sharedCommits": 11
+          "sharedCommits": 11,
+          "contractsOnly": false
         },
         {
           "path": "packages/billing",
-          "sharedCommits": 6
+          "sharedCommits": 6,
+          "contractsOnly": false
         },
         {
           "path": "packages/web",
-          "sharedCommits": 5
+          "sharedCommits": 5,
+          "contractsOnly": false
         },
         {
           "path": "packages/auth",
-          "sharedCommits": 4
+          "sharedCommits": 4,
+          "contractsOnly": false
         }
       ],
       "entryPoints": ["packages/shared/src/index.ts"],
@@ -1224,11 +1228,13 @@
       "partners": [
         {
           "path": "packages/shared",
-          "sharedCommits": 11
+          "sharedCommits": 11,
+          "contractsOnly": false
         },
         {
           "path": "packages/billing",
-          "sharedCommits": 3
+          "sharedCommits": 3,
+          "contractsOnly": false
         }
       ],
       "entryPoints": [],
@@ -1253,15 +1259,18 @@
       "partners": [
         {
           "path": "packages/billing",
-          "sharedCommits": 20
+          "sharedCommits": 20,
+          "contractsOnly": false
         },
         {
           "path": "packages/auth",
-          "sharedCommits": 14
+          "sharedCommits": 14,
+          "contractsOnly": false
         },
         {
           "path": "packages/shared",
-          "sharedCommits": 5
+          "sharedCommits": 5,
+          "contractsOnly": false
         }
       ],
       "entryPoints": [],
@@ -1286,19 +1295,23 @@
       "partners": [
         {
           "path": "packages/web",
-          "sharedCommits": 20
+          "sharedCommits": 20,
+          "contractsOnly": false
         },
         {
           "path": "packages/auth",
-          "sharedCommits": 9
+          "sharedCommits": 9,
+          "contractsOnly": false
         },
         {
           "path": "packages/shared",
-          "sharedCommits": 6
+          "sharedCommits": 6,
+          "contractsOnly": false
         },
         {
           "path": "apps/cli",
-          "sharedCommits": 3
+          "sharedCommits": 3,
+          "contractsOnly": false
         }
       ],
       "entryPoints": ["packages/billing/src/index.ts"],
@@ -1327,15 +1340,18 @@
       "partners": [
         {
           "path": "packages/web",
-          "sharedCommits": 14
+          "sharedCommits": 14,
+          "contractsOnly": false
         },
         {
           "path": "packages/billing",
-          "sharedCommits": 9
+          "sharedCommits": 9,
+          "contractsOnly": false
         },
         {
           "path": "packages/shared",
-          "sharedCommits": 4
+          "sharedCommits": 4,
+          "contractsOnly": false
         }
       ],
       "entryPoints": ["packages/auth/src/index.ts"],

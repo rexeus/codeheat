@@ -2,6 +2,7 @@
 import type { InspectResult, Module } from "@codeheat/engine";
 
 import { escapeForTerminal } from "../escape.js";
+import { partnerName } from "./contract-view.js";
 import { describeDepth } from "./depth-view.js";
 import { day, percent, twoDecimals } from "./format.js";
 import type { Style } from "./style.js";
@@ -89,7 +90,7 @@ const moduleLine = (module: Module | undefined): ReadonlyArray<string> => {
   const partnerNote =
     partner === undefined
       ? ""
-      : `, most often with ${escapeForTerminal(partner.path)} (${partner.sharedCommits})`;
+      : `, most often with ${partnerName(partner)} (${partner.sharedCommits})`;
   return [
     `${name}: ${percent(module.cohesion)} of ${module.commits} commits stay inside${partnerNote}`,
     ...depthLine(module),

@@ -106,6 +106,7 @@ const toModule = (
   path: string,
   tally: Tally,
   churn: InterfaceChurn,
+  modulePaths: ReadonlySet<string>,
 ): Module => {
   const testOnly = tally.testFiles === tally.files;
   return {
@@ -120,7 +121,11 @@ const toModule = (
         ? null
         : roundReported(tally.localCommits / tally.commits),
     partners: [...tally.shared]
-      .map(([partner, sharedCommits]) => ({ path: partner, sharedCommits }))
+      .map(([partner, sharedCommits]) => ({
+        path: partner,
+        sharedCommits,
+        contractsOnly: !modulePaths.has(partner),
+      }))
       .toSorted(byPartnerStrength)
       .slice(0, MAX_PARTNERS),
     ...churn,
@@ -158,9 +163,10 @@ export const measureModules = (
       tallies,
     );
   }
+  const modulePaths = new Set(tallies.keys());
   return [...tallies]
     .map(([path, tally]) =>
-      toModule(path, tally, interfaces.get(path) ?? NO_INTERFACE),
+      toModule(path, tally, interfaces.get(path) ?? NO_INTERFACE, modulePaths),
     )
     .toSorted(
       (a, b) =>
