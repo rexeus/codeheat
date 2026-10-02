@@ -144,7 +144,7 @@ layer(NodeServices.layer)(
   "analyze contract housing and generated output",
   (it) => {
     it.effect(
-      "houses a contract outside every module at the root without making a module of it",
+      "houses a contract outside every module in a directory of its own without making a module of it",
       () =>
         Effect.gen(function* () {
           yield* setNow;
@@ -159,7 +159,7 @@ layer(NodeServices.layer)(
 
           assert.deepStrictEqual(
             report.contracts.map(({ path, module }) => [path, module]),
-            [["specs/openapi.yaml", "."]],
+            [["specs/openapi.yaml", "specs"]],
           );
           assert.deepStrictEqual(report.modules.map((m) => m.path).toSorted(), [
             "src/a",
