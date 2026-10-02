@@ -7,9 +7,17 @@ packages:
 allowBuilds:
   esbuild: false
 
-# Reject packages published less than a day ago. Setting it explicitly makes
-# pnpm enforce it strictly instead of silently excluding young versions.
-minimumReleaseAge: 1440
+# Reject packages published less than three days ago. Setting it explicitly
+# makes pnpm enforce it strictly instead of silently excluding young versions.
+minimumReleaseAge: 4320
+
+# Reject a version that is less trusted than an earlier one (for example, one
+# published without provenance after signed releases): a possible takeover.
+trustPolicy: no-downgrade
+trustPolicyExclude:
+  # Published in January 2025 by the same maintainer as the signed 3.2.1, only
+  # without provenance; a long-standing vitest dependency.
+  - why-is-node-running@3.2.2
 
 catalog:
   "@effect/language-service": 0.87.3
