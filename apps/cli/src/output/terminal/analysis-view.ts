@@ -181,9 +181,9 @@ const leakyModules = (report: Report): ReadonlyArray<Module> =>
  * the five strongest couplings that are neither test pairs nor pairs of two
  * contract files, each with the co-change probability in both directions
  * (`shared / revisions(side)`) and a contract file marked `(contract)`, the
- * five copy families with the most commits touching every copy (the section
- * is left out when there is none), the five least cohesive modules, the first
- * five modules with a leaky interface,
+ * five copy families with production code and the most commits touching every
+ * copy (the section is left out when there is none), the five least cohesive
+ * modules, the first five modules with a leaky interface,
  * the five shallowest ranked modules (fewest implementation lines per exported
  * name; the section is left out when none has a depth), and, when the report compares two windows, the biggest changes. The report
  * must not be cut to `--limit`: test pairs could crowd out every other
