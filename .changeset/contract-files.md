@@ -1,0 +1,5 @@
+---
+"codeheat": minor
+---
+
+Include contract files in coupling: interface definitions and schemas (`.tsp`, `.proto`, `.graphql`, `.gql`, `.avsc`, `.thrift`, `.smithy`, `*.schema.json`, and `openapi.*`, `asyncapi.*`, `swagger.*` in YAML or JSON) now show which code follows them. They get no score, rank, or complexity and never appear in `files`, module sizes, leakage, or depth, but they couple with code, count as a touch of the module they live in for cohesion, and are marked `(contract)` in the terminal. `analyze --json` gains `contracts`, `totals.contracts`, `ubiquitousFiles`, `Coupling.kinds`, and the thresholds `ubiquitousShare` and `ubiquitousMinCommits`; `inspect` partners gain `kind`. A contract file that changes in more than 30 % of the counted commits (a central schema every change touches) is listed in `ubiquitousFiles` and left out of every pair. `.proto`, `.graphql`, and `.gql` are no longer scored as code, and `tsp-output/` joins the excluded output directories. `--exclude` removes contract files, `--include` replaces the contract list like the language list, and there is no new flag.
