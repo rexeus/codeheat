@@ -82,10 +82,17 @@ describe("isTestPair for a mirrored test directory", () => {
     ["src/api.ts", "test/mocks/api.ts"],
     ["src/api.ts", "test/fixtures/api.ts"],
     ["src/a.test.ts", "test/a.test.ts"],
-  ])("leaves %s and %s, a helper or another test, unpaired", (a, b) => {
-    expect(isTestPair(a, b)).toBe(false);
-    expect(isTestPair(b, a)).toBe(false);
-  });
+    ["src/fixtures/a.ts", "test/fixtures/a.test.ts"],
+    ["fixtures/a.ts", "test/fixtures/a.spec.ts"],
+    ["src/a.ts", "__fixtures__/a.test.ts"],
+    ["src/a/b.ts", "tests/__fixtures__/a/b.test.ts"],
+  ])(
+    "leaves %s and %s, a helper, test input, or another test, unpaired",
+    (a, b) => {
+      expect(isTestPair(a, b)).toBe(false);
+      expect(isTestPair(b, a)).toBe(false);
+    },
+  );
 });
 
 describe("isTestFile", () => {

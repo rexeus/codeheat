@@ -1,11 +1,14 @@
 // Owns the answer to "is this path a test?" for module measures: a test file
 // by name, or any file below a test directory.
-import { isTestFile, MIRRORED_TEST_DIRECTORIES } from "../coupling/pair.js";
+import {
+  FIXTURE_DIRECTORIES,
+  isTestFile,
+  MIRRORED_TEST_DIRECTORIES,
+} from "../coupling/pair.js";
 
 const TEST_DIRECTORY_NAMES = new Set([
   ...MIRRORED_TEST_DIRECTORIES,
-  "fixtures",
-  "__fixtures__",
+  ...FIXTURE_DIRECTORIES,
 ]);
 
 /**

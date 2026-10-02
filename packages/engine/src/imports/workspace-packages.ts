@@ -19,17 +19,57 @@ export type Workspace = {
   readonly dependencies: ReadonlySet<string>;
 };
 
+/** A manifest's claim on a package name. */
+type Claim = {
+  readonly name: string;
+  readonly directory: string;
+  readonly rootTargets: ReadonlyArray<string>;
+  /** The universe files its entry points are looked for among. */
+  readonly files: ReadonlyArray<string>;
+  /** Whether `files` are the ones the package owns, not those below it. */
+  readonly ownsFiles: boolean;
+};
+
+/** The packages by name, and the names that more than one claim keeps open; see `readWorkspace` for which claims count. */
+const registered = (
+  claims: ReadonlyArray<Claim>,
+): Pick<Workspace, "packages" | "ambiguous"> => {
+  const ownerNames = new Set(
+    claims.filter(({ ownsFiles }) => ownsFiles).map(({ name }) => name),
+  );
+  const packages = new Map<string, WorkspacePackage>();
+  const ambiguous = new Set<string>();
+  for (const claim of claims) {
+    if (!claim.ownsFiles && ownerNames.has(claim.name)) {
+      continue;
+    }
+    if (packages.has(claim.name)) {
+      ambiguous.add(claim.name);
+    }
+    packages.set(claim.name, {
+      directory: claim.directory,
+      entryPoints: packageMainEntries(
+        claim.directory,
+        claim.rootTargets,
+        claim.files,
+      ),
+    });
+  }
+  return { packages, ambiguous };
+};
+
 /**
  * Reads `manifestFiles`, repository-relative paths of `package.json` files.
  * The packages are those among them that have a `name` and `universe` files
- * below their directory. Importing a package by
- * name reaches the files its manifest names (see `packageMainEntries`) among
- * the `universe` files it owns, those whose nearest package it is; a package
- * that owns none (a workspace folder above its sub-packages) resolves its
- * targets among every `universe` file below its directory instead, so its
- * `main` may point into a sub-package. The repository root package owns
- * nothing by name and is not registered. The report's modules play no part,
- * so a package that is split into directory modules (or is the whole
+ * below their directory. Importing a package by name reaches the files its
+ * manifest names (see `packageMainEntries`) among the `universe` files it
+ * owns, those whose nearest package it is. A package that owns none (a
+ * workspace folder above its sub-packages) resolves its targets among every
+ * `universe` file below its directory instead, so its `main` may point into
+ * a sub-package; it is registered only when no package that owns files claims
+ * its name, because a name it shares with a real package belongs to that one.
+ * The repository root package is never registered. The report's modules play
+ * no part, so a package that is split into directory modules (or is the whole
  * analysis) is still importable by name. `--entry` and the report's entry
  * points play no part either: they describe interfaces, not what an import
  * resolves to. `root` is the repository root the paths are relative to.
@@ -50,13 +90,7 @@ export const readWorkspace = (
       }
     }
     const universeFiles = [...universe];
-    const filesOf = (directory: string): ReadonlyArray<string> =>
-      owned.get(directory) ??
-      (directory === "."
-        ? []
-        : universeFiles.filter((file) => file.startsWith(`${directory}/`)));
-    const byName = new Map<string, WorkspacePackage>();
-    const ambiguous = new Set<string>();
+    const claims: Array<Claim> = [];
     const dependencies = new Set<string>();
     for (const manifestFile of manifestFiles) {
       const facts = yield* readManifestFacts(path.join(root, manifestFile));
@@ -67,18 +101,21 @@ export const readWorkspace = (
         dependencies.add(dependency);
       }
       const directory = directoryOf(manifestFile);
-      const files = filesOf(directory);
+      const ownFiles = owned.get(directory);
+      const files =
+        ownFiles ??
+        universeFiles.filter((file) => file.startsWith(`${directory}/`));
       if (facts.name !== undefined && files.length > 0) {
-        if (byName.has(facts.name)) {
-          ambiguous.add(facts.name);
-        }
-        byName.set(facts.name, {
+        claims.push({
+          name: facts.name,
           directory,
-          entryPoints: packageMainEntries(directory, facts.rootTargets, files),
+          rootTargets: facts.rootTargets,
+          files,
+          ownsFiles: ownFiles !== undefined,
         });
       }
     }
-    return { packages: byName, ambiguous, dependencies };
+    return { ...registered(claims), dependencies };
   });
 
 /**

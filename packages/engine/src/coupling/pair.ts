@@ -16,6 +16,12 @@ export const MIRRORED_TEST_DIRECTORIES: ReadonlySet<string> = new Set([
   "e2e",
 ]);
 
+/** Directories of test inputs: what lies below one is test code but never a test, so it pairs with nothing. */
+export const FIXTURE_DIRECTORIES: ReadonlySet<string> = new Set([
+  "fixtures",
+  "__fixtures__",
+]);
+
 /** What a mirrored test directory stands in for: a source root beside it, or (undefined) the directory it sits in. */
 const SOURCE_ROOTS = ["src", "lib", undefined] as const;
 
@@ -67,7 +73,8 @@ const isSideBySide = (a: string, b: string): boolean => {
 };
 
 /**
- * `test` has a test suffix and lies below a mirrored test directory, and
+ * `test` has a test suffix and lies below a mirrored test directory (and
+ * below no fixtures directory), and
  * `source` is where that directory's mirror puts the same stem: the directory
  * removed, or replaced by `src` or `lib`.
  */
@@ -77,6 +84,9 @@ const mirrors = (test: string, source: string): boolean => {
     return false;
   }
   const parts = name.split("/");
+  if (parts.slice(0, -1).some((part) => FIXTURE_DIRECTORIES.has(part))) {
+    return false;
+  }
   const sourceStem = stemOf(source);
   return parts.some(
     (part, index) =>

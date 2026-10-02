@@ -1,5 +1,5 @@
-import type { Partner } from "../coupling/partners.js";
 // Owns the explanations attached to a scored file, for humans and agents alike.
+import type { Partner } from "../coupling/partners.js";
 import { isTestPath } from "../modules/test-path.js";
 
 /** Fewest distinct co-changed files that make a file a hub. */
