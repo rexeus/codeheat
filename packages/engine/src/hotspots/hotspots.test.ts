@@ -326,6 +326,26 @@ describe("rankFiles hub candidates", () => {
     );
   });
 
+  it("neither ranks nor names test code below a test directory, however wide", () => {
+    // step files, mocks and fixtures are test code by their directory alone
+    const files = [
+      wide("test/steps/checkout.ts", 5, 30),
+      wide("src/__tests__/mock.ts", 5, 30),
+      wide("hub.ts", 5, 10),
+      ...narrowFiles(17),
+    ];
+
+    expect(reasonsOf(files, "test/steps/checkout.ts")).toStrictEqual([
+      "changed in 5 commits (#1 of 20)",
+    ]);
+    expect(reasonsOf(files, "src/__tests__/mock.ts")).toStrictEqual([
+      "changed in 5 commits (#1 of 20)",
+    ]);
+    expect(reasonsOf(files, "hub.ts")?.at(-1)).toBe(
+      "changes together with 10 different files",
+    );
+  });
+
   it("includes every candidate tied at the cut-off", () => {
     // 20 candidates: the top 5% is 1 file, and both widest files share rank 1
     const files = [

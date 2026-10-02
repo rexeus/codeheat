@@ -1,6 +1,6 @@
-// Owns the explanations attached to a scored file, for humans and agents alike.
-import { isTestFile } from "../coupling/pair.js";
 import type { Partner } from "../coupling/partners.js";
+// Owns the explanations attached to a scored file, for humans and agents alike.
+import { isTestPath } from "../modules/test-path.js";
 
 /** Fewest distinct co-changed files that make a file a hub. */
 export const HUB_MIN_BREADTH = 10;
@@ -12,9 +12,9 @@ export const HUB_TOP_SHARE = 0.05;
 /** Smallest co-change probability at which a partner without an import gets a reason line. */
 export const MIN_HIDDEN_PROBABILITY = 0.5;
 
-/** Only frequently changed files that are not tests can be hubs and are ranked by breadth. */
+/** Only frequently changed files that are not test code (`isTestPath`) can be hubs and are ranked by breadth. */
 export const isHubCandidate = (path: string, revisions: number): boolean =>
-  revisions >= HUB_MIN_REVISIONS && !isTestFile(path);
+  revisions >= HUB_MIN_REVISIONS && !isTestPath(path);
 
 export type ReasonFacts = {
   readonly revisions: number;
