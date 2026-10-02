@@ -16,6 +16,7 @@ Run `npx codeheat inspect <file> --json` (quote globs) before changing a file an
 - A low `rank` (1 is hottest) means the file is large or nested and changes often. Keep the change small, add tests first, and prefer extracting over adding more code to it.
 - A partner with `kind: "contract"` is an interface definition or schema (TypeSpec, Protocol Buffers, GraphQL, OpenAPI, JSON Schema, …): it drives this file. Change the contract first and bring the code along, and do not edit code that mirrors a contract without checking the contract.
 - `reasons` explains the rank in plain words; quote it when you explain your plan.
+- A non-null `copyFamily` lists files with largely the same content that keep changing in lockstep (see below). Apply the change to every member of the family in the same edit, or state why a copy stays as it is; when the same fix lands in all of them again, propose extracting the shared part.
 - `modules` describes the module the file lives in (see below): a low `cohesion` means changes there usually reach into other modules; a low `depth.linesPerExport` marks a shallow module, where a new export widens an interface with little behind it.
 
 For orientation in an unfamiliar repository, run `npx codeheat analyze --json` once: `files` are the top hotspots, `couplings` the strongest co-changing pairs, and `totals` the full size.
@@ -100,6 +101,24 @@ A coupling or partner carries `imports`, and a file gets a reason ("changes with
 - `imports: null` means unknown, never "none": the file is not TypeScript or JavaScript, does not parse, no parser was available (stderr says so), or one of its imports is not accounted for (a tsconfig `paths` alias, a `#` subpath import, an undeclared package, code outside the analyzed files, a module loaded by an expression). Do not treat it as hidden coupling; read both files.
 - `none` means every import of both files, and of the barrels they import through, was resolved and none links the pair. It does not see ties that are not imports.
 - `thresholds.minHiddenProbability` is the co-change probability from which a hidden partner gets its reason line.
+
+## Reading copy families
+
+A copy family is a group of files whose content is largely the same and that change in the same commits: the same fix applied to each copy. `analyze --json` lists them in `copyFamilies` (the most fixes applied to all members first), `inspect --json` gives the family of each match as `copyFamily` (`null` for a file that is no member):
+
+```json
+{
+  "files": ["packages/auth/src/index.ts", "packages/billing/src/index.ts"],
+  "similarity": { "min": 0.58, "max": 0.58 },
+  "sharedChanges": 6,
+  "changesToAll": 6
+}
+```
+
+- **When you change one member, change all of them** in the same edit, or say why a copy stays as it is. `sharedChanges` counts the commits that touched at least two members, `changesToAll` the commits that touched every member: a high `changesToAll` means the copies have always been fixed together, so a fix that reaches only one of them is probably incomplete.
+- `similarity` is the Jaccard index of the files' five-word runs (identifiers, keywords, and the shape of literals; comments, whitespace, and punctuation do not count), 0..1; a family is built from pairs that are both coupled and at least `thresholds.minCopySimilarity` alike, so `min` and `max` are the weakest and strongest of those pairs.
+- A family means "these files change in lockstep", not "something is wrong". One adapter per entity or one config per environment is duplication on purpose; when the same fix keeps landing in all copies, the design move is to extract the shared abstraction. Do not report a family as a bug.
+- Only files that already change together are compared, and only from the work tree as it is now: copies that never changed together, files too small to compare, and a coupling between a file and its own test are not families.
 
 ## Contract
 
