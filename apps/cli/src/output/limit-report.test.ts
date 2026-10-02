@@ -22,7 +22,8 @@ describe("limitReport", () => {
   it("keeps the totals of the untruncated report", () => {
     expect(limitReport(sampleReport(), 3).totals).toEqual({
       files: 36,
-      couplings: 8,
+      contracts: 1,
+      couplings: 9,
       modules: 5,
     });
   });
@@ -31,7 +32,7 @@ describe("limitReport", () => {
     const limited = limitReport(sampleReport(), 0);
 
     expect(limited.files).toHaveLength(36);
-    expect(limited.couplings).toHaveLength(8);
+    expect(limited.couplings).toHaveLength(9);
     expect(limited.modules).toHaveLength(5);
   });
 
@@ -39,6 +40,6 @@ describe("limitReport", () => {
     const limited = limitReport(sampleReport(), 100);
 
     expect(limited.files).toHaveLength(36);
-    expect(limited.couplings).toHaveLength(8);
+    expect(limited.couplings).toHaveLength(9);
   });
 });

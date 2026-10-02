@@ -51,6 +51,7 @@ export const partnersOf = (
       path: coupling.a === path ? coupling.b : coupling.a,
       sharedCommits: coupling.sharedCommits,
       probability: roundReported(coupling.sharedCommits / revisions),
+      kind: coupling.a === path ? coupling.kinds.b : coupling.kinds.a,
       testPair: coupling.testPair,
       crossesModule: coupling.crossesModule,
       imports: importsFrom(path, coupling),

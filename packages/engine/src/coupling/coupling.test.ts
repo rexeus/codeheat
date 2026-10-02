@@ -8,13 +8,17 @@ const findCouplings = (
   commits: ReadonlyArray<ReadonlyArray<string>>,
   revisions: ReadonlyMap<string, number>,
   modules: ReadonlyMap<string, ModuleRef> = new Map(),
+  contracts: ReadonlySet<string> = new Set(),
 ) => {
   const paths = [...new Set(commits.flat())];
   const indexed = commits.map((commit) => ({
     files: Uint32Array.from(commit, (path) => paths.indexOf(path)),
     size: commit.length,
   }));
-  return findCouplingsByFileId(indexed, paths, revisions, modules);
+  return findCouplingsByFileId(indexed, paths, revisions, {
+    modules,
+    contracts,
+  });
 };
 
 const pkg = (path: string): ModuleRef => ({ path, kind: "package" });
@@ -122,7 +126,7 @@ describe("findCouplings commit size", () => {
       repeat(3, touched),
       ["a.ts", "b.ts"],
       new Map(),
-      new Map(),
+      { modules: new Map(), contracts: new Set() },
     );
 
     expect(result).toMatchObject({ couplingCommits: 0, couplings: [] });
@@ -228,6 +232,36 @@ describe("findCouplings modules", () => {
       ["app/a.ts", "lib/b.ts", true],
       ["app/a.ts", "lib/c.ts", true],
       ["lib/b.ts", "lib/c.ts", false],
+    ]);
+  });
+});
+
+describe("findCouplings contract files", () => {
+  it("tells contract files from code on both sides of a pair", () => {
+    const commits = repeat(3, [
+      "api/main.tsp",
+      "src/api.ts",
+      "api/types.proto",
+    ]);
+    const revisions = new Map([
+      ["api/main.tsp", 3],
+      ["src/api.ts", 3],
+      ["api/types.proto", 3],
+    ]);
+
+    const { couplings } = findCouplings(
+      commits,
+      revisions,
+      new Map(),
+      new Set(["api/main.tsp", "api/types.proto"]),
+    );
+
+    expect(
+      couplings.map(({ a, b, kinds }) => [a, b, kinds.a, kinds.b]),
+    ).toStrictEqual([
+      ["api/main.tsp", "api/types.proto", "contract", "contract"],
+      ["api/main.tsp", "src/api.ts", "contract", "code"],
+      ["api/types.proto", "src/api.ts", "contract", "code"],
     ]);
   });
 });

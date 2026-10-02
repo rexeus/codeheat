@@ -39,7 +39,8 @@
   },
   "totals": {
     "files": 36,
-    "couplings": 8,
+    "contracts": 1,
+    "couplings": 9,
     "modules": 5
   },
   "files": [
@@ -206,7 +207,7 @@
       "trend": {
         "previousScore": 0.6946,
         "previousRevisions": 22,
-        "scoreDelta": 0.0,
+        "scoreDelta": 0,
         "newlyActive": false
       },
       "test": false
@@ -478,7 +479,7 @@
       "trend": {
         "previousScore": 0.3671,
         "previousRevisions": 5,
-        "scoreDelta": 0.0,
+        "scoreDelta": 0,
         "newlyActive": false
       },
       "test": false
@@ -749,7 +750,7 @@
       "trend": {
         "previousScore": 0.2443,
         "previousRevisions": 3,
-        "scoreDelta": 0.0,
+        "scoreDelta": 0,
         "newlyActive": false
       },
       "test": false
@@ -1017,6 +1018,15 @@
       "test": false
     }
   ],
+  "contracts": [
+    {
+      "path": "packages/billing/api/billing.tsp",
+      "module": "packages/billing",
+      "revisions": 28,
+      "linesAdded": 410,
+      "linesDeleted": 236
+    }
+  ],
   "couplings": [
     {
       "a": "packages/billing/src/index.ts",
@@ -1025,6 +1035,10 @@
       "degree": 0.75,
       "distance": 4,
       "testPair": false,
+      "kinds": {
+        "a": "code",
+        "b": "code"
+      },
       "crossesModule": true,
       "imports": "none"
     },
@@ -1035,6 +1049,10 @@
       "degree": 0.738,
       "distance": 0,
       "testPair": true,
+      "kinds": {
+        "a": "code",
+        "b": "code"
+      },
       "crossesModule": false,
       "imports": "b→a"
     },
@@ -1045,6 +1063,10 @@
       "degree": 0.679,
       "distance": 0,
       "testPair": true,
+      "kinds": {
+        "a": "code",
+        "b": "code"
+      },
       "crossesModule": false,
       "imports": "b→a"
     },
@@ -1055,6 +1077,10 @@
       "degree": 0.667,
       "distance": 0,
       "testPair": true,
+      "kinds": {
+        "a": "code",
+        "b": "code"
+      },
       "crossesModule": false,
       "imports": "b→a"
     },
@@ -1065,8 +1091,26 @@
       "degree": 0.608,
       "distance": 0,
       "testPair": false,
+      "kinds": {
+        "a": "code",
+        "b": "code"
+      },
       "crossesModule": false,
       "imports": "a→b"
+    },
+    {
+      "a": "packages/billing/api/billing.tsp",
+      "b": "packages/billing/src/invoice.ts",
+      "sharedCommits": 22,
+      "degree": 0.5789,
+      "distance": 2,
+      "testPair": false,
+      "kinds": {
+        "a": "contract",
+        "b": "code"
+      },
+      "crossesModule": false,
+      "imports": null
     },
     {
       "a": "packages/auth/src/session.ts",
@@ -1075,6 +1119,10 @@
       "degree": 0.529,
       "distance": 5,
       "testPair": false,
+      "kinds": {
+        "a": "code",
+        "b": "code"
+      },
       "crossesModule": true,
       "imports": "b→a"
     },
@@ -1085,6 +1133,10 @@
       "degree": 0.419,
       "distance": 7,
       "testPair": false,
+      "kinds": {
+        "a": "code",
+        "b": "code"
+      },
       "crossesModule": true,
       "imports": "b→a"
     },
@@ -1095,6 +1147,10 @@
       "degree": 0.418,
       "distance": 5,
       "testPair": false,
+      "kinds": {
+        "a": "code",
+        "b": "code"
+      },
       "crossesModule": true,
       "imports": "none"
     }

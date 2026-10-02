@@ -22,7 +22,7 @@ const pathsOf = (
     ...options,
   }).pipe(
     Effect.provide(Git.layer(repo.directory)),
-    Effect.map((files) => files.map((file) => file.path)),
+    Effect.map(({ files }) => files.map((file) => file.path)),
   );
 
 layer(NodeServices.layer)("inventory git rules", (it) => {
@@ -228,7 +228,7 @@ layer(NodeServices.layer)("inventory measures", (it) => {
       const repo = yield* makeTempRepository;
       yield* repo.commit(DATE, { "a.ts": "a\n  b\n", "empty.ts": "" });
 
-      const files = yield* inventory({
+      const { files } = yield* inventory({
         root: repo.directory,
         scope: ".",
         include: [],
@@ -238,6 +238,109 @@ layer(NodeServices.layer)("inventory measures", (it) => {
       assert.deepStrictEqual(files, [
         { path: "a.ts", complexity: { loc: 2, total: 1, mean: 0.5, max: 1 } },
         { path: "empty.ts", complexity: { loc: 0, total: 0, mean: 0, max: 0 } },
+      ]);
+    }),
+  );
+});
+
+const contractsOf = (
+  repo: TempRepository,
+  options: Partial<InventoryOptions> = {},
+) =>
+  inventory({
+    root: repo.directory,
+    scope: ".",
+    include: [],
+    exclude: [],
+    ...options,
+  }).pipe(
+    Effect.provide(Git.layer(repo.directory)),
+    Effect.map(({ files, contracts }) => ({
+      files: files.map((file) => file.path),
+      contracts,
+    })),
+  );
+
+layer(NodeServices.layer)("inventory contract files", (it) => {
+  it.effect(
+    "keeps interface definitions and API descriptions apart from code, sorted by path",
+    () =>
+      Effect.gen(function* () {
+        const repo = yield* makeTempRepository;
+        yield* repo.commit(DATE, {
+          "src/app.ts": "a\n",
+          "api/main.tsp": "model A {}\n",
+          "proto/user.proto": "message A {}\n",
+          "schema.graphql": "type A\n",
+          "docs/openapi.yaml": "openapi: 3.0.0\n",
+          "package.json": "{}\n",
+        });
+
+        assert.deepStrictEqual(yield* contractsOf(repo), {
+          files: ["src/app.ts"],
+          contracts: [
+            "api/main.tsp",
+            "docs/openapi.yaml",
+            "proto/user.proto",
+            "schema.graphql",
+          ],
+        });
+      }),
+  );
+
+  it.effect("leaves out the output generated from a contract", () =>
+    Effect.gen(function* () {
+      const repo = yield* makeTempRepository;
+      yield* repo.commit(DATE, {
+        "api/main.tsp": "model A {}\n",
+        "tsp-output/@typespec/openapi3/openapi.yaml": "openapi: 3.0.0\n",
+        "generated/openapi.yaml": "openapi: 3.0.0\n",
+        "src/__generated__/user.schema.json": "{}\n",
+        "dist/schema.graphql": "type A\n",
+      });
+
+      assert.deepStrictEqual((yield* contractsOf(repo)).contracts, [
+        "api/main.tsp",
+      ]);
+    }),
+  );
+});
+
+layer(NodeServices.layer)("inventory contract file options", (it) => {
+  it.effect(
+    "lets an include glob replace the contract list too, and exclude remove contracts",
+    () =>
+      Effect.gen(function* () {
+        const repo = yield* makeTempRepository;
+        yield* repo.commit(DATE, {
+          "src/app.ts": "a\n",
+          "api/main.tsp": "model A {}\n",
+          "api/internal.tsp": "model B {}\n",
+          "docs/notes.md": "# notes\n",
+        });
+
+        assert.deepStrictEqual(
+          yield* contractsOf(repo, { exclude: ["api/internal.tsp"] }),
+          { files: ["src/app.ts"], contracts: ["api/main.tsp"] },
+        );
+        assert.deepStrictEqual(
+          yield* contractsOf(repo, { include: ["src/**", "docs/**"] }),
+          { files: ["docs/notes.md", "src/app.ts"], contracts: [] },
+        );
+      }),
+  );
+
+  it.effect("drops contract files that are binary or minified", () =>
+    Effect.gen(function* () {
+      const repo = yield* makeTempRepository;
+      yield* repo.commit(DATE, {
+        "api/kept.tsp": "model A {}\n",
+        "api/binary.proto": new Uint8Array([97, 0, 98]),
+        "api/one-line.schema.json": `{"a":"${"x".repeat(400)}"}`,
+      });
+
+      assert.deepStrictEqual((yield* contractsOf(repo)).contracts, [
+        "api/kept.tsp",
       ]);
     }),
   );

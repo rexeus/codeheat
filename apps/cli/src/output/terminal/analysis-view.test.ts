@@ -18,7 +18,7 @@ const section = (view: string, heading: string): ReadonlyArray<string> => {
 describe("renderAnalysis", () => {
   it("summarizes the repository, window and universe size", () => {
     expect(plainView().split("\n")[0]).toBe(
-      "acme-shop  2025-09-29 to 2026-09-29  212 commits, 36 files",
+      "acme-shop  2025-09-29 to 2026-09-29  212 commits, 36 files, 1 contract file",
     );
   });
 
@@ -52,9 +52,9 @@ describe("renderAnalysis coupling table", () => {
       "degree  shared  distance  a → b  b → a  imports  files",
       "   75%       6         4    67%    86%  hidden   packages/billing/src/index.ts <-> packages/auth/src/index.ts",
       "   61%      24         0    50%    77%  a→b      packages/billing/src/invoice.ts <-> packages/billing/src/tax.ts",
+      "   58%      22         2    79%    46%  -        packages/billing/api/billing.tsp (contract) <-> packages/billing/src/invoice.ts",
       "   53%       9         5    41%    75%  b→a      packages/auth/src/session.ts <-> packages/web/src/hooks/use-session.ts",
       "   42%       9         7    53%    35%  b→a      packages/shared/src/config.ts <-> apps/cli/src/commands/analyze.ts",
-      "   42%      14         5    29%    74%  hidden   packages/billing/src/invoice.ts <-> packages/web/src/routes/invoices.tsx",
     ]);
   });
 
@@ -82,7 +82,9 @@ describe("renderAnalysis coupling table", () => {
     const report = sampleReport();
     const cut = { ...report, files: report.files.slice(0, 1) };
 
-    expect(() => plainView(cut)).toThrow(/missing from the report's files/u);
+    expect(() => plainView(cut)).toThrow(
+      /missing from the report's files and contracts/u,
+    );
   });
 
   it("shows an unknown import relation as a dash and emphasizes hidden coupling in color", () => {
@@ -300,6 +302,16 @@ describe("renderAnalysis styling and safety", () => {
     expect(plainView(empty)).toContain("No files in the analysis universe.");
     expect(plainView(empty)).toContain(
       "No change coupling above the thresholds.",
+    );
+  });
+});
+
+describe("renderAnalysis contract files", () => {
+  it("marks a contract file in the table and takes its revisions from the contracts", () => {
+    const couplings = section(plainView(), "Change coupling");
+
+    expect(couplings[3]).toBe(
+      "   58%      22         2    79%    46%  -        packages/billing/api/billing.tsp (contract) <-> packages/billing/src/invoice.ts",
     );
   });
 });

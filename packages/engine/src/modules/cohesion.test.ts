@@ -4,19 +4,28 @@ import type { Module } from "../report/module.js";
 import { measureModules, minModuleCommitsFor } from "./cohesion.js";
 import type { ModuleRef } from "./detect.js";
 
-/** Measures `commits` (lists of file paths) over files assigned to modules by `moduleOf`. */
-const measure = (
+const directoryModules = (
   moduleOf: Readonly<Record<string, string>>,
-  commits: ReadonlyArray<ReadonlyArray<string>>,
-  minModuleCommits: number,
-): ReadonlyArray<Module> => {
-  const paths = Object.keys(moduleOf);
-  const refs = new Map<string, ModuleRef>(
+): ReadonlyMap<string, ModuleRef> =>
+  new Map(
     Object.entries(moduleOf).map(([file, path]) => [
       file,
       { path, kind: "directory" },
     ]),
   );
+
+/**
+ * Measures `commits` (lists of file paths) over code files assigned to modules
+ * by `moduleOf` and contract files housed in modules by `contractOf`.
+ */
+const measure = (
+  moduleOf: Readonly<Record<string, string>>,
+  commits: ReadonlyArray<ReadonlyArray<string>>,
+  minModuleCommits: number,
+  contractOf: Readonly<Record<string, string>> = {},
+): ReadonlyArray<Module> => {
+  const paths = [...Object.keys(moduleOf), ...Object.keys(contractOf)];
+  const refs = directoryModules(moduleOf);
   return measureModules(
     {
       commits: commits.map((files) => ({
@@ -25,7 +34,7 @@ const measure = (
       })),
       paths,
     },
-    refs,
+    { modules: refs, contracts: directoryModules(contractOf) },
     minModuleCommits,
     new Map(),
   );
@@ -145,7 +154,7 @@ describe("measureModules commit size", () => {
 
     const modules = measureModules(
       { commits: [touched, touched], paths: [...refs.keys()] },
-      refs,
+      { modules: refs, contracts: new Map() },
       5,
       new Map(),
     );
@@ -155,6 +164,40 @@ describe("measureModules commit size", () => {
     ).toStrictEqual([
       [0, null],
       [0, null],
+    ]);
+  });
+
+  it("counts a contract as a touch of its module without counting it as a file of it", () => {
+    const modules = measure(
+      { "a/a.ts": "a", "b/b.ts": "b" },
+      [["a/a.ts", "b/api.tsp"], ["a/a.ts", "b/api.tsp"], ["a/a.ts"]],
+      1,
+      { "b/api.tsp": "b" },
+    );
+
+    expect(
+      modules.map(({ path, files, commits, localCommits, partners }) => ({
+        path,
+        files,
+        commits,
+        localCommits,
+        partners,
+      })),
+    ).toStrictEqual([
+      {
+        path: "b",
+        files: 1,
+        commits: 2,
+        localCommits: 0,
+        partners: [{ path: "a", sharedCommits: 2 }],
+      },
+      {
+        path: "a",
+        files: 1,
+        commits: 3,
+        localCommits: 1,
+        partners: [{ path: "b", sharedCommits: 2 }],
+      },
     ]);
   });
 });

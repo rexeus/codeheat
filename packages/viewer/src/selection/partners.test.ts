@@ -39,6 +39,7 @@ describe("indexPartners", () => {
         path: "src/tax.ts",
         degree: 0.9,
         testPair: true,
+        kind: "code",
         sharedCommits: 20,
         distance: 0,
         crossesModule: false,
@@ -72,6 +73,17 @@ describe("indexPartners", () => {
     expect(imported.get("src/b.ts")?.[0]?.imports).toBe("partner→file");
     expect(imported.get("src/c.ts")?.[0]?.imports).toBe("none");
     expect(imported.get("src/d.ts")?.[0]?.imports).toBe("none");
+  });
+
+  it("tells a contract partner from a code partner on each side", () => {
+    const mixed = indexPartners([
+      coupling("api/main.tsp", "src/api.ts", {
+        kinds: { a: "contract", b: "code" },
+      }),
+    ]);
+
+    expect(mixed.get("src/api.ts")?.[0]?.kind).toBe("contract");
+    expect(mixed.get("api/main.tsp")?.[0]?.kind).toBe("code");
   });
 
   it("has no entry for a file without couplings", () => {

@@ -20,6 +20,14 @@ const scoreBar = (score: number): string => {
   return "█".repeat(filled) + "░".repeat(BAR_WIDTH - filled);
 };
 
+/** How many contract files the analysis also read; nothing without any. */
+const contractNote = (report: Report): string => {
+  const { contracts } = report.totals;
+  return contracts === 0
+    ? ""
+    : `, ${contracts} contract ${contracts === 1 ? "file" : "files"}`;
+};
+
 const hotspotLines = (
   files: ReadonlyArray<FileStats>,
   style: Style,
@@ -51,17 +59,24 @@ const importsCell = ({ imports }: Coupling, style: Style): Cell =>
     ? { text: "hidden", paint: style.bold }
     : plain(imports ?? "-");
 
+/** A coupled file's path, marked when it is a contract (an interface definition or schema, which has no hotspot score). */
+const coupledPath = (path: string, kind: Coupling["kinds"]["a"]): string =>
+  escapeForTerminal(path) + (kind === "contract" ? " (contract)" : "");
+
 const couplingLines = (
   couplings: ReadonlyArray<Coupling>,
   files: ReadonlyArray<FileStats>,
+  contracts: Report["contracts"],
   style: Style,
 ): ReadonlyArray<string> => {
-  const revisions = new Map(files.map((file) => [file.path, file.revisions]));
+  const revisions = new Map(
+    [...files, ...contracts].map((file) => [file.path, file.revisions]),
+  );
   const coChange = (coupling: Coupling, from: string): string => {
     const total = revisions.get(from);
     if (total === undefined) {
       throw new Error(
-        `Coupled file ${escapeForTerminal(from)} is missing from the report's files; render an untruncated report.`,
+        `Coupled file ${escapeForTerminal(from)} is missing from the report's files and contracts; render an untruncated report.`,
       );
     }
     return percent(coupling.sharedCommits / total);
@@ -87,7 +102,7 @@ const couplingLines = (
         plain(coChange(coupling, coupling.b)),
         importsCell(coupling, style),
         plain(
-          `${escapeForTerminal(coupling.a)} <-> ${escapeForTerminal(coupling.b)}`,
+          `${coupledPath(coupling.a, coupling.kinds.a)} <-> ${coupledPath(coupling.b, coupling.kinds.b)}`,
         ),
       ]),
     style,
@@ -173,17 +188,22 @@ const leakyModules = (report: Report): ReadonlyArray<Module> =>
  * the five shallowest ranked modules (fewest implementation lines per exported
  * name; the section is left out when none has a depth), and, when the report compares two windows, the biggest changes. The report
  * must not be cut to `--limit`: test pairs could crowd out every other
- * coupling, and every coupled file must appear in `files`: rendering throws
- * otherwise.
+ * coupling, and every coupled file must appear in `files` or `contracts`:
+ * rendering throws otherwise.
  * The result has no trailing newline.
  */
 export const renderAnalysis = (report: Report, style: Style): string => {
-  const summary = `${escapeForTerminal(report.repository.name)}  ${day(report.window.since)} to ${day(report.window.until)}  ${report.window.commits} commits, ${report.totals.files} files`;
+  const summary = `${escapeForTerminal(report.repository.name)}  ${day(report.window.since)} to ${day(report.window.until)}  ${report.window.commits} commits, ${report.totals.files} files${contractNote(report)}`;
   const hotspots =
     report.files.length === 0
       ? ["No files in the analysis universe."]
       : hotspotLines(report.files, style);
-  const couplings = couplingLines(report.couplings, report.files, style);
+  const couplings = couplingLines(
+    report.couplings,
+    report.files,
+    report.contracts,
+    style,
+  );
   const modules = rankedModules(report);
   const leaky = leakyModules(report);
   const shallow = shallowestLines(report, style);

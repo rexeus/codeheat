@@ -32,6 +32,7 @@ export const coupling = (
   degree: 0.5,
   distance: 0,
   testPair: false,
+  kinds: { a: "code", b: "code" },
   crossesModule: false,
   imports: null,
   ...overrides,
@@ -94,10 +95,12 @@ export const reportOf = (
   },
   totals: {
     files: files.length,
+    contracts: 0,
     couplings: couplings.length,
     modules: modules.length,
   },
   files,
+  contracts: [],
   couplings,
   modules,
 });

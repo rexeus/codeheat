@@ -1,8 +1,10 @@
 // Owns the pure part of an analysis: scoring files, coupling them, and measuring modules,
 // in the latest window and, when comparing, against the window before it.
+import { measureContracts } from "../contracts/stats.js";
 import { findCouplings } from "../coupling/coupling.js";
 import type { Couplings } from "../coupling/coupling.js";
 import type { History } from "../history/history.js";
+import { withoutPaths } from "../history/without-paths.js";
 import { rankFiles } from "../hotspots/hotspots.js";
 import type { FileMeasure } from "../hotspots/hotspots.js";
 import { measureModules } from "../modules/cohesion.js";
@@ -43,10 +45,21 @@ const measureFiles = (
     };
   });
 
+/** The universe with its modules and their entry points: what every window is measured over. */
+export type Universe = {
+  /** The code files; the only ones that are scored and counted in modules. */
+  readonly files: ReadonlyArray<InventoryFile>;
+  /** The module of every code file. */
+  readonly modules: ReadonlyMap<string, ModuleRef>;
+  /** The module every contract file lives in. */
+  readonly contracts: ReadonlyMap<string, ModuleRef>;
+  readonly entryPoints: ReadonlyMap<string, ReadonlyArray<string>>;
+};
+
 /** The coupled pairs of a window's history, without import relations. */
 export const coupleHistory = (
   history: History,
-  modules: ReadonlyMap<string, ModuleRef>,
+  { modules, contracts }: Pick<Universe, "modules" | "contracts">,
 ): Couplings =>
   findCouplings(
     history.commits,
@@ -54,27 +67,28 @@ export const coupleHistory = (
     new Map(
       [...history.files].map(([file, activity]) => [file, activity.revisions]),
     ),
-    modules,
+    {
+      modules: new Map([...modules, ...contracts]),
+      contracts: new Set(contracts.keys()),
+    },
   );
-
-/** The universe with its modules and their entry points: what every window is measured over. */
-export type Universe = {
-  readonly files: ReadonlyArray<InventoryFile>;
-  readonly modules: ReadonlyMap<string, ModuleRef>;
-  readonly entryPoints: ReadonlyMap<string, ReadonlyArray<string>>;
-};
 
 /** Scores the files and measures the modules around the couplings; the pure part of an analysis. */
 const measure = (
-  { files, modules, entryPoints }: Universe,
+  { files, modules, contracts, entryPoints }: Universe,
   history: History,
   { couplingCommits, couplings, breadth }: Couplings,
 ) => {
   const thresholds = thresholdsFor(couplingCommits);
-  const interfaces = measureInterfaces(history, modules, entryPoints);
+  // A contract is neither interface nor implementation of its module.
+  const interfaces = measureInterfaces(
+    withoutPaths(history, new Set(contracts.keys())),
+    modules,
+    entryPoints,
+  );
   const measuredModules = measureModules(
     history,
-    modules,
+    { modules, contracts },
     thresholds.minModuleCommits,
     interfaces.byModule,
   );
@@ -94,6 +108,7 @@ const measure = (
       couplings,
     ),
     couplings,
+    contracts: measureContracts(contracts, history),
     modules: measuredModules,
   };
 };
@@ -116,7 +131,7 @@ export const measureWindows = (
   const previous = measure(
     universe,
     histories.previous,
-    coupleHistory(histories.previous, universe.modules),
+    coupleHistory(histories.previous, universe),
   );
   return {
     ...current,

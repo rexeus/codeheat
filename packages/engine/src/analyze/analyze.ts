@@ -70,7 +70,11 @@ export type AnalyzeOptions = {
   readonly toolVersion: string;
 };
 
-/** Measures the windows; the latest window's couplings come with their import relations. */
+/**
+ * Measures the windows; the latest window's couplings come with their import
+ * relations. Imports are read among the code files: a contract is an asset to
+ * the code that loads it, and its own coupling's relation is unknown.
+ */
 const measureLinked = (
   options: AnalyzeOptions,
   place: { readonly root: string; readonly scope: string },
@@ -78,7 +82,7 @@ const measureLinked = (
   histories: WindowHistories,
 ) =>
   Effect.gen(function* () {
-    const coupled = coupleHistory(histories.current, universe.modules);
+    const coupled = coupleHistory(histories.current, universe);
     const couplings = yield* linkCouplings(
       {
         ...place,
@@ -130,7 +134,10 @@ const analyzeRepository = (
     const { histories, oldestCommit } = yield* readTimeline(windows, {
       head,
       skipCommits: shallowBoundary ?? new Set(),
-      universe: new Set(universe.files.map((file) => file.path)),
+      universe: new Set([
+        ...universe.files.map((file) => file.path),
+        ...universe.contracts.keys(),
+      ]),
     });
     const { commits, couplingCommits, thresholds, ...measured } =
       yield* measureLinked(options, { root, scope }, universe, histories);
@@ -149,6 +156,7 @@ const analyzeRepository = (
       thresholds,
       totals: {
         files: measured.files.length,
+        contracts: measured.contracts.length,
         couplings: measured.couplings.length,
         modules: measured.modules.length,
       },

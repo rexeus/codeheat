@@ -70,6 +70,7 @@ describe("codeheat analyze against a git repository", () => {
         ]);
         expect(report.totals).toStrictEqual({
           files: 3,
+          contracts: 0,
           couplings: 1,
           modules: 1,
         });

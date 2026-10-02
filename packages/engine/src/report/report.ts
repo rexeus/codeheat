@@ -98,8 +98,9 @@ export const FileStats = Schema.Struct({
   linesAdded: Count,
   linesDeleted: Count,
   /**
-   * Distinct other universe files this file changed together with in counted
-   * commits (at most `Thresholds.maxCommitFiles` files), however rarely.
+   * Distinct other universe files, contract files included, this file changed
+   * together with in counted commits (at most `Thresholds.maxCommitFiles`
+   * files), however rarely.
    */
   breadth: Count,
   /**
@@ -127,6 +128,33 @@ export const FileStats = Schema.Struct({
 });
 export type FileStats = typeof FileStats.Type;
 
+/** What a universe file is: code is scored, a contract (interface definition or schema) only couples. */
+export const FileKind = Schema.Literals(["code", "contract"]);
+export type FileKind = typeof FileKind.Type;
+
+/**
+ * A contract file: an IDL or schema file (`.tsp`, `.proto`, `.graphql`,
+ * `.gql`, `.avsc`, `.thrift`, `.smithy`), a JSON Schema (`*.schema.json`), or
+ * an OpenAPI, AsyncAPI, or Swagger description (`openapi.*`, `asyncapi.*`,
+ * `swagger.*` in YAML or JSON). It takes part in coupling but has no score,
+ * rank, or complexity, and is never listed in `files`.
+ */
+export const ContractFile = Schema.Struct({
+  /** Repository-relative POSIX path. */
+  path: Schema.String,
+  /**
+   * `path` of the module the contract lives in: the nearest module above it,
+   * or "." when none is. It counts for the module's cohesion and partners, never
+   * for its size.
+   */
+  module: Schema.String,
+  /** Commits of the window that touched the file, large ones included. */
+  revisions: Count,
+  linesAdded: Count,
+  linesDeleted: Count,
+});
+export type ContractFile = typeof ContractFile.Type;
+
 /** Two files that keep changing in the same commits. */
 export const Coupling = Schema.Struct({
   a: Schema.String,
@@ -138,6 +166,12 @@ export const Coupling = Schema.Struct({
   distance: Count,
   /** One file is the other's test; expected coupling, never a smell. */
   testPair: Schema.Boolean,
+  /**
+   * What each file is. A coupling with a contract side joins a contract to the
+   * code that changes with it (or to another contract); the contract is listed
+   * in `Report.contracts`, not in `files`.
+   */
+  kinds: Schema.Struct({ a: FileKind, b: FileKind }),
   /** The files belong to different modules. Neutral: an app legitimately changes with the library it uses. */
   crossesModule: Schema.Boolean,
   /**
@@ -183,9 +217,21 @@ export const Report = Schema.Struct({
   comparison: Schema.NullOr(Comparison),
   thresholds: Thresholds,
   /** Sizes before any output limit, so truncated reports keep their context. */
-  totals: Schema.Struct({ files: Count, couplings: Count, modules: Count }),
-  /** Sorted by rank. */
+  totals: Schema.Struct({
+    /** Code files, the ones in `files`. */
+    files: Count,
+    /** Contract files, the ones in `contracts`. */
+    contracts: Count,
+    couplings: Count,
+    modules: Count,
+  }),
+  /** The hotspots: every code file, sorted by rank. Contract files are never listed here. */
   files: Schema.Array(FileStats),
+  /**
+   * Every contract file of the universe, most revised first, ties by path.
+   * They have no score; they appear in `couplings` with `kinds`.
+   */
+  contracts: Schema.Array(ContractFile),
   /** Sorted by degree, descending. */
   couplings: Schema.Array(Coupling),
   /**

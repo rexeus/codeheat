@@ -39,6 +39,21 @@ export const makeImportProject = Effect.map(makeGitRepository, (repo) => {
 });
 
 /**
+ * `api/orders.tsp` is a contract that changes together with `src/orders.ts` in
+ * four commits; `tsp-output/openapi.yaml` is what the contract generates.
+ */
+export const makeContractProject = Effect.map(makeGitRepository, (repo) => {
+  for (const day of [30, 20, 10, 5]) {
+    repo.commit(day, {
+      "api/orders.tsp": `model Order { id: ${day} }\n`,
+      "src/orders.ts": source(2, day),
+      "tsp-output/openapi.yaml": `version: ${day}\n`,
+    });
+  }
+  return repo;
+});
+
+/**
  * Two packages that change together in five commits, so both are ranked.
  * `lib` exports `run` and `stop` through `src/index.ts`, with four lines of
  * implementation behind them; `app` has no entry point.

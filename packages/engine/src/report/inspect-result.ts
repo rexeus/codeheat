@@ -4,7 +4,7 @@
 import { Schema } from "effect";
 
 import { Module } from "./module.js";
-import { AnalysisWindow, FileStats } from "./report.js";
+import { AnalysisWindow, FileKind, FileStats } from "./report.js";
 import { Count, UnitInterval } from "./scalars.js";
 
 /** A file that changes together with an inspected file. */
@@ -13,6 +13,8 @@ const Partner = Schema.Struct({
   sharedCommits: Count,
   /** `sharedCommits / revisions(inspected file)`: how likely a change here also changes the partner; rounded to 4 decimals. */
   probability: UnitInterval,
+  /** What the partner is; a contract has no score and is listed in `Report.contracts`. */
+  kind: FileKind,
   testPair: Schema.Boolean,
   /** The partner belongs to a different module than the inspected file. */
   crossesModule: Schema.Boolean,

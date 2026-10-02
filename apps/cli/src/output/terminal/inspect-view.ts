@@ -11,6 +11,9 @@ import type { Cell } from "./table.js";
 type Entry = InspectResult["matches"][number];
 
 const partnerMarker = (partner: Entry["partners"][number]): string => {
+  if (partner.kind === "contract") {
+    return " (contract)";
+  }
   if (partner.testPair) {
     return " (test)";
   }

@@ -23,7 +23,7 @@ const coupling = (
   a: string,
   b: string,
   sharedCommits: number,
-  flags: Partial<Pick<Coupling, "testPair" | "crossesModule">> = {},
+  flags: Partial<Pick<Coupling, "testPair" | "crossesModule" | "kinds">> = {},
 ): Coupling => ({
   a,
   b,
@@ -31,6 +31,7 @@ const coupling = (
   degree: 0.5,
   distance: 0,
   testPair: false,
+  kinds: { a: "code", b: "code" },
   crossesModule: false,
   imports: null,
   ...flags,
@@ -103,8 +104,14 @@ const reportOf = (
     maxMeanLineLength: 300,
     maxFileBytes: 1_048_576,
   },
-  totals: { files: files.length, couplings: couplings.length, modules: 2 },
+  totals: {
+    files: files.length,
+    contracts: 0,
+    couplings: couplings.length,
+    modules: 2,
+  },
   files,
+  contracts: [],
   couplings,
   modules,
 });
@@ -189,6 +196,7 @@ describe("inspect partners", () => {
       path: "p11.ts",
       sharedCommits: 14,
       probability: 0.7,
+      kind: "code",
       testPair: false,
       crossesModule: false,
       imports: null,
@@ -222,6 +230,7 @@ describe("inspect partner marks", () => {
         path: "b.ts",
         sharedCommits: 4,
         probability: 0.4,
+        kind: "code",
         testPair: false,
         crossesModule: false,
         imports: null,
@@ -232,6 +241,7 @@ describe("inspect partner marks", () => {
         path: "a.ts",
         sharedCommits: 4,
         probability: 1,
+        kind: "code",
         testPair: false,
         crossesModule: false,
         imports: null,
@@ -252,6 +262,7 @@ describe("inspect partner marks", () => {
         path: "src/a.test.ts",
         sharedCommits: 5,
         probability: 0.5,
+        kind: "code",
         testPair: true,
         crossesModule: false,
         imports: null,
@@ -319,5 +330,24 @@ describe("inspect modules", () => {
 
   it("lists no module when nothing matched", () => {
     expect(inspect(reportOf(universe), ["nope.ts"]).modules).toEqual([]);
+  });
+});
+
+describe("inspect contract partners", () => {
+  it("tells a contract partner from a code partner", () => {
+    const report = reportOf(
+      [stats("src/a.ts", 1, 10)],
+      [
+        coupling("api/main.tsp", "src/a.ts", 5, {
+          kinds: { a: "contract", b: "code" },
+        }),
+      ],
+    );
+
+    const [entry] = inspect(report, ["src/a.ts"]).matches;
+
+    expect(entry?.partners.map(({ path, kind }) => [path, kind])).toStrictEqual(
+      [["api/main.tsp", "contract"]],
+    );
   });
 });
