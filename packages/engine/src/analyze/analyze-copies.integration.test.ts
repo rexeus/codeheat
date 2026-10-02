@@ -81,39 +81,45 @@ layer(NodeServices.layer)("analyze copy families", (it) => {
 });
 
 layer(NodeServices.layer)("analyze copy families and contract files", (it) => {
-  it.effect("reads contract files like code and groups copies of one", () =>
-    Effect.gen(function* () {
-      yield* setNow;
-      const repo = yield* makeTempRepository;
-      for (let revision = 1; revision <= 4; revision += 1) {
-        yield* repo.commit(day(revision), {
-          "api/billing.tsp": handler("billing", revision),
-          "api/orders.tsp": handler("orders", revision),
-          "src/handler.ts": settings(revision),
-        });
-      }
+  it.effect(
+    "reads contract files like code and, in a spec directory, does not take them for tests",
+    () =>
+      Effect.gen(function* () {
+        yield* setNow;
+        const repo = yield* makeTempRepository;
+        for (let revision = 1; revision <= 4; revision += 1) {
+          yield* repo.commit(day(revision), {
+            "spec/billing.tsp": handler("billing", revision),
+            "spec/orders.tsp": handler("orders", revision),
+            "src/handler.ts": settings(revision),
+          });
+        }
 
-      const report = yield* analyze(analyzeOptionsFor(repo));
+        const report = yield* analyze(analyzeOptionsFor(repo));
 
-      assert.deepStrictEqual(
-        report.copyFamilies.map(({ files, similarity, changesToAll }) => [
-          files,
-          similarity,
-          changesToAll,
-        ]),
-        [
+        assert.deepStrictEqual(
+          report.copyFamilies.map(
+            ({ files, similarity, changesToAll, testOnly }) => [
+              files,
+              similarity,
+              changesToAll,
+              testOnly,
+            ],
+          ),
           [
-            ["api/billing.tsp", "api/orders.tsp"],
-            { min: 0.697, max: 0.697 },
-            4,
+            [
+              ["spec/billing.tsp", "spec/orders.tsp"],
+              { min: 0.697, max: 0.697 },
+              4,
+              false,
+            ],
           ],
-        ],
-      );
-      assert.deepStrictEqual(
-        report.files.map(({ path }) => path),
-        ["src/handler.ts"],
-      );
-    }),
+        );
+        assert.deepStrictEqual(
+          report.files.map(({ path }) => path),
+          ["src/handler.ts"],
+        );
+      }),
   );
 });
 

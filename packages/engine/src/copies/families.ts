@@ -3,7 +3,6 @@ import { Order } from "effect";
 
 import { countedCommits } from "../coupling/coupling.js";
 import type { History } from "../history/history.js";
-import { isTestPath } from "../modules/test-path.js";
 import type { CopyFamily } from "../report/copy-family.js";
 import { roundReported } from "../report/precision.js";
 
@@ -110,12 +109,14 @@ const byImportance = (a: CopyFamily, b: CopyFamily): number =>
  * pairs of its members, so its minimum can lie below the threshold that
  * linked them (A is like B, B like C, A not like C). `history` is the window
  * whose counted commits (see `countedCommits`) tell how often the members
- * changed together.
+ * changed together. A family is `testOnly` when `isTestCode` holds for every
+ * member.
  */
 export const familiesOf = (
   links: ReadonlyArray<Link>,
   history: History,
   similarityOf: (a: string, b: string) => number,
+  isTestCode: (path: string) => boolean,
 ): ReadonlyArray<CopyFamily> => {
   const members = componentsOf(links);
   const changes = countChanges(members, history);
@@ -123,7 +124,7 @@ export const familiesOf = (
     .map((files, index) => ({
       files,
       similarity: similarityRange(files, similarityOf),
-      testOnly: files.every((file) => isTestPath(file)),
+      testOnly: files.every((file) => isTestCode(file)),
       sharedChanges: changes[index]?.shared ?? 0,
       changesToAll: changes[index]?.all ?? 0,
     }))
