@@ -60,9 +60,6 @@ const SOURCE_EXTENSIONS: ReadonlySet<string> = new Set([
   "sol",
   // data and markup that hold logic
   "sql",
-  "graphql",
-  "gql",
-  "proto",
   "html",
   "css",
   "scss",

@@ -3,7 +3,7 @@
 See where a codebase hurts. codeheat reads your git history and shows two things:
 
 - **Hotspots** — files that are big or deeply nested _and_ change all the time. That is where bugs, merge conflicts, and slow reviews concentrate.
-- **Change coupling** — files that keep changing in the same commits. When they sit in different modules, a boundary is in the wrong place, and anyone (human or agent) who edits one file without the other ships a half-done change.
+- **Change coupling** — files that keep changing in the same commits. When they sit in different modules, a boundary is in the wrong place, and anyone (human or agent) who edits one file without the other ships a half-done change. Interface definitions and schemas (TypeSpec, Protocol Buffers, GraphQL, OpenAPI, …) take part as contract files: when the contract is the pacemaker, the code that follows it shows up as its partner.
 - **Hidden coupling** — coupled files with no import between them (TypeScript and JavaScript). Nothing in the code points at the dependency, so duplicated logic, a wire protocol, or configuration read in two places goes unnoticed until one side changes alone.
 
 Humans get a treemap. Agents get ranked, explained JSON.
@@ -80,6 +80,7 @@ npx codeheat inspect packages/billing/src/invoice.ts --json
           "path": "packages/billing/src/invoice.test.ts",
           "sharedCommits": 31,
           "probability": 0.6458,
+          "kind": "code",
           "testPair": true,
           "crossesModule": false,
           "imports": "partner→file",
@@ -88,14 +89,25 @@ npx codeheat inspect packages/billing/src/invoice.ts --json
           "path": "packages/billing/src/tax.ts",
           "sharedCommits": 24,
           "probability": 0.5,
+          "kind": "code",
           "testPair": false,
           "crossesModule": false,
           "imports": "file→partner",
         },
         {
+          "path": "packages/billing/api/billing.tsp",
+          "sharedCommits": 22,
+          "probability": 0.4583,
+          "kind": "contract",
+          "testPair": false,
+          "crossesModule": false,
+          "imports": null,
+        },
+        {
           "path": "packages/web/src/routes/invoices.tsx",
           "sharedCommits": 14,
           "probability": 0.2917,
+          "kind": "code",
           "testPair": false,
           "crossesModule": true,
           "imports": "none",
@@ -116,6 +128,7 @@ npx codeheat inspect packages/billing/src/invoice.ts --json
         {
           "path": "packages/web",
           "sharedCommits": 20,
+          "contractsOnly": false,
         },
         {
           "path": "packages/auth",
@@ -145,7 +158,7 @@ npx codeheat inspect packages/billing/src/invoice.ts --json
 
 The example shows an illustrative shop repository (the one in `fixtures/report.sample.json`).
 
-`probability` reads as: when this file changed, the partner changed too in that share of commits. `crossesModule` marks a partner that lives in another module. `imports` says how an import links the partner and the inspected file: `file→partner` (the file imports the partner), `partner→file`, `both`, or `none`, which is hidden coupling (read the partner before editing); it is `null` when unknown. Globs work, so `inspect "packages/*/src/index.ts"` shows how often public barrels change and what changes with them.
+`probability` reads as: when this file changed, the partner changed too in that share of commits. `kind` is `contract` for an interface definition or schema (an IDL, a JSON Schema, an OpenAPI description) and `code` otherwise; a contract has no score and is not in `files`, so read it from the partner entry. `crossesModule` marks a partner that lives in another module. `imports` says how an import links the partner and the inspected file: `file→partner` (the file imports the partner), `partner→file`, `both`, or `none`, which is hidden coupling (read the partner before editing); it is `null` when unknown. Globs work, so `inspect "packages/*/src/index.ts"` shows how often public barrels change and what changes with them.
 
 [docs/agents.md](docs/agents.md) has a snippet for `AGENTS.md` / `CLAUDE.md` that makes agents use it.
 
@@ -158,9 +171,9 @@ The example shows an illustrative shop repository (the one in `fixtures/report.s
 | `[path]`                              | whole repository | A directory (or file) inside a repository; only files under it are analyzed. Also works for a repository elsewhere: `codeheat analyze ../other-repo`.                                                                  |
 | `--since <when>`                      | `12m`            | History window: `<n>d`, `<n>w`, `<n>m`, `<n>y`, or `YYYY-MM-DD`. Old churn says little about today.                                                                                                                    |
 | `--compare <duration>`                | off              | `<n>d`, `<n>w`, `<n>m`, or `<n>y`. Reports the latest window of that length and how each file's score and each module's cohesion moved against the window before it. Replaces `--since`; giving both is a usage error. |
-| `--include <glob>`                    | language list    | Replaces the built-in list of ~50 source-code extensions. Repeatable.                                                                                                                                                  |
-| `--exclude <glob>`                    | —                | Removes matching files. Repeatable.                                                                                                                                                                                    |
-| `--limit <n>`                         | `25`             | Files, couplings, and modules in `--json`, each; `0` for all. `totals` always tells the full size.                                                                                                                     |
+| `--include <glob>`                    | language list    | Replaces the built-in list of ~50 source-code extensions and the contract list. A file that names a contract (see Contract files) stays one. Repeatable.                                                               |
+| `--exclude <glob>`                    | —                | Removes matching files, contract files too. Repeatable.                                                                                                                                                                |
+| `--limit <n>`                         | `25`             | Files, contract files, couplings, and modules in `--json`, each; `0` for all. `totals` always tells the full size.                                                                                                     |
 | `--entry <glob>`                      | detected         | Files that form a module's public interface, instead of detecting them (see interface leakage below). Repeatable.                                                                                                      |
 | `--json`                              | off              | One JSON document on stdout; everything else goes to stderr.                                                                                                                                                           |
 | `--html`, `--out <file>`, `--no-open` | off              | The treemap, see above.                                                                                                                                                                                                |
@@ -181,7 +194,8 @@ Paths or globs. A path without glob characters is absolute or relative to the wo
 
 ## How the numbers work
 
-- **Universe** — the files that count: tracked by git, not ignored (also files committed before a `.gitignore` rule existed), not marked `linguist-generated` or `linguist-vendored` in `.gitattributes`, not in `vendor/`, `node_modules/`, `dist/`, `build/`, `generated/`, `__generated__/`, not minified or binary or larger than 1 MiB, and matching the language list or `--include`.
+- **Universe** — the files that count: tracked by git, not ignored (also files committed before a `.gitignore` rule existed), not marked `linguist-generated` or `linguist-vendored` in `.gitattributes`, not in `vendor/`, `node_modules/`, `dist/`, `build/`, `generated/`, `__generated__/`, `tsp-output/`, not minified or binary or larger than 1 MiB, and matching the language list, the contract list (below), or `--include`. Code files get a score; contract files only couple.
+- **Contract files** — interface definitions and schemas whose changes drive changes in code: `.tsp`, `.proto`, `.graphql`, `.gql`, `.avsc`, `.thrift`, `.smithy`, JSON Schema files (`*.schema.json`), and OpenAPI, AsyncAPI, and Swagger descriptions by name (`openapi.*`, `asyncapi.*`, `swagger.*` in YAML or JSON). They are in the universe by default, and `--exclude` removes them. They take part in coupling (`Coupling.kinds` says which side is a contract, `inspect` partners carry `kind`, the terminal marks `(contract)`) and count as a touch of the module they live in (the nearest module above them; the root module only houses contracts at the top of the repository; any other contract outside every module, such as a `spec/` folder beside the packages that implement it, lives in the highest directory above it that holds no code, which is no module, and `partners[].contractsOnly` marks it, shown as `spec (contracts)` in the terminal) for cohesion and partners, but get no score, rank, or complexity, never appear in `files`, and count for no module's size, leakage, or depth. They are listed in `contracts` with their revisions and lines. A commit that touched only contract files counts in `window.commits` and `window.couplingCommits`. `couplings` lists pairs with at least one code side first and pairs of two contract files after them (the files of one API definition change together far more often than code does, so `--limit` keeps the code pairs); the terminal's coupling table leaves contract pairs out like test pairs. The output generated from a contract (`tsp-output/`, `generated/`, `__generated__/`) stays out: the contract and the code generated from it are linked through coupling. Their import relation is `null`. A contract file that changed in more than 30 % of the counted commits, and at least 10 of them (`thresholds.ubiquitousShare`, `ubiquitousMinCommits`), is **ubiquitous**: a central schema every change touches would couple to everything. It is listed in `ubiquitousFiles` and left out of every pair, breadth, and cohesion. `.proto`, `.graphql`, and `.gql` moved here from the language list: their indentation says nothing about an interface definition.
 - **Revisions** — non-merge commits in the window that touched the file, following renames. A path that was deleted and later created again with other content starts afresh: only the file that exists today counts, not the one deleted at its path; a deleted file that comes back with the very content it had (a revert, or a re-land after a revert) continues. What a commit changed in the deleted file adds nothing to revisions, changed lines, coupling, breadth, module cohesion, interface churn, or trends, though the commit still counts in `window.commits`, and it still counts toward the 50-file cap, so a mass commit stays ignored for coupling even where most of its files have been deleted and recreated since. Deletions and creations made only inside merge commits are not seen (see Known limits).
 - **Indentation complexity** — the sum of indentation levels over the file's non-blank lines. A language-agnostic stand-in for nesting that tracks cyclomatic complexity well ([Tornhill, _Your Code as a Crime Scene_](https://pragprog.com/titles/atcrime2/your-code-as-a-crime-scene-second-edition/)).
 - **Score** — `norm(revisions) × norm(weighted lines)`, where weighted lines are lines plus indentation levels and `norm(x) = ln(1+x) / ln(1+max)` over the repository. 0..1, relative to this repository: a 0.8 here says nothing about a 0.8 elsewhere.
@@ -200,6 +214,7 @@ The report states every threshold under `thresholds`, and the JSON contract is v
 ## Known limits
 
 - Hidden coupling reads imports, not other ties. Where imports are not resolved (aliases, code outside the analyzed scope or the universe), the pair is unknown (`null`) rather than hidden, so a repository that relies on aliases gets fewer answers, not wrong ones. Files in other languages than TypeScript and JavaScript report `imports: null`, and a module whose entry points are in another language has no `depth`.
+- Contract files are partners, not subjects: `inspect` shows code files, so `inspect api/orders.tsp` says `"api/orders.tsp" is a contract file; inspect the code that changes with it` (exit code 4 when nothing else matched; `contractFiles` in `--json`), and the contract appears among the partners of the code that follows it. The list of contract files is fixed (no flag adds a file to it); `--exclude` removes one, and a file in another schema language is analyzed as code only when `--include` names it.
 - The code parser is a native module (`oxc-parser`, the one runtime dependency of the package). Where its binary cannot load, codeheat says so on stderr, reports `imports: null` and no module `depth`, and still runs everything else.
 - Indentation is a proxy. Unusual formatting distorts it; minified files are excluded for that reason.
 - Shallow clones lack history; codeheat warns and ignores the boundary commit. Run `git fetch --unshallow` for full results.

@@ -31,6 +31,8 @@
     "minModuleCommits": 5,
     "minSharedCommits": 3,
     "minDegree": 0.3,
+    "ubiquitousShare": 0.3,
+    "ubiquitousMinCommits": 10,
     "maxMeanLineLength": 300,
     "maxFileBytes": 1048576,
     "minHiddenProbability": 0.5,
@@ -39,7 +41,8 @@
   },
   "totals": {
     "files": 36,
-    "couplings": 8,
+    "contracts": 2,
+    "couplings": 9,
     "modules": 5
   },
   "files": [
@@ -206,7 +209,7 @@
       "trend": {
         "previousScore": 0.6946,
         "previousRevisions": 22,
-        "scoreDelta": 0.0,
+        "scoreDelta": 0,
         "newlyActive": false
       },
       "test": false
@@ -478,7 +481,7 @@
       "trend": {
         "previousScore": 0.3671,
         "previousRevisions": 5,
-        "scoreDelta": 0.0,
+        "scoreDelta": 0,
         "newlyActive": false
       },
       "test": false
@@ -749,7 +752,7 @@
       "trend": {
         "previousScore": 0.2443,
         "previousRevisions": 3,
-        "scoreDelta": 0.0,
+        "scoreDelta": 0,
         "newlyActive": false
       },
       "test": false
@@ -1017,6 +1020,29 @@
       "test": false
     }
   ],
+  "contracts": [
+    {
+      "path": "api/openapi.yaml",
+      "module": ".",
+      "revisions": 93,
+      "linesAdded": 1204,
+      "linesDeleted": 890
+    },
+    {
+      "path": "packages/billing/api/billing.tsp",
+      "module": "packages/billing",
+      "revisions": 28,
+      "linesAdded": 410,
+      "linesDeleted": 236
+    }
+  ],
+  "ubiquitousFiles": [
+    {
+      "path": "api/openapi.yaml",
+      "commits": 88,
+      "share": 0.4444
+    }
+  ],
   "couplings": [
     {
       "a": "packages/billing/src/index.ts",
@@ -1025,6 +1051,10 @@
       "degree": 0.75,
       "distance": 4,
       "testPair": false,
+      "kinds": {
+        "a": "code",
+        "b": "code"
+      },
       "crossesModule": true,
       "imports": "none"
     },
@@ -1035,6 +1065,10 @@
       "degree": 0.738,
       "distance": 0,
       "testPair": true,
+      "kinds": {
+        "a": "code",
+        "b": "code"
+      },
       "crossesModule": false,
       "imports": "b→a"
     },
@@ -1045,6 +1079,10 @@
       "degree": 0.679,
       "distance": 0,
       "testPair": true,
+      "kinds": {
+        "a": "code",
+        "b": "code"
+      },
       "crossesModule": false,
       "imports": "b→a"
     },
@@ -1055,6 +1093,10 @@
       "degree": 0.667,
       "distance": 0,
       "testPair": true,
+      "kinds": {
+        "a": "code",
+        "b": "code"
+      },
       "crossesModule": false,
       "imports": "b→a"
     },
@@ -1065,8 +1107,26 @@
       "degree": 0.608,
       "distance": 0,
       "testPair": false,
+      "kinds": {
+        "a": "code",
+        "b": "code"
+      },
       "crossesModule": false,
       "imports": "a→b"
+    },
+    {
+      "a": "packages/billing/api/billing.tsp",
+      "b": "packages/billing/src/invoice.ts",
+      "sharedCommits": 22,
+      "degree": 0.5789,
+      "distance": 2,
+      "testPair": false,
+      "kinds": {
+        "a": "contract",
+        "b": "code"
+      },
+      "crossesModule": false,
+      "imports": null
     },
     {
       "a": "packages/auth/src/session.ts",
@@ -1075,6 +1135,10 @@
       "degree": 0.529,
       "distance": 5,
       "testPair": false,
+      "kinds": {
+        "a": "code",
+        "b": "code"
+      },
       "crossesModule": true,
       "imports": "b→a"
     },
@@ -1085,6 +1149,10 @@
       "degree": 0.419,
       "distance": 7,
       "testPair": false,
+      "kinds": {
+        "a": "code",
+        "b": "code"
+      },
       "crossesModule": true,
       "imports": "b→a"
     },
@@ -1095,6 +1163,10 @@
       "degree": 0.418,
       "distance": 5,
       "testPair": false,
+      "kinds": {
+        "a": "code",
+        "b": "code"
+      },
       "crossesModule": true,
       "imports": "none"
     }
@@ -1111,19 +1183,23 @@
       "partners": [
         {
           "path": "apps/cli",
-          "sharedCommits": 11
+          "sharedCommits": 11,
+          "contractsOnly": false
         },
         {
           "path": "packages/billing",
-          "sharedCommits": 6
+          "sharedCommits": 6,
+          "contractsOnly": false
         },
         {
           "path": "packages/web",
-          "sharedCommits": 5
+          "sharedCommits": 5,
+          "contractsOnly": false
         },
         {
           "path": "packages/auth",
-          "sharedCommits": 4
+          "sharedCommits": 4,
+          "contractsOnly": false
         }
       ],
       "entryPoints": ["packages/shared/src/index.ts"],
@@ -1152,11 +1228,13 @@
       "partners": [
         {
           "path": "packages/shared",
-          "sharedCommits": 11
+          "sharedCommits": 11,
+          "contractsOnly": false
         },
         {
           "path": "packages/billing",
-          "sharedCommits": 3
+          "sharedCommits": 3,
+          "contractsOnly": false
         }
       ],
       "entryPoints": [],
@@ -1181,15 +1259,18 @@
       "partners": [
         {
           "path": "packages/billing",
-          "sharedCommits": 20
+          "sharedCommits": 20,
+          "contractsOnly": false
         },
         {
           "path": "packages/auth",
-          "sharedCommits": 14
+          "sharedCommits": 14,
+          "contractsOnly": false
         },
         {
           "path": "packages/shared",
-          "sharedCommits": 5
+          "sharedCommits": 5,
+          "contractsOnly": false
         }
       ],
       "entryPoints": [],
@@ -1214,19 +1295,23 @@
       "partners": [
         {
           "path": "packages/web",
-          "sharedCommits": 20
+          "sharedCommits": 20,
+          "contractsOnly": false
         },
         {
           "path": "packages/auth",
-          "sharedCommits": 9
+          "sharedCommits": 9,
+          "contractsOnly": false
         },
         {
           "path": "packages/shared",
-          "sharedCommits": 6
+          "sharedCommits": 6,
+          "contractsOnly": false
         },
         {
           "path": "apps/cli",
-          "sharedCommits": 3
+          "sharedCommits": 3,
+          "contractsOnly": false
         }
       ],
       "entryPoints": ["packages/billing/src/index.ts"],
@@ -1255,15 +1340,18 @@
       "partners": [
         {
           "path": "packages/web",
-          "sharedCommits": 14
+          "sharedCommits": 14,
+          "contractsOnly": false
         },
         {
           "path": "packages/billing",
-          "sharedCommits": 9
+          "sharedCommits": 9,
+          "contractsOnly": false
         },
         {
           "path": "packages/shared",
-          "sharedCommits": 4
+          "sharedCommits": 4,
+          "contractsOnly": false
         }
       ],
       "entryPoints": ["packages/auth/src/index.ts"],

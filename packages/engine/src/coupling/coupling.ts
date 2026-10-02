@@ -3,6 +3,7 @@ import { Order } from "effect";
 
 import type { HistoryCommit } from "../history/history.js";
 import type { ModuleRef } from "../modules/detect.js";
+import type { FileKind } from "../report/contract-file.js";
 import { roundReported } from "../report/precision.js";
 import type { Coupling } from "../report/report.js";
 import { directoryDistance, isTestPair } from "./pair.js";
@@ -22,7 +23,20 @@ export const countedCommits = (
 ): ReadonlyArray<HistoryCommit> =>
   commits.filter((commit) => commit.size <= MAX_COMMIT_FILES);
 
+const kindOf = (path: string, contracts: ReadonlySet<string>): FileKind =>
+  contracts.has(path) ? "contract" : "code";
+
+const isContractPair = ({ kinds }: Coupling): boolean =>
+  kinds.a === "contract" && kinds.b === "contract";
+
+/**
+ * Pairs with a code side first, contract pairs after them: the files of one
+ * API definition change together far more often than any two pieces of code,
+ * and would fill every limited list. Within each group, by degree, shared
+ * commits, then path.
+ */
 const byStrength = (a: Coupling, b: Coupling): number =>
+  Number(isContractPair(a)) - Number(isContractPair(b)) ||
   b.degree - a.degree ||
   b.sharedCommits - a.sharedCommits ||
   Order.String(a.a, b.a) ||
@@ -73,6 +87,14 @@ const breadthById = (
   return breadth;
 };
 
+/** Where the files of a window live and which of them are contracts. */
+export type Places = {
+  /** The module of every path, contract files included. */
+  readonly modules: ReadonlyMap<string, ModuleRef>;
+  /** The paths that are contract files. */
+  readonly contracts: ReadonlySet<string>;
+};
+
 /** The couplings of one window with what was learned counting them. */
 export type Couplings = {
   readonly couplingCommits: number;
@@ -87,17 +109,20 @@ export type Couplings = {
  *
  * Every coupling comes back with `imports: null`; the import graph fills it in.
  * `couplingCommits` is the number of commits small enough to count. Pairs
- * are sorted by their reported (rounded) degree, then shared commits, then path.
+ * with a code side come before pairs of two contract files, each group sorted
+ * by its reported (rounded) degree, then shared commits, then path.
  * `breadth` maps every path in `paths` to the number of distinct other files it
- * shares a counted commit with, whatever the pair's strength. `modules` maps
- * every path to its module and decides `crossesModule`.
+ * shares a counted commit with, whatever the pair's strength. `places` says
+ * where every path lives, which decides `crossesModule`, and which paths are
+ * contract files, which `kinds` tells apart from code.
  */
 export const findCouplings = (
   commits: ReadonlyArray<HistoryCommit>,
   paths: ReadonlyArray<string>,
   revisions: ReadonlyMap<string, number>,
-  modules: ReadonlyMap<string, ModuleRef>,
+  places: Places,
 ): Couplings => {
+  const { modules, contracts } = places;
   const counted = countedCommits(commits);
   const revisionsById = paths.map((path) => revisions.get(path) ?? 0);
   const couplings: Array<Coupling> = [];
@@ -121,6 +146,7 @@ export const findCouplings = (
           degree: roundReported(degree),
           distance: directoryDistance(a, b),
           testPair: isTestPair(a, b),
+          kinds: { a: kindOf(a, contracts), b: kindOf(b, contracts) },
           crossesModule: modules.get(a)?.path !== modules.get(b)?.path,
           imports: null,
         });

@@ -763,6 +763,12 @@ button:focus-visible {
 .file-button:hover {
   background: var(--group);
 }
+.file-button.contract {
+  cursor: default;
+}
+.file-button.contract:hover {
+  background: none;
+}
 .file-button .swatch {
   margin-top: 3px;
 }

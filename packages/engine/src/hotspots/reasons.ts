@@ -50,7 +50,7 @@ const isHub = (facts: ReasonFacts): boolean =>
 const percentOf = (probability: number): number =>
   Math.round(probability * 100);
 
-/** The reason for the strongest non-test partner: a hidden coupling when no import links it and it is likely enough. */
+/** The reason for the strongest non-test partner (a contract is named as one): a hidden coupling when no import links it and it is likely enough. */
 const describePartner = (
   partners: ReadonlyArray<Partner>,
 ): ReadonlyArray<string> => {
@@ -62,10 +62,14 @@ const describePartner = (
   const isHidden =
     strongest.imports === "none" &&
     strongest.probability >= MIN_HIDDEN_PROBABILITY;
+  const partner =
+    strongest.kind === "contract"
+      ? `the contract ${strongest.path}`
+      : strongest.path;
   return [
     isHidden
-      ? `changes with ${strongest.path} in ${percent}% of its commits without an import between them`
-      : `co-changes with ${strongest.path} in ${percent}% of its commits`,
+      ? `changes with ${partner} in ${percent}% of its commits without an import between them`
+      : `co-changes with ${partner} in ${percent}% of its commits`,
   ];
 };
 

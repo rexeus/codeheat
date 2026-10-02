@@ -8,13 +8,17 @@ const findCouplings = (
   commits: ReadonlyArray<ReadonlyArray<string>>,
   revisions: ReadonlyMap<string, number>,
   modules: ReadonlyMap<string, ModuleRef> = new Map(),
+  contracts: ReadonlySet<string> = new Set(),
 ) => {
   const paths = [...new Set(commits.flat())];
   const indexed = commits.map((commit) => ({
     files: Uint32Array.from(commit, (path) => paths.indexOf(path)),
     size: commit.length,
   }));
-  return findCouplingsByFileId(indexed, paths, revisions, modules);
+  return findCouplingsByFileId(indexed, paths, revisions, {
+    modules,
+    contracts,
+  });
 };
 
 const pkg = (path: string): ModuleRef => ({ path, kind: "package" });
@@ -122,7 +126,7 @@ describe("findCouplings commit size", () => {
       repeat(3, touched),
       ["a.ts", "b.ts"],
       new Map(),
-      new Map(),
+      { modules: new Map(), contracts: new Set() },
     );
 
     expect(result).toMatchObject({ couplingCommits: 0, couplings: [] });
@@ -228,6 +232,72 @@ describe("findCouplings modules", () => {
       ["app/a.ts", "lib/b.ts", true],
       ["app/a.ts", "lib/c.ts", true],
       ["lib/b.ts", "lib/c.ts", false],
+    ]);
+  });
+});
+
+describe("findCouplings contract files", () => {
+  it("tells contract files from code on both sides of a pair", () => {
+    const commits = repeat(3, [
+      "api/main.tsp",
+      "src/api.ts",
+      "api/types.proto",
+    ]);
+    const revisions = new Map([
+      ["api/main.tsp", 3],
+      ["src/api.ts", 3],
+      ["api/types.proto", 3],
+    ]);
+
+    const { couplings } = findCouplings(
+      commits,
+      revisions,
+      new Map(),
+      new Set(["api/main.tsp", "api/types.proto"]),
+    );
+
+    expect(
+      couplings.map(({ a, b, kinds }) => [a, b, kinds.a, kinds.b]),
+    ).toStrictEqual([
+      ["api/main.tsp", "src/api.ts", "contract", "code"],
+      ["api/types.proto", "src/api.ts", "contract", "code"],
+      ["api/main.tsp", "api/types.proto", "contract", "contract"],
+    ]);
+  });
+
+  it("lists pairs with a code side before pairs of two contracts, however strong", () => {
+    const siblings = Array.from(
+      { length: 6 },
+      (_, index) => `api/m${index}.tsp`,
+    );
+    const commits = [
+      ...repeat(5, siblings),
+      ...repeat(3, ["packages/a/x.ts", "packages/b/y.ts"]),
+      ...repeat(3, ["packages/a/p.ts", "packages/b/q.ts"]),
+    ];
+    const revisions = new Map<string, number>([
+      ...siblings.map((path): [string, number] => [path, 5]),
+      ["packages/a/x.ts", 10],
+      ["packages/b/y.ts", 10],
+      ["packages/a/p.ts", 6],
+      ["packages/b/q.ts", 6],
+    ]);
+
+    const { couplings } = findCouplings(
+      commits,
+      revisions,
+      new Map(),
+      new Set(siblings),
+    );
+
+    // the 15 sibling pairs have degree 1; the code pairs have 0.3 and 0.5
+    expect(couplings).toHaveLength(17);
+    expect(
+      couplings.slice(0, 3).map(({ a, b, degree }) => [a, b, degree]),
+    ).toStrictEqual([
+      ["packages/a/p.ts", "packages/b/q.ts", 0.5],
+      ["packages/a/x.ts", "packages/b/y.ts", 0.3],
+      ["api/m0.tsp", "api/m1.tsp", 1],
     ]);
   });
 });

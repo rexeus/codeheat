@@ -4,6 +4,7 @@ import { Effect } from "effect";
 import type { FileSystem, Path } from "effect";
 
 import type { LanguageAdapter } from "../code/language-adapter.js";
+import { contractHomes } from "../contracts/homes.js";
 import type { GitError } from "../git/git-errors.js";
 import type { Git } from "../git/git.js";
 import { measureDepths } from "../modules/depth.js";
@@ -20,8 +21,9 @@ export type UniverseReading = Universe & {
 
 /**
  * Reads the universe under `root` limited to `scope`: the files `include` and
- * `exclude` leave, their modules and entry points (`entry` replaces
- * detection), and the module depths `adapters` can measure.
+ * `exclude` leave, the modules and entry points of its code files (`entry`
+ * replaces detection), where its contract files live, and the module depths
+ * `adapters` can measure.
  */
 export const readUniverse = (options: {
   readonly root: string;
@@ -37,7 +39,7 @@ export const readUniverse = (options: {
 > =>
   Effect.gen(function* () {
     const { root, scope } = options;
-    const files = yield* inventory({
+    const { files, contracts } = yield* inventory({
       root,
       scope,
       include: options.include,
@@ -61,5 +63,11 @@ export const readUniverse = (options: {
       modules,
       entryPoints,
     });
-    return { files, modules, entryPoints, depths };
+    return {
+      files,
+      modules,
+      contracts: contractHomes(contracts, modules),
+      entryPoints,
+      depths,
+    };
   });

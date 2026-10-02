@@ -2,7 +2,10 @@ import { analyze, inspectFrom } from "@codeheat/engine";
 import { Console, Effect } from "effect";
 import { Argument, Command } from "effect/cli";
 
-import { NothingMatched } from "../errors/nothing-matched.js";
+import {
+  contractFileMessage,
+  NothingMatched,
+} from "../errors/nothing-matched.js";
 import { loadLanguageAdapters } from "../languages/load-language-adapters.js";
 import { warnIfEntryMatchedNothing } from "../output/entry-warning.js";
 import { escapeForTerminal } from "../output/escape.js";
@@ -41,7 +44,15 @@ export const inspectCommand = Command.make(
     yield* warnIfEntryMatchedNothing(report, entry);
     const result = yield* inspectFrom({ cwd, report, patterns });
     if (result.matches.length === 0) {
-      return yield* new NothingMatched({ patterns: result.unmatched });
+      return yield* new NothingMatched({
+        patterns: result.unmatched,
+        contracts: result.contractFiles,
+      });
+    }
+    for (const path of result.contractFiles) {
+      yield* Console.error(
+        `codeheat: ${escapeForTerminal(contractFileMessage(path))}`,
+      );
     }
     for (const pattern of result.unmatched) {
       yield* Console.error(

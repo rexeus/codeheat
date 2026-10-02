@@ -26,6 +26,12 @@ export const minModuleCommitsFor = (couplingCommits: number): number =>
     Math.ceil(MIN_MODULE_COMMITS_SHARE * couplingCommits),
   );
 
+/** Where the files of the universe live: the modules of the code files, and the module each contract file lives in. */
+export type ModuleHomes = {
+  readonly modules: ReadonlyMap<string, ModuleRef>;
+  readonly contracts: ReadonlyMap<string, ModuleRef>;
+};
+
 type Tally = {
   readonly kind: ModuleRef["kind"];
   files: number;
@@ -100,6 +106,7 @@ const toModule = (
   path: string,
   tally: Tally,
   churn: InterfaceChurn,
+  modulePaths: ReadonlySet<string>,
 ): Module => {
   const testOnly = tally.testFiles === tally.files;
   return {
@@ -114,7 +121,11 @@ const toModule = (
         ? null
         : roundReported(tally.localCommits / tally.commits),
     partners: [...tally.shared]
-      .map(([partner, sharedCommits]) => ({ path: partner, sharedCommits }))
+      .map(([partner, sharedCommits]) => ({
+        path: partner,
+        sharedCommits,
+        contractsOnly: !modulePaths.has(partner),
+      }))
       .toSorted(byPartnerStrength)
       .slice(0, MAX_PARTNERS),
     ...churn,
@@ -126,7 +137,9 @@ const toModule = (
 
 /**
  * Measures every module over the counted commits (see `countedCommits`) of
- * `history`; `refs` maps every universe file to its module, and
+ * `history`; `homes` maps every code file to its module and every contract
+ * file to the module it lives in (a contract counts as a touch of its
+ * module, never for its size), and
  * `interfaces` maps every module path to its measured interface churn (see
  * `measureInterfaces`; a module missing there has none).
  *
@@ -136,21 +149,24 @@ const toModule = (
  */
 export const measureModules = (
   { commits, paths }: Pick<History, "commits" | "paths">,
-  refs: ReadonlyMap<string, ModuleRef>,
+  { modules: refs, contracts: contractRefs }: ModuleHomes,
   minModuleCommits: number,
   interfaces: ReadonlyMap<string, InterfaceChurn>,
 ): ReadonlyArray<Module> => {
   const tallies = tallyFiles(refs);
-  const moduleOfId = paths.map((path) => refs.get(path)?.path ?? ".");
+  const moduleOfId = paths.map(
+    (path) => (refs.get(path) ?? contractRefs.get(path))?.path ?? ".",
+  );
   for (const commit of countedCommits(commits)) {
     countCommit(
       new Set(Array.from(commit.files, (id) => moduleOfId[id] ?? ".")),
       tallies,
     );
   }
+  const modulePaths = new Set(tallies.keys());
   return [...tallies]
     .map(([path, tally]) =>
-      toModule(path, tally, interfaces.get(path) ?? NO_INTERFACE),
+      toModule(path, tally, interfaces.get(path) ?? NO_INTERFACE, modulePaths),
     )
     .toSorted(
       (a, b) =>

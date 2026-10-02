@@ -1,6 +1,8 @@
 // Owns focus: answering questions about some files within an unchanged universe.
 // Pure over a finished Report, so agents' per-file questions cost no second analysis.
 // Patterns are repository-relative picomatch globs or exact paths.
+import { Order } from "effect";
+
 import { groupByPath, partnersOf } from "../coupling/partners.js";
 import type { InspectResult } from "../report/inspect-result.js";
 import type { Coupling, FileStats, Report } from "../report/report.js";
@@ -35,15 +37,20 @@ export const inspect = (
   patterns: ReadonlyArray<string>,
 ): InspectResult => {
   const focused = new Set<string>();
+  const contractFiles = new Set<string>();
   const unmatched: Array<string> = [];
   for (const pattern of patterns) {
     const matches = matchesAny([pattern]);
     const hits = report.files.filter((file) => matches(file.path));
-    if (hits.length === 0) {
+    const contractHits = report.contracts.filter((file) => matches(file.path));
+    if (hits.length === 0 && contractHits.length === 0) {
       unmatched.push(pattern);
     }
     for (const { path } of hits) {
       focused.add(path);
+    }
+    for (const { path } of contractHits) {
+      contractFiles.add(path);
     }
   }
   const coupled = groupByPath(report.couplings);
@@ -58,6 +65,7 @@ export const inspect = (
       toEntry(file, report.totals.files, coupled.get(file.path) ?? []),
     ),
     modules: report.modules.filter(({ path }) => focusedModules.has(path)),
+    contractFiles: [...contractFiles].toSorted((a, b) => Order.String(a, b)),
     unmatched,
   };
 };

@@ -24,6 +24,7 @@ const entry: InspectResult["matches"][number] = {
       path: "packages/billing/src/invoice.test.ts",
       sharedCommits: 31,
       probability: 0.646,
+      kind: "code" as const,
       testPair: true,
       crossesModule: false,
       imports: "both",
@@ -32,6 +33,7 @@ const entry: InspectResult["matches"][number] = {
       path: "packages/billing/src/tax.ts",
       sharedCommits: 24,
       probability: 0.5,
+      kind: "code" as const,
       testPair: false,
       crossesModule: false,
       imports: "file→partner",
@@ -40,6 +42,7 @@ const entry: InspectResult["matches"][number] = {
       path: "packages/web/src/checkout.ts",
       sharedCommits: 12,
       probability: 0.25,
+      kind: "code" as const,
       testPair: false,
       crossesModule: true,
       imports: "none",
@@ -56,8 +59,8 @@ const billing: Module = {
   localCommits: 41,
   cohesion: 0.5541,
   partners: [
-    { path: "packages/web", sharedCommits: 20 },
-    { path: "packages/auth", sharedCommits: 9 },
+    { path: "packages/web", sharedCommits: 20, contractsOnly: false },
+    { path: "packages/auth", sharedCommits: 9, contractsOnly: false },
   ],
   entryPoints: ["packages/billing/src/index.ts"],
   interfaceCommits: 9,
@@ -81,6 +84,7 @@ const result = (
   },
   matches,
   modules,
+  contractFiles: [],
   unmatched: [],
 });
 
@@ -230,6 +234,7 @@ describe("renderInspect import relations", () => {
         path: "tax.test.ts",
         sharedCommits: 3,
         probability: 0.5,
+        kind: "code" as const,
         testPair: true,
         crossesModule: false,
         imports: "none" as const,
@@ -248,5 +253,41 @@ describe("renderInspect import relations", () => {
     expect(plainView).toContain("none    tax.test.ts (test)");
     expect(plainView).not.toContain("hidden");
     expect(colorView).not.toContain("\u001B[1mnone");
+  });
+});
+
+describe("renderInspect contract partners", () => {
+  it("marks a contract partner, which comes before any other mark", () => {
+    const partners = [
+      {
+        path: "api/orders.tsp",
+        sharedCommits: 9,
+        probability: 0.5,
+        kind: "contract" as const,
+        testPair: false,
+        crossesModule: true,
+        imports: null,
+      },
+    ];
+
+    const view = renderInspect(
+      result([{ ...entry, partners }]),
+      makeStyle(false),
+    );
+
+    expect(view).toContain("-       api/orders.tsp (contract)");
+  });
+});
+
+describe("renderInspect contract-only partners", () => {
+  it("marks a module partner that holds only contract files", () => {
+    const module: Module = {
+      ...billing,
+      partners: [{ path: "spec", sharedCommits: 20, contractsOnly: true }],
+    };
+
+    const view = renderInspect(result([entry], [module]), makeStyle(false));
+
+    expect(view).toContain("most often with spec (contracts) (20)");
   });
 });

@@ -89,6 +89,9 @@ const partnerRow = (context: Context, partner: Partner): HTMLElement => {
     h("span", "", `${formatCount(partner.sharedCommits)} shared commits`),
     h("span", "", distanceLabel(partner.distance)),
   );
+  if (partner.kind === "contract") {
+    meta.append(h("span", "badge", "contract"));
+  }
   if (partner.testPair) {
     meta.append(h("span", "badge", "test pair"));
   }
@@ -98,14 +101,14 @@ const partnerRow = (context: Context, partner: Partner): HTMLElement => {
   if (partner.hidden) {
     meta.append(h("span", "badge hidden-coupling", "no import"));
   }
+  const body = h("span", "partner-body", pathLabel(partner.path), meta);
+  // A contract is no tile, so there is nothing to select.
   return h(
     "li",
     "",
-    fileButton(
-      context,
-      partner.path,
-      h("span", "partner-body", pathLabel(partner.path), meta),
-    ),
+    partner.kind === "contract"
+      ? h("div", "file-button contract", body)
+      : fileButton(context, partner.path, body),
   );
 };
 

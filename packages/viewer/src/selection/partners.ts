@@ -7,6 +7,8 @@ export type Partner = {
   readonly degree: number;
   readonly distance: number;
   readonly testPair: boolean;
+  /** A contract (interface definition or schema) has no tile: it is not in `files`. */
+  readonly kind: "code" | "contract";
   /** The partner lives in another module. */
   readonly crossesModule: boolean;
   /**
@@ -44,16 +46,18 @@ export const indexPartners = (couplings: readonly Coupling[]): PartnerIndex => {
       partners.push(partner);
     }
   };
-  for (const { a, b, imports, ...measures } of couplings) {
+  for (const { a, b, imports, kinds, ...measures } of couplings) {
     const hidden = imports === "none" && !measures.testPair;
     add(a, {
       path: b,
+      kind: kinds.b,
       ...measures,
       imports: importsSeenFrom(imports, true),
       hidden,
     });
     add(b, {
       path: a,
+      kind: kinds.a,
       ...measures,
       imports: importsSeenFrom(imports, false),
       hidden,

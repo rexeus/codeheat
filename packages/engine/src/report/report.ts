@@ -3,6 +3,7 @@
 // Additive fields keep schemaVersion 1; renaming or removing a field bumps it.
 import { Schema } from "effect";
 
+import { ContractFile, FileKind, UbiquitousFile } from "./contract-file.js";
 import { Module } from "./module.js";
 import { Count, UnitDelta, UnitInterval } from "./scalars.js";
 
@@ -82,6 +83,13 @@ const Thresholds = Schema.Struct({
   minLeakage: UnitInterval,
   /** Fewest `Module.implementationCommits` a module needs before its entry points get that reason line. */
   minImplementationCommits: Count,
+  /**
+   * A contract file that changed in more than this share of the counted
+   * commits is ubiquitous (see `Report.ubiquitousFiles`).
+   */
+  ubiquitousShare: UnitInterval,
+  /** Fewest counted commits a contract file needs to be ubiquitous. */
+  ubiquitousMinCommits: Count,
   maxMeanLineLength: Count,
   maxFileBytes: Count,
 });
@@ -98,8 +106,9 @@ export const FileStats = Schema.Struct({
   linesAdded: Count,
   linesDeleted: Count,
   /**
-   * Distinct other universe files this file changed together with in counted
-   * commits (at most `Thresholds.maxCommitFiles` files), however rarely.
+   * Distinct other universe files, contract files included, this file changed
+   * together with in counted commits (at most `Thresholds.maxCommitFiles`
+   * files), however rarely.
    */
   breadth: Count,
   /**
@@ -138,6 +147,12 @@ export const Coupling = Schema.Struct({
   distance: Count,
   /** One file is the other's test; expected coupling, never a smell. */
   testPair: Schema.Boolean,
+  /**
+   * What each file is. A coupling with a contract side joins a contract to the
+   * code that changes with it (or to another contract); the contract is listed
+   * in `Report.contracts`, not in `files`.
+   */
+  kinds: Schema.Struct({ a: FileKind, b: FileKind }),
   /** The files belong to different modules. Neutral: an app legitimately changes with the library it uses. */
   crossesModule: Schema.Boolean,
   /**
@@ -183,10 +198,37 @@ export const Report = Schema.Struct({
   comparison: Schema.NullOr(Comparison),
   thresholds: Thresholds,
   /** Sizes before any output limit, so truncated reports keep their context. */
-  totals: Schema.Struct({ files: Count, couplings: Count, modules: Count }),
-  /** Sorted by rank. */
+  totals: Schema.Struct({
+    /** Code files, the ones in `files`. */
+    files: Count,
+    /** Contract files, the ones in `contracts`. */
+    contracts: Count,
+    couplings: Count,
+    modules: Count,
+  }),
+  /** The hotspots: every code file, sorted by rank. Contract files are never listed here. */
   files: Schema.Array(FileStats),
-  /** Sorted by degree, descending. */
+  /**
+   * Every contract file of the universe, most revised first, ties by path.
+   * They have no score; they appear in `couplings` with `kinds`.
+   */
+  contracts: Schema.Array(ContractFile),
+  /**
+   * The contract files that changed in more than `Thresholds.ubiquitousShare`
+   * of the counted commits, and in at least `Thresholds.ubiquitousMinCommits`
+   * of them, most commits first. A central schema or API description that
+   * every change touches would couple to everything, so they join no
+   * `couplings` pair, no `breadth`, and no module's cohesion or partners; they
+   * stay in `contracts`. With `--compare` the previous window is judged on its
+   * own commits and this lists the latest window's.
+   */
+  ubiquitousFiles: Schema.Array(UbiquitousFile),
+  /**
+   * First the pairs with at least one code side, then the pairs of two contract
+   * files (`kinds`), so a limit keeps code pairs: the files of one API
+   * definition change together far more often than code does. Each group is
+   * sorted by degree, descending, then shared commits, then path.
+   */
   couplings: Schema.Array(Coupling),
   /**
    * The ranking order, which terminal and viewer keep. First the ranked

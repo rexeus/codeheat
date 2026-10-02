@@ -32,6 +32,7 @@ const coupling = (
   degree: 0.5,
   distance: 0,
   testPair,
+  kinds: { a: "code", b: "code" },
   crossesModule: false,
   imports: null,
 });

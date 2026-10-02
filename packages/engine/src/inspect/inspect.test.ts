@@ -23,7 +23,7 @@ const coupling = (
   a: string,
   b: string,
   sharedCommits: number,
-  flags: Partial<Pick<Coupling, "testPair" | "crossesModule">> = {},
+  flags: Partial<Pick<Coupling, "testPair" | "crossesModule" | "kinds">> = {},
 ): Coupling => ({
   a,
   b,
@@ -31,6 +31,7 @@ const coupling = (
   degree: 0.5,
   distance: 0,
   testPair: false,
+  kinds: { a: "code", b: "code" },
   crossesModule: false,
   imports: null,
   ...flags,
@@ -46,7 +47,7 @@ const modules: Report["modules"] = [
     commits: 4,
     localCommits: 1,
     cohesion: 0.25,
-    partners: [{ path: "src", sharedCommits: 3 }],
+    partners: [{ path: "src", sharedCommits: 3, contractsOnly: false }],
     entryPoints: [],
     interfaceCommits: 0,
     implementationCommits: 4,
@@ -63,7 +64,7 @@ const modules: Report["modules"] = [
     commits: 20,
     localCommits: 17,
     cohesion: 0.85,
-    partners: [{ path: "lib", sharedCommits: 3 }],
+    partners: [{ path: "lib", sharedCommits: 3, contractsOnly: false }],
     entryPoints: ["src/index.ts"],
     interfaceCommits: 4,
     implementationCommits: 20,
@@ -100,11 +101,20 @@ const reportOf = (
     minImplementationCommits: 5,
     minSharedCommits: 3,
     minDegree: 0.3,
+    ubiquitousShare: 0.3,
+    ubiquitousMinCommits: 10,
     maxMeanLineLength: 300,
     maxFileBytes: 1_048_576,
   },
-  totals: { files: files.length, couplings: couplings.length, modules: 2 },
+  totals: {
+    files: files.length,
+    contracts: 0,
+    couplings: couplings.length,
+    modules: 2,
+  },
   files,
+  contracts: [],
+  ubiquitousFiles: [],
   couplings,
   modules,
 });
@@ -189,6 +199,7 @@ describe("inspect partners", () => {
       path: "p11.ts",
       sharedCommits: 14,
       probability: 0.7,
+      kind: "code",
       testPair: false,
       crossesModule: false,
       imports: null,
@@ -222,6 +233,7 @@ describe("inspect partner marks", () => {
         path: "b.ts",
         sharedCommits: 4,
         probability: 0.4,
+        kind: "code",
         testPair: false,
         crossesModule: false,
         imports: null,
@@ -232,6 +244,7 @@ describe("inspect partner marks", () => {
         path: "a.ts",
         sharedCommits: 4,
         probability: 1,
+        kind: "code",
         testPair: false,
         crossesModule: false,
         imports: null,
@@ -252,6 +265,7 @@ describe("inspect partner marks", () => {
         path: "src/a.test.ts",
         sharedCommits: 5,
         probability: 0.5,
+        kind: "code",
         testPair: true,
         crossesModule: false,
         imports: null,
@@ -319,5 +333,49 @@ describe("inspect modules", () => {
 
   it("lists no module when nothing matched", () => {
     expect(inspect(reportOf(universe), ["nope.ts"]).modules).toEqual([]);
+  });
+});
+
+describe("inspect contract partners", () => {
+  it("tells a contract partner from a code partner", () => {
+    const report = reportOf(
+      [stats("src/a.ts", 1, 10)],
+      [
+        coupling("api/main.tsp", "src/a.ts", 5, {
+          kinds: { a: "contract", b: "code" },
+        }),
+      ],
+    );
+
+    const [entry] = inspect(report, ["src/a.ts"]).matches;
+
+    expect(entry?.partners.map(({ path, kind }) => [path, kind])).toStrictEqual(
+      [["api/main.tsp", "contract"]],
+    );
+  });
+});
+
+const withContracts = (paths: ReadonlyArray<string>): Report => ({
+  ...reportOf([stats("src/a.ts", 1, 10)]),
+  contracts: paths.map((path) => ({
+    path,
+    module: ".",
+    revisions: 3,
+    linesAdded: 1,
+    linesDeleted: 0,
+  })),
+});
+
+describe("inspect contract files", () => {
+  it("reports a matched contract file apart, without an entry, and not as unmatched", () => {
+    const result = inspect(withContracts(["api/b.tsp", "api/a.tsp"]), [
+      "api/*.tsp",
+      "src/a.ts",
+      "nope.ts",
+    ]);
+
+    expect(result.matches.map(({ path }) => path)).toEqual(["src/a.ts"]);
+    expect(result.contractFiles).toEqual(["api/a.tsp", "api/b.tsp"]);
+    expect(result.unmatched).toEqual(["nope.ts"]);
   });
 });

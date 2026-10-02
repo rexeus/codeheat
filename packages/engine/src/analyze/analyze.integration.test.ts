@@ -122,6 +122,8 @@ layer(NodeServices.layer)("analyze report", (it) => {
           minImplementationCommits: 5,
           minSharedCommits: 3,
           minDegree: 0.3,
+          ubiquitousShare: 0.3,
+          ubiquitousMinCommits: 10,
           maxMeanLineLength: 300,
           maxFileBytes: 1_048_576,
         });
