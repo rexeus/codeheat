@@ -38,6 +38,15 @@ describe("limitReport", () => {
     expect(limitReport(report, 0).distantCouplings).toHaveLength(4);
   });
 
+  it("cuts the module couplings to the limit as well", () => {
+    const report = sampleReport();
+
+    expect(report.moduleCoupling).toHaveLength(8);
+    expect(
+      limitReport(report, 3).moduleCoupling.map(({ share }) => share),
+    ).toEqual([0.4231, 0.3448, 0.3182]);
+  });
+
   it("keeps the totals of the untruncated report", () => {
     expect(limitReport(sampleReport(), 3).totals).toEqual({
       files: 36,

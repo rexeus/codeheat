@@ -23,5 +23,6 @@ export const DEFAULT_THRESHOLDS: Report["thresholds"] = {
 
 /** The design-fit lists of a report, all empty. */
 export const NO_DESIGN_FINDINGS = {
+  moduleCoupling: [],
   distantCouplings: [],
 } satisfies Partial<Report>;

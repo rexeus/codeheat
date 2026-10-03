@@ -28,7 +28,7 @@ layer(NodeServices.layer)("analyze distant couplings", (it) => {
           "packages/compiler/package.json": manifest,
           "packages/app/package.json": manifest,
         });
-        for (let revision = 1; revision <= 4; revision += 1) {
+        for (let revision = 1; revision <= 5; revision += 1) {
           yield* repo.commit(day(revision + 1), {
             "packages/core/src/a.ts": `export const a = ${revision};`,
             "packages/core/test/a.test.ts": `// revision ${revision}`,
@@ -55,6 +55,17 @@ layer(NodeServices.layer)("analyze distant couplings", (it) => {
           a: "packages/app",
           b: "packages/compiler",
         });
+        assert.deepStrictEqual(
+          report.moduleCoupling.map(
+            ({ a, b, sharedCommits, share }) =>
+              `${a} ${b} ${sharedCommits} ${share}`,
+          ),
+          [
+            "packages/app packages/compiler 5 1",
+            "packages/app packages/core 5 1",
+            "packages/compiler packages/core 5 1",
+          ],
+        );
         assert.strictEqual(report.thresholds.minLocalDistance, 3);
       }),
   );

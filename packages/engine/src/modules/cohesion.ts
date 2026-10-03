@@ -3,7 +3,6 @@
 // module records, adding the interface churn measured next to it.
 import { Order } from "effect";
 
-import { countedChanges } from "../coupling/coupling.js";
 import type { History } from "../history/history.js";
 import type { Module } from "../report/module.js";
 import { roundReported } from "../report/precision.js";
@@ -11,6 +10,8 @@ import type { ModuleRef } from "./detect.js";
 import { isLeakyInterface, NO_INTERFACE } from "./interface-churn.js";
 import type { InterfaceChurn } from "./interface-churn.js";
 import { isTestPath } from "./test-path.js";
+import { touchedModules } from "./touched-modules.js";
+import type { ModuleHomes } from "./touched-modules.js";
 
 const MIN_MODULE_COMMITS_FLOOR = 5;
 const MIN_MODULE_COMMITS_SHARE = 0.01;
@@ -25,12 +26,6 @@ export const minModuleCommitsFor = (couplingCommits: number): number =>
     MIN_MODULE_COMMITS_FLOOR,
     Math.ceil(MIN_MODULE_COMMITS_SHARE * couplingCommits),
   );
-
-/** Where the files of the universe live: the modules of the code files, and the module each contract file lives in. */
-export type ModuleHomes = {
-  readonly modules: ReadonlyMap<string, ModuleRef>;
-  readonly contracts: ReadonlyMap<string, ModuleRef>;
-};
 
 type Tally = {
   readonly kind: ModuleRef["kind"];
@@ -148,20 +143,14 @@ const toModule = (
  * ranked when it has at least `minModuleCommits` commits and is not test-only.
  */
 export const measureModules = (
-  { changes, paths }: Pick<History, "changes" | "paths">,
-  { modules: refs, contracts: contractRefs }: ModuleHomes,
+  history: Pick<History, "changes" | "paths">,
+  homes: ModuleHomes,
   minModuleCommits: number,
   interfaces: ReadonlyMap<string, InterfaceChurn>,
 ): ReadonlyArray<Module> => {
-  const tallies = tallyFiles(refs);
-  const moduleOfId = paths.map(
-    (path) => (refs.get(path) ?? contractRefs.get(path))?.path ?? ".",
-  );
-  for (const change of countedChanges(changes)) {
-    countCommit(
-      new Set(Array.from(change.files, (id) => moduleOfId[id] ?? ".")),
-      tallies,
-    );
+  const tallies = tallyFiles(homes.modules);
+  for (const touched of touchedModules(history, homes)) {
+    countCommit(touched, tallies);
   }
   const modulePaths = new Set(tallies.keys());
   return [...tallies]

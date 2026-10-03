@@ -1493,5 +1493,55 @@
       "imports": "b→a",
       "score": 1.587
     }
+  ],
+  "moduleCoupling": [
+    {
+      "a": "apps/cli",
+      "b": "packages/shared",
+      "sharedCommits": 11,
+      "share": 0.4231
+    },
+    {
+      "a": "packages/billing",
+      "b": "packages/web",
+      "sharedCommits": 20,
+      "share": 0.3448
+    },
+    {
+      "a": "packages/auth",
+      "b": "packages/web",
+      "sharedCommits": 14,
+      "share": 0.3182
+    },
+    {
+      "a": "packages/auth",
+      "b": "packages/billing",
+      "sharedCommits": 9,
+      "share": 0.2045
+    },
+    {
+      "a": "packages/billing",
+      "b": "packages/shared",
+      "sharedCommits": 6,
+      "share": 0.2
+    },
+    {
+      "a": "packages/shared",
+      "b": "packages/web",
+      "sharedCommits": 5,
+      "share": 0.1667
+    },
+    {
+      "a": "packages/auth",
+      "b": "packages/shared",
+      "sharedCommits": 4,
+      "share": 0.1333
+    },
+    {
+      "a": "apps/cli",
+      "b": "packages/billing",
+      "sharedCommits": 3,
+      "share": 0.1154
+    }
   ]
 }

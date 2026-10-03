@@ -5,7 +5,12 @@ import { Effect } from "effect";
 import type { LanguageAdapter } from "../code/language-adapter.js";
 import { findCopyFamilies } from "../copies/find-copy-families.js";
 import { distantCouplings } from "../distant/distant-couplings.js";
+import {
+  moduleCoChange,
+  moduleCouplings,
+} from "../distant/module-co-change.js";
 import { linkCouplings } from "../imports/link-couplings.js";
+import { touchedModules } from "../modules/touched-modules.js";
 import { coupleHistory, measureWindows } from "./measure.js";
 import type { Universe } from "./measure.js";
 import type { WindowHistories } from "./windows.js";
@@ -36,12 +41,22 @@ export const measureLinked = (
       couplings,
       histories.current,
     );
+    const measured = measureWindows(universe, histories, {
+      ...coupled,
+      couplings,
+    });
+    const coChange = moduleCoChange(
+      touchedModules(histories.current, universe),
+      measured.modules,
+      measured.thresholds.minModuleCommits,
+    );
     return {
-      ...measureWindows(universe, histories, { ...coupled, couplings }),
+      ...measured,
       copyFamilies,
       distantCouplings: distantCouplings(
         couplings,
         new Map([...universe.modules, ...universe.contracts]),
       ),
+      moduleCoupling: moduleCouplings(coChange),
     };
   });
