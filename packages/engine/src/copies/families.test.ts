@@ -18,6 +18,7 @@ const historyOf = (...changes: ReadonlyArray<LogicalChange>): History => ({
   files: new Map(),
   commits: [],
   changes,
+  logicalChanges: { by: "commit", count: changes.length, largest: 1 },
   mechanical: countKinds([]),
 });
 

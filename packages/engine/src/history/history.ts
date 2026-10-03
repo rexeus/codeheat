@@ -3,7 +3,10 @@
 // read as one History or split in two at a point in time.
 import { Effect } from "effect";
 
+import { groupChanges } from "../changes/group.js";
+import type { GroupedBy } from "../changes/group.js";
 import type { LogicalChange } from "../changes/logical-change.js";
+import { readMerges } from "../changes/merges.js";
 import type { GitError } from "../git/git-errors.js";
 import type { Git } from "../git/git.js";
 import { classify } from "../mechanical/classify.js";
@@ -35,8 +38,19 @@ export type History = {
   readonly paths: ReadonlyArray<string>;
   /** Per commit that touched the universe. */
   readonly commits: ReadonlyArray<HistoryCommit>;
-  /** The real changes among them: what coupling, cohesion, and interface churn count. */
+  /**
+   * The real changes among them: what coupling, cohesion, and interface churn
+   * count. A change is one commit, or the commits of one pull request or
+   * ticket (see `groupChanges`).
+   */
   readonly changes: ReadonlyArray<LogicalChange>;
+  /** How `commits` were grouped into `changes`. */
+  readonly logicalChanges: {
+    readonly by: GroupedBy;
+    readonly count: number;
+    /** The most commits one change holds. */
+    readonly largest: number;
+  };
   /** Only files with at least one revision; mechanical commits give none. */
   readonly files: ReadonlyMap<string, FileHistory>;
   /** How many of `commits` are mechanical, per kind. */
@@ -80,18 +94,30 @@ const buildHistory = (
   paths: ReadonlyArray<string>,
   entries: ReadonlyArray<Entry>,
   kinds: ReadonlyMap<string, MechanicalKind>,
+  merges: ReadonlyMap<string, string>,
 ): History => {
   const commits: Array<HistoryCommit> = [];
-  const changes: Array<LogicalChange> = [];
+  const real: Array<Entry> = [];
   const fileHistories = new Map<number, FileHistory>();
   for (const entry of entries) {
     const mechanical = kinds.get(entry.signals.sha);
     commits.push({ mechanical });
     if (mechanical === undefined) {
-      changes.push({ files: entry.files, size: entry.size });
+      real.push(entry);
       addActivity(fileHistories, entry);
     }
   }
+  const { changes, by, largest } = groupChanges(
+    real.map(({ signals, subject, files, previousLives, size }) => ({
+      sha: signals.sha,
+      time: signals.time,
+      subject,
+      files,
+      previousLives,
+      size,
+    })),
+    merges,
+  );
   const files = new Map<string, FileHistory>();
   for (const [id, path] of paths.entries()) {
     const fileHistory = fileHistories.get(id);
@@ -103,6 +129,7 @@ const buildHistory = (
     paths,
     commits,
     changes,
+    logicalChanges: { by, count: changes.length, largest },
     files,
     mechanical: countKinds(kinds.values()),
   };
@@ -121,8 +148,10 @@ const readEntries = (
   Effect.gen(function* () {
     const entries = yield* scanCommits({ ...options, fileIds });
     const evidence = yield* readEvidence(entries.map(({ signals }) => signals));
+    const merges = yield* readMerges(options);
     return {
       entries,
+      merges,
       kindsOf: (window: ReadonlyArray<Entry>) =>
         classify(
           window.map(({ signals }) => signals),
@@ -141,8 +170,8 @@ export const readHistory = (
 ): Effect.Effect<History, GitError, Git> =>
   Effect.gen(function* () {
     const { paths, fileIds } = indexPaths(options);
-    const { entries, kindsOf } = yield* readEntries(options, fileIds);
-    return buildHistory(paths, entries, kindsOf(entries));
+    const { entries, merges, kindsOf } = yield* readEntries(options, fileIds);
+    return buildHistory(paths, entries, kindsOf(entries), merges);
   });
 
 /**
@@ -161,11 +190,11 @@ export const readHistoryHalves = (
 > =>
   Effect.gen(function* () {
     const { paths, fileIds } = indexPaths(options);
-    const { entries, kindsOf } = yield* readEntries(options, fileIds);
+    const { entries, merges, kindsOf } = yield* readEntries(options, fileIds);
     const recent = entries.filter(({ signals }) => signals.time >= splitAt);
     const earlier = entries.filter(({ signals }) => signals.time < splitAt);
     return {
-      recent: buildHistory(paths, recent, kindsOf(recent)),
-      earlier: buildHistory(paths, earlier, kindsOf(earlier)),
+      recent: buildHistory(paths, recent, kindsOf(recent), merges),
+      earlier: buildHistory(paths, earlier, kindsOf(earlier), merges),
     };
   });

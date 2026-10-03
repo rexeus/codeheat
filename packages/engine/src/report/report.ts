@@ -6,6 +6,7 @@ import { Schema } from "effect";
 import { Comparison, FileTrend } from "./comparison.js";
 import { ContractFile, FileKind, UbiquitousFile } from "./contract-file.js";
 import { CopyFamily } from "./copy-family.js";
+import { LogicalChanges } from "./logical-changes.js";
 import { MechanicalCommits } from "./mechanical-commits.js";
 import { Module } from "./module.js";
 import { Count, UnitInterval } from "./scalars.js";
@@ -28,8 +29,11 @@ export const AnalysisWindow = Schema.Struct({
    */
   realCommits: Count,
   /**
-   * Commits that count for coupling: neither mechanical (see
-   * `Report.mechanicalCommits`) nor too large (see `Thresholds.maxCommitFiles`).
+   * Logical changes that count for coupling, cohesion, and interface churn
+   * (see `Report.logicalChanges`; one per commit unless commits were
+   * grouped): made of real commits (not mechanical, see
+   * `Report.mechanicalCommits`) and not too large (see
+   * `Thresholds.maxCommitFiles`).
    */
   couplingCommits: Count,
 });
@@ -175,6 +179,8 @@ export const Report = Schema.Struct({
   window: AnalysisWindow,
   /** How many commits of `window.commits` are mechanical (see `MechanicalCommits`). */
   mechanicalCommits: MechanicalCommits,
+  /** How the window's real commits were grouped into the changes that are counted. */
+  logicalChanges: LogicalChanges,
   /** Null without `--compare`. */
   comparison: Schema.NullOr(Comparison),
   thresholds: Thresholds,

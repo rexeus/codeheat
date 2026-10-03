@@ -97,6 +97,7 @@ const reportOf = (
     reverts: 0,
     duplicates: 0,
   },
+  logicalChanges: { by: "commit", count: 0, largest: 0 },
   comparison: null,
   thresholds: {
     maxCommitFiles: 50,

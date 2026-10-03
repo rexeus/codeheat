@@ -97,6 +97,7 @@ const measure = (
     commits: history.commits.length,
     realCommits: realCommitCount(history),
     mechanicalCommits: history.mechanical,
+    logicalChanges: history.logicalChanges,
     couplingCommits,
     thresholds,
     files: rankFiles(

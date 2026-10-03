@@ -29,16 +29,26 @@ export type Entry = {
   /** Lines the commit added and deleted in each of `files`. */
   readonly added: Uint32Array;
   readonly deleted: Uint32Array;
+  /** The ids of the universe files it touched only in an earlier life. */
+  readonly previousLives: Uint32Array;
   /** How many distinct universe files it touched, earlier lives included. */
   readonly size: number;
+  /** The first line of its message. */
+  readonly subject: string;
 };
 
-const entryOf = (signals: CommitSignals, { lines, size }: Touch): Entry => ({
+const entryOf = (
+  signals: CommitSignals,
+  { lines, size, previousLives }: Touch,
+  subject: string,
+): Entry => ({
   signals,
   files: Uint32Array.from(lines.keys()),
   added: Uint32Array.from(lines.values(), (touched) => touched.added),
   deleted: Uint32Array.from(lines.values(), (touched) => touched.deleted),
+  previousLives,
   size,
+  subject,
 });
 
 /**
@@ -79,7 +89,11 @@ export const scanCommits = (
             const keep =
               commit.reverts !== undefined || reverted.has(commit.sha);
             entries.push(
-              entryOf(signalsOf(commit, touch.analyzed, keep), touch),
+              entryOf(
+                signalsOf(commit, touch.analyzed, keep),
+                touch,
+                commit.subject,
+              ),
             );
           }
         }),

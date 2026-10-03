@@ -16,7 +16,7 @@
     "until": "2026-09-29T12:00:00.000Z",
     "commits": 212,
     "realCommits": 197,
-    "couplingCommits": 198
+    "couplingCommits": 178
   },
   "mechanicalCommits": {
     "ignored": 2,
@@ -24,6 +24,11 @@
     "whitespace": 3,
     "reverts": 4,
     "duplicates": 1
+  },
+  "logicalChanges": {
+    "by": "mixed",
+    "count": 181,
+    "largest": 6
   },
   "comparison": {
     "previousSince": "2024-09-29T12:00:00.000Z",
