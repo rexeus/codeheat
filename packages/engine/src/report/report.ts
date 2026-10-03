@@ -6,6 +6,8 @@ import { Schema } from "effect";
 import { Comparison, FileTrend } from "./comparison.js";
 import { ContractFile, FileKind, UbiquitousFile } from "./contract-file.js";
 import { CopyFamily } from "./copy-family.js";
+import { DistantCoupling } from "./distant-coupling.js";
+import { ImportRelation } from "./import-relation.js";
 import { LogicalChanges } from "./logical-changes.js";
 import { MechanicalCommits } from "./mechanical-commits.js";
 import { Module } from "./module.js";
@@ -55,6 +57,8 @@ const Thresholds = Schema.Struct({
    * `max(5, ceil(0.01 × window.couplingCommits))`, so the floor grows with the window.
    */
   minModuleCommits: Count,
+  /** Fewest directory hops (`Coupling.distance`) at which two files of one module are a distant coupling; files of different modules always are. */
+  minLocalDistance: Count,
   /**
    * Smallest `Partner.probability` at which a partner that no import links to
    * the file (hidden coupling) gets a reason line.
@@ -152,19 +156,8 @@ export const Coupling = Schema.Struct({
   kinds: Schema.Struct({ a: FileKind, b: FileKind }),
   /** The files belong to different modules. Neutral: an app legitimately changes with the library it uses. */
   crossesModule: Schema.Boolean,
-  /**
-   * Whether a static import links the files, directly or through the
-   * re-exports of the module it imports: `a→b` means `a` imports `b`. `none`
-   * is hidden coupling: the files change together without referring to each
-   * other, and every module they and their re-exporting barrels load is
-   * accounted for (a universe file, a Node built-in, a declared dependency, a
-   * workspace package, an asset). Null when the relation is unknown: a file
-   * is not TypeScript or JavaScript, does not parse, no parser was available,
-   * or an import could not be resolved (tsconfig path aliases, `#` subpath
-   * imports, undeclared packages, code outside the universe, modules loaded by
-   * an expression). Unknown is not `none`.
-   */
-  imports: Schema.NullOr(Schema.Literals(["a→b", "b→a", "both", "none"])),
+  /** Whether a static import links the files; `none` is hidden coupling, null is unknown (see `ImportRelation`). */
+  imports: ImportRelation,
 });
 export type Coupling = typeof Coupling.Type;
 
@@ -247,5 +240,13 @@ export const Report = Schema.Struct({
    * members first.
    */
   copyFamilies: Schema.Array(CopyFamily),
+  /**
+   * The coupled pairs that lie far apart in the design, best first, at most 50:
+   * across modules, or at least `Thresholds.minLocalDistance` directory hops
+   * apart within one, with no test-code file and no pair of two contract files
+   * among them. Ranked by `score`, so a hidden coupling between distant
+   * modules comes first.
+   */
+  distantCouplings: Schema.Array(DistantCoupling),
 });
 export type Report = typeof Report.Type;

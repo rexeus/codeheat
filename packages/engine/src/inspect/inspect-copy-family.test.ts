@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 
 import type { FileStats, Report } from "../report/report.js";
-import { DEFAULT_THRESHOLDS } from "../testing/report-defaults.js";
+import {
+  DEFAULT_THRESHOLDS,
+  NO_DESIGN_FINDINGS,
+} from "../testing/report-defaults.js";
 import { inspect } from "./inspect.js";
 
 const stats = (path: string, rank: number): FileStats => ({
@@ -58,6 +61,7 @@ const reportOf = (copyFamilies: Report["copyFamilies"]): Report => ({
   couplings: [],
   modules: [],
   copyFamilies,
+  ...NO_DESIGN_FINDINGS,
 });
 
 describe("inspect copy family", () => {

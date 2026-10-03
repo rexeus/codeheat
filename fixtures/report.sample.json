@@ -43,6 +43,7 @@
     "hubMinRevisions": 5,
     "hubTopShare": 0.05,
     "minModuleCommits": 5,
+    "minLocalDistance": 3,
     "minSharedCommits": 3,
     "minDegree": 0.3,
     "ubiquitousShare": 0.3,
@@ -1426,10 +1427,71 @@
   "copyFamilies": [
     {
       "files": ["packages/auth/src/index.ts", "packages/billing/src/index.ts"],
-      "similarity": { "min": 0.58, "max": 0.58 },
+      "similarity": {
+        "min": 0.58,
+        "max": 0.58
+      },
       "testOnly": false,
       "sharedChanges": 6,
       "changesToAll": 6
+    }
+  ],
+  "distantCouplings": [
+    {
+      "a": "packages/billing/src/index.ts",
+      "b": "packages/auth/src/index.ts",
+      "sharedCommits": 6,
+      "strength": 0.75,
+      "distance": 4,
+      "crossesModule": true,
+      "modules": {
+        "a": "packages/billing",
+        "b": "packages/auth"
+      },
+      "imports": "none",
+      "score": 3.375
+    },
+    {
+      "a": "packages/shared/src/config.ts",
+      "b": "apps/cli/src/commands/analyze.ts",
+      "sharedCommits": 9,
+      "strength": 0.419,
+      "distance": 7,
+      "crossesModule": true,
+      "modules": {
+        "a": "packages/shared",
+        "b": "apps/cli"
+      },
+      "imports": "b→a",
+      "score": 2.095
+    },
+    {
+      "a": "packages/billing/src/invoice.ts",
+      "b": "packages/web/src/routes/invoices.tsx",
+      "sharedCommits": 14,
+      "strength": 0.418,
+      "distance": 5,
+      "crossesModule": true,
+      "modules": {
+        "a": "packages/billing",
+        "b": "packages/web"
+      },
+      "imports": "none",
+      "score": 1.881
+    },
+    {
+      "a": "packages/auth/src/session.ts",
+      "b": "packages/web/src/hooks/use-session.ts",
+      "sharedCommits": 9,
+      "strength": 0.529,
+      "distance": 5,
+      "crossesModule": true,
+      "modules": {
+        "a": "packages/auth",
+        "b": "packages/web"
+      },
+      "imports": "b→a",
+      "score": 1.587
     }
   ]
 }

@@ -68,6 +68,7 @@ const THRESHOLDS: Report["thresholds"] = {
   hubMinRevisions: 5,
   hubTopShare: 0.05,
   minModuleCommits: 5,
+  minLocalDistance: 3,
   minHiddenProbability: 0.5,
   minCopySimilarity: 0.5,
   minLeakage: 0.5,
@@ -79,6 +80,11 @@ const THRESHOLDS: Report["thresholds"] = {
   maxMeanLineLength: 300,
   maxFileBytes: 1048576,
 };
+
+/** The design-fit lists of a report, all empty. */
+const NO_FINDINGS = {
+  distantCouplings: [],
+} satisfies Partial<Report>;
 
 /** A minimal valid report around the given files and couplings; `comparison` is null unless given. */
 export const reportOf = (
@@ -120,4 +126,5 @@ export const reportOf = (
   couplings,
   modules,
   copyFamilies: [],
+  ...NO_FINDINGS,
 });

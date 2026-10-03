@@ -9,6 +9,7 @@ import {
   MIN_DEGREE,
   MIN_SHARED_COMMITS,
 } from "../coupling/coupling.js";
+import { MIN_LOCAL_DISTANCE } from "../distant/distant-couplings.js";
 import {
   HUB_MIN_BREADTH,
   HUB_MIN_REVISIONS,
@@ -34,6 +35,7 @@ export const thresholdsFor = (couplingCommits: number) =>
     hubMinRevisions: HUB_MIN_REVISIONS,
     hubTopShare: HUB_TOP_SHARE,
     minModuleCommits: minModuleCommitsFor(couplingCommits),
+    minLocalDistance: MIN_LOCAL_DISTANCE,
     minHiddenProbability: MIN_HIDDEN_PROBABILITY,
     minCopySimilarity: MIN_COPY_SIMILARITY,
     minLeakage: MIN_LEAKAGE,

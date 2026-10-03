@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 
 import type { Coupling, FileStats, Report } from "../report/report.js";
-import { DEFAULT_THRESHOLDS } from "../testing/report-defaults.js";
+import {
+  DEFAULT_THRESHOLDS,
+  NO_DESIGN_FINDINGS,
+} from "../testing/report-defaults.js";
 import { inspect } from "./inspect.js";
 
 const stats = (path: string, rank: number, revisions: number): FileStats => ({
@@ -114,6 +117,7 @@ const reportOf = (
   couplings,
   modules,
   copyFamilies: [],
+  ...NO_DESIGN_FINDINGS,
 });
 
 const universe = [

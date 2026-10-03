@@ -30,6 +30,14 @@ describe("limitReport", () => {
     expect(limitReport(report, 0).copyFamilies).toHaveLength(3);
   });
 
+  it("cuts the distant couplings to the limit as well", () => {
+    const report = sampleReport();
+
+    expect(report.distantCouplings).toHaveLength(4);
+    expect(limitReport(report, 2).distantCouplings).toHaveLength(2);
+    expect(limitReport(report, 0).distantCouplings).toHaveLength(4);
+  });
+
   it("keeps the totals of the untruncated report", () => {
     expect(limitReport(sampleReport(), 3).totals).toEqual({
       files: 36,
