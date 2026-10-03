@@ -110,6 +110,27 @@ layer(NodeServices.layer)("analyze series windows", (it) => {
     }),
   );
 
+  it.effect("cuts only the latest window when comparing", () =>
+    Effect.gen(function* () {
+      yield* setNow;
+      const repo = yield* makeTempRepository;
+      yield* createTwoPackages(repo);
+      yield* commitInMonth(repo, "2025-08", repeated(10, FILE_A));
+      yield* commitInMonth(repo, "2026-01", repeated(10, FILE_A));
+      yield* commitInMonth(repo, "2026-04", repeated(12, FILE_A));
+
+      const report = yield* analyze(analyzeOptionsFor(repo, { compare: "6m" }));
+
+      // the latest 6 months are two windows; the 10 changes of August belong to the window before
+      assert.deepStrictEqual(
+        report.series.map(({ changes }) => changes),
+        [10, 12],
+      );
+      assert.strictEqual(report.series[0]?.since, report.window.since);
+      assert.strictEqual(report.series[1]?.until, report.window.until);
+    }),
+  );
+
   it.effect("has no series for a window shorter than six weeks", () =>
     Effect.gen(function* () {
       yield* setNow;
