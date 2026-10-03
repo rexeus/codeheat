@@ -11,7 +11,7 @@ Paste this into the repository's agent instructions:
 
 Run `npx codeheat inspect <file> --json` (quote globs) before changing a file and read the result:
 
-- `partners` with `probability` ≥ 0.5 usually change together with this file. Read them, and update them in the same change or state why not. A partner in a distant folder (not a `testPair`) is a hidden dependency: prefer fixing the boundary over copying the coupling.
+- `partners` with `probability` ≥ 0.5 usually change together with this file. Read them, and update them in the same change or state why not. A partner with `distant: true` lies in another module or far away in the tree (never a test): the change crosses a design boundary. Read it, and prefer fixing the boundary over copying the coupling.
 - A partner with `imports: "none"` is hidden coupling: no import links the two files, so the compiler will not tell you when one side breaks the other. Check both files before changing either.
 - A low `rank` (1 is hottest) means the file is large or nested and changes often. Keep the change small, add tests first, and prefer extracting over adding more code to it.
 - A partner with `kind: "contract"` is an interface definition or schema (TypeSpec, Protocol Buffers, GraphQL, OpenAPI, JSON Schema, …): it drives this file. Change the contract first and bring the code along, and do not edit code that mirrors a contract without checking the contract.
@@ -19,7 +19,7 @@ Run `npx codeheat inspect <file> --json` (quote globs) before changing a file an
 - A non-null `copyFamily` lists files with largely the same content that keep changing in lockstep (see below). Apply the change to every member of the family in the same edit, or state why a copy stays as it is; when the same fix lands in all of them again, propose extracting the shared part.
 - `modules` describes the module the file lives in (see below): a low `cohesion` means changes there usually reach into other modules; a low `depth.linesPerExport` marks a shallow module, where a new export widens an interface with little behind it.
 
-For orientation in an unfamiliar repository, run `npx codeheat analyze --json` once: `files` are the top hotspots, `couplings` the strongest co-changing pairs, and `totals` the full size.
+For orientation in an unfamiliar repository, run `npx codeheat analyze --json` once: `files` are the top hotspots, `couplings` the strongest co-changing pairs, and `totals` the full size. `distantCouplings` are the pairs that change together across modules or far apart, `cliques` the modules that change as a group, `unstableInterfaces` the files many others import that keep changing, and `dependencyDirection` the imports that point from stable to volatile modules (see "Reading distant coupling and scaling signals").
 ```
 
 ## Choosing the call
@@ -71,9 +71,46 @@ The files of a repository are grouped into modules: workspace packages (a direct
 - A module partner with `contractsOnly: true` is no module but a place that holds only contract files, such as a code-free `spec/` folder: the module loses cohesion to a contract that lives outside every module. Read the contracts there before changing the module.
 - A partner in `inspect` with `crossesModule: true` lives in another module than the inspected file.
 - `leakage` is the share of the module's implementation changes that also touched an entry point. `leakyInterface: true` means changes inside usually change the public API too, so check the callers of the module. `modules` is in cohesion order, so look for `leakyInterface` instead of the first entries, and use `--limit 0` to see all modules. Low leakage behind an `export *` barrel does not prove a stable API.
+- A partner in `inspect` with `crossesModule: true` lives in another module than the inspected file. `distant` adds that it is not test code and not a contract pair: those are the partners that show the module boundary leaking.
 - A coupling with `crossesModule: true` joins files of different modules. That is neutral information: an app changes with the library it uses. It is worth a look when the modules should not know each other.
 
 `codeheat analyze --json` lists every module in `modules`, bounded by `--limit` like `files` and `couplings`; `totals.modules` is the full count. The order is the ranking: first the modules with at least `thresholds.minModuleCommits` changes that are not `testOnly`, then the other modules with counted changes (each group least cohesive first, ties by more `commits`, then `path`), last the modules with `cohesion: null`. The first entries are therefore the ones worth reading, also under a small `--limit`.
+
+## Reading distant coupling and scaling signals
+
+`analyze --json` also answers where the structure fails to contain change, and where growth will hurt:
+
+```json
+{
+  "distantCouplings": [
+    {
+      "a": "packages/billing/src/index.ts",
+      "b": "packages/auth/src/index.ts",
+      "sharedCommits": 6,
+      "strength": 0.75,
+      "distance": 4,
+      "crossesModule": true,
+      "modules": { "a": "packages/billing", "b": "packages/auth" },
+      "imports": "none",
+      "score": 3.375
+    }
+  ],
+  "cliques": [
+    {
+      "modules": ["packages/auth", "packages/billing", "packages/web"],
+      "sharedCommits": 12,
+      "weakestShare": 0.3182,
+      "reason": "3 modules of which every pair shares at least 32% of the smaller one's commits; 12 commits touched all of them"
+    }
+  ]
+}
+```
+
+- `distantCouplings` (at most 50, best first) lists coupled files in different modules, or at least `thresholds.minLocalDistance` directory hops apart in one module. `score` is `strength × reach × hidden`: a module boundary counts more than directory steps, and `imports: "none"` (hidden coupling: no import explains the pairing) ranks a pair 1.5 times higher. `imports: null` means unknown, not hidden. Test code and pairs of two contract files never appear. Before changing one file of a pair, read the other, and say so when you leave it untouched.
+- `moduleCoupling` is the data of a coupling matrix: for pairs of ranked modules, `sharedCommits` and `share` of the smaller module's commits. A `share` near 1 means the smaller module almost never changes alone.
+- `cliques` are groups of at least three modules that change together: every pair shares at least `thresholds.minCliqueShare` of the smaller module's commits. A change in one member usually reaches the others, so plan for all of them. `reason` is one sentence for the report.
+- `unstableInterfaces` (TypeScript and JavaScript) lists files that at least `thresholds.minFanIn` files import and that change more often than their dependents: `fanIn`, `revisions`, `medianDependentRevisions`, `changedDependents` (dependents that changed in a commit that also changed the file), and the `dependents` that changed with it most often. Changing one of these ripples; add tests first, keep the change backwards compatible, and prefer splitting what keeps changing from what many rely on. Dependencies are read as text and only the ones that resolve to files count, so a repository that imports through path aliases shows a lower `fanIn` than it has.
+- `dependencyDirection` (TypeScript and JavaScript) lists import edges from a module that rarely changes (`fromCommits`) to one that changes often (`toCommits`, at least `thresholds.minVolatilityRatio` times as many): a change to `to` reaches code that otherwise sits still. Check the `importingFiles` before changing `to`'s public API.
 
 ## Reading module depth
 
