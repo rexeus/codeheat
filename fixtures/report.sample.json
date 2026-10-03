@@ -59,7 +59,9 @@
     "minFanIn": 5,
     "minInterfaceChanges": 5,
     "minVolatilityRatio": 2,
-    "minWindowChanges": 10
+    "minWindowChanges": 10,
+    "minTrendWindows": 3,
+    "minErosionShift": 0.1
   },
   "totals": {
     "files": 36,
@@ -1179,6 +1181,20 @@
       }
     }
   ],
+  "erosion": {
+    "verdict": "eroding",
+    "windows": 4,
+    "locality": {
+      "from": 0.704,
+      "to": 0.5896,
+      "slope": -0.0382
+    },
+    "propagationCost": {
+      "from": 0.0499,
+      "to": 0.0733,
+      "slope": 0.0078
+    }
+  },
   "couplings": [
     {
       "a": "packages/billing/src/index.ts",
@@ -1352,6 +1368,14 @@
       "trend": {
         "previousCohesion": 0.28,
         "cohesionDelta": 0.12
+      },
+      "erosion": {
+        "from": 0.3571,
+        "to": 0.4536,
+        "slope": 0.0321,
+        "windows": 3,
+        "cohesion": [0.35, 0.4, null, 0.45],
+        "recent": true
       }
     },
     {
@@ -1384,7 +1408,8 @@
       "trend": {
         "previousCohesion": 0.58,
         "cohesionDelta": -0.08
-      }
+      },
+      "erosion": null
     },
     {
       "path": "packages/web",
@@ -1421,6 +1446,14 @@
       "trend": {
         "previousCohesion": 0.7345,
         "cohesionDelta": -0.2
+      },
+      "erosion": {
+        "from": 0.602,
+        "to": 0.458,
+        "slope": -0.048,
+        "windows": 4,
+        "cohesion": [0.6, 0.55, 0.52, 0.45],
+        "recent": true
       }
     },
     {
@@ -1467,6 +1500,14 @@
       "trend": {
         "previousCohesion": 0.5241,
         "cohesionDelta": 0.03
+      },
+      "erosion": {
+        "from": 0.71,
+        "to": 0.41,
+        "slope": -0.1,
+        "windows": 4,
+        "cohesion": [0.72, 0.6, 0.5, 0.42],
+        "recent": true
       }
     },
     {
@@ -1508,7 +1549,8 @@
       "trend": {
         "previousCohesion": 0.6636,
         "cohesionDelta": -0.05
-      }
+      },
+      "erosion": null
     }
   ],
   "copyFamilies": [

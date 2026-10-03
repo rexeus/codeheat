@@ -132,6 +132,8 @@ layer(NodeServices.layer)("analyze report", (it) => {
           ubiquitousShare: 0.3,
           ubiquitousMinCommits: 10,
           minWindowChanges: 10,
+          minTrendWindows: 3,
+          minErosionShift: 0.1,
           maxMeanLineLength: 300,
           maxFileBytes: 1_048_576,
         });

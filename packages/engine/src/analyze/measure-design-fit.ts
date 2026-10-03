@@ -1,11 +1,13 @@
-// Owns what the counted changes of the analysis window say about the design
-// once files and modules are measured: which modules change together, how far
-// a change spreads, and how that moved over the consecutive windows.
 import { findCliques } from "../distant/cliques.js";
 import {
   moduleCoChange,
   moduleCouplings,
 } from "../distant/module-co-change.js";
+// Owns what the counted changes of the analysis window say about the design
+// once files and modules are measured: which modules change together, how far
+// a change spreads, and how that moved over the consecutive windows.
+import { withModuleErosion } from "../erosion/module-erosion.js";
+import { judgeErosion } from "../erosion/repository-erosion.js";
 import { touchedModules } from "../modules/touched-modules.js";
 import type { Coupling } from "../report/report.js";
 import { measureSpread } from "../spread/measure-spread.js";
@@ -36,9 +38,15 @@ export const measureDesignFit = (
     ...measured,
     modules: spread.modules,
   });
+  const series = slices.map(({ window }) => window);
   return {
     ...spread,
-    series: slices.map(({ window }) => window),
+    modules: withModuleErosion(
+      spread.modules,
+      slices.map((slice) => slice.touched),
+    ),
+    series,
+    erosion: judgeErosion(series),
     moduleCoupling: moduleCouplings(coChange),
     cliques: cliqueSearch.cliques,
     cliquesPartial: cliqueSearch.partial,

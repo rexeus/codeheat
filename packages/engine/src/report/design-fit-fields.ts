@@ -5,6 +5,7 @@
 import { Schema } from "effect";
 
 import { ChangeRadius, PropagationCost } from "./change-radius.js";
+import { Erosion } from "./erosion.js";
 import { SeriesWindow } from "./series.js";
 
 /** Fields of `Report`; each is documented here, where it is defined. */
@@ -20,4 +21,6 @@ export const DesignFitFields = {
    * window has no series. With `--compare` it cuts the latest window only.
    */
   series: Schema.Array(SeriesWindow),
+  /** Whether the design keeps containing change over `series` (see `Erosion`); null exactly when `series` is empty. */
+  erosion: Schema.NullOr(Erosion),
 };

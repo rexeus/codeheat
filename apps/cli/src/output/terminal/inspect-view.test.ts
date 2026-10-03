@@ -75,6 +75,7 @@ const billing: Module = {
   leakyInterface: false,
   depth: null,
   trend: null,
+  erosion: null,
 };
 
 const result = (

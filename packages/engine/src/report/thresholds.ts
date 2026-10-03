@@ -53,6 +53,10 @@ export const Thresholds = Schema.Struct({
   ubiquitousMinCommits: Count,
   /** Fewest counted changes a window of `Report.series` needs to be `active`, which is what the erosion, trend, and heat classifications count. */
   minWindowChanges: Count,
+  /** Fewest windows with evidence a trend (`Erosion`, `ModuleErosion`) is fitted through. */
+  minTrendWindows: Count,
+  /** How far the fitted locality (`Erosion.locality`) must move, as a share of the changes, for the verdict to be `eroding` or `improving`. */
+  minErosionShift: UnitInterval,
   maxMeanLineLength: Count,
   maxFileBytes: Count,
 });

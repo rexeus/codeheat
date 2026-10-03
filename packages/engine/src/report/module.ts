@@ -4,6 +4,7 @@
 // Additive fields keep schemaVersion 1; renaming or removing a field bumps it.
 import { Schema } from "effect";
 
+import { ModuleErosion } from "./erosion.js";
 import { Count, UnitDelta, UnitInterval } from "./scalars.js";
 
 /** Another module that changes in the same logical changes (see `Report.logicalChanges`). */
@@ -128,5 +129,11 @@ export const Module = Schema.Struct({
    * much to call a change.
    */
   trend: Schema.NullOr(ModuleTrend),
+  /**
+   * How the module's cohesion moved over `Report.series`; null for a test-only
+   * module and unless the module has evidence in at least
+   * `Thresholds.minTrendWindows` windows (see `ModuleErosion`).
+   */
+  erosion: Schema.NullOr(ModuleErosion),
 });
 export type Module = typeof Module.Type;

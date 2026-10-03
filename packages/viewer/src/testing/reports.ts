@@ -60,6 +60,7 @@ export const moduleStats = (
   leakyInterface: false,
   depth: null,
   trend: null,
+  erosion: null,
   ...overrides,
 });
 
@@ -84,6 +85,8 @@ const THRESHOLDS: Report["thresholds"] = {
   ubiquitousShare: 0.3,
   ubiquitousMinCommits: 10,
   minWindowChanges: 10,
+  minTrendWindows: 3,
+  minErosionShift: 0.1,
   maxMeanLineLength: 300,
   maxFileBytes: 1048576,
 };
@@ -93,6 +96,7 @@ const NO_FINDINGS = {
   changeRadius: null,
   propagationCost: null,
   series: [],
+  erosion: null,
   cliquesPartial: false,
   dependencyDirection: [],
   unstableInterfaces: [],

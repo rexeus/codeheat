@@ -120,6 +120,7 @@ const module = (path: string, overrides: Partial<Module>): Module => ({
   leakyInterface: true,
   depth: null,
   trend: null,
+  erosion: null,
   ...overrides,
 });
 

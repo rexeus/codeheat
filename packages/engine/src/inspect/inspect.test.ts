@@ -61,6 +61,7 @@ const modules: Report["modules"] = [
     leakyInterface: false,
     depth: null,
     trend: null,
+    erosion: null,
   },
   {
     path: "src",
@@ -79,6 +80,7 @@ const modules: Report["modules"] = [
     leakyInterface: false,
     depth: null,
     trend: null,
+    erosion: null,
   },
 ];
 
