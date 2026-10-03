@@ -31,11 +31,9 @@ const windowNoun = (series: Report["series"], count: number): string => {
       );
 };
 
-const VERDICT_LABELS = {
-  eroding: "Eroding",
-  improving: "Improving",
-  holding: "Holding",
-} as const;
+/** A fitted share as a percentage: the report keeps the line's own values, but no share is below 0 % or above 100 %. */
+const share = (value: number): string =>
+  percent(Math.min(1, Math.max(0, value)));
 
 /** The verdict on the whole repository as one sentence with the numbers behind it. */
 const verdictLine = (report: Report): string | undefined => {
@@ -45,10 +43,7 @@ const verdictLine = (report: Report): string | undefined => {
   }
   const active = windowNoun(series, erosion.windows);
   const line = erosion.locality;
-  const moved =
-    line === null
-      ? ""
-      : `changes that stay in one module went from ${percent(line.from)} to ${percent(line.to)} over the active period of ${active}`;
+  const period = `the active period of ${active}`;
   const quiet =
     erosion.inactiveSince === null
       ? ""
@@ -56,13 +51,20 @@ const verdictLine = (report: Report): string | undefined => {
   if (erosion.verdict === "unknown") {
     return `No verdict yet: ${plural(erosion.windows, "window has", "windows have")} at least ${thresholds.minWindowChanges} changes, and a trend needs ${thresholds.minTrendWindows}${quiet}.`;
   }
-  return `${VERDICT_LABELS[erosion.verdict]}: ${moved}${quiet}.`;
+  if (line === null) {
+    return undefined;
+  }
+  const verdict = {
+    eroding: `Eroding: changes that stay in one module fell from ${share(line.from)} to ${share(line.to)} over ${period}`,
+    improving: `Improving: changes that stay in one module rose from ${share(line.from)} to ${share(line.to)} over ${period}`,
+    holding: `Holding: no lasting change in the share of changes that stay in one module (${share(line.from)} to ${share(line.to)}) over ${period}`,
+  }[erosion.verdict];
+  return `${verdict}${quiet}.`;
 };
 
-/** Modules still changing whose cohesion fell by at least the shift that counts, most eroded first. */
+/** Modules still changing whose cohesion fell by more than chance explains (their `verdict` is `eroding`), most eroded first. */
 const erodingModules = ({
   modules,
-  thresholds,
 }: Report): ReadonlyArray<
   Module & { erosion: NonNullable<Module["erosion"]> }
 > =>
@@ -70,7 +72,7 @@ const erodingModules = ({
     .flatMap((module) =>
       module.erosion !== null &&
       module.erosion.recent &&
-      module.erosion.from - module.erosion.to >= thresholds.minErosionShift
+      module.erosion.verdict === "eroding"
         ? [{ ...module, erosion: module.erosion }]
         : [],
     )
@@ -84,7 +86,7 @@ const erodingModules = ({
 const erodingLines = (report: Report): ReadonlyArray<string> =>
   erodingModules(report).map(
     ({ path, erosion }) =>
-      `  ${escapeForTerminal(path)}: cohesion ${percent(erosion.from)} to ${percent(erosion.to)} over ${windowNoun(report.series, erosion.windows)}`,
+      `  ${escapeForTerminal(path)}: cohesion ${share(erosion.from)} to ${share(erosion.to)} over ${windowNoun(report.series, erosion.windows)}`,
   );
 
 const filesWithHeat = (
@@ -120,7 +122,7 @@ const fixLines = ({
   }
   if (!fixDensity.known || fixDensity.share === null) {
     return [
-      `Fixes: unknown, as only ${percent(fixDensity.conventional)} of the commit subjects follow a convention.`,
+      `Fixes: unknown, as only ${percent(fixDensity.conventional)} of the commit subjects match a fix rule or a Conventional Commits type.`,
     ];
   }
   const [worst] = modules

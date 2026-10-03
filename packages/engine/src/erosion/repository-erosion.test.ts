@@ -3,14 +3,14 @@ import { describe, expect, it } from "vitest";
 import type { SeriesWindow } from "../report/series.js";
 import { judgeErosion } from "./repository-erosion.js";
 
-/** A window with 20 changes of which `local` stay in one module; null for an inactive window. */
+/** A window with 100 changes of which the share `local` stays in one module; null for an inactive window. */
 const seriesWindow = (local: number | null, cost = 0.1): SeriesWindow => ({
   since: "2026-01-01T00:00:00.000Z",
   until: "2026-04-01T00:00:00.000Z",
-  changes: local === null ? 2 : 20,
+  changes: local === null ? 2 : 100,
   active: local !== null,
   changeRadius:
-    local === null ? null : { changes: 20, median: 1, p90: 2, local },
+    local === null ? null : { changes: 100, median: 1, p90: 2, local },
   propagationCost: local === null ? null : { cost, files: 10 },
 });
 

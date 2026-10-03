@@ -30,44 +30,68 @@ const erosionOf = (
     windows,
   ).find((module) => module.path === path)?.erosion;
 
+/** Three windows of 50 changes whose cohesion falls from 0.8 to 0.4. */
+const FALLING = [
+  quarter("a", 40, 10),
+  quarter("a", 30, 20),
+  quarter("a", 20, 30),
+];
+
 describe("withModuleErosion", () => {
   it("fits the cohesion of each window through the windows where the module has enough changes", () => {
-    // cohesion 0.8, 0.6, 0.4 in windows of 10 changes (the floor is 5)
-    const erosion = erosionOf("a", [
-      quarter("a", 8, 2),
-      quarter("a", 6, 4),
-      quarter("a", 4, 6),
-    ]);
-
-    expect(erosion).toStrictEqual({
+    expect(erosionOf("a", FALLING)).toStrictEqual({
       from: 0.8,
       to: 0.4,
       slope: -0.2,
+      verdict: "eroding",
       windows: 3,
       cohesion: [0.8, 0.6, 0.4],
       recent: true,
     });
   });
 
-  it("leaves out a window where the module had fewer changes than a window of that size needs", () => {
+  it("calls a fall that chance explains holding, as the repository's is", () => {
+    // 0.8, 0.6, 0.4 of ten changes each: a fall of 40 points, but of 10 changes a window
     const erosion = erosionOf("a", [
       quarter("a", 8, 2),
-      quarter("a", 1, 2),
       quarter("a", 6, 4),
       quarter("a", 4, 6),
+    ]);
+
+    expect(erosion?.verdict).toBe("holding");
+    expect(erosion?.from).toBe(0.8);
+  });
+
+  it("calls a rise improving", () => {
+    expect(erosionOf("a", FALLING.toReversed())?.verdict).toBe("improving");
+  });
+
+  it("calls a flat module holding", () => {
+    const flat = quarter("a", 30, 20);
+
+    expect(erosionOf("a", [flat, flat, flat])?.verdict).toBe("holding");
+  });
+
+  it("leaves out a window where the module had fewer changes than a ranked module needs, and fewer than ten", () => {
+    // 9 changes is above the floor of 5 that ranks a module, but below 10
+    const erosion = erosionOf("a", [
+      quarter("a", 40, 10),
+      quarter("a", 5, 4),
+      quarter("a", 30, 20),
+      quarter("a", 20, 30),
     ]);
 
     expect(erosion?.cohesion).toStrictEqual([0.8, null, 0.6, 0.4]);
     expect(erosion?.windows).toBe(3);
   });
 
-  it("raises the floor with the window's own changes: 1% of them, at least 5", () => {
-    // the busy window counts 700 changes, so a module needs 7 in it; a has 6
-    const busy = [...quarter("a", 4, 2), ...quarter("x", 694, 0)];
+  it("raises the floor with the window's own changes: 1% of them, at least 10", () => {
+    // the busy window counts 1500 changes, so a module needs 15 in it; a has 12
+    const busy = [...quarter("a", 8, 4), ...quarter("x", 1488, 0)];
     const erosion = erosionOf("a", [
-      quarter("a", 8, 2),
-      quarter("a", 6, 4),
-      quarter("a", 4, 6),
+      quarter("a", 40, 10),
+      quarter("a", 30, 20),
+      quarter("a", 20, 30),
       busy,
     ]);
 
@@ -78,25 +102,17 @@ describe("withModuleErosion", () => {
 describe("withModuleErosion without evidence", () => {
   it("is no longer recent when the module had no evidence in the last two windows", () => {
     const erosion = erosionOf("a", [
-      quarter("a", 8, 2),
-      quarter("a", 6, 4),
-      quarter("a", 4, 6),
-      quarter("x", 10, 0),
-      quarter("x", 10, 0),
+      ...FALLING,
+      quarter("x", 50, 0),
+      quarter("x", 50, 0),
     ]);
 
     expect(erosion?.recent).toBe(false);
   });
 
   it("is null with evidence in fewer than three windows, and for a test-only module", () => {
-    expect(erosionOf("a", [quarter("a", 8, 2), quarter("a", 6, 4)])).toBeNull();
-    expect(
-      erosionOf(
-        "a",
-        [quarter("a", 8, 2), quarter("a", 6, 4), quarter("a", 4, 6)],
-        true,
-      ),
-    ).toBeNull();
+    expect(erosionOf("a", FALLING.slice(0, 2))).toBeNull();
+    expect(erosionOf("a", FALLING, true)).toBeNull();
   });
 
   it("keeps every other field of the module", () => {

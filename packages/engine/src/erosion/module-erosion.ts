@@ -3,8 +3,10 @@ import { minModuleCommitsFor } from "../modules/cohesion.js";
 import type { ModuleErosion } from "../report/erosion.js";
 import type { Module } from "../report/module.js";
 import { roundReported } from "../report/precision.js";
+import { MIN_WINDOW_CHANGES } from "../series/active-window.js";
+import { judgeShift } from "./shift-gate.js";
+import type { WindowShare } from "./shift-gate.js";
 import { fitLine } from "./trend-line.js";
-import type { WindowValue } from "./trend-line.js";
 
 /** How many of the latest windows count as "still changing". */
 const RECENT_WINDOWS = 2;
@@ -27,26 +29,32 @@ const tallyWindow = (
   return tallies;
 };
 
-/** A module's cohesion in each window, null where it lacks the changes of a ranked module in a window of that size. */
+/**
+ * A module's cohesion in each window with the changes it is the share of;
+ * null where the module had fewer changes than a ranked module needs in a
+ * window of that size, and at least `MIN_WINDOW_CHANGES`: with fewer, one
+ * change moves the share by ten points or more.
+ */
 const cohesionOf = (
   path: string,
   windows: ReadonlyArray<{
     readonly size: number;
     readonly tallies: ReadonlyMap<string, Tally>;
   }>,
-): ReadonlyArray<number | null> =>
+): ReadonlyArray<{ readonly value: number; readonly changes: number } | null> =>
   windows.map(({ size, tallies }) => {
     const tally = tallies.get(path);
-    return tally === undefined || tally.commits < minModuleCommitsFor(size)
+    return tally === undefined ||
+      tally.commits < Math.max(MIN_WINDOW_CHANGES, minModuleCommitsFor(size))
       ? null
-      : tally.local / tally.commits;
+      : { value: tally.local / tally.commits, changes: tally.commits };
   });
 
 const erosionOf = (
-  cohesion: ReadonlyArray<number | null>,
+  cohesion: ReturnType<typeof cohesionOf>,
 ): ModuleErosion | null => {
-  const points = cohesion.flatMap((value, index): Array<WindowValue> =>
-    value === null ? [] : [{ index, value }],
+  const points = cohesion.flatMap((window, index): Array<WindowShare> =>
+    window === null ? [] : [{ index, ...window }],
   );
   const line = fitLine(points);
   if (line === null) {
@@ -54,19 +62,21 @@ const erosionOf = (
   }
   return {
     ...line,
+    verdict: judgeShift(points, line),
     windows: points.length,
-    cohesion: cohesion.map((value) =>
-      value === null ? null : roundReported(value),
+    cohesion: cohesion.map((window) =>
+      window === null ? null : roundReported(window.value),
     ),
-    recent: cohesion.slice(-RECENT_WINDOWS).some((value) => value !== null),
+    recent: cohesion.slice(-RECENT_WINDOWS).some((window) => window !== null),
   };
 };
 
 /**
  * Sets `erosion` on every module that is not test-only: its cohesion in each
  * window, given the distinct modules each counted change of the window touched
- * (see `touchedModules`), oldest window first. A module has no `erosion`
- * without evidence in enough windows (see `fitLine`).
+ * (see `touchedModules`), oldest window first, and whether it fell, rose, or
+ * held (see `judgeShift`). A module has no `erosion` without evidence in
+ * enough windows (see `fitLine`).
  */
 export const withModuleErosion = (
   modules: ReadonlyArray<Module>,

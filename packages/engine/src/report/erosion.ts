@@ -7,15 +7,17 @@ import { Schema } from "effect";
 import { Count, UnitInterval } from "./scalars.js";
 
 /**
- * A straight line fitted (least squares) through a measure over the windows
- * that have evidence, read at the first and at the last of them. Fitting
- * keeps one odd window from deciding the direction.
+ * A robust straight line (Theil–Sen: the median of the slopes between every
+ * two windows, and the median intercept) fitted through a measure over the
+ * windows that have evidence, read at the first and at the last of them. One
+ * odd window cannot turn it. It is the line's own value, not held to the range
+ * of the measure: for a share near 0 or 1 it can lie slightly outside it.
  */
 export const TrendLine = Schema.Struct({
-  /** The line's value at the first window with evidence, kept between 0 and 1 and rounded to 4 decimals. */
-  from: UnitInterval,
-  /** The line's value at the last window with evidence, kept between 0 and 1 and rounded to 4 decimals. */
-  to: UnitInterval,
+  /** The line's value at the first window with evidence, rounded to 4 decimals. */
+  from: Schema.Finite,
+  /** The line's value at the last window with evidence, rounded to 4 decimals. */
+  to: Schema.Finite,
   /** Change per window of the series (not per window with evidence), rounded to 4 decimals; negative means falling. */
   slope: Schema.Finite,
 });
@@ -25,12 +27,20 @@ export type TrendLine = typeof TrendLine.Type;
  * How a module's cohesion moved over `Report.series`: the windows in which it
  * had at least as many counted changes as a window of that size needs to rank
  * a module (`Thresholds.minModuleCommits`, derived from the window's own
- * counted changes) carry evidence, and at least `Thresholds.minTrendWindows`
- * of them are needed for a trend. A module whose cohesion falls keeps
- * pulling other modules into its changes.
+ * counted changes) and at least `Thresholds.minWindowChanges` carry evidence,
+ * and at least `Thresholds.minTrendWindows` of them are needed for a trend. A
+ * module whose cohesion falls keeps pulling other modules into its changes.
  */
 export const ModuleErosion = Schema.Struct({
   ...TrendLine.fields,
+  /**
+   * `eroding` or `improving` only when the line moved by at least
+   * `Thresholds.minErosionShift` and `Thresholds.minErosionSigmas` standard
+   * errors of the shift (see `Erosion.verdict`), computed from the windows'
+   * numbers of counted changes; otherwise `holding`: the module's share only
+   * wobbled.
+   */
+  verdict: Schema.Literals(["eroding", "improving", "holding"]),
   /** Windows with evidence the line is fitted through. */
   windows: Count,
   /**
@@ -53,9 +63,15 @@ export type ModuleErosion = typeof ModuleErosion.Type;
  */
 export const Erosion = Schema.Struct({
   /**
-   * `eroding`: changes stay in one module less often than they did, by at
-   * least `Thresholds.minErosionShift` (the line's `to` against its `from`);
-   * `improving`: more often, by as much; `holding`: neither.
+   * `eroding`: changes stay in one module less often than they did: the
+   * line's `to` is below its `from` by at least `Thresholds.minErosionShift`
+   * and by at least `Thresholds.minErosionSigmas` standard errors of that
+   * shift. The error is the one of a weighted least-squares line through the
+   * windows' shares, whose variance is binomial, `p(1-p)/changes` with `p` the
+   * pooled share (not below 5 % or above 95 %), widened by 15 % for the
+   * Theil–Sen estimator and for changes that burst together. A flat design
+   * therefore reads `holding` in more than 95 % of the cases at 60 changes a
+   * year and up. `improving`: the same, upward; `holding`: neither.
    * `unknown`: fewer than `Thresholds.minTrendWindows` active windows with
    * counted changes to fit a line through.
    * The verdict is judged over the active windows (see `SeriesWindow.active`)

@@ -1,4 +1,4 @@
-import type { Report } from "@codeheat/engine";
+import type { Module, Report } from "@codeheat/engine";
 import { describe, expect, it } from "vitest";
 
 import { sampleReport } from "../../testing/sample-report.js";
@@ -31,12 +31,9 @@ describe("overTimeSection", () => {
   it("states the verdict with the numbers behind it, the modules losing cohesion, the hotspots by age, and the fixes", () => {
     expect(plainSection(sampleReport())).toStrictEqual([
       "Over time",
-      "Eroding: changes that stay in one module went from 70% to 59% over the active period of 4 quarters.",
-      "  packages/billing: cohesion 71% to 41% over 4 quarters",
-      "  packages/web: cohesion 60% to 46% over 4 quarters",
-      "Hotspots by age: 2 chronic files (hot in most windows, so a design problem) and 1 acute file (hot only lately, so current work).",
-      "  #1 packages/billing/src/invoice.ts: hot in 4 of 4 windows",
-      "  #2 packages/billing/src/tax.ts: hot in 3 of 4 windows",
+      "Eroding: changes that stay in one module fell from 78% to 51% over the active period of 4 quarters.",
+      "  packages/billing: cohesion 79% to 29% over 4 quarters",
+      "Hotspots by age: 0 chronic files (hot in most windows, so a design problem) and 2 acute files (hot only lately, so current work).",
       "Fixes: 23% of 178 changes fix something; most in packages/billing (31%, 9 of its 23 fixes also touched another module).",
       "",
     ]);
@@ -44,10 +41,10 @@ describe("overTimeSection", () => {
 
   it("says improving or holding in the same terms", () => {
     expect(plainSection(withVerdict("improving"))[1]).toBe(
-      "Improving: changes that stay in one module went from 70% to 59% over the active period of 4 quarters.",
+      "Improving: changes that stay in one module rose from 78% to 51% over the active period of 4 quarters.",
     );
     expect(plainSection(withVerdict("holding"))[1]).toBe(
-      "Holding: changes that stay in one module went from 70% to 59% over the active period of 4 quarters.",
+      "Holding: no lasting change in the share of changes that stay in one module (78% to 51%) over the active period of 4 quarters.",
     );
   });
 
@@ -57,7 +54,7 @@ describe("overTimeSection", () => {
     );
 
     expect(verdict).toBe(
-      "Eroding: changes that stay in one module went from 70% to 59% over the active period of 4 quarters (quiet since 2026-04: fewer than 10 changes a window).",
+      "Eroding: changes that stay in one module fell from 78% to 51% over the active period of 4 quarters (quiet since 2026-04: fewer than 10 changes a window).",
     );
   });
 
@@ -93,26 +90,45 @@ describe("overTimeSection parts", () => {
     expect(plainSection(longer)[1]).toContain("of 4 12-month windows");
   });
 
-  it("leaves a module out that stopped changing, or whose cohesion fell less than the shift that counts", () => {
+  it("lists a module only when it is still changing and its cohesion fell by more than chance explains", () => {
     const report = sampleReport();
-    const modules = report.modules.map((module) =>
-      module.erosion === null
-        ? module
-        : {
-            ...module,
-            erosion: {
-              ...module.erosion,
-              recent: module.path !== "packages/billing",
-              to: module.path === "packages/web" ? 0.55 : module.erosion.to,
-            },
-          },
+    const moduleLines = (erosion: Partial<NonNullable<Module["erosion"]>>) =>
+      plainSection({
+        ...report,
+        modules: report.modules.map((module) =>
+          module.path === "packages/billing" && module.erosion !== null
+            ? Object.assign({}, module, {
+                erosion: Object.assign({}, module.erosion, erosion),
+              })
+            : module,
+        ),
+      }).filter((line) => line.startsWith("  packages/"));
+
+    expect(moduleLines({})).toHaveLength(1);
+    expect(moduleLines({ recent: false })).toStrictEqual([]);
+    expect(moduleLines({ verdict: "holding" })).toStrictEqual([]);
+  });
+
+  it("lists the chronic hotspots with how often they were hot", () => {
+    const report = sampleReport();
+    const files = report.files.map((file, index) =>
+      index < 2
+        ? {
+            ...file,
+            heat: { kind: "chronic" as const, hotWindows: 5, windows: 6 },
+          }
+        : file,
     );
 
     expect(
-      plainSection({ ...report, modules }).filter((line) =>
-        line.startsWith("  packages/"),
+      plainSection({ ...report, files }).filter(
+        (line) => line.startsWith("Hotspots by age") || line.startsWith("  #"),
       ),
-    ).toStrictEqual([]);
+    ).toStrictEqual([
+      "Hotspots by age: 2 chronic files (hot in most windows, so a design problem) and 1 acute file (hot only lately, so current work).",
+      "  #1 packages/billing/src/invoice.ts: hot in 5 of 6 windows",
+      "  #2 packages/billing/src/tax.ts: hot in 5 of 6 windows",
+    ]);
   });
 });
 
@@ -132,7 +148,7 @@ describe("overTimeSection fixes", () => {
         },
       }).at(-2),
     ).toBe(
-      "Fixes: unknown, as only 2% of the commit subjects follow a convention.",
+      "Fixes: unknown, as only 2% of the commit subjects match a fix rule or a Conventional Commits type.",
     );
   });
 

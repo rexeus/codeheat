@@ -14,12 +14,13 @@ describe("fitLine", () => {
     });
   });
 
-  it("fits through the points by least squares", () => {
-    // x 0..3, y .9 .8 .5 .3: slope -1.05 / 5 = -0.21, mean y 0.625 at x 1.5
+  it("takes the median slope and the median intercept", () => {
+    // x 0..3, y .9 .8 .5 .3: slopes -.1 -.2 -.2 -.3 -.25 -.2, median -.2;
+    // intercepts .9 1 .9 .9, median .9
     expect(fitLine(at(0.9, 0.8, 0.5, 0.3))).toStrictEqual({
-      from: 0.94,
-      to: 0.31,
-      slope: -0.21,
+      from: 0.9,
+      to: 0.3,
+      slope: -0.2,
     });
   });
 
@@ -33,13 +34,26 @@ describe("fitLine", () => {
     expect(fitLine(points)).toStrictEqual({ from: 0.9, to: 0.3, slope: -0.2 });
   });
 
-  it("keeps the ends of the line within 0 and 1", () => {
-    expect(fitLine(at(1, 0.8, 0.5, 0.2))).toStrictEqual({
-      from: 1,
-      to: 0.22,
-      slope: -0.27,
+  it("is not turned by one odd window at either end", () => {
+    expect(fitLine(at(0.7, 0.7, 0.7, 0.7, 0.7, 0.2))).toStrictEqual({
+      from: 0.7,
+      to: 0.7,
+      slope: 0,
     });
-    expect(fitLine(at(0.1, 0.2, 0.9))?.from).toBe(0);
+    expect(fitLine(at(0.2, 0.7, 0.7, 0.7, 0.7, 0.7))).toStrictEqual({
+      from: 0.7,
+      to: 0.7,
+      slope: 0,
+    });
+  });
+
+  it("reports the line's own values, without holding them to 0 and 1", () => {
+    // slopes -.2 -.25 -.2667 -.3 -.3 -.3, median -.2833; intercepts 1 1.0833 1.0667 1.05, median 1.0583
+    expect(fitLine(at(1, 0.8, 0.5, 0.2))).toStrictEqual({
+      from: 1.0583,
+      to: 0.2083,
+      slope: -0.2833,
+    });
   });
 
   it("is a flat line for a constant measure", () => {

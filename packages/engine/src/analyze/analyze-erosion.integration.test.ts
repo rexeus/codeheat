@@ -34,18 +34,19 @@ layer(NodeServices.layer)("analyze erosion", (it) => {
       Effect.gen(function* () {
         const report = yield* erosionOf([0, 2, 5, 8]);
 
-        // local share 1, .8, .5, .2: the line falls from 1.03 (kept at 1) to .22
+        // local share 1, .8, .5, .2: the robust line falls from 1.0583 to .2083
         assert.deepStrictEqual(report.erosion?.verdict, "eroding");
         assert.deepStrictEqual(report.erosion?.locality, {
-          from: 1,
-          to: 0.22,
-          slope: -0.27,
+          from: 1.0583,
+          to: 0.2083,
+          slope: -0.2833,
         });
         const a = report.modules.find(({ path }) => path === "packages/a");
         assert.deepStrictEqual(a?.erosion, {
-          from: 1,
-          to: 0.22,
-          slope: -0.27,
+          from: 1.0583,
+          to: 0.2083,
+          slope: -0.2833,
+          verdict: "eroding",
           windows: 4,
           cohesion: [1, 0.8, 0.5, 0.2],
           recent: true,

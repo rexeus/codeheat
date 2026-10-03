@@ -25,6 +25,7 @@ export const DEFAULT_THRESHOLDS: Report["thresholds"] = {
   minWindowChanges: 10,
   minTrendWindows: 3,
   minErosionShift: 0.1,
+  minErosionSigmas: 2,
   hotTopShare: 0.1,
   minConventionShare: 0.05,
   maxMeanLineLength: 300,

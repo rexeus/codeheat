@@ -2,11 +2,10 @@
 // inside one module as often as they used to.
 import type { Erosion } from "../report/erosion.js";
 import type { SeriesWindow } from "../report/series.js";
+import { judgeShift } from "./shift-gate.js";
+import type { WindowShare } from "./shift-gate.js";
 import { fitLine } from "./trend-line.js";
 import type { WindowValue } from "./trend-line.js";
-
-/** How far (as a share of the changes) the fitted locality must move to be called eroding or improving. */
-export const MIN_EROSION_SHIFT = 0.1;
 
 /** The active windows' values of `measure`, with their positions in the series; windows it does not measure are left out. */
 const valuesOf = (
@@ -18,6 +17,16 @@ const valuesOf = (
     return value === undefined ? [] : [{ index, value }];
   });
 
+/** The share of local changes of each active window that has a change radius, with the changes it is the share of. */
+const localShares = (
+  windows: ReadonlyArray<SeriesWindow>,
+): ReadonlyArray<WindowShare> =>
+  windows.flatMap(({ active, changeRadius }, index) =>
+    active && changeRadius !== null
+      ? [{ index, value: changeRadius.local, changes: changeRadius.changes }]
+      : [],
+  );
+
 /** The start of the run of inactive windows that ends the series, or null when the last window is active. */
 const inactiveSince = (windows: ReadonlyArray<SeriesWindow>): string | null => {
   const lastActive = windows.findLastIndex(({ active }) => active);
@@ -27,12 +36,13 @@ const inactiveSince = (windows: ReadonlyArray<SeriesWindow>): string | null => {
 /**
  * Judges the `windows` of a series, oldest first. Null for no window at all.
  *
- * Only active windows count, wherever they lie: a line is fitted through the
- * locality of the active windows (see `fitLine`), and the verdict follows how
- * far it moved: by at least `MIN_EROSION_SHIFT` down is `eroding`, up is
- * `improving`, anything else `holding`; `unknown` without enough windows.
- * Inactive windows are left out, so they can neither cause nor hide a verdict;
- * a quiet end of the series is reported as `inactiveSince` next to it.
+ * Only active windows count, wherever they lie: a robust line is fitted
+ * through the locality of the active windows (see `fitLine`), and the verdict
+ * follows how far it moved (see `judgeShift`): down is `eroding`, up
+ * `improving`, anything within what chance and the minimum shift allow
+ * `holding`; `unknown` without enough windows. Inactive windows are left out,
+ * so they can neither cause nor hide a verdict; a quiet end of the series is
+ * reported as `inactiveSince` next to it.
  */
 export const judgeErosion = (
   windows: ReadonlyArray<SeriesWindow>,
@@ -40,26 +50,18 @@ export const judgeErosion = (
   if (windows.length === 0) {
     return null;
   }
-  const locality = valuesOf(windows, (window) => window.changeRadius?.local);
-  const line = fitLine(locality);
-  const propagationCost = fitLine(
-    valuesOf(windows, (window) => window.propagationCost?.cost),
-  );
+  const shares = localShares(windows);
+  const line = fitLine(shares);
   const base = {
-    windows: locality.length,
-    locality: line,
-    propagationCost,
+    windows: shares.length,
     inactiveSince: inactiveSince(windows),
+    locality: line,
+    propagationCost: fitLine(
+      valuesOf(windows, (window) => window.propagationCost?.cost),
+    ),
   };
-  if (line === null) {
-    return { ...base, verdict: "unknown" };
-  }
-  const shift = line.to - line.from;
-  if (shift <= -MIN_EROSION_SHIFT) {
-    return { ...base, verdict: "eroding" };
-  }
   return {
     ...base,
-    verdict: shift >= MIN_EROSION_SHIFT ? "improving" : "holding",
+    verdict: line === null ? "unknown" : judgeShift(shares, line),
   };
 };
