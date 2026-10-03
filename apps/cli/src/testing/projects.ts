@@ -152,6 +152,36 @@ export const makeCopyProject = Effect.map(makeGitRepository, (repo) => {
   return repo;
 });
 
+/**
+ * `billing` and `web` hold three files each. Six commits change `billing/a.ts`
+ * alone; six change `billing/b.ts` together with `web/a.ts`, so half of the
+ * changes that touch `billing` reach into `web`, and every one of `web`'s.
+ */
+export const makeLeakyProject = Effect.map(makeGitRepository, (repo) => {
+  const folders = ["billing", "web"];
+  repo.commit(
+    60,
+    Object.fromEntries(
+      folders.flatMap((folder) =>
+        ["a", "b", "c"].map((name): [string, string] => [
+          `${folder}/${name}.ts`,
+          source(2, 0),
+        ]),
+      ),
+    ),
+  );
+  for (const day of [55, 54, 53, 52, 51, 50]) {
+    repo.commit(day, { "billing/a.ts": source(3, day) });
+  }
+  for (const day of [45, 44, 43, 42, 41, 40]) {
+    repo.commit(day, {
+      "billing/b.ts": source(3, day),
+      "web/a.ts": source(2, day),
+    });
+  }
+  return repo;
+});
+
 /** Sets PATH for the scope and restores it afterwards; spawned programs resolve against it. */
 export const withPath = (value: string) =>
   Effect.acquireRelease(

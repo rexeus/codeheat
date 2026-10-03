@@ -5,6 +5,7 @@ import { escapeForTerminal } from "../escape.js";
 import { partnerName } from "./contract-view.js";
 import { copyFamilyLine } from "./copies-view.js";
 import { describeDepth } from "./depth-view.js";
+import { fileEntryPointLines } from "./entry-points-view.js";
 import { day, percent, twoDecimals } from "./format.js";
 import { heatLines } from "./over-time-view.js";
 import { radiusClause } from "./spread-view.js";
@@ -118,6 +119,7 @@ const entryLines = (
   `${entry.revisions} revisions, ${entry.breadth} co-changed files, +${entry.linesAdded} -${entry.linesDeleted} lines, ${entry.loc} loc`,
   `indentation complexity ${entry.complexity.total} (mean ${twoDecimals(entry.complexity.mean)}, max ${entry.complexity.max})`,
   ...heatLines(entry),
+  ...fileEntryPointLines(entry.entryPoints),
   ...moduleLine(modules.find(({ path }) => path === entry.module)),
   ...entry.reasons.map((reason) => `- ${escapeForTerminal(reason)}`),
   ...copyFamilyLine(entry.path, entry.copyFamily),

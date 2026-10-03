@@ -6,6 +6,7 @@ import { Schema } from "effect";
 import { AnalysisWindow } from "./analysis-window.js";
 import { FileKind } from "./contract-file.js";
 import { CopyFamily } from "./copy-family.js";
+import { EntryPoint } from "./entry-point.js";
 import { Module } from "./module.js";
 import { FileStats } from "./report.js";
 import { Count, UnitInterval } from "./scalars.js";
@@ -51,6 +52,13 @@ const InspectEntry = Schema.Struct({
    * member.
    */
   copyFamily: Schema.NullOr(CopyFamily),
+  /**
+   * The entry points of the report the file belongs to, best first (see
+   * `Report.entryPoints`): one that names files concerns exactly those, one
+   * that names none (`boundary`, `clique`) every file in its territories.
+   * Empty for a file that is part of none.
+   */
+  entryPoints: Schema.Array(EntryPoint),
 });
 
 /** The result of `inspect`. */

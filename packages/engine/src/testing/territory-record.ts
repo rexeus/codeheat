@@ -21,3 +21,22 @@ export const territoryRecord = (
   splitReason: null,
   fit: null,
 });
+
+/** A fit with no evidence at all; override what a test is about. */
+export const fitRecord = (
+  overrides: Partial<NonNullable<Territory["fit"]>> = {},
+): NonNullable<Territory["fit"]> => ({
+  detail: 1,
+  containment: null,
+  radius: null,
+  partner: null,
+  distantPairs: 0,
+  hiddenPairs: 0,
+  cliques: 0,
+  erosion: null,
+  chronicFiles: 0,
+  acuteFiles: 0,
+  chronicShare: 0,
+  fixDensity: null,
+  ...overrides,
+});

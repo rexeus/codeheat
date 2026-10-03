@@ -119,6 +119,7 @@ const NO_FINDINGS = {
   moduleCoupling: [],
   distantCouplings: [],
   territories: { recommended: 0, details: [], nodes: [] },
+  entryPoints: [],
 } satisfies Partial<Report>;
 
 /** A minimal valid report around the given files and couplings; `comparison` is null unless given. */

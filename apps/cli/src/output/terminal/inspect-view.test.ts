@@ -22,6 +22,7 @@ const entry: InspectResult["matches"][number] = {
   trend: null,
   heat: null,
   copyFamily: null,
+  entryPoints: [],
   of: 36,
   partners: [
     {

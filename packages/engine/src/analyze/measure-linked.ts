@@ -55,17 +55,21 @@ export const measureLinked = (
       measured,
       couplings,
     );
+    const territorial = yield* measureTerritorial({
+      ...place,
+      packages: universe.packages,
+      files: designFit.files,
+      couplings,
+      copyFamilies,
+      unstableInterfaces: stability.unstableInterfaces,
+      changes: measured.couplingCommits,
+      histories,
+      minChanges: measured.thresholds.minModuleCommits,
+    });
     return {
       ...measured,
       ...designFit,
-      ...(yield* measureTerritorial({
-        ...place,
-        packages: universe.packages,
-        files: designFit.files,
-        couplings,
-        histories,
-        minChanges: measured.thresholds.minModuleCommits,
-      })),
+      ...territorial,
       copyFamilies,
       distantCouplings: distantCouplings(
         couplings,

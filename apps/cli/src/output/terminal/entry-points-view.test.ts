@@ -1,0 +1,180 @@
+import type { Report } from "@codeheat/engine";
+import { describe, expect, it } from "vitest";
+
+import { entryPointLines, fileEntryPointLines } from "./entry-points-view.js";
+import { makeStyle } from "./style.js";
+
+type EntryPoint = Report["entryPoints"][number];
+
+const entry = (overrides: Partial<EntryPoint>): EntryPoint => ({
+  rank: 1,
+  kind: "boundary",
+  score: 0.2,
+  territories: ["t2"],
+  files: [],
+  evidence: {},
+  verdict: "Verdict.",
+  designMove: "Move.",
+  ...overrides,
+});
+
+const territories = (
+  paths: Readonly<Record<string, string>>,
+): Pick<Report, "territories"> => ({
+  territories: {
+    recommended: 1,
+    details: [],
+    nodes: Object.entries(paths).map(([id, path]) => ({
+      id,
+      path,
+      kind: "folder" as const,
+      parent: null,
+      children: [],
+      files: 1,
+      testFiles: 0,
+      changes: 1,
+      heatShare: 0,
+      description: path,
+      splitReason: null,
+      fit: null,
+    })),
+  },
+});
+
+const lines = (entries: ReadonlyArray<EntryPoint>) =>
+  entryPointLines(
+    {
+      entryPoints: entries,
+      ...territories({ t2: "billing", t3: "web", t4: "auth" }),
+    },
+    makeStyle(false),
+  );
+
+describe("entryPointLines", () => {
+  it("says nothing without entry points", () => {
+    expect(lines([])).toStrictEqual([]);
+  });
+
+  it("tells a boundary with its numbers in words, the verdict, and the move", () => {
+    expect(
+      lines([
+        entry({
+          evidence: {
+            heatShare: 0.31,
+            containment: 0.36,
+            changes: 278,
+            partnerShare: 0.49,
+          },
+        }),
+      ]),
+    ).toStrictEqual([
+      "Where to start",
+      "1. boundary  billing",
+      "   Verdict.",
+      "   31% of the heat; 36% of its 278 changes stay inside, 49% also touch its closest partner",
+      "   Move.",
+      "",
+    ]);
+  });
+});
+
+describe("entryPointLines subjects", () => {
+  it("names the files of a file kind and the territories of a unit", () => {
+    const subjects = lines([
+      entry({}),
+      entry({
+        rank: 2,
+        kind: "hotspot",
+        files: ["billing/a.ts", "billing/b.ts"],
+        evidence: { heatShare: 0.4, chronicShare: 0.5, chronicFiles: 2 },
+      }),
+      entry({
+        rank: 3,
+        kind: "clique",
+        territories: ["t2", "t3", "t4"],
+        evidence: {
+          heatShare: 0.5,
+          sharedChanges: 1,
+          territories: 3,
+          weakestShare: 0.3,
+        },
+      }),
+      entry({
+        rank: 4,
+        kind: "copies",
+        files: ["a.ts", "b.ts"],
+        evidence: { files: 2, similarity: 0.8, changesToAll: 5 },
+      }),
+      entry({
+        rank: 5,
+        kind: "hub",
+        files: ["lib/hub.ts"],
+        evidence: { fanIn: 1, changes: 1, changedDependents: 1 },
+      }),
+    ]).filter((line) => /^\d\./u.test(line));
+
+    expect(subjects).toStrictEqual([
+      "1. boundary  billing",
+      "2. hotspot  billing/a.ts + billing/b.ts",
+      "3. unit  billing + web + auth",
+      "4. copies  a.ts + b.ts",
+      "5. hub  lib/hub.ts",
+    ]);
+  });
+});
+
+describe("entryPointLines words", () => {
+  it("reads one change in the singular", () => {
+    expect(
+      lines([
+        entry({
+          kind: "clique",
+          territories: ["t2", "t3", "t4"],
+          evidence: {
+            heatShare: 0.5,
+            sharedChanges: 1,
+            territories: 3,
+            weakestShare: 0.3,
+          },
+        }),
+      ])[3],
+    ).toBe(
+      "   50% of the heat; 1 change touched all 3, every pair shares at least 30%",
+    );
+  });
+
+  it("makes paths safe to print, in the subject and in the sentences", () => {
+    const out = lines([
+      entry({
+        kind: "hub",
+        files: ["a\u001B[31m.ts"],
+        designMove: "Break up a\u001B[31m.ts",
+        verdict: "Bad\u0007",
+      }),
+    ]).join("\n");
+
+    expect(out).not.toContain("\u001B");
+    expect(out).not.toContain("\u0007");
+    expect(out).toContain("a\\u001b[31m.ts");
+  });
+});
+
+describe("fileEntryPointLines", () => {
+  it("names the rank, kind, verdict, and move of each entry point", () => {
+    expect(
+      fileEntryPointLines([
+        entry({ rank: 2, kind: "hub" }),
+        entry({ rank: 5, kind: "copies", verdict: "V.", designMove: "M." }),
+      ]),
+    ).toStrictEqual([
+      "entry point #2 (hub): Verdict.",
+      "  Move.",
+      "entry point #5 (copies): V.",
+      "  M.",
+    ]);
+  });
+
+  it("says nothing for a file that is in none", () => {
+    expect(fileEntryPointLines([])).toStrictEqual([]);
+  });
+});
