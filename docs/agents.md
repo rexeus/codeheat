@@ -17,7 +17,7 @@ Run `npx codeheat inspect <file> --json` (quote globs) before changing a file an
 - A partner with `kind: "contract"` is an interface definition or schema (TypeSpec, Protocol Buffers, GraphQL, OpenAPI, JSON Schema, …): it drives this file. Change the contract first and bring the code along, and do not edit code that mirrors a contract without checking the contract.
 - `reasons` explains the rank in plain words; quote it when you explain your plan.
 - A non-null `copyFamily` lists files with largely the same content that keep changing in lockstep (see below). Apply the change to every member of the family in the same edit, or state why a copy stays as it is; when the same fix lands in all of them again, propose extracting the shared part.
-- `heat` says how old the file's hotness is: `chronic` (hot in most quarters, so a design problem: do not add more to it, split it) or `acute` (hot only lately, so current work: expect it to settle, and finish the feature before refactoring); `null` for any other file.
+- `heat` says how old the file's hotness is: `chronic` (hot in at least half of the windows before the last two, so a design problem: do not add more to it, split it) or `acute` (hot in both of the last two windows and in fewer than half of the earlier ones, so current work: expect it to settle, and finish the feature before refactoring); `null` for any other file. A series needs at least five windows (`--since 18m` or more) before a file can be chronic.
 - `modules` describes the module the file lives in (see below): a low `cohesion` means changes there usually reach into other modules; a low `depth.linesPerExport` marks a shallow module, where a new export widens an interface with little behind it.
 
 For orientation in an unfamiliar repository, run `npx codeheat analyze --json` once: `erosion.verdict` says whether the design holds over time, `changeRadius` and `propagationCost` say how far a typical change spreads, `files` are the top hotspots, `couplings` the strongest co-changing pairs, and `totals` the full size. `distantCouplings` are the pairs that change together across modules or far apart, `cliques` the modules that change as a group, `unstableInterfaces` the files many others import that keep changing, and `dependencyDirection` the imports that point from stable to volatile modules (see "Reading distant coupling and scaling signals").
@@ -132,7 +132,7 @@ The files of a repository are grouped into modules: workspace packages (a direct
 
 ## Reading how the design moved over time
 
-`analyze --json` also says whether the design holds up over time, from windows of about a quarter of a year cut from the analysis window (`--since 3y` gives twelve; the default 12 months give four):
+`analyze --json` also says whether the design holds up over time, from windows of about a quarter of a year (91 days) cut from the analysis window: at most twelve, so they grow longer once it covers more than three years, and none when the window is shorter than about 4.5 months (20 weeks). `--since 3y` gives twelve; the default 12 months give four:
 
 ```json
 {
@@ -142,7 +142,7 @@ The files of a repository are grouped into modules: workspace packages (a direct
       "until": "2025-12-29T18:00:00.000Z",
       "changes": 38,
       "active": true,
-      "changeRadius": { "changes": 38, "median": 1, "p90": 3, "local": 0.7105 },
+      "changeRadius": { "changes": 38, "median": 1, "p90": 3, "local": 0.7895 },
       "propagationCost": { "cost": 0.0493, "files": 24 }
     }
   ],
@@ -150,7 +150,7 @@ The files of a repository are grouped into modules: workspace packages (a direct
     "verdict": "eroding",
     "inactiveSince": null,
     "windows": 4,
-    "locality": { "from": 0.704, "to": 0.5896, "slope": -0.0382 },
+    "locality": { "from": 0.7812, "to": 0.5078, "slope": -0.0911 },
     "propagationCost": { "from": 0.0499, "to": 0.0733, "slope": 0.0078 }
   },
   "fixDensity": {
@@ -163,10 +163,10 @@ The files of a repository are grouped into modules: workspace packages (a direct
 }
 ```
 
-- `erosion.verdict` is `eroding` (the share of changes that stay in one module, `locality`, fell by at least `thresholds.minErosionShift` between the first and the last active window of the fitted line), `improving`, `holding`, or `unknown` (fewer than `thresholds.minTrendWindows` active windows). It describes the active period: windows without `thresholds.minWindowChanges` changes are left out wherever they lie, so quiet windows never cause an `improving`. Quote the numbers, not only the word. `erosion.inactiveSince` is the start of the quiet run that ends the series (null when the last window is active): when it is set, the verdict is about how the repository was, and says nothing about the present. `erosion` is `null` when the window is shorter than six weeks (`series` is empty). `propagationCost` is context only: it rises when more files change often enough to be coupled.
+- `erosion.verdict` is `eroding` (the share of changes that stay in one module, `locality`, fell between the first and the last active window of a robust line), `improving` (it rose), `holding`, or `unknown` (fewer than `thresholds.minTrendWindows` active windows). A shift counts only when it is at least `thresholds.minErosionShift` **and** `thresholds.minErosionSigmas` standard errors of the shift, computed from how many changes each window holds, so a flat design reads `holding` and one odd window does not decide: windows with few changes need a bigger move. The verdict describes the active period: windows without `thresholds.minWindowChanges` changes are left out wherever they lie, so quiet windows never cause an `improving`. Quote the numbers, not only the word. `erosion.inactiveSince` is the start of the quiet run that ends the series (null when the last window is active): when it is set, the verdict is about how the repository was, and says nothing about the present. `erosion` is `null` when the window is shorter than about 4.5 months (`series` is empty). `locality.from` and `to` are the line's own values and can lie slightly outside 0 to 1. `propagationCost` is context only: it rises when more files change often enough to be coupled.
 - A window with `active: false` has too few changes to say anything; its numbers are listed but nothing rests on them. A pull request that spans two windows is split between them, so the windows' `changes` can add up to slightly more than `window.couplingCommits`.
-- A module's `erosion` is the same line through its `cohesion` per window (`null` where the module had too few changes, and the module `null` without three such windows). A falling line (`from` above `to`) with `recent: true` marks a module that keeps pulling other modules into its changes: look at its `partners`, `cliques`, and `distantCouplings` before adding to it. `recent: false` means it stopped changing.
-- `fixDensity.known: false` means the team's commit subjects follow no convention (`conventional` is their share), so the share of fixes is **unknown, not 0**: do not read a missing share as a quality signal. When known, `Module.fixDensity.share` is the share of the module's changes that fix something, and `spanning` those fixes that also touched another module: a high `spanning` marks a fragile boundary. The fix rules (Conventional Commits `fix`/`hotfix`/`bugfix`, `Revert "`, `fix` or `bug` as the first word) are fixed in the engine.
+- A module's `erosion` is the same robust line through its `cohesion` per window (`null` in windows where the module had fewer than 10 changes or too few to rank it, and the module `null` without three such windows), with the same gate in `verdict`. Only `verdict: "eroding"` with `recent: true` marks a module that keeps pulling other modules into its changes: look at its `partners`, `cliques`, and `distantCouplings` before adding to it. `recent: false` means it stopped changing; `holding` means the share only wobbled.
+- `fixDensity.known: false` means fewer than `thresholds.minConventionShare` (5 %) of the commit subjects match a fix rule or a Conventional Commits type (`conventional` is that share), so the share of fixes is **unknown, not 0**: do not read a missing share as a quality signal. A team that writes free text but often starts with "Fix" does get a share. When known, `Module.fixDensity.share` is the share of the module's changes that fix something, and `spanning` those fixes that also touched another module: a high `spanning` marks a fragile boundary. The fix rules (Conventional Commits `fix`/`hotfix`/`bugfix`/`revert`, `Revert "`, `fix` or `bug` as the first word, but not `bug` followed by a ticket number) are fixed in the engine.
 - `FileStats.heat` (`chronic`, `acute`, or `null`, with `hotWindows` of `windows`) is also in `inspect`; see the snippet above.
 
 ## Reading module depth
