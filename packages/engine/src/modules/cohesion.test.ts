@@ -31,6 +31,7 @@ const measure = (
       changes: commits.map((files) => ({
         files: Uint32Array.from(files, (f) => paths.indexOf(f)),
         size: files.length,
+        subjectKind: "other" as const,
       })),
       paths,
     },
@@ -150,7 +151,11 @@ describe("measureModules commit size", () => {
       ["a/a.ts", { path: "a", kind: "directory" }],
       ["b/b.ts", { path: "b", kind: "directory" }],
     ]);
-    const touched = { files: Uint32Array.of(0, 1), size: 51 };
+    const touched = {
+      files: Uint32Array.of(0, 1),
+      size: 51,
+      subjectKind: "other" as const,
+    };
 
     const modules = measureModules(
       { changes: [touched, touched], paths: [...refs.keys()] },

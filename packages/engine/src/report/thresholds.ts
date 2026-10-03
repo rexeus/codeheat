@@ -51,6 +51,20 @@ export const Thresholds = Schema.Struct({
   ubiquitousShare: UnitInterval,
   /** Fewest counted changes a contract file needs to be ubiquitous. */
   ubiquitousMinCommits: Count,
+  /** Fewest counted changes a window of `Report.series` needs to be `active`, which is what the erosion, trend, and heat classifications count, and the fewest changes a module needs in a window for that window to count towards its `ModuleErosion` (at least what `minModuleCommits` is for a window of that size). */
+  minWindowChanges: Count,
+  /** Fewest windows with evidence a trend (`Erosion`, `ModuleErosion`) is fitted through. */
+  minTrendWindows: Count,
+  /** How far the fitted locality (`Erosion.locality`) must move, as a share of the changes, for the verdict to be `eroding` or `improving`; it must also move by `minErosionSigmas` standard errors. */
+  minErosionShift: UnitInterval,
+  /** Fewest windows with evidence a verdict of `eroding` or `improving` needs, so that it can be checked without the first and the last (`Erosion.verdict`); with fewer it is `holding`. */
+  minVerdictWindows: Count,
+  /** How many standard errors of the shift (from the windows' binomial variances, see `Erosion.verdict`) a fitted line must move to count as eroding or improving, for the repository and for a module. */
+  minErosionSigmas: Count,
+  /** Share of the files with revisions in a window of `Report.series` that are hot in it (see `Heat`). */
+  hotTopShare: UnitInterval,
+  /** Smallest share of the counted changes whose subject must match a fix rule or be a Conventional Commits type (`FixDensity.conventional`) for `Report.fixDensity` to be known; below it the fix density is unknown, not 0. */
+  minConventionShare: UnitInterval,
   maxMeanLineLength: Count,
   maxFileBytes: Count,
 });

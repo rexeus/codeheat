@@ -4,16 +4,10 @@ import { Effect } from "effect";
 
 import type { LanguageAdapter } from "../code/language-adapter.js";
 import { findCopyFamilies } from "../copies/find-copy-families.js";
-import { findCliques } from "../distant/cliques.js";
 import { distantCouplings } from "../distant/distant-couplings.js";
-import {
-  moduleCoChange,
-  moduleCouplings,
-} from "../distant/module-co-change.js";
 import { readImportGraph } from "../imports/import-graph.js";
 import { linkCouplings } from "../imports/link-couplings.js";
-import { touchedModules } from "../modules/touched-modules.js";
-import { measureSpread } from "../spread/measure-spread.js";
+import { measureDesignFit } from "./measure-design-fit.js";
 import { measureStability } from "./measure-stability.js";
 import { coupleHistory, measureWindows } from "./measure.js";
 import type { Universe } from "./measure.js";
@@ -54,24 +48,14 @@ export const measureLinked = (
       modules: measured.modules,
       minModuleCommits: measured.thresholds.minModuleCommits,
     });
-    const touched = touchedModules(histories.current, universe);
-    const coChange = moduleCoChange(
-      touched,
-      measured.modules,
-      measured.thresholds.minModuleCommits,
-    );
-    const cliqueSearch = findCliques(coChange, touched);
     return {
       ...measured,
-      ...measureSpread(histories.current, touched, measured, couplings),
+      ...measureDesignFit(universe, histories, measured, couplings),
       copyFamilies,
       distantCouplings: distantCouplings(
         couplings,
         new Map([...universe.modules, ...universe.contracts]),
       ),
-      moduleCoupling: moduleCouplings(coChange),
-      cliques: cliqueSearch.cliques,
-      cliquesPartial: cliqueSearch.partial,
       ...stability,
     };
   });

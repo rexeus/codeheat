@@ -23,4 +23,6 @@ export const moduleRecord = (
   leakyInterface: false,
   depth: null,
   trend: null,
+  erosion: null,
+  fixDensity: null,
 });

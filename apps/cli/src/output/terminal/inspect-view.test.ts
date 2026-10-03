@@ -19,6 +19,7 @@ const entry: InspectResult["matches"][number] = {
   complexity: { total: 1900, mean: 1.97, max: 9 },
   reasons: ["changed in 48 commits (#1 of 36)"],
   trend: null,
+  heat: null,
   copyFamily: null,
   of: 36,
   partners: [
@@ -75,6 +76,8 @@ const billing: Module = {
   leakyInterface: false,
   depth: null,
   trend: null,
+  erosion: null,
+  fixDensity: null,
 };
 
 const result = (
@@ -151,6 +154,21 @@ describe("renderInspect", () => {
     expect(view).toContain("a\\u001b[2J.ts");
     expect(view).toContain("module m\\u001b[2J:");
     expect(view).not.toContain("\u001B");
+  });
+});
+
+const markedWith = (heat: InspectResult["matches"][number]["heat"]) =>
+  renderInspect(result([{ ...entry, heat }]), makeStyle(false)).split("\n");
+
+describe("renderInspect hotspot age", () => {
+  it("marks a chronic or acute hotspot under the file's metrics", () => {
+    expect(markedWith({ kind: "chronic", hotWindows: 4, windows: 4 })[6]).toBe(
+      "chronic hotspot: hot in 4 of 4 windows, so a design problem rather than current work",
+    );
+    expect(markedWith({ kind: "acute", hotWindows: 2, windows: 5 })[6]).toBe(
+      "acute hotspot: hot in 2 of 5 windows, only lately, so current work",
+    );
+    expect(markedWith(null).join("\n")).not.toContain("hotspot");
   });
 });
 

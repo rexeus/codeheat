@@ -6,6 +6,7 @@ import { partnerName } from "./contract-view.js";
 import { copyFamilyLine } from "./copies-view.js";
 import { describeDepth } from "./depth-view.js";
 import { day, percent, twoDecimals } from "./format.js";
+import { heatLines } from "./over-time-view.js";
 import { radiusClause } from "./spread-view.js";
 import type { Style } from "./style.js";
 import { plain, renderTable } from "./table.js";
@@ -116,6 +117,7 @@ const entryLines = (
   `rank #${entry.rank} of ${entry.of}, score ${entry.score.toFixed(2)}`,
   `${entry.revisions} revisions, ${entry.breadth} co-changed files, +${entry.linesAdded} -${entry.linesDeleted} lines, ${entry.loc} loc`,
   `indentation complexity ${entry.complexity.total} (mean ${twoDecimals(entry.complexity.mean)}, max ${entry.complexity.max})`,
+  ...heatLines(entry),
   ...moduleLine(modules.find(({ path }) => path === entry.module)),
   ...entry.reasons.map((reason) => `- ${escapeForTerminal(reason)}`),
   ...copyFamilyLine(entry.path, entry.copyFamily),

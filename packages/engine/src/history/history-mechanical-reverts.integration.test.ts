@@ -3,8 +3,8 @@ import { assert, layer } from "@effect/vitest";
 import { Effect } from "effect";
 
 import { Git } from "../git/git.js";
+import { readHistory } from "../testing/history.js";
 import { makeTempRepository } from "../testing/temp-repository.js";
-import { readHistory } from "./history.js";
 
 const body = (extra = "") =>
   Array.from({ length: 10 }, (_, index) => `const value${index} = ${index};\n`)

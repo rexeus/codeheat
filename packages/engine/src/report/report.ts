@@ -3,48 +3,23 @@
 // Additive fields keep schemaVersion 1; renaming or removing a field bumps it.
 import { Schema } from "effect";
 
-import { ChangeRadius, PropagationCost } from "./change-radius.js";
 import { Clique } from "./clique.js";
 import { Comparison, FileTrend } from "./comparison.js";
 import { ContractFile, FileKind, UbiquitousFile } from "./contract-file.js";
 import { CopyFamily } from "./copy-family.js";
 import { DependencyDirection } from "./dependency-direction.js";
+import { DesignFitFields } from "./design-fit-fields.js";
 import { DistantCoupling } from "./distant-coupling.js";
+import { Heat } from "./heat.js";
 import { ImportRelation } from "./import-relation.js";
-import { LogicalChanges } from "./logical-changes.js";
-import { MechanicalCommits } from "./mechanical-commits.js";
 import { ModuleCoupling } from "./module-coupling.js";
 import { Module } from "./module.js";
 import { Count, UnitInterval } from "./scalars.js";
 import { Thresholds } from "./thresholds.js";
 import { UnstableInterface } from "./unstable-interface.js";
+import { WindowFields } from "./window-fields.js";
 
 const Rank = Schema.Int.check(Schema.isGreaterThanOrEqualTo(1));
-
-/** The history range an analysis covers, resolved to ISO timestamps. */
-export const AnalysisWindow = Schema.Struct({
-  since: Schema.String,
-  until: Schema.String,
-  /**
-   * Non-merge commits in the window that touched at least one universe file,
-   * or a file deleted at a universe path (a path recreated later starts afresh).
-   */
-  commits: Count,
-  /**
-   * The commits among `commits` that are not mechanical (see
-   * `Report.mechanicalCommits`). 0 means the window has no real change: with
-   * `--compare`, there is nothing to compare, even when `commits` is not 0.
-   */
-  realCommits: Count,
-  /**
-   * Logical changes that count for coupling, cohesion, and interface churn
-   * (see `Report.logicalChanges`; one per commit unless commits were
-   * grouped): made of real commits (not mechanical, see
-   * `Report.mechanicalCommits`) and not too large (see
-   * `Thresholds.maxCommitFiles`).
-   */
-  couplingCommits: Count,
-});
 
 /** One universe file: its hotspot score, the metrics behind it, and why. */
 export const FileStats = Schema.Struct({
@@ -99,6 +74,8 @@ export const FileStats = Schema.Struct({
   reasons: Schema.Array(Schema.String),
   /** Null without `--compare`, and when either window has no real (non-mechanical) commit touching the universe. */
   trend: Schema.NullOr(FileTrend),
+  /** How long the file has been among the hottest; null for a file that is neither a chronic nor an acute hotspot, for test code, and without `Report.series` (see `Heat`). */
+  heat: Schema.NullOr(Heat),
 });
 export type FileStats = typeof FileStats.Type;
 
@@ -148,12 +125,7 @@ export const Report = Schema.Struct({
      */
     shallow: Schema.Boolean,
   }),
-  /** The current window; with `--compare`, every field of the report describes it. */
-  window: AnalysisWindow,
-  /** How many commits of `window.commits` are mechanical (see `MechanicalCommits`). */
-  mechanicalCommits: MechanicalCommits,
-  /** How the window's real commits were grouped into the changes that are counted. */
-  logicalChanges: LogicalChanges,
+  ...WindowFields,
   /** Null without `--compare`. */
   comparison: Schema.NullOr(Comparison),
   thresholds: Thresholds,
@@ -183,10 +155,7 @@ export const Report = Schema.Struct({
    * own changes and this lists the latest window's.
    */
   ubiquitousFiles: Schema.Array(UbiquitousFile),
-  /** How far a counted change spreads over `modules` (see `ChangeRadius`); null when none touched a module. */
-  changeRadius: Schema.NullOr(ChangeRadius),
-  /** How much of the code a change drags along, read from `couplings` (see `PropagationCost`); null without two files to couple. */
-  propagationCost: Schema.NullOr(PropagationCost),
+  ...DesignFitFields,
   /**
    * First the pairs with at least one code side, then the pairs of two contract
    * files (`kinds`), so a limit keeps code pairs: the files of one API

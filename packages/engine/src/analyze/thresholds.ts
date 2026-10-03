@@ -11,6 +11,7 @@ import {
 } from "../coupling/coupling.js";
 import { MIN_CLIQUE_SHARE } from "../distant/cliques.js";
 import { MIN_LOCAL_DISTANCE } from "../distant/distant-couplings.js";
+import { MIN_CONVENTION_SHARE } from "../fixes/fix-density.js";
 import {
   HUB_MIN_BREADTH,
   HUB_MIN_REVISIONS,
@@ -33,6 +34,7 @@ import {
   MAX_FILE_BYTES,
   MAX_MEAN_LINE_LENGTH,
 } from "../universe/source-file.js";
+import { OVER_TIME_THRESHOLDS } from "./over-time-thresholds.js";
 
 /** The limits an analysis applied; `couplingCommits` sets the floor of ranked modules. */
 export const thresholdsFor = (couplingCommits: number) =>
@@ -56,6 +58,8 @@ export const thresholdsFor = (couplingCommits: number) =>
     propagationDepth: PROPAGATION_DEPTH,
     ubiquitousShare: UBIQUITOUS_SHARE,
     ubiquitousMinCommits: UBIQUITOUS_MIN_COMMITS,
+    ...OVER_TIME_THRESHOLDS,
+    minConventionShare: MIN_CONVENTION_SHARE,
     maxMeanLineLength: MAX_MEAN_LINE_LENGTH,
     maxFileBytes: MAX_FILE_BYTES,
   }) satisfies Report["thresholds"];

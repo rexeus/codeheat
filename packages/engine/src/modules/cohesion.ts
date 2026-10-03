@@ -128,6 +128,8 @@ const toModule = (
     leakyInterface: isLeakyInterface(churn, testOnly),
     depth: null,
     trend: null,
+    erosion: null,
+    fixDensity: null,
   };
 };
 

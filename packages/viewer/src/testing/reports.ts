@@ -19,6 +19,7 @@ export const fileStats = (
   complexity: { total: 200, mean: 2, max: 5 },
   reasons: [],
   trend: null,
+  heat: null,
   ...overrides,
 });
 
@@ -60,6 +61,8 @@ export const moduleStats = (
   leakyInterface: false,
   depth: null,
   trend: null,
+  erosion: null,
+  fixDensity: null,
   ...overrides,
 });
 
@@ -83,6 +86,13 @@ const THRESHOLDS: Report["thresholds"] = {
   propagationDepth: 3,
   ubiquitousShare: 0.3,
   ubiquitousMinCommits: 10,
+  minWindowChanges: 10,
+  minTrendWindows: 3,
+  minErosionShift: 0.1,
+  minErosionSigmas: 2,
+  minVerdictWindows: 5,
+  hotTopShare: 0.1,
+  minConventionShare: 0.05,
   maxMeanLineLength: 300,
   maxFileBytes: 1048576,
 };
@@ -91,6 +101,16 @@ const THRESHOLDS: Report["thresholds"] = {
 const NO_FINDINGS = {
   changeRadius: null,
   propagationCost: null,
+  series: [],
+  seriesSince: null,
+  erosion: null,
+  fixDensity: {
+    changes: 0,
+    fixes: 0,
+    conventional: 0,
+    known: false,
+    share: null,
+  },
   cliquesPartial: false,
   dependencyDirection: [],
   unstableInterfaces: [],

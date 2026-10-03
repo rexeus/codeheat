@@ -3,6 +3,7 @@ import { assert, layer } from "@effect/vitest";
 import { Effect } from "effect";
 
 import { Git } from "../git/git.js";
+import { readHistoryHalves } from "../testing/history.js";
 import {
   lines,
   mergePullRequest,
@@ -11,7 +12,6 @@ import {
   startOn,
 } from "../testing/logical-changes.js";
 import { makeTempRepository } from "../testing/temp-repository.js";
-import { readHistoryHalves } from "./history.js";
 
 layer(NodeServices.layer)("readHistory logical changes by suffix", (it) => {
   it.effect("joins commits that end with the same pull request number", () =>

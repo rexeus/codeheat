@@ -15,7 +15,8 @@ const without = (
  * Leaves the contract files of `contracts` that are ubiquitous in a window out
  * of that window's commits, so they join no pair, breadth, or cohesion of
  * it. Each window is judged on its own commits. `ubiquitousFiles` are those of
- * the latest window, which the report describes.
+ * the latest window, which the report describes; the slices of that window
+ * leave out the same files.
  */
 export const setAsideUbiquitous = (
   histories: WindowHistories,
@@ -35,6 +36,10 @@ export const setAsideUbiquitous = (
               histories.previous,
               findUbiquitous(histories.previous, contracts),
             ),
+      series: histories.series.map(({ range, history }) => ({
+        range,
+        history: without(history, ubiquitousFiles),
+      })),
     },
     ubiquitousFiles,
   };

@@ -41,6 +41,25 @@ const sequence = (count: number, subject: string, day = 0) =>
 const range = (from: number, length: number) =>
   Array.from({ length }, (_, index) => from + index);
 
+/** The kind each change of one pull request's commits, whose subjects are `subjects`, ends up with. */
+const kindsOf = (...subjects: ReadonlyArray<string>) =>
+  groupChanges(
+    subjects.map((subject, index) =>
+      commit(`c${index}`, `${subject} (#1)`, index, [index]),
+    ),
+    new Map(),
+  ).changes.map(({ subjectKind }) => subjectKind);
+
+describe("groupChanges subject kinds", () => {
+  it("reads what the subjects of the commits of a change say: a fix needs more than half of them", () => {
+    expect(kindsOf("fix: a", "fix: b", "feat: c")).toStrictEqual(["fix"]);
+    expect(kindsOf("feat: a", "fix: typo", "feat: b")).toStrictEqual([
+      "convention",
+    ]);
+    expect(kindsOf("add a")).toStrictEqual(["other"]);
+  });
+});
+
 describe("groupChanges by pull request", () => {
   it("joins commits with one pull request suffix into a change of the union of their files", () => {
     const grouping = groupChanges(

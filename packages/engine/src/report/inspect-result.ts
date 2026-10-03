@@ -3,10 +3,11 @@
 // Additive fields keep schemaVersion 1; renaming or removing a field bumps it.
 import { Schema } from "effect";
 
+import { AnalysisWindow } from "./analysis-window.js";
 import { FileKind } from "./contract-file.js";
 import { CopyFamily } from "./copy-family.js";
 import { Module } from "./module.js";
-import { AnalysisWindow, FileStats } from "./report.js";
+import { FileStats } from "./report.js";
 import { Count, UnitInterval } from "./scalars.js";
 
 /** A file that changes together with an inspected file. */

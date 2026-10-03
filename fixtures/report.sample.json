@@ -58,7 +58,14 @@
     "minImplementationCommits": 5,
     "minFanIn": 5,
     "minInterfaceChanges": 5,
-    "minVolatilityRatio": 2
+    "minVolatilityRatio": 2,
+    "minWindowChanges": 10,
+    "minTrendWindows": 3,
+    "minErosionShift": 0.1,
+    "minErosionSigmas": 2,
+    "minVerdictWindows": 5,
+    "hotTopShare": 0.1,
+    "minConventionShare": 0.05
   },
   "totals": {
     "files": 36,
@@ -95,6 +102,11 @@
         "scoreDelta": 0.31,
         "newlyActive": false
       },
+      "heat": {
+        "kind": "chronic",
+        "hotWindows": 5,
+        "windows": 6
+      },
       "test": false
     },
     {
@@ -124,6 +136,11 @@
         "scoreDelta": -0.12,
         "newlyActive": false
       },
+      "heat": {
+        "kind": "chronic",
+        "hotWindows": 4,
+        "windows": 6
+      },
       "test": false
     },
     {
@@ -152,6 +169,7 @@
         "scoreDelta": 0.05,
         "newlyActive": false
       },
+      "heat": null,
       "test": true
     },
     {
@@ -180,6 +198,11 @@
         "previousRevisions": 24,
         "scoreDelta": -0.2,
         "newlyActive": false
+      },
+      "heat": {
+        "kind": "acute",
+        "hotWindows": 2,
+        "windows": 6
       },
       "test": false
     },
@@ -210,6 +233,7 @@
         "scoreDelta": 0.14,
         "newlyActive": false
       },
+      "heat": null,
       "test": false
     },
     {
@@ -239,6 +263,7 @@
         "scoreDelta": 0,
         "newlyActive": false
       },
+      "heat": null,
       "test": false
     },
     {
@@ -267,6 +292,7 @@
         "scoreDelta": -0.08,
         "newlyActive": false
       },
+      "heat": null,
       "test": true
     },
     {
@@ -296,6 +322,7 @@
         "scoreDelta": 0.22,
         "newlyActive": false
       },
+      "heat": null,
       "test": false
     },
     {
@@ -324,6 +351,7 @@
         "scoreDelta": -0.15,
         "newlyActive": false
       },
+      "heat": null,
       "test": true
     },
     {
@@ -353,6 +381,7 @@
         "scoreDelta": 0.02,
         "newlyActive": false
       },
+      "heat": null,
       "test": false
     },
     {
@@ -381,6 +410,7 @@
         "scoreDelta": 0.31,
         "newlyActive": false
       },
+      "heat": null,
       "test": false
     },
     {
@@ -409,6 +439,7 @@
         "scoreDelta": -0.12,
         "newlyActive": false
       },
+      "heat": null,
       "test": false
     },
     {
@@ -437,6 +468,7 @@
         "scoreDelta": 0.05,
         "newlyActive": false
       },
+      "heat": null,
       "test": false
     },
     {
@@ -465,6 +497,7 @@
         "scoreDelta": -0.2,
         "newlyActive": false
       },
+      "heat": null,
       "test": false
     },
     {
@@ -493,6 +526,7 @@
         "scoreDelta": 0.14,
         "newlyActive": false
       },
+      "heat": null,
       "test": false
     },
     {
@@ -521,6 +555,7 @@
         "scoreDelta": 0,
         "newlyActive": false
       },
+      "heat": null,
       "test": false
     },
     {
@@ -549,6 +584,7 @@
         "scoreDelta": -0.08,
         "newlyActive": false
       },
+      "heat": null,
       "test": false
     },
     {
@@ -577,6 +613,7 @@
         "scoreDelta": 0.22,
         "newlyActive": false
       },
+      "heat": null,
       "test": true
     },
     {
@@ -605,6 +642,7 @@
         "scoreDelta": -0.15,
         "newlyActive": false
       },
+      "heat": null,
       "test": false
     },
     {
@@ -633,6 +671,7 @@
         "scoreDelta": 0.02,
         "newlyActive": false
       },
+      "heat": null,
       "test": false
     },
     {
@@ -661,6 +700,7 @@
         "scoreDelta": 0.2783,
         "newlyActive": true
       },
+      "heat": null,
       "test": false
     },
     {
@@ -689,6 +729,7 @@
         "scoreDelta": -0.12,
         "newlyActive": false
       },
+      "heat": null,
       "test": false
     },
     {
@@ -717,6 +758,7 @@
         "scoreDelta": 0.05,
         "newlyActive": false
       },
+      "heat": null,
       "test": false
     },
     {
@@ -746,6 +788,7 @@
         "scoreDelta": -0.2,
         "newlyActive": false
       },
+      "heat": null,
       "test": false
     },
     {
@@ -774,6 +817,7 @@
         "scoreDelta": 0.14,
         "newlyActive": false
       },
+      "heat": null,
       "test": false
     },
     {
@@ -802,6 +846,7 @@
         "scoreDelta": 0,
         "newlyActive": false
       },
+      "heat": null,
       "test": false
     },
     {
@@ -831,6 +876,7 @@
         "scoreDelta": -0.08,
         "newlyActive": false
       },
+      "heat": null,
       "test": false
     },
     {
@@ -859,6 +905,7 @@
         "scoreDelta": 0.2179,
         "newlyActive": true
       },
+      "heat": null,
       "test": false
     },
     {
@@ -887,6 +934,7 @@
         "scoreDelta": -0.15,
         "newlyActive": false
       },
+      "heat": null,
       "test": false
     },
     {
@@ -915,6 +963,7 @@
         "scoreDelta": 0.02,
         "newlyActive": false
       },
+      "heat": null,
       "test": false
     },
     {
@@ -943,6 +992,7 @@
         "scoreDelta": 0.2093,
         "newlyActive": true
       },
+      "heat": null,
       "test": false
     },
     {
@@ -971,6 +1021,7 @@
         "scoreDelta": -0.12,
         "newlyActive": false
       },
+      "heat": null,
       "test": false
     },
     {
@@ -999,6 +1050,7 @@
         "scoreDelta": 0.05,
         "newlyActive": false
       },
+      "heat": null,
       "test": false
     },
     {
@@ -1024,6 +1076,7 @@
         "scoreDelta": 0,
         "newlyActive": false
       },
+      "heat": null,
       "test": false
     },
     {
@@ -1049,6 +1102,7 @@
         "scoreDelta": 0,
         "newlyActive": false
       },
+      "heat": null,
       "test": false
     },
     {
@@ -1074,6 +1128,7 @@
         "scoreDelta": 0,
         "newlyActive": false
       },
+      "heat": null,
       "test": false
     }
   ],
@@ -1111,6 +1166,127 @@
   "propagationCost": {
     "cost": 0.0612,
     "files": 31
+  },
+  "seriesSince": "2025-03-29T12:00:00.000Z",
+  "series": [
+    {
+      "since": "2025-03-29T12:00:00.000Z",
+      "until": "2025-06-29T00:00:00.000Z",
+      "changes": 30,
+      "active": true,
+      "changeRadius": {
+        "changes": 30,
+        "median": 1,
+        "p90": 3,
+        "local": 0.8667
+      },
+      "propagationCost": {
+        "cost": 0.0512,
+        "files": 22
+      }
+    },
+    {
+      "since": "2025-06-29T00:00:00.000Z",
+      "until": "2025-09-28T12:00:00.000Z",
+      "changes": 32,
+      "active": true,
+      "changeRadius": {
+        "changes": 32,
+        "median": 1,
+        "p90": 3,
+        "local": 0.8125
+      },
+      "propagationCost": {
+        "cost": 0.0467,
+        "files": 23
+      }
+    },
+    {
+      "since": "2025-09-28T12:00:00.000Z",
+      "until": "2025-12-29T00:00:00.000Z",
+      "changes": 38,
+      "active": true,
+      "changeRadius": {
+        "changes": 38,
+        "median": 1,
+        "p90": 3,
+        "local": 0.7895
+      },
+      "propagationCost": {
+        "cost": 0.0493,
+        "files": 24
+      }
+    },
+    {
+      "since": "2025-12-29T00:00:00.000Z",
+      "until": "2026-03-30T12:00:00.000Z",
+      "changes": 44,
+      "active": true,
+      "changeRadius": {
+        "changes": 44,
+        "median": 1,
+        "p90": 3,
+        "local": 0.6818
+      },
+      "propagationCost": {
+        "cost": 0.0587,
+        "files": 26
+      }
+    },
+    {
+      "since": "2026-03-30T12:00:00.000Z",
+      "until": "2026-06-30T00:00:00.000Z",
+      "changes": 41,
+      "active": true,
+      "changeRadius": {
+        "changes": 41,
+        "median": 1,
+        "p90": 3,
+        "local": 0.5854
+      },
+      "propagationCost": {
+        "cost": 0.0652,
+        "files": 27
+      }
+    },
+    {
+      "since": "2026-06-30T00:00:00.000Z",
+      "until": "2026-09-29T12:00:00.000Z",
+      "changes": 47,
+      "active": true,
+      "changeRadius": {
+        "changes": 47,
+        "median": 1,
+        "p90": 3,
+        "local": 0.5319
+      },
+      "propagationCost": {
+        "cost": 0.0731,
+        "files": 29
+      }
+    }
+  ],
+  "erosion": {
+    "verdict": "eroding",
+    "inactiveSince": null,
+    "windows": 6,
+    "locality": {
+      "from": 0.8827,
+      "to": 0.5319,
+      "slope": -0.0701
+    },
+    "propagationCost": {
+      "from": 0.0405,
+      "to": 0.0714,
+      "slope": 0.0062
+    }
+  },
+  "fixDensity": {
+    "changes": 178,
+    "fixes": 41,
+    "conventional": 0.7584,
+    "known": true,
+    "share": 0.2303
   },
   "couplings": [
     {
@@ -1285,6 +1461,20 @@
       "trend": {
         "previousCohesion": 0.28,
         "cohesionDelta": 0.12
+      },
+      "erosion": {
+        "from": 0.3542,
+        "to": 0.4458,
+        "slope": 0.0183,
+        "verdict": "holding",
+        "windows": 4,
+        "cohesion": [0.35, 0.4, null, 0.4, null, 0.45],
+        "recent": true
+      },
+      "fixDensity": {
+        "fixes": 9,
+        "share": 0.3,
+        "spanning": 7
       }
     },
     {
@@ -1317,6 +1507,12 @@
       "trend": {
         "previousCohesion": 0.58,
         "cohesionDelta": -0.08
+      },
+      "erosion": null,
+      "fixDensity": {
+        "fixes": 4,
+        "share": 0.1538,
+        "spanning": 1
       }
     },
     {
@@ -1354,6 +1550,20 @@
       "trend": {
         "previousCohesion": 0.7345,
         "cohesionDelta": -0.2
+      },
+      "erosion": {
+        "from": 0.625,
+        "to": 0.5,
+        "slope": -0.025,
+        "verdict": "holding",
+        "windows": 6,
+        "cohesion": [0.62, 0.6, 0.58, 0.55, 0.52, 0.5],
+        "recent": true
+      },
+      "fixDensity": {
+        "fixes": 13,
+        "share": 0.2241,
+        "spanning": 6
       }
     },
     {
@@ -1400,6 +1610,20 @@
       "trend": {
         "previousCohesion": 0.5241,
         "cohesionDelta": 0.03
+      },
+      "erosion": {
+        "from": 0.84,
+        "to": 0.315,
+        "slope": -0.105,
+        "verdict": "eroding",
+        "windows": 6,
+        "cohesion": [0.82, 0.75, 0.7, 0.55, 0.4, 0.3],
+        "recent": true
+      },
+      "fixDensity": {
+        "fixes": 23,
+        "share": 0.3108,
+        "spanning": 9
       }
     },
     {
@@ -1441,6 +1665,12 @@
       "trend": {
         "previousCohesion": 0.6636,
         "cohesionDelta": -0.05
+      },
+      "erosion": null,
+      "fixDensity": {
+        "fixes": 8,
+        "share": 0.1818,
+        "spanning": 2
       }
     }
   ],

@@ -11,7 +11,11 @@ const PATHS = ["a.ts", "b.ts", "c.ts", "d.ts", "e.ts", "f.ts"];
 const commit = (
   ids: ReadonlyArray<number>,
   size = ids.length,
-): LogicalChange => ({ files: Uint32Array.from(ids), size });
+): LogicalChange => ({
+  files: Uint32Array.from(ids),
+  size,
+  subjectKind: "other",
+});
 
 const historyOf = (...changes: ReadonlyArray<LogicalChange>): History => ({
   paths: PATHS,

@@ -15,6 +15,7 @@ import { shallowestLines } from "./depth-view.js";
 import { cliqueSection, distantSection } from "./distant-view.js";
 import { day, percent } from "./format.js";
 import { importsCell } from "./imports-cell.js";
+import { overTimeSection } from "./over-time-view.js";
 import { spreadLines } from "./spread-view.js";
 import { stabilitySections } from "./stability-view.js";
 import type { Style } from "./style.js";
@@ -176,7 +177,9 @@ const leakyModules = (report: Report): ReadonlyArray<Module> =>
 /**
  * Renders the terminal view of an `analyze` report: how far a change spreads
  * (change radius and propagation cost, each left out when the report has
- * none), the ten hottest files,
+ * none), the ten hottest files, how the design moved over time (the verdict,
+ * the modules losing cohesion, hotspots by age, and the share of fixes; each
+ * part is left out when the report has no data for it),
  * the five best ranked distant couplings and a line per clique of modules
  * that change together (each section is left out when there is none),
  * the five strongest couplings that are neither test pairs nor pairs of two
@@ -218,6 +221,7 @@ export const renderAnalysis = (report: Report, style: Style): string => {
     style.bold("Hotspots"),
     ...hotspots,
     "",
+    ...overTimeSection(report, style),
     ...distantSection(report, style),
     ...cliqueSection(report, style),
     style.bold("Change coupling (test pairs and contract pairs excluded)"),

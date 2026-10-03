@@ -3,9 +3,9 @@ import { assert, layer } from "@effect/vitest";
 import { Effect } from "effect";
 
 import { Git } from "../git/git.js";
+import { readHistory, readHistoryHalves } from "../testing/history.js";
 import { makeTempRepository } from "../testing/temp-repository.js";
 import type { TempRepository } from "../testing/temp-repository.js";
-import { readHistory, readHistoryHalves } from "./history.js";
 import type { HistoryOptions } from "./history.js";
 
 /** Ten distinct lines, so git sees a moved file as the same file. */

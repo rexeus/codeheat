@@ -27,6 +27,7 @@ const dependentsOf = (
 const commit = (...files: ReadonlyArray<string>) => ({
   files: Uint32Array.from(files.map((file) => PATHS.indexOf(file))),
   size: files.length,
+  subjectKind: "other" as const,
 });
 
 /** A history in which each path has the logical changes given and, unless `revisions` says otherwise, as many changes. */
@@ -144,7 +145,11 @@ describe("unstableInterfaces ripple", () => {
   });
 
   it("ignores a commit too large to count and a file that does not depend on it", () => {
-    const large = { ...commit(API, "app/e.ts"), size: 51 };
+    const large = {
+      ...commit(API, "app/e.ts"),
+      size: 51,
+      subjectKind: "other" as const,
+    };
 
     const [found] = unstableInterfaces(
       dependentsOf(),

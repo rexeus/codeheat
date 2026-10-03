@@ -131,6 +131,13 @@ layer(NodeServices.layer)("analyze report", (it) => {
           propagationDepth: 3,
           ubiquitousShare: 0.3,
           ubiquitousMinCommits: 10,
+          minWindowChanges: 10,
+          minTrendWindows: 3,
+          minErosionShift: 0.1,
+          minErosionSigmas: 2,
+          minVerdictWindows: 5,
+          hotTopShare: 0.1,
+          minConventionShare: 0.05,
           maxMeanLineLength: 300,
           maxFileBytes: 1_048_576,
         });
