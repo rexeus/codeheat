@@ -12,7 +12,9 @@ describe("limitReport", () => {
       0.75, 0.738, 0.679,
     ]);
   });
+});
 
+describe("limitReport further lists", () => {
   it("cuts the least cohesive modules to the limit as well", () => {
     expect(
       limitReport(sampleReport(), 2).modules.map((module) => module.path),
@@ -47,6 +49,25 @@ describe("limitReport", () => {
     ).toEqual([0.4231, 0.3448, 0.3182]);
   });
 
+  it("cuts the unstable interfaces and dependency directions to the limit as well", () => {
+    const report = sampleReport();
+    const [found] = report.unstableInterfaces;
+    const [edge] = report.dependencyDirection;
+    const many = {
+      ...report,
+      unstableInterfaces: found === undefined ? [] : [found, found, found],
+      dependencyDirection: edge === undefined ? [] : [edge, edge, edge],
+    };
+
+    const limited = limitReport(many, 2);
+
+    expect(limited.unstableInterfaces).toHaveLength(2);
+    expect(limited.dependencyDirection).toHaveLength(2);
+    expect(limitReport(many, 0).unstableInterfaces).toHaveLength(3);
+  });
+});
+
+describe("limitReport totals", () => {
   it("keeps the totals of the untruncated report", () => {
     expect(limitReport(sampleReport(), 3).totals).toEqual({
       files: 36,

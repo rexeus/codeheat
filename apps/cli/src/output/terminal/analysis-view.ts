@@ -15,6 +15,7 @@ import { shallowestLines } from "./depth-view.js";
 import { cliqueSection, distantSection } from "./distant-view.js";
 import { day, percent } from "./format.js";
 import { importsCell } from "./imports-cell.js";
+import { stabilitySections } from "./stability-view.js";
 import type { Style } from "./style.js";
 import { plain, renderTable } from "./table.js";
 
@@ -182,7 +183,10 @@ const leakyModules = (report: Report): ReadonlyArray<Module> =>
  * copy (the section is left out when there is none), the five least cohesive
  * modules, the first five modules with a leaky interface,
  * the five shallowest ranked modules (fewest implementation lines per exported
- * name; the section is left out when none has a depth), and, when the report compares two windows, the biggest changes. The report
+ * name; the section is left out when none has a depth), the five most
+ * unstable interfaces and the three imports that point from a stable module
+ * to a volatile one (left out when there are none), and, when the report
+ * compares two windows, the biggest changes. The report
  * must not be cut to `--limit`: test pairs could crowd out every other
  * coupling, and every coupled file must appear in `files` or `contracts`:
  * rendering throws otherwise.
@@ -240,6 +244,7 @@ export const renderAnalysis = (report: Report, style: Style): string => {
     ...(shallow.length === 0
       ? []
       : [style.bold("Shallowest modules"), ...shallow, ""]),
+    ...stabilitySections(report, style),
     ...changeLines(report, style),
     style.dim("Use --html for the treemap or --json for the full report."),
   ].join("\n");
