@@ -88,6 +88,7 @@ layer(NodeServices.layer)("analyze --compare", (it) => {
         previousSince: "2025-12-01T12:00:00.000Z",
         previousUntil: "2026-03-01T12:00:00.000Z",
         previousCommits: 5,
+        previousRealCommits: 5,
         previousTruncated: false,
       });
       assert.strictEqual(report.window.since, "2026-03-01T12:00:00.000Z");
@@ -295,6 +296,7 @@ layer(NodeServices.layer)(
             previousSince: "1996-06-01T12:00:00.000Z",
             previousUntil: "2011-06-01T12:00:00.000Z",
             previousCommits: 0,
+            previousRealCommits: 0,
             previousTruncated: true,
           });
           assert.isNull(report.files[0]?.trend);

@@ -64,9 +64,9 @@ layer(NodeServices.layer)("readHistory", (it) => {
           universe: new Set(["c.ts", "other.ts"]),
         });
 
-        // creation, three edits, and two renames touch the one file
+        // creation and three edits; the two renames keep every byte and add none
         assert.deepStrictEqual(result.files.get("c.ts"), {
-          revisions: 6,
+          revisions: 4,
           linesAdded: 13,
           linesDeleted: 0,
         });
@@ -164,8 +164,9 @@ layer(NodeServices.layer)("readHistory lives of a path and renames", (it) => {
 
         const result = yield* history(repo, { universe: new Set(["a.ts"]) });
 
+        // b.ts's creation; its move onto a.ts adds none
         assert.deepStrictEqual(result.files.get("a.ts"), {
-          revisions: 2,
+          revisions: 1,
           linesAdded: 10,
           linesDeleted: 0,
         });
@@ -186,9 +187,9 @@ layer(NodeServices.layer)("readHistory lives of a path and renames", (it) => {
 
         const result = yield* history(repo, { universe: new Set(["a.ts"]) });
 
-        // b.ts's creation and its rename; the dead a.ts is a different file
+        // b.ts's creation, not its rename; the dead a.ts is a different file
         assert.deepStrictEqual(result.files.get("a.ts"), {
-          revisions: 2,
+          revisions: 1,
           linesAdded: 10,
           linesDeleted: 0,
         });
@@ -236,7 +237,7 @@ layer(NodeServices.layer)(
           const result = yield* history(repo, { universe: new Set(["r.ts"]) });
 
           assert.deepStrictEqual(result.files.get("r.ts"), {
-            revisions: 2,
+            revisions: 1,
             linesAdded: 10,
             linesDeleted: 0,
           });
@@ -269,9 +270,10 @@ layer(NodeServices.layer)("readHistory universe and window", (it) => {
         universe: new Set(["c.ts", "b.ts"]),
       });
 
-      // the edit of b.ts on 03-04 and the rename of b.ts to c.ts on 03-05;
-      // the rename is in the window but the edit of c.ts on 03-06 is not
-      assert.strictEqual(result.files.get("c.ts")?.revisions, 2);
+      // the edit of b.ts on 03-04 is a revision; the rename of b.ts to c.ts on
+      // 03-05 is a commit of the window that adds none; the edit of c.ts on
+      // 03-06 is outside the window
+      assert.strictEqual(result.files.get("c.ts")?.revisions, 1);
       assert.strictEqual(result.commits.length, 2);
     }),
   );
@@ -334,14 +336,14 @@ layer(NodeServices.layer)("readHistoryHalves", (it) => {
           Date.parse("2026-03-04T12:00:00Z") / 1000,
         ).pipe(Effect.provide(Git.layer(repo.directory)));
 
-        // recent: the edit, the second rename, the last edit; earlier: creation, edit, first rename
+        // recent: the edit and the last edit; earlier: creation and edit; the renames add none
         assert.deepStrictEqual(recent.files.get("c.ts"), {
-          revisions: 3,
+          revisions: 2,
           linesAdded: 2,
           linesDeleted: 0,
         });
         assert.deepStrictEqual(earlier.files.get("c.ts"), {
-          revisions: 3,
+          revisions: 2,
           linesAdded: 11,
           linesDeleted: 0,
         });

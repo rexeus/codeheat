@@ -8,8 +8,8 @@ import type { FileStats } from "../report/report.js";
 
 /** What one window's measurement says; a `Report`'s files and modules, plus its commit count. */
 type WindowMeasure = {
-  /** Commits in the window that touched the universe (`window.commits`). */
-  readonly commits: number;
+  /** Real changes in the window (`window.realCommits`): a window of mechanical commits only has nothing to compare. */
+  readonly realCommits: number;
   readonly files: ReadonlyArray<FileStats>;
   readonly modules: ReadonlyArray<Module>;
 };
@@ -19,7 +19,7 @@ const withFileTrends = (
   previous: WindowMeasure,
 ): ReadonlyArray<FileStats> => {
   // Scores are normalized within their window, so an empty window has no scale to compare against.
-  if (current.commits === 0 || previous.commits === 0) {
+  if (current.realCommits === 0 || previous.realCommits === 0) {
     return current.files;
   }
   const before = new Map(previous.files.map((file) => [file.path, file]));
@@ -72,7 +72,8 @@ const withModuleTrends = (
  * movement relative to each window's hottest file, not in absolute change.
  * A file with revisions only in `current` is `newlyActive`: its delta is its
  * score, which says it appeared, not that it warmed up.
- * A file has no trend when either window has no commit. A module has none
+ * A file has no trend when either window has no real commit (one that is not
+ * mechanical). A module has none
  * unless it has at least `minModuleCommits` counted commits in both windows:
  * the cohesion of a handful of commits swings too much to call a change.
  */

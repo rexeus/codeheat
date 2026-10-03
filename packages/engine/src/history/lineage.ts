@@ -48,15 +48,17 @@ export const newLineage = (): Lineage => ({
   deadNames: new Set(),
 });
 
+type Change = Commit["changes"][number];
+
 /** What one commit changed in the universe. */
 export type Touch = {
   /** Lines changed per file id, in the current file's life only. */
   readonly lines: ReadonlyMap<number, Lines>;
   /** How many distinct universe files the commit changed, dead ones included. */
   readonly size: number;
+  /** The changes at a universe path, dead files included, as the log shows them. */
+  readonly analyzed: ReadonlyArray<Change>;
 };
-
-type Change = Commit["changes"][number];
 
 /** What a change says about the life of its file, and which names it gives, takes and frees. */
 type Life = {
@@ -134,6 +136,7 @@ export const touchUniverse = (
 ): Touch => {
   const lines = new Map<number, Lines>();
   const touched = new Set<number>();
+  const analyzed: Array<Change> = [];
   const lives: Array<Life> = [];
   for (const change of commit.changes) {
     const path = lineage.renamedTo.get(change.path) ?? change.path;
@@ -145,6 +148,7 @@ export const touchUniverse = (
     const id = fileIds.get(path);
     if (id !== undefined) {
       touched.add(id);
+      analyzed.push(change);
       if (!life.isPreviousLife) {
         lines.set(id, addLines(lines.get(id), change));
       }
@@ -163,5 +167,5 @@ export const touchUniverse = (
       lineage.deadNames.add(name);
     }
   }
-  return { lines, size: touched.size };
+  return { lines, size: touched.size, analyzed };
 };

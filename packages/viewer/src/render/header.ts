@@ -9,13 +9,16 @@ import { formatCount, formatDay } from "./format.js";
 
 const SHORT_SHA_LENGTH = 7;
 
-/** A caveat on the previous window: no commits means there is nothing to compare, cut off means less history. */
+/** A caveat on the previous window: no real change means there is nothing to compare, cut off means less history. */
 const comparisonCaveat = ({
   previousCommits,
+  previousRealCommits,
   previousTruncated,
 }: NonNullable<Report["comparison"]>): string => {
-  if (previousCommits === 0) {
-    return " (no commits: nothing to compare)";
+  if (previousRealCommits === 0) {
+    return previousCommits === 0
+      ? " (no commits: nothing to compare)"
+      : " (only mechanical commits: nothing to compare)";
   }
   return previousTruncated ? " (cut off at the start of the history)" : "";
 };
