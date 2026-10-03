@@ -12,6 +12,7 @@ export const readHistory = (
 ): Effect.Effect<History, GitError, Git> =>
   readHistories(options, {
     currentFrom: Math.floor(Date.parse(options.since) / 1000),
+    windowsSince: options.since,
     previousFrom: null,
     seriesSince: options.until,
   }).pipe(Effect.map(({ current }) => current));
@@ -29,6 +30,7 @@ export const readHistoryHalves = (
   Git
 > =>
   readHistories(options, {
+    windowsSince: options.since,
     currentFrom: splitAt,
     previousFrom: Math.floor(Date.parse(options.since) / 1000),
     seriesSince: options.until,

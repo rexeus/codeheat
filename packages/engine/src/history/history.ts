@@ -6,14 +6,13 @@ import { Effect } from "effect";
 import { groupChanges } from "../changes/group.js";
 import type { GroupedBy } from "../changes/group.js";
 import type { LogicalChange } from "../changes/logical-change.js";
-import { readMerges } from "../changes/merges.js";
 import type { GitError } from "../git/git-errors.js";
 import type { Git } from "../git/git.js";
-import { classify } from "../mechanical/classify.js";
 import { readEvidence } from "../mechanical/evidence.js";
 import { countKinds } from "../mechanical/kinds.js";
 import type { MechanicalCounts, MechanicalKind } from "../mechanical/kinds.js";
 import type { SliceRange } from "../series/slice-ranges.js";
+import { classifierFor } from "./classifier.js";
 import { scanCommits } from "./scan.js";
 import type { Entry } from "./scan.js";
 import { sliceSeries } from "./slices.js";
@@ -160,30 +159,12 @@ const buildHistory = (
   };
 };
 
+const seconds = (iso: string): number => Math.floor(Date.parse(iso) / 1000);
+
 const indexPaths = (options: HistoryOptions) => {
   const paths = [...options.universe];
   return { paths, fileIds: new Map(paths.map((path, id) => [path, id])) };
 };
-
-/** Scans the window and classifies its commits, which needs git's answers about the whole scan at once. */
-const readEntries = (
-  options: HistoryOptions,
-  fileIds: ReadonlyMap<string, number>,
-) =>
-  Effect.gen(function* () {
-    const entries = yield* scanCommits({ ...options, fileIds });
-    const evidence = yield* readEvidence(entries.map(({ signals }) => signals));
-    const merges = yield* readMerges(options);
-    return {
-      entries,
-      merges,
-      kindsOf: (window: ReadonlyArray<Entry>) =>
-        classify(
-          window.map(({ signals }) => signals),
-          evidence,
-        ),
-    };
-  });
 
 /** One slice of the series and the time range it covers. */
 export type SeriesSlice = {
@@ -193,6 +174,8 @@ export type SeriesSlice = {
 
 /** How one read of the log is divided into the windows an analysis needs. */
 export type HistoryParts = {
+  /** ISO time at which the windows start: the one before the latest when comparing, else the latest. */
+  readonly windowsSince: string;
   /** Seconds since the epoch: the commits from here on make the window the report describes. */
   readonly currentFrom: number;
   /** When comparing, the seconds at which the window before it starts; it ends at `currentFrom`. Null otherwise. */
@@ -206,11 +189,16 @@ export type HistoryParts = {
  * and divides them: `current` is the window from `parts.currentFrom`, `previous`
  * the one before it when comparing, and `series` the commits from
  * `parts.seriesSince` cut into slices (see `sliceSeries`), whatever the other
- * two cover. `options.since` must not be later than any of them. Renames and
- * deletions are followed across every boundary; reverts and duplicates are
- * paired inside each window, and inside the series span for the slices, so a
- * commit can be mechanical in a slice and not in the window, or the other way.
- * A slice is grouped from its own commits.
+ * two cover. `options.since` must not be later than `parts.windowsSince` or
+ * `parts.seriesSince`. Renames and deletions are followed across every
+ * boundary.
+ *
+ * What the windows say is what reading just their span (from
+ * `parts.windowsSince`) would say: reverts, re-lands, and duplicates are
+ * looked for inside it, and so are the merges that group commits into pull
+ * requests (see `classifierFor`). The slices are classified and grouped the
+ * same way over the series span, so a commit can be mechanical in a slice and
+ * not in the window, or the other way. A slice is grouped from its own commits.
  *
  * Git must run in the repository root, and the repository needs a `HEAD`.
  */
@@ -228,15 +216,34 @@ export const readHistories = (
 > =>
   Effect.gen(function* () {
     const { paths, fileIds } = indexPaths(options);
-    const { entries, merges, kindsOf } = yield* readEntries(options, fileIds);
+    const scanned = yield* scanCommits({ ...options, fileIds });
+    const evidence = yield* readEvidence(scanned.map(({ signals }) => signals));
     const within = (from: number, until: number) =>
-      entries.filter(
+      scanned.filter(
         ({ signals }) => signals.time >= from && signals.time < until,
       );
-    const build = (window: ReadonlyArray<Entry>, kinds = kindsOf(window)) =>
-      buildHistory(paths, window, kinds, merges);
-    const series = sliceSeries(entries, parts.seriesSince, options.until);
-    const seriesKinds = kindsOf(series.entries);
+    const windows = within(
+      seconds(parts.windowsSince),
+      Number.POSITIVE_INFINITY,
+    );
+    const forWindows = yield* classifierFor(
+      evidence,
+      windows,
+      parts.windowsSince,
+    );
+    const build = (
+      window: ReadonlyArray<Entry>,
+      { kindsOf, merges } = forWindows,
+      kinds = kindsOf(window),
+    ) => buildHistory(paths, window, kinds, merges);
+    const series = sliceSeries(scanned, parts.seriesSince, options.until);
+    const sameSpan =
+      series.slices.length === 0 ||
+      Date.parse(parts.seriesSince) === Date.parse(parts.windowsSince);
+    const forSeries = sameSpan
+      ? forWindows
+      : yield* classifierFor(evidence, series.entries, parts.seriesSince);
+    const seriesKinds = forSeries.kindsOf(series.entries);
     return {
       current: build(within(parts.currentFrom, Number.POSITIVE_INFINITY)),
       previous:
@@ -245,7 +252,7 @@ export const readHistories = (
           : build(within(parts.previousFrom, parts.currentFrom)),
       series: series.slices.map(({ range, entries: slice }) => ({
         range,
-        history: build(slice, seriesKinds),
+        history: build(slice, forSeries, seriesKinds),
       })),
     };
   });

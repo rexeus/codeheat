@@ -68,3 +68,27 @@ export const readEvidence = (
     const confirmedReverts = yield* readConfirmedReverts(mirroredReverts(open));
     return { ignored, whitespaceOnly, patchIds, reLands, confirmedReverts };
   });
+
+/**
+ * The evidence for the commits of one span, from the evidence for a longer
+ * read that contains it. What git says about a commit alone, and about a
+ * revert and the commit it names, does not depend on the span. A re-land
+ * does: a copy sits on top of an older copy of its patch, and the older copies
+ * of a span are those inside it, so the re-lands are found again among the
+ * duplicates of `commits` (newest first). That is what reading the span on
+ * its own would have found.
+ */
+export const evidenceWithin = (
+  evidence: Evidence,
+  commits: ReadonlyArray<CommitSignals>,
+): Effect.Effect<Evidence, GitError, Git> =>
+  Effect.gen(function* () {
+    const open = commits.filter(
+      ({ sha, moveOnly }) =>
+        !evidence.ignored.has(sha) &&
+        !moveOnly &&
+        !evidence.whitespaceOnly.has(sha),
+    );
+    const reLands = yield* readReLands(findDuplicates(open, evidence.patchIds));
+    return { ...evidence, reLands };
+  });

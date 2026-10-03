@@ -110,6 +110,7 @@ export const readWindows = (
       ...options,
     },
     {
+      windowsSince: (previous ?? current).since,
       currentFrom: Math.floor(Date.parse(current.since) / 1000),
       previousFrom:
         previous === null
