@@ -1295,7 +1295,7 @@
       "commits": 26,
       "localCommits": 13,
       "cohesion": 0.5,
-      "radius": 2,
+      "radius": 1,
       "partners": [
         {
           "path": "packages/shared",

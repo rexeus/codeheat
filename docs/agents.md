@@ -54,7 +54,7 @@ The files of a repository are grouped into modules: workspace packages (a direct
   "commits": 74,
   "localCommits": 41,
   "cohesion": 0.5541,
-  "radius": 2,
+  "radius": 1,
   "partners": [
     { "path": "packages/web", "sharedCommits": 20, "contractsOnly": false }
   ],
@@ -125,8 +125,8 @@ The files of a repository are grouped into modules: workspace packages (a direct
 }
 ```
 
-- `changeRadius` counts the modules each counted change touched (test-only modules left out; a change that touched no other module is not measured). `median` is the modules a typical change touches (a lower median, so a whole number), `p90` the most that nine in ten touch, `local` the share that touched exactly one module, and `changes` how many changes were measured. A `local` near 1 and a `median` of 1 mean the design holds: plan a change inside one module. A `p90` of 4 or more means a tenth of the changes spread widely; check `cliques` and `distantCouplings` for where. The numbers depend on the modules detected: finer modules give a larger radius, and a repository with a single module always reads 1. `null` when no counted change touched a module.
-- `propagationCost` is the mean share of the other files a file reaches through chains of at most `thresholds.propagationDepth` couplings (the pairs in `couplings`), over the `files` that are not test code and have at least `thresholds.minSharedCommits` changes. At 0.06, a change to a typical file drags along about 6% of the files that change regularly, through up to three hops of co-change. 0 means no file is coupled, 1 that everything reaches everything. Compare it across windows of one repository rather than across very different repositories, and read it with the change radius: a low radius with a high cost means coupling inside modules. `null` when fewer than two files have enough changes.
+- `changeRadius` counts the modules each counted change touched (test-only modules left out; a change that touched no other module is not measured). `median` is the modules a typical change touches (a lower median, so a whole number), `p90` the most that nine in ten touch, `local` the share that touched exactly one module, and `changes` how many changes were measured. A `local` near 1 and a `median` of 1 mean the design holds: plan a change inside one module. A `p90` of 4 or more means a tenth of the changes spread widely; check `cliques` and `distantCouplings` for where. The numbers depend on the modules detected: finer modules give a larger radius, and a repository with a single module always reads 1. `null` when no counted change touched a module. `changes` can be lower than `window.couplingCommits`: a change that touched only files that are dead today, or no module, is not measured.
+- `propagationCost` is the mean share of the other files a file reaches through chains of at most `thresholds.propagationDepth` couplings (the pairs in `couplings`), over the `files` that are not test code and have at least `thresholds.minSharedCommits` counted changes (large changes are not counted). At 0.06, a change to a typical file drags along about 6% of the files that change regularly, through up to three hops of co-change. 0 means no file is coupled, 1 that everything reaches everything. The cost shrinks as the number of regularly changing files grows, so it is a within-repository, over-time measure: compare it across windows of one repository, not between repositories. The terminal does not show it. Read it with the change radius: a low radius with a high cost means coupling inside modules. `null` when fewer than two files have enough changes.
 - `modules[].radius` gives the radius around one module, and `inspect` shows it with the file's module.
 
 ## Reading module depth
