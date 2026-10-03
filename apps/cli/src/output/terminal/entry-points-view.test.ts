@@ -121,11 +121,11 @@ describe("entryPointLines subjects", () => {
 
     expect(subjects).toStrictEqual([
       "1. boundary  billing",
-      "2. hotspot  billing/a.ts + billing/b.ts",
-      "3. unit  billing + web + auth",
-      "4. copies  a.ts + b.ts",
+      "2. hotspot  billing/a.ts, billing/b.ts",
+      "3. unit  billing, web, auth",
+      "4. copies  a.ts, b.ts",
       "5. hub  lib/hub.ts",
-      "6. coupling  a/x.ts + b/y.ts",
+      "6. coupling  a/x.ts <-> b/y.ts",
     ]);
   });
 });
@@ -163,6 +163,45 @@ describe("entryPointLines words", () => {
     expect(out).not.toContain("\u001B");
     expect(out).not.toContain("\u0007");
     expect(out).toContain("a\\u001b[31m.ts");
+  });
+});
+
+describe("entryPointLines layout", () => {
+  it("aligns the lines under an entry with its rank when there are ten", () => {
+    const out = lines(
+      Array.from({ length: 10 }, (_, index) => entry({ rank: index + 1 })),
+    );
+
+    expect(out[1]).toBe(" 1. boundary  billing");
+    expect(out[2]).toBe("    Verdict.");
+    expect(out[37]).toBe("10. boundary  billing");
+    expect(out[38]).toBe("    Verdict.");
+  });
+
+  it("keeps the folders of a group territory apart from the territories it lists", () => {
+    const out = entryPointLines(
+      {
+        entryPoints: [entry({ territories: ["t2", "t3"] })],
+        ...territories({ t2: "a + b", t3: "c" }),
+      },
+      makeStyle(false),
+    );
+
+    expect(out[1]).toBe("1. boundary  a + b, c");
+  });
+
+  it("says which dependents changed with a hub", () => {
+    const out = lines([
+      entry({
+        kind: "hub",
+        files: ["lib/hub.ts"],
+        evidence: { fanIn: 30, changes: 8, changedDependents: 14 },
+      }),
+    ]);
+
+    expect(out[3]).toBe(
+      "   30 files depend on it, 14 of them changed together with it; 8 changes touched it",
+    );
   });
 });
 
