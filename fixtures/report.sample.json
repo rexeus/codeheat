@@ -56,7 +56,7 @@
     "minLeakage": 0.5,
     "minImplementationCommits": 5,
     "minFanIn": 5,
-    "minInterfaceRevisions": 5,
+    "minInterfaceChanges": 5,
     "minVolatilityRatio": 2
   },
   "totals": {
@@ -1554,8 +1554,8 @@
       "path": "packages/shared/src/config.ts",
       "module": "packages/shared",
       "fanIn": 14,
-      "revisions": 22,
-      "medianDependentRevisions": 9,
+      "changes": 22,
+      "medianDependentChanges": 9,
       "changedDependents": 9,
       "dependents": [
         {
@@ -1571,7 +1571,7 @@
           "sharedCommits": 5
         }
       ],
-      "reason": "14 files depend on it and it changed in 22 commits, against a median of 9 for them; 9 of them changed together with it"
+      "reason": "14 files depend on it and it changed in 22 logical changes, against a median of 9 for them; 9 of them changed together with it"
     }
   ],
   "dependencyDirection": [

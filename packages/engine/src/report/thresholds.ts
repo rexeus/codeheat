@@ -28,7 +28,7 @@ export const Thresholds = Schema.Struct({
   /** Fewest dependents (`UnstableInterface.fanIn`) that make a file an interface many rely on. */
   minFanIn: Count,
   /** Fewest revisions a file needs to be an unstable interface. */
-  minInterfaceRevisions: Count,
+  minInterfaceChanges: Count,
   /** How many times as many counted commits as an importing module the imported one needs to be flagged in `Report.dependencyDirection`. */
   minVolatilityRatio: Count,
   /**

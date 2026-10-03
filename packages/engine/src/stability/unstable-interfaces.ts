@@ -11,8 +11,8 @@ import type { UnstableInterface } from "../report/unstable-interface.js";
 /** Fewest dependents (see `UnstableInterface.fanIn`) that make a file an interface many rely on. */
 export const MIN_FAN_IN = 5;
 
-/** Fewest revisions a file needs before its changes count as frequent. */
-export const MIN_INTERFACE_REVISIONS = 5;
+/** Fewest logical changes a file needs before its changes count as frequent. */
+export const MIN_INTERFACE_CHANGES = 5;
 
 /** The report keeps this many unstable interfaces, the ones that changed most dependents first. */
 const MAX_UNSTABLE_INTERFACES = 50;
@@ -21,8 +21,8 @@ const SHOWN_DEPENDENTS = 5;
 type Candidate = {
   readonly path: string;
   readonly dependents: ReadonlySet<string>;
-  readonly revisions: number;
-  readonly medianDependentRevisions: number;
+  readonly changes: number;
+  readonly medianDependentChanges: number;
   /** Counted changes shared with each dependent. */
   readonly together: Map<string, number>;
 };
@@ -35,37 +35,37 @@ const median = (values: ReadonlyArray<number>): number => {
     : Math.floor(((sorted[middle - 1] ?? 0) + (sorted[middle] ?? 0)) / 2);
 };
 
-/** Files with enough dependents and revisions that change more often than the typical dependent. */
+/** Files with enough dependents and logical changes that change more often than the typical dependent. */
 const candidatesOf = (
   dependents: ReadonlyMap<string, ReadonlySet<string>>,
-  revisionsOf: (path: string) => number,
+  changesOf: (path: string) => number,
 ): ReadonlyArray<Candidate> =>
   [...dependents].flatMap(([path, own]) => {
-    const revisions = revisionsOf(path);
+    const changes = changesOf(path);
     if (
       own.size < MIN_FAN_IN ||
-      revisions < MIN_INTERFACE_REVISIONS ||
+      changes < MIN_INTERFACE_CHANGES ||
       isTestPath(path)
     ) {
       return [];
     }
-    const medianDependentRevisions = median(
-      [...own].map((dependent) => revisionsOf(dependent)),
+    const medianDependentChanges = median(
+      [...own].map((dependent) => changesOf(dependent)),
     );
-    return revisions > medianDependentRevisions
+    return changes > medianDependentChanges
       ? [
           {
             path,
             dependents: own,
-            revisions,
-            medianDependentRevisions,
+            changes,
+            medianDependentChanges,
             together: new Map<string, number>(),
           },
         ]
       : [];
   });
 
-/** Credits `candidate` with one more shared commit for each of its dependents among the files of one commit. */
+/** Credits `candidate` with one more shared change for each of its dependents among the files of one change. */
 const creditDependents = (
   candidate: Candidate,
   commit: Uint32Array,
@@ -103,15 +103,15 @@ const countTogether = (
 
 const reasonFor = ({
   dependents,
-  revisions,
-  medianDependentRevisions,
+  changes,
+  medianDependentChanges,
   together,
 }: Candidate): string =>
-  `${dependents.size} files depend on it and it changed in ${revisions} commits, against a median of ${medianDependentRevisions} for them; ${together.size} of them changed together with it`;
+  `${dependents.size} files depend on it and it changed in ${changes} logical changes, against a median of ${medianDependentChanges} for them; ${together.size} of them changed together with it`;
 
 const byRipple = (a: UnstableInterface, b: UnstableInterface): number =>
   b.changedDependents - a.changedDependents ||
-  b.revisions - a.revisions ||
+  b.changes - a.changes ||
   b.fanIn - a.fanIn ||
   Order.String(a.path, b.path);
 
@@ -120,9 +120,11 @@ const byRipple = (a: UnstableInterface, b: UnstableInterface): number =>
  * `dependents` maps a file to the files that depend on it (see
  * `dependentsByFile`), test code left out by the caller. A file is one when at
  * least `MIN_FAN_IN` files depend on it, it has at least
- * `MIN_INTERFACE_REVISIONS` revisions, and more revisions than the median of
- * its dependents. The `MAX_UNSTABLE_INTERFACES` that changed together with the
- * most dependents come first, then more revisions, higher fan-in, and path.
+ * `MIN_INTERFACE_CHANGES` logical changes (`FileStats.changes`: the churn of an
+ * interface is how often it was changed as a whole, not how many commits it
+ * took), and more changes than the median of its dependents. The
+ * `MAX_UNSTABLE_INTERFACES` that changed together with the most dependents come
+ * first, then more changes, higher fan-in, and path.
  */
 export const unstableInterfaces = (
   dependents: ReadonlyMap<string, ReadonlySet<string>>,
@@ -131,7 +133,7 @@ export const unstableInterfaces = (
 ): ReadonlyArray<UnstableInterface> => {
   const candidates = candidatesOf(
     dependents,
-    (path) => history.files.get(path)?.revisions ?? 0,
+    (path) => history.files.get(path)?.changes ?? 0,
   );
   countTogether(candidates, history);
   return candidates
@@ -139,8 +141,8 @@ export const unstableInterfaces = (
       path: candidate.path,
       module: modules.get(candidate.path)?.path ?? ".",
       fanIn: candidate.dependents.size,
-      revisions: candidate.revisions,
-      medianDependentRevisions: candidate.medianDependentRevisions,
+      changes: candidate.changes,
+      medianDependentChanges: candidate.medianDependentChanges,
       changedDependents: candidate.together.size,
       dependents: [...candidate.together]
         .map(([path, sharedCommits]) => ({ path, sharedCommits }))

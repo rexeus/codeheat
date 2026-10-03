@@ -120,7 +120,7 @@ layer(NodeServices.layer)("analyze report", (it) => {
           minLocalDistance: 3,
           minCliqueShare: 0.3,
           minFanIn: 5,
-          minInterfaceRevisions: 5,
+          minInterfaceChanges: 5,
           minVolatilityRatio: 2,
           minHiddenProbability: 0.5,
           minCopySimilarity: 0.5,

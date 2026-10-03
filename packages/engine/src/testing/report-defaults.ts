@@ -9,7 +9,7 @@ export const DEFAULT_THRESHOLDS: Report["thresholds"] = {
   hubTopShare: 0.05,
   minModuleCommits: 5,
   minVolatilityRatio: 2,
-  minInterfaceRevisions: 5,
+  minInterfaceChanges: 5,
   minFanIn: 5,
   minCliqueShare: 0.3,
   minLocalDistance: 3,

@@ -22,7 +22,7 @@ describe("codeheat finds unstable interfaces", () => {
         );
         expect(lines.slice(start, start + 4)).toStrictEqual([
           "Unstable interfaces (many files import them, and they keep changing)",
-          "fan-in  commits  ripple  file",
+          "fan-in  changes  ripple  file",
           "     5        5       5  src/api.ts",
           "fan-in: files that import it; ripple: of those, files that changed in the same commits",
         ]);
@@ -45,8 +45,8 @@ describe("codeheat finds unstable interfaces", () => {
       expect(report.unstableInterfaces[0]).toMatchObject({
         path: "src/api.ts",
         fanIn: 5,
-        revisions: 5,
-        medianDependentRevisions: 1,
+        changes: 5,
+        medianDependentChanges: 1,
         changedDependents: 5,
       });
       expect(report.dependencyDirection).toStrictEqual([]);

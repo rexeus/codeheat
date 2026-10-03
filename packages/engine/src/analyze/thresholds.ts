@@ -26,7 +26,7 @@ import type { Report } from "../report/report.js";
 import { MIN_VOLATILITY_RATIO } from "../stability/dependency-direction.js";
 import {
   MIN_FAN_IN,
-  MIN_INTERFACE_REVISIONS,
+  MIN_INTERFACE_CHANGES,
 } from "../stability/unstable-interfaces.js";
 import {
   MAX_FILE_BYTES,
@@ -44,7 +44,7 @@ export const thresholdsFor = (couplingCommits: number) =>
     minLocalDistance: MIN_LOCAL_DISTANCE,
     minCliqueShare: MIN_CLIQUE_SHARE,
     minFanIn: MIN_FAN_IN,
-    minInterfaceRevisions: MIN_INTERFACE_REVISIONS,
+    minInterfaceChanges: MIN_INTERFACE_CHANGES,
     minVolatilityRatio: MIN_VOLATILITY_RATIO,
     minHiddenProbability: MIN_HIDDEN_PROBABILITY,
     minCopySimilarity: MIN_COPY_SIMILARITY,

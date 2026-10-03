@@ -241,7 +241,7 @@ export const Report = Schema.Struct({
    * Import edges from a module that rarely changes to one that changes often
    * (the Stable Dependencies Principle, see `DependencyDirection`),
    * TypeScript and JavaScript only; at most 50, ranked by `ratio` and
-   * `changedImporters`.
+   * `changesTogether`.
    */
   dependencyDirection: Schema.Array(DependencyDirection),
 });

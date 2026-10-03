@@ -29,20 +29,27 @@ const commit = (...files: ReadonlyArray<string>) => ({
   size: files.length,
 });
 
+/** A history in which each path has the logical changes given and, unless `revisions` says otherwise, as many commits. */
 const historyOf = (
-  revisions: Readonly<Record<string, number>>,
-  changes: ReadonlyArray<ReturnType<typeof commit>> = [],
+  changes: Readonly<Record<string, number>>,
+  touched: ReadonlyArray<ReturnType<typeof commit>> = [],
+  revisions: Readonly<Record<string, number>> = changes,
 ): History => ({
   paths: PATHS,
   files: new Map(
-    Object.entries(revisions).map(([path, count]) => [
+    Object.entries(changes).map(([path, count]) => [
       path,
-      { revisions: count, changes: count, linesAdded: 0, linesDeleted: 0 },
+      {
+        revisions: revisions[path] ?? count,
+        changes: count,
+        linesAdded: 0,
+        linesDeleted: 0,
+      },
     ]),
   ),
   commits: [],
-  changes,
-  logicalChanges: { by: "commit", count: changes.length, largest: 1 },
+  changes: touched,
+  logicalChanges: { by: "commit", count: touched.length, largest: 1 },
   mechanical: countKinds([]),
 });
 
@@ -63,13 +70,13 @@ describe("unstableInterfaces selection", () => {
       path: API,
       module: "lib",
       fanIn: 5,
-      revisions: 8,
-      medianDependentRevisions: 3,
+      changes: 8,
+      medianDependentChanges: 3,
       changedDependents: 0,
     });
   });
 
-  it("leaves out a file with fewer than five dependents or fewer than five revisions", () => {
+  it("leaves out a file with fewer than five dependents or fewer than five logical changes", () => {
     const history = historyOf({ [API]: 8 });
 
     expect(
@@ -78,6 +85,15 @@ describe("unstableInterfaces selection", () => {
     expect(
       unstableInterfaces(dependentsOf(), historyOf({ [API]: 4 }), MODULES),
     ).toEqual([]);
+  });
+
+  it("measures the churn in logical changes, not in commits", () => {
+    const history = historyOf({ [API]: 3, "app/a.ts": 0 }, [], {
+      [API]: 20,
+      "app/a.ts": 0,
+    });
+
+    expect(unstableInterfaces(dependentsOf(), history, MODULES)).toEqual([]);
   });
 
   it("leaves out a file that changes no more often than its typical dependent", () => {
@@ -123,7 +139,7 @@ describe("unstableInterfaces ripple", () => {
       { path: "app/b.ts", sharedCommits: 1 },
     ]);
     expect(found?.reason).toBe(
-      "5 files depend on it and it changed in 6 commits, against a median of 0 for them; 2 of them changed together with it",
+      "5 files depend on it and it changed in 6 logical changes, against a median of 0 for them; 2 of them changed together with it",
     );
   });
 
@@ -139,7 +155,7 @@ describe("unstableInterfaces ripple", () => {
     expect(found?.changedDependents).toBe(2);
   });
 
-  it("ranks the file that changed with the most dependents first, then more revisions", () => {
+  it("ranks the file that changed with the most dependents first, then more changes", () => {
     const dependents = new Map<string, ReadonlySet<string>>([
       [API, new Set(USERS)],
       ["lib/other.ts", new Set(USERS)],

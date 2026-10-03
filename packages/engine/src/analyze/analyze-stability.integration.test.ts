@@ -66,8 +66,8 @@ layer(NodeServices.layer)("analyze stability", (it) => {
             path: "packages/core/src/api.ts",
             module: "packages/core",
             fanIn: 6,
-            revisions: 6,
-            medianDependentRevisions: 1,
+            changes: 6,
+            medianDependentChanges: 1,
             changedDependents: 6,
             dependents: [
               { path: "packages/app/src/a.ts", sharedCommits: 6 },
@@ -77,11 +77,11 @@ layer(NodeServices.layer)("analyze stability", (it) => {
               { path: "packages/app/src/e.ts", sharedCommits: 1 },
             ],
             reason:
-              "6 files depend on it and it changed in 6 commits, against a median of 1 for them; 6 of them changed together with it",
+              "6 files depend on it and it changed in 6 logical changes, against a median of 1 for them; 6 of them changed together with it",
           },
         ]);
         assert.strictEqual(report.thresholds.minFanIn, 5);
-        assert.strictEqual(report.thresholds.minInterfaceRevisions, 5);
+        assert.strictEqual(report.thresholds.minInterfaceChanges, 5);
       }),
   );
 

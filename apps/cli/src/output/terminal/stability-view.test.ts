@@ -14,7 +14,7 @@ describe("stabilitySections", () => {
   it("tabulates the unstable interfaces and lists the stable-to-volatile imports", () => {
     expect(stabilitySections(sampleReport(), makeStyle(false))).toEqual([
       "Unstable interfaces (many files import them, and they keep changing)",
-      "fan-in  commits  ripple  file",
+      "fan-in  changes  ripple  file",
       "    14       22       9  packages/shared/src/config.ts",
       "fan-in: files that import it; ripple: of those, files that changed in the same commits",
       "",

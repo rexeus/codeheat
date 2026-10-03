@@ -19,7 +19,7 @@ const interfaceTable = (
   ...renderTable(
     [
       { header: "fan-in", align: "right" },
-      { header: "commits", align: "right" },
+      { header: "changes", align: "right" },
       { header: "ripple", align: "right" },
       { header: "file", align: "left" },
     ],
@@ -27,7 +27,7 @@ const interfaceTable = (
       .slice(0, TOP_INTERFACES)
       .map((found) => [
         plain(String(found.fanIn)),
-        plain(String(found.revisions)),
+        plain(String(found.changes)),
         plain(String(found.changedDependents)),
         plain(escapeForTerminal(found.path)),
       ]),
