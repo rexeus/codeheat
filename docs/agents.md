@@ -103,7 +103,8 @@ The files of a repository are grouped into modules: workspace packages (a direct
         "changes": 120,
         "heatShare": 1,
         "description": "The shop: billing and a web app.",
-        "splitReason": "the first cut: top-level folders"
+        "splitReason": "the first cut: top-level folders",
+        "fit": null
       },
       {
         "id": "t2",
@@ -116,7 +117,25 @@ The files of a repository are grouped into modules: workspace packages (a direct
         "changes": 74,
         "heatShare": 0.7113,
         "description": "Invoices and tax for the shop.",
-        "splitReason": "invoice and tax change independently: 81% of the 74 changes touching it stay inside one part"
+        "splitReason": "invoice and tax change independently: 81% of the 74 changes touching it stay inside one part",
+        "fit": {
+          "detail": 2,
+          "containment": 0.62,
+          "radius": 1,
+          "partner": {
+            "territory": "t3",
+            "sharedChanges": 21,
+            "share": 0.2838
+          },
+          "distantPairs": 4,
+          "hiddenPairs": 2,
+          "cliques": 1,
+          "erosion": null,
+          "chronicFiles": 2,
+          "acuteFiles": 0,
+          "chronicShare": 0.4721,
+          "fixDensity": { "fixes": 23, "share": 0.3108, "spanning": 9 }
+        }
       },
       {
         "id": "t3",
@@ -180,6 +199,7 @@ The files of a repository are grouped into modules: workspace packages (a direct
 - `kind` is `package` (a directory with a manifest), `folder`, `group` (`path` joins the sibling folders with `+`: they keep changing in the same changes, so read them as one), `tests` (test code that belongs to no code, listed after the code), or `other`. A `tests` node is also the home of the tests of code that is split into several territories, a child of the territory that holds them all (`t6` above). An `other` node is never a real territory: it holds the files directly in a directory, or a bucket of smaller folders (`description` says how many) that a finer detail opens.
 - `description` is one line that is safe to print: the manifest's `description`, else the first sentence of the README, else `main files: a, b, c`, the most changed files. A README sentence is the author's words, so read it as a hint.
 - `splitReason` says why a territory splits: too big (its parts still change together, so do not treat the parts as independent), or its folders change independently (a change usually stays in one of them). Null when it does not split.
+- `fit` says how well the territory holds up to the way the code changes, per territory and measured once: `containment` is the share of the changes touching it that touch no other territory (low means its boundary does not hold), `radius` the median number of territories such a change touches, `partner` the territory its changes most often reach into (with the shared changes and their share of this territory's), `distantPairs` and `hiddenPairs` the coupled file pairs that cross its boundary (and of those, the ones no import links), `cliques` the groups of three or more territories it changes with as one unit, `erosion` how containment moved over the series (same shape and verdicts as `Module.erosion`), `chronicFiles`, `acuteFiles`, and `chronicShare` how much of its heat sits in long-lived hotspots, and `fixDensity` the fixes among its changes. Boundary measures (`radius`, `partner`, `cliques`, the crossing of `distantPairs`) are taken against the territories at `fit.detail`, the detail that shows the territory closest to `recommended`; a partner id is a territory of that detail. `fit` is null for the root and for a node no detail shows; a `tests` territory takes no part (test code is no spread).
 - Test code is counted in the territory of the code it tests, in `files`, `testFiles`, `changes`, and `heatShare`; the children of a split territory open hottest first, and at the recommended detail no bucket hides a folder of at least 1% of all heat that is hotter than a territory opened beside it, unless every detail with at most 25 territories does.
 - `--limit` does not cut `territories`: the tree is complete in every report.
 - `modules` is unchanged and not a view of the territories; cohesion, partners, and the other module measures still describe modules.

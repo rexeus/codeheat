@@ -1730,7 +1730,8 @@
         "changes": 178,
         "heatShare": 1,
         "description": "The shop: billing, web app, auth, and a command line tool.",
-        "splitReason": "the first cut: packages and top-level folders"
+        "splitReason": "the first cut: packages and top-level folders",
+        "fit": null
       },
       {
         "id": "t2",
@@ -1743,7 +1744,37 @@
         "changes": 74,
         "heatShare": 0.6239,
         "description": "Invoices, tax, and discounts for the shop.",
-        "splitReason": null
+        "splitReason": null,
+        "fit": {
+          "detail": 1,
+          "containment": 0.5541,
+          "radius": 1,
+          "partner": {
+            "territory": "t3",
+            "sharedChanges": 20,
+            "share": 0.2703
+          },
+          "distantPairs": 3,
+          "hiddenPairs": 1,
+          "cliques": 0,
+          "erosion": {
+            "from": 0.84,
+            "to": 0.315,
+            "slope": -0.105,
+            "verdict": "eroding",
+            "windows": 6,
+            "cohesion": [0.82, 0.75, 0.7, 0.55, 0.4, 0.3],
+            "recent": true
+          },
+          "chronicFiles": 2,
+          "acuteFiles": 0,
+          "chronicShare": 0.4721,
+          "fixDensity": {
+            "fixes": 23,
+            "share": 0.3108,
+            "spanning": 9
+          }
+        }
       },
       {
         "id": "t3",
@@ -1756,7 +1787,37 @@
         "changes": 58,
         "heatShare": 0.1298,
         "description": "The web app: routes, hooks, and components.",
-        "splitReason": null
+        "splitReason": null,
+        "fit": {
+          "detail": 1,
+          "containment": 0.5345,
+          "radius": 1,
+          "partner": {
+            "territory": "t2",
+            "sharedChanges": 20,
+            "share": 0.3448
+          },
+          "distantPairs": 2,
+          "hiddenPairs": 1,
+          "cliques": 0,
+          "erosion": {
+            "from": 0.625,
+            "to": 0.5,
+            "slope": -0.025,
+            "verdict": "holding",
+            "windows": 6,
+            "cohesion": [0.62, 0.6, 0.58, 0.55, 0.52, 0.5],
+            "recent": true
+          },
+          "chronicFiles": 0,
+          "acuteFiles": 1,
+          "chronicShare": 0,
+          "fixDensity": {
+            "fixes": 13,
+            "share": 0.2241,
+            "spanning": 6
+          }
+        }
       },
       {
         "id": "t4",
@@ -1769,7 +1830,29 @@
         "changes": 44,
         "heatShare": 0.1058,
         "description": "Sessions, tokens, and sign-in with GitHub and Google.",
-        "splitReason": null
+        "splitReason": null,
+        "fit": {
+          "detail": 1,
+          "containment": 0.6136,
+          "radius": 1,
+          "partner": {
+            "territory": "t3",
+            "sharedChanges": 14,
+            "share": 0.3182
+          },
+          "distantPairs": 1,
+          "hiddenPairs": 0,
+          "cliques": 0,
+          "erosion": null,
+          "chronicFiles": 0,
+          "acuteFiles": 0,
+          "chronicShare": 0,
+          "fixDensity": {
+            "fixes": 8,
+            "share": 0.1818,
+            "spanning": 2
+          }
+        }
       },
       {
         "id": "t5",
@@ -1782,7 +1865,29 @@
         "changes": 26,
         "heatShare": 0.1014,
         "description": "main files: analyze, inspect, terminal",
-        "splitReason": null
+        "splitReason": null,
+        "fit": {
+          "detail": 1,
+          "containment": 0.5,
+          "radius": 1,
+          "partner": {
+            "territory": "t6",
+            "sharedChanges": 11,
+            "share": 0.4231
+          },
+          "distantPairs": 0,
+          "hiddenPairs": 0,
+          "cliques": 0,
+          "erosion": null,
+          "chronicFiles": 0,
+          "acuteFiles": 0,
+          "chronicShare": 0,
+          "fixDensity": {
+            "fixes": 4,
+            "share": 0.1538,
+            "spanning": 1
+          }
+        }
       },
       {
         "id": "t6",
@@ -1795,7 +1900,37 @@
         "changes": 30,
         "heatShare": 0.0391,
         "description": "main files: config, logger, index",
-        "splitReason": null
+        "splitReason": null,
+        "fit": {
+          "detail": 1,
+          "containment": 0.4,
+          "radius": 2,
+          "partner": {
+            "territory": "t5",
+            "sharedChanges": 11,
+            "share": 0.3667
+          },
+          "distantPairs": 2,
+          "hiddenPairs": 1,
+          "cliques": 0,
+          "erosion": {
+            "from": 0.3542,
+            "to": 0.4458,
+            "slope": 0.0183,
+            "verdict": "holding",
+            "windows": 4,
+            "cohesion": [0.35, 0.4, null, 0.4, null, 0.45],
+            "recent": true
+          },
+          "chronicFiles": 0,
+          "acuteFiles": 0,
+          "chronicShare": 0,
+          "fixDensity": {
+            "fixes": 9,
+            "share": 0.3,
+            "spanning": 7
+          }
+        }
       }
     ]
   },

@@ -25,16 +25,23 @@ const HIDDEN_BOOST = 1.5;
 const FULL_EVIDENCE_COMMITS = 10;
 
 /**
- * Whether a coupled pair is distant: it crosses modules or lies at least
- * `MIN_LOCAL_DISTANCE` directory hops apart within one, involves no test-code
- * file (a test belongs next to the code it checks, and a step file or helper
- * next to nothing in particular), and is no pair of two contract files (the
- * files of one API definition change together by design).
+ * Whether a coupled pair can be a design statement at all: it involves no
+ * test-code file (a test belongs next to the code it checks, and a step file
+ * or helper next to nothing in particular), and is no pair of two contract
+ * files (the files of one API definition change together by design).
  */
-export const isDistantCoupling = (coupling: Coupling): boolean =>
+export const isJudgeablePair = (coupling: Coupling): boolean =>
   !isTestPath(coupling.a) &&
   !isTestPath(coupling.b) &&
-  !(coupling.kinds.a === "contract" && coupling.kinds.b === "contract") &&
+  !(coupling.kinds.a === "contract" && coupling.kinds.b === "contract");
+
+/**
+ * Whether a coupled pair is distant: it is a judgeable pair (see
+ * `isJudgeablePair`) that crosses modules or lies at least
+ * `MIN_LOCAL_DISTANCE` directory hops apart within one.
+ */
+export const isDistantCoupling = (coupling: Coupling): boolean =>
+  isJudgeablePair(coupling) &&
   (coupling.crossesModule || coupling.distance >= MIN_LOCAL_DISTANCE);
 
 /** A path inside the module directory, so that its parent directory is the module's; "." is the repository root. */

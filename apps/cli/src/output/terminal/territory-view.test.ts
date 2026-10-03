@@ -17,6 +17,7 @@ const node = (id: string, kind: Territories["nodes"][number]["kind"]) => ({
   heatShare: 0,
   description: id,
   splitReason: null,
+  fit: null,
 });
 
 describe("territoryLines", () => {
