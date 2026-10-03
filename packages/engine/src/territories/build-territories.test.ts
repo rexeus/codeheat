@@ -270,6 +270,33 @@ describe("hot folders", () => {
   });
 });
 
+describe("hot folders and the tests that belong to them", () => {
+  it("counts the tests placed beside a folder's code for the heat that opens it", () => {
+    const cold = Array.from({ length: 11 }, (_, index) => `c${index + 1}`);
+    const tree = buildTerritories({
+      files: [
+        ...cold.flatMap((folder) =>
+          filesIn(`${folder}/src`, 20).map((path) => file(path, 1)),
+        ),
+        ...filesIn("hot/src", 4).map((path) => file(path, 1)),
+        ...filesIn("hot/test/helpers", 3).map((path) =>
+          Object.assign(file(path, 50), { loc: 1000 }),
+        ),
+      ],
+      changes: [
+        ...changed(6, "hot/src/f1.ts"),
+        ...cold.flatMap((folder) => changed(6, `${folder}/src/f1.ts`)),
+      ],
+      packages: new Set(),
+      minChanges: 5,
+    });
+
+    expect(idsAt(tree, 1).map((id) => nodeOf(tree, id).path)[0]).toBe(
+      "hot/src",
+    );
+  });
+});
+
 describe("a package that holds every file", () => {
   it("is the root territory", () => {
     const tree = build(

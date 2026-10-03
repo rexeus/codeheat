@@ -3,14 +3,8 @@
 // has a `tests` child of the territory that holds them all, so that its heat
 // does not inflate one sibling.
 import { isTestPath } from "../modules/test-path.js";
+import { ancestorDirectories } from "./folders.js";
 import type { Part, TreeNode } from "./part.js";
-
-const directoriesOf = (file: string): ReadonlyArray<string> => {
-  const parts = file.split("/").slice(0, -1);
-  return Array.from({ length: parts.length + 1 }, (_, length) =>
-    parts.slice(0, length).join("/"),
-  );
-};
 
 /** Every childless node, with the chain of nodes from the root down to it. */
 const leafChains = (root: TreeNode): ReadonlyArray<ReadonlyArray<TreeNode>> => {
@@ -39,7 +33,7 @@ const reached = (
   new Set(
     files
       .filter((file) => !isTestPath(file))
-      .flatMap((file) => directoriesOf(file))
+      .flatMap((file) => ancestorDirectories(file))
       .filter((directory) => directories.has(directory)),
   );
 
@@ -76,7 +70,7 @@ const commonNode = (
 /** The longest directory that all of `files` are below; "" when there is none. */
 const commonDirectory = (files: ReadonlyArray<string>): string => {
   const [first = ""] = files;
-  const shared = directoriesOf(first).filter((directory) =>
+  const shared = ancestorDirectories(first).filter((directory) =>
     files.every((file) => directory === "" || file.startsWith(`${directory}/`)),
   );
   return shared.at(-1) ?? "";

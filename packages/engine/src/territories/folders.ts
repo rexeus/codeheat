@@ -16,6 +16,14 @@ export type FolderCut = {
   readonly rest: ReadonlyArray<string>;
 };
 
+/** The directories above a file, the repository root ("") first and the file's own directory last. */
+export const ancestorDirectories = (file: string): ReadonlyArray<string> => {
+  const parts = file.split("/").slice(0, -1);
+  return Array.from({ length: parts.length + 1 }, (_, length) =>
+    parts.slice(0, length).join("/"),
+  );
+};
+
 const below = (directory: string, file: string): string =>
   directory === "" ? file : file.slice(directory.length + 1);
 

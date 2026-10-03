@@ -48,7 +48,7 @@ export type Evidence = {
   readonly minChanges: number;
   /** Files above which a part is too big to stay one territory, if it changes enough. */
   readonly sizeBound: number;
-  /** Per file that shapes the tree, its heat (`changes × (loc + complexity)`) and that of the test code paired with it. */
+  /** Per file that shapes the tree, its heat (`changes × (loc + complexity)`), that of the test code paired with it, and its share of the test code placed in its directories. */
   readonly heat: ReadonlyMap<string, number>;
   /** The heat of every code file, test code that is paired with none included. */
   readonly totalHeat: number;
