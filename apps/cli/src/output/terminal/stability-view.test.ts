@@ -51,6 +51,20 @@ describe("stabilitySections", () => {
     expect(lines.at(-2)).toBe("+2 more; see dependencyDirection in --json");
   });
 
+  it("says one commit in the singular", () => {
+    const base = sampleReport();
+    const [edge] = base.dependencyDirection;
+    const report = {
+      ...base,
+      dependencyDirection:
+        edge === undefined ? [] : [{ ...edge, fromCommits: 1, toCommits: 4 }],
+    };
+
+    expect(stabilitySections(report, makeStyle(false)).join("\n")).toContain(
+      "packages/shared (1 commit) imports packages/billing (4 commits) in 2 files",
+    );
+  });
+
   it("escapes control characters in paths", () => {
     const base = sampleReport();
     const [found] = base.unstableInterfaces;

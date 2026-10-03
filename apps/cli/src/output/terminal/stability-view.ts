@@ -6,6 +6,9 @@ import { escapeForTerminal } from "../escape.js";
 import type { Style } from "./style.js";
 import { plain, renderTable } from "./table.js";
 
+const commits = (count: number): string =>
+  `${count} ${count === 1 ? "commit" : "commits"}`;
+
 const TOP_INTERFACES = 5;
 const TOP_DIRECTIONS = 3;
 
@@ -76,7 +79,7 @@ const directionSection = (
     ),
     ...shown.map(
       ({ from, to, importingFiles, fromCommits, toCommits }) =>
-        `${escapeForTerminal(from)} (${fromCommits} commits) imports ${escapeForTerminal(to)} (${toCommits} commits) in ${importingFiles} ${importingFiles === 1 ? "file" : "files"}`,
+        `${escapeForTerminal(from)} (${commits(fromCommits)}) imports ${escapeForTerminal(to)} (${commits(toCommits)}) in ${importingFiles} ${importingFiles === 1 ? "file" : "files"}`,
     ),
     ...(hidden > 0
       ? [`+${hidden} more; see dependencyDirection in --json`]

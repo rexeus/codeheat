@@ -24,7 +24,7 @@ export const UnstableInterface = Schema.Struct({
    * path aliases shows a lower fan-in than it has.
    */
   fanIn: Count,
-  /** Non-merge commits of the window that touched the file (`FileStats.revisions`). */
+  /** Real changes to the file in the window, mechanical commits excluded (see `Report.mechanicalCommits`); `FileStats.revisions`. */
   revisions: Count,
   /** The median of `revisions` over its dependents: the file changes more often than this. */
   medianDependentRevisions: Count,
