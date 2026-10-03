@@ -68,12 +68,16 @@ layer(NodeServices.layer)("readHistory", (it) => {
         assert.deepStrictEqual(result.files.get("c.ts"), {
           revisions: 4,
           changes: 4,
+          weightedRevisions: 4,
+          weightedChanges: 4,
           linesAdded: 13,
           linesDeleted: 0,
         });
         assert.deepStrictEqual(result.files.get("other.ts"), {
           revisions: 1,
           changes: 1,
+          weightedRevisions: 1,
+          weightedChanges: 1,
           linesAdded: 1,
           linesDeleted: 0,
         });
@@ -120,6 +124,8 @@ layer(NodeServices.layer)("readHistory lives of a path", (it) => {
         assert.deepStrictEqual(result.files.get("a.ts"), {
           revisions: 2,
           changes: 2,
+          weightedRevisions: 2,
+          weightedChanges: 2,
           linesAdded: 2,
           linesDeleted: 0,
         });
@@ -145,6 +151,8 @@ layer(NodeServices.layer)("readHistory lives of a path", (it) => {
       assert.deepStrictEqual(result.files.get("a.ts"), {
         revisions: 2,
         changes: 2,
+        weightedRevisions: 2,
+        weightedChanges: 2,
         linesAdded: 11,
         linesDeleted: 10,
       });
@@ -171,6 +179,8 @@ layer(NodeServices.layer)("readHistory lives of a path and renames", (it) => {
         assert.deepStrictEqual(result.files.get("a.ts"), {
           revisions: 1,
           changes: 1,
+          weightedRevisions: 1,
+          weightedChanges: 1,
           linesAdded: 10,
           linesDeleted: 0,
         });
@@ -195,6 +205,8 @@ layer(NodeServices.layer)("readHistory lives of a path and renames", (it) => {
         assert.deepStrictEqual(result.files.get("a.ts"), {
           revisions: 1,
           changes: 1,
+          weightedRevisions: 1,
+          weightedChanges: 1,
           linesAdded: 10,
           linesDeleted: 0,
         });
@@ -222,6 +234,8 @@ layer(NodeServices.layer)(
           assert.deepStrictEqual(result.files.get("p.ts"), {
             revisions: 1,
             changes: 1,
+            weightedRevisions: 1,
+            weightedChanges: 1,
             linesAdded: 1,
             linesDeleted: 0,
           });
@@ -245,6 +259,8 @@ layer(NodeServices.layer)(
           assert.deepStrictEqual(result.files.get("r.ts"), {
             revisions: 1,
             changes: 1,
+            weightedRevisions: 1,
+            weightedChanges: 1,
             linesAdded: 10,
             linesDeleted: 0,
           });
@@ -318,6 +334,8 @@ layer(NodeServices.layer)("readHistory content", (it) => {
       assert.deepStrictEqual(result.files.get("blob.ts"), {
         revisions: 1,
         changes: 1,
+        weightedRevisions: 1,
+        weightedChanges: 1,
         linesAdded: 0,
         linesDeleted: 0,
       });
@@ -348,12 +366,16 @@ layer(NodeServices.layer)("readHistoryHalves", (it) => {
         assert.deepStrictEqual(recent.files.get("c.ts"), {
           revisions: 2,
           changes: 2,
+          weightedRevisions: 2,
+          weightedChanges: 2,
           linesAdded: 2,
           linesDeleted: 0,
         });
         assert.deepStrictEqual(earlier.files.get("c.ts"), {
           revisions: 2,
           changes: 2,
+          weightedRevisions: 2,
+          weightedChanges: 2,
           linesAdded: 11,
           linesDeleted: 0,
         });

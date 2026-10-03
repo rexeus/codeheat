@@ -6,6 +6,12 @@ import { Count, UnitInterval } from "./scalars.js";
 
 /** The noise limits an analysis applied, reported so consumers see them. */
 export const Thresholds = Schema.Struct({
+  /**
+   * The half-life of a change's weight, in days; 0 means weighting is off.
+   * A change counts `0.5^(age / halfLife)`, its age measured from the end of
+   * the window it falls in (see `FileStats.weightedRevisions`).
+   */
+  halfLifeDays: Count,
   maxCommitFiles: Count,
   /** Fewest distinct co-changed files (`FileStats.breadth`) that make a file a hub. */
   hubMinBreadth: Count,

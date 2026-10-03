@@ -67,7 +67,7 @@ const buildHistory = (repo: TempRepository) =>
 const expectedModules: Report["modules"] = [
   {
     path: "packages/a",
-    kind: "package",
+    kind: "package" as const,
     testOnly: false,
     files: 53,
     commits: 6,
@@ -87,7 +87,7 @@ const expectedModules: Report["modules"] = [
   },
   {
     path: "packages/b",
-    kind: "package",
+    kind: "package" as const,
     testOnly: false,
     files: 1,
     commits: 4,
@@ -107,7 +107,7 @@ const expectedModules: Report["modules"] = [
   },
   {
     path: "packages/c",
-    kind: "package",
+    kind: "package" as const,
     testOnly: false,
     files: 1,
     commits: 3,
@@ -127,7 +127,7 @@ const expectedModules: Report["modules"] = [
   },
   {
     path: "packages/d",
-    kind: "package",
+    kind: "package" as const,
     testOnly: false,
     files: 1,
     commits: 0,
@@ -142,7 +142,12 @@ const expectedModules: Report["modules"] = [
     depth: null,
     trend: null,
   },
-];
+].map((module) =>
+  Object.assign({}, module, {
+    weightedCommits: module.commits,
+    weightedLocalCommits: module.localCommits,
+  }),
+);
 
 layer(NodeServices.layer)("analyze module cohesion", (it) => {
   it.effect(

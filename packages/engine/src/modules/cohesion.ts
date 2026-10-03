@@ -3,9 +3,11 @@
 // module records, adding the interface churn measured next to it.
 import { Order } from "effect";
 
+import { countedChanges } from "../coupling/coupling.js";
 import type { History } from "../history/history.js";
+import { shrunkShare } from "../history/recency.js";
 import type { Module } from "../report/module.js";
-import { roundReported } from "../report/precision.js";
+import { roundReported, roundWeighted } from "../report/precision.js";
 import type { ModuleRef } from "./detect.js";
 import { isLeakyInterface, NO_INTERFACE } from "./interface-churn.js";
 import type { InterfaceChurn } from "./interface-churn.js";
@@ -33,6 +35,9 @@ type Tally = {
   testFiles: number;
   commits: number;
   localCommits: number;
+  /** The weights (`LogicalChange.weight`) of `commits` and of `localCommits`. */
+  weightedCommits: number;
+  weightedLocalCommits: number;
   /** Shared commits per other module path. */
   readonly shared: Map<string, number>;
 };
@@ -66,6 +71,8 @@ const tallyFiles = (
       testFiles: 0,
       commits: 0,
       localCommits: 0,
+      weightedCommits: 0,
+      weightedLocalCommits: 0,
       shared: new Map(),
     };
     tally.files += 1;
@@ -75,9 +82,10 @@ const tallyFiles = (
   return tallies;
 };
 
-/** Credits one change, given the distinct modules it touched, to each of them. */
+/** Credits one change of weight `weight`, given the distinct modules it touched, to each of them. */
 const countCommit = (
   touched: ReadonlySet<string>,
+  weight: number,
   tallies: ReadonlyMap<string, Tally>,
 ): void => {
   for (const path of touched) {
@@ -86,8 +94,10 @@ const countCommit = (
       continue;
     }
     tally.commits += 1;
+    tally.weightedCommits += weight;
     if (touched.size === 1) {
       tally.localCommits += 1;
+      tally.weightedLocalCommits += weight;
     }
     for (const other of touched) {
       if (other !== path) {
@@ -111,10 +121,20 @@ const toModule = (
     testOnly,
     commits: tally.commits,
     localCommits: tally.localCommits,
+    weightedCommits: roundWeighted(tally.weightedCommits),
+    weightedLocalCommits: roundWeighted(tally.weightedLocalCommits),
     cohesion:
       tally.commits === 0
         ? null
-        : roundReported(tally.localCommits / tally.commits),
+        : roundReported(
+            shrunkShare(
+              {
+                plain: tally.localCommits,
+                weighted: tally.weightedLocalCommits,
+              },
+              { plain: tally.commits, weighted: tally.weightedCommits },
+            ),
+          ),
     partners: [...tally.shared]
       .map(([partner, sharedCommits]) => ({
         path: partner,
@@ -139,7 +159,11 @@ const toModule = (
  * `measureInterfaces`; a module missing there has none).
  *
  * A module's cohesion is the share of its commits that touched no other
- * module. The order is the one documented on `Report.modules`; a module is
+ * module, by weight, so recent changes count more: `weightedLocalCommits /
+ * weightedCommits`, shrunk towards the plain `localCommits / commits` (see
+ * `shrunkShare`) so a few recent changes do not outvote many old ones;
+ * `commits` and `localCommits` stay plain counts, and `minModuleCommits` gates
+ * on them. The order is the one documented on `Report.modules`; a module is
  * ranked when it has at least `minModuleCommits` commits and is not test-only.
  */
 export const measureModules = (
@@ -149,8 +173,9 @@ export const measureModules = (
   interfaces: ReadonlyMap<string, InterfaceChurn>,
 ): ReadonlyArray<Module> => {
   const tallies = tallyFiles(homes.modules);
-  for (const touched of touchedModules(history, homes)) {
-    countCommit(touched, tallies);
+  const weights = countedChanges(history.changes).map(({ weight }) => weight);
+  for (const [index, touched] of touchedModules(history, homes).entries()) {
+    countCommit(touched, weights[index] ?? 0, tallies);
   }
   const modulePaths = new Set(tallies.keys());
   return [...tallies]

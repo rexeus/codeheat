@@ -26,6 +26,14 @@ type FileLookups = {
   readonly leakyInterfaces: ReadonlyMap<string, number>;
 };
 
+const NO_ACTIVITY = {
+  revisions: 0,
+  weightedRevisions: 0,
+  changes: 0,
+  linesAdded: 0,
+  linesDeleted: 0,
+};
+
 /** Every universe file with the window's activity on it, none for untouched files. */
 const measureFiles = (
   files: ReadonlyArray<InventoryFile>,
@@ -33,14 +41,15 @@ const measureFiles = (
   { breadth, modules, leakyInterfaces }: FileLookups,
 ): ReadonlyArray<FileMeasure> =>
   files.map(({ path, complexity }) => {
-    const activity = history.files.get(path);
+    const activity = history.files.get(path) ?? NO_ACTIVITY;
     return {
       path,
       module: modules.get(path)?.path ?? ".",
-      revisions: activity?.revisions ?? 0,
-      changes: activity?.changes ?? 0,
-      linesAdded: activity?.linesAdded ?? 0,
-      linesDeleted: activity?.linesDeleted ?? 0,
+      revisions: activity.revisions,
+      weightedRevisions: activity.weightedRevisions,
+      changes: activity.changes,
+      linesAdded: activity.linesAdded,
+      linesDeleted: activity.linesDeleted,
       breadth: breadth.get(path) ?? 0,
       interfaceLeakage: leakyInterfaces.get(path),
       complexity,
@@ -63,25 +72,19 @@ export const coupleHistory = (
   history: History,
   { modules, contracts }: Pick<Universe, "modules" | "contracts">,
 ): Couplings =>
-  findCouplings(
-    history.changes,
-    history.paths,
-    new Map(
-      [...history.files].map(([file, activity]) => [file, activity.changes]),
-    ),
-    {
-      modules: new Map([...modules, ...contracts]),
-      contracts: new Set(contracts.keys()),
-    },
-  );
+  findCouplings(history.changes, history.paths, history.files, {
+    modules: new Map([...modules, ...contracts]),
+    contracts: new Set(contracts.keys()),
+  });
 
 /** Scores the files and measures the modules around the couplings; the pure part of an analysis. */
 const measure = (
   { files, modules, contracts, entryPoints }: Universe,
   history: History,
   { couplingCommits, couplings, breadth }: Couplings,
+  halfLifeDays: number,
 ) => {
-  const thresholds = thresholdsFor(couplingCommits);
+  const thresholds = thresholdsFor(couplingCommits, halfLifeDays);
   // A contract is neither interface nor implementation of its module.
   const interfaces = measureInterfaces(
     withoutPaths(history, new Set(contracts.keys())),
@@ -122,14 +125,16 @@ const measure = (
  * Measures the latest window, whose couplings are `couplings` (see
  * `coupleHistory`); with a previous one, also its files and modules with the
  * trend against it. `commits`, `couplingCommits`, and `thresholds` describe
- * the latest window.
+ * the latest window. `thresholds` reports the half-life the histories were
+ * weighted with.
  */
 export const measureWindows = (
   universe: Universe,
   histories: WindowHistories,
   couplings: Couplings,
 ) => {
-  const current = measure(universe, histories.current, couplings);
+  const { halfLifeDays } = histories;
+  const current = measure(universe, histories.current, couplings, halfLifeDays);
   if (histories.previous === null) {
     return current;
   }
@@ -137,6 +142,7 @@ export const measureWindows = (
     universe,
     histories.previous,
     coupleHistory(histories.previous, universe),
+    halfLifeDays,
   );
   return {
     ...current,

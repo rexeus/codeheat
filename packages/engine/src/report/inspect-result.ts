@@ -3,10 +3,11 @@
 // Additive fields keep schemaVersion 1; renaming or removing a field bumps it.
 import { Schema } from "effect";
 
+import { AnalysisWindow } from "./analysis-window.js";
 import { FileKind } from "./contract-file.js";
 import { CopyFamily } from "./copy-family.js";
 import { Module } from "./module.js";
-import { AnalysisWindow, FileStats } from "./report.js";
+import { FileStats } from "./report.js";
 import { Count, UnitInterval } from "./scalars.js";
 
 /** A file that changes together with an inspected file. */
@@ -56,6 +57,12 @@ const InspectEntry = Schema.Struct({
 export const InspectResult = Schema.Struct({
   schemaVersion: Schema.Literal(1),
   window: AnalysisWindow,
+  /**
+   * The half-life of a change's weight in days, 0 when weighting is off: the
+   * `Thresholds.halfLifeDays` of the analysis behind the ranks, scores, and
+   * cohesion below (see `FileStats.weightedRevisions`).
+   */
+  halfLifeDays: Count,
   /** Sorted by rank. */
   matches: Schema.Array(InspectEntry),
   /** The modules of the matched files, in report order: where a change would land and what it tends to pull in. */

@@ -13,47 +13,16 @@ import {
 import { copyLines } from "./copies-view.js";
 import { shallowestLines } from "./depth-view.js";
 import { cliqueSection, distantSection } from "./distant-view.js";
-import { day, percent } from "./format.js";
+import { day, percent, weightingNote } from "./format.js";
+import { hotspotLines } from "./hotspots-view.js";
 import { importsCell } from "./imports-cell.js";
 import { stabilitySections } from "./stability-view.js";
 import type { Style } from "./style.js";
 import { plain, renderTable } from "./table.js";
 
-const TOP_HOTSPOTS = 10;
 const TOP_COUPLINGS = 5;
 const TOP_MODULES = 5;
 const SHOWN_ENTRY_POINTS = 2;
-const BAR_WIDTH = 10;
-
-const scoreBar = (score: number): string => {
-  const filled = Math.round(score * BAR_WIDTH);
-  return "█".repeat(filled) + "░".repeat(BAR_WIDTH - filled);
-};
-
-const hotspotLines = (
-  files: ReadonlyArray<FileStats>,
-  style: Style,
-): ReadonlyArray<string> =>
-  renderTable(
-    [
-      { header: "rank", align: "right" },
-      { header: "score", align: "left" },
-      { header: "revisions", align: "right" },
-      { header: "complexity", align: "right" },
-      { header: "path", align: "left" },
-    ],
-    files.slice(0, TOP_HOTSPOTS).map((file) => [
-      plain(`#${file.rank}`),
-      {
-        text: `${scoreBar(file.score)} ${file.score.toFixed(2)}`,
-        paint: (text) => style.heat(file.score, text),
-      },
-      plain(String(file.revisions)),
-      plain(String(file.complexity.total)),
-      plain(escapeForTerminal(file.path)),
-    ]),
-    style,
-  );
 
 const couplingLines = (
   couplings: ReadonlyArray<Coupling>,
@@ -193,11 +162,11 @@ const leakyModules = (report: Report): ReadonlyArray<Module> =>
  * The result has no trailing newline.
  */
 export const renderAnalysis = (report: Report, style: Style): string => {
-  const summary = `${escapeForTerminal(report.repository.name)}  ${day(report.window.since)} to ${day(report.window.until)}  ${report.window.commits} commits, ${report.totals.files} files${contractNote(report)}`;
+  const summary = `${escapeForTerminal(report.repository.name)}  ${day(report.window.since)} to ${day(report.window.until)}  ${report.window.commits} commits, ${report.totals.files} files${contractNote(report)}, ${weightingNote(report.thresholds.halfLifeDays)}`;
   const hotspots =
     report.files.length === 0
       ? ["No files in the analysis universe."]
-      : hotspotLines(report.files, style);
+      : hotspotLines(report.files, report.thresholds.halfLifeDays > 0, style);
   const couplings = couplingLines(
     report.couplings,
     report.files,

@@ -65,6 +65,7 @@ export const inspect = (
   return {
     schemaVersion: 1,
     window: report.window,
+    halfLifeDays: report.thresholds.halfLifeDays,
     matches: matches.map((file) =>
       toEntry(
         file,

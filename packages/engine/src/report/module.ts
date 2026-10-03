@@ -73,7 +73,24 @@ export const Module = Schema.Struct({
   commits: Count,
   /** Of those, changes that touched no universe file outside the module. */
   localCommits: Count,
-  /** `localCommits / commits`, rounded to 4 decimals; null when no counted change touched the module. */
+  /**
+   * The `commits` weighed by recency (see `Thresholds.halfLifeDays`): a change
+   * counts `0.5^(age / halfLife)` for its newest commit's age. Rounded to 4
+   * decimals, or 4 significant digits below 0.1, so a positive weight never
+   * reads 0; equals `commits` when weighting is off.
+   */
+  weightedCommits: Schema.Finite.check(Schema.isGreaterThanOrEqualTo(0)),
+  /** The `localCommits` weighed the same way. */
+  weightedLocalCommits: Schema.Finite.check(Schema.isGreaterThanOrEqualTo(0)),
+  /**
+   * The share of the module's changes that stayed inside it, recent ones
+   * counting more: `weightedLocalCommits / weightedCommits`, pulled towards the
+   * plain `localCommits / commits` by a prior worth three changes:
+   * `(weightedLocalCommits + 3 × plain) / (weightedCommits + 3)`. A few recent
+   * changes cannot swing a share built on many old ones; many recent changes
+   * make it follow the weights. The plain share when weighting is off. Rounded
+   * to 4 decimals; null when no counted change touched the module.
+   */
   cohesion: Schema.NullOr(UnitInterval),
   /** Modules it changes with, most shared changes first; at most five. */
   partners: Schema.Array(ModulePartner),

@@ -22,6 +22,7 @@ describe("measureInterfaces", () => {
   const touching = (commit: ReadonlyArray<string>) => ({
     files: Uint32Array.from(commit, (file) => files.indexOf(file)),
     size: commit.length,
+    weight: 1,
   });
   const measure = (commits: ReadonlyArray<ReadonlyArray<string>>) =>
     measureInterfaces(
@@ -59,7 +60,7 @@ describe("measureInterfaces", () => {
   });
 
   it("ignores commits above the counted size", () => {
-    const huge = { files: Uint32Array.of(0, 1, 2, 3, 4), size: 51 };
+    const huge = { files: Uint32Array.of(0, 1, 2, 3, 4), size: 51, weight: 1 };
     const small = touching(["m/src/impl.ts", "m/src/index.ts"]);
 
     const { byModule } = measureInterfaces(
@@ -110,6 +111,8 @@ const module = (path: string, overrides: Partial<Module>): Module => ({
   testOnly: false,
   commits: 10,
   localCommits: 5,
+  weightedCommits: 10,
+  weightedLocalCommits: 5,
   cohesion: 0.5,
   partners: [],
   entryPoints: [`${path}/index.ts`, `${path}/src/index.ts`],

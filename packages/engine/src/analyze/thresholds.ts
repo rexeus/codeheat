@@ -33,9 +33,13 @@ import {
   MAX_MEAN_LINE_LENGTH,
 } from "../universe/source-file.js";
 
-/** The limits an analysis applied; `couplingCommits` sets the floor of ranked modules. */
-export const thresholdsFor = (couplingCommits: number) =>
+/**
+ * The limits an analysis applied; `couplingCommits` sets the floor of ranked
+ * modules, `halfLifeDays` is the half-life of a change's weight (0: off).
+ */
+export const thresholdsFor = (couplingCommits: number, halfLifeDays: number) =>
   ({
+    halfLifeDays,
     maxCommitFiles: MAX_COMMIT_FILES,
     hubMinBreadth: HUB_MIN_BREADTH,
     hubMinRevisions: HUB_MIN_REVISIONS,

@@ -18,7 +18,6 @@ import {
 import type { HistoryOptions } from "../history/history.js";
 import { withDepths } from "../modules/depth.js";
 import type { Report } from "../report/report.js";
-import type { InvalidCompare, InvalidSince } from "./analysis-window.js";
 import { measureLinked } from "./measure-linked.js";
 import { readUniverse } from "./read-universe.js";
 import { setAsideUbiquitous } from "./set-aside-ubiquitous.js";
@@ -28,10 +27,10 @@ import {
   readWindows,
   resolveWindows,
 } from "./windows.js";
-import type { Windows } from "./windows.js";
+import type { Windows, WindowsError } from "./windows.js";
 
 /** Every expected failure of `analyze`. */
-export type AnalyzeError = GitError | InvalidSince | InvalidCompare;
+export type AnalyzeError = GitError | WindowsError;
 
 export type AnalyzeOptions = {
   /** A directory inside the repository; git locates the work tree from here. */
@@ -49,6 +48,14 @@ export type AnalyzeOptions = {
    * the window before it. Replaces `since`.
    */
   readonly compare?: string | undefined;
+  /**
+   * `<n>d`, `<n>w`, `<n>m`, or `<n>y`, or `0`: how fast a change loses weight
+   * with its age. A change counts `0.5^(age / halfLife)` toward the scores,
+   * coupling degrees, and cohesion, its age measured from the end of its
+   * window; `0` weighs every change 1. A week counts 7 days, a month 30, and
+   * a year 365. Default `DEFAULT_HALF_LIFE`.
+   */
+  readonly halfLife?: string | undefined;
   /** Globs that replace the language allow-list when non-empty. */
   readonly include: ReadonlyArray<string>;
   /** Globs removed from the universe after `include`. */
@@ -75,7 +82,7 @@ const readTimeline = (
   {
     head,
     ...options
-  }: Omit<HistoryOptions, "since" | "until"> & {
+  }: Omit<HistoryOptions, "since" | "until" | "halfLifeDays"> & {
     readonly head: string | null;
   },
 ) =>

@@ -14,8 +14,15 @@ const findCouplings = (
   const indexed = commits.map((commit) => ({
     files: Uint32Array.from(commit, (path) => paths.indexOf(path)),
     size: commit.length,
+    weight: 1,
   }));
-  return findCouplingsByFileId(indexed, paths, changes, {
+  const counts = new Map(
+    [...changes].map(([path, count]) => [
+      path,
+      { changes: count, weightedChanges: count },
+    ]),
+  );
+  return findCouplingsByFileId(indexed, paths, counts, {
     modules,
     contracts,
   });
@@ -120,7 +127,7 @@ describe("findCouplings commit size", () => {
   });
 
   it("sizes a commit by every file it touched, not by the ids left to count", () => {
-    const touched = { files: Uint32Array.of(0, 1), size: 51 };
+    const touched = { files: Uint32Array.of(0, 1), size: 51, weight: 1 };
 
     const result = findCouplingsByFileId(
       repeat(3, touched),

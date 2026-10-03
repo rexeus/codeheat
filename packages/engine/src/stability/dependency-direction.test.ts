@@ -51,6 +51,7 @@ const historyOf = (
   changes: changes.map((files) => ({
     files: Uint32Array.from(files.map((file) => PATHS.indexOf(file))),
     size: files.length,
+    weight: 1,
   })),
 });
 

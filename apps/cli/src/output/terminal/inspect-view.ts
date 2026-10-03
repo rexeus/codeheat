@@ -5,7 +5,13 @@ import { escapeForTerminal } from "../escape.js";
 import { partnerName } from "./contract-view.js";
 import { copyFamilyLine } from "./copies-view.js";
 import { describeDepth } from "./depth-view.js";
-import { day, percent, twoDecimals } from "./format.js";
+import {
+  day,
+  percent,
+  twoDecimals,
+  weightingNote,
+  weightLabel,
+} from "./format.js";
 import type { Style } from "./style.js";
 import { plain, renderTable } from "./table.js";
 import type { Cell } from "./table.js";
@@ -106,14 +112,21 @@ const moduleLine = (module: Module | undefined): ReadonlyArray<string> => {
   ];
 };
 
+/** The revisions, with their recency-weighted sum when the analysis weighted change. */
+const revisionsNote = (entry: Entry, halfLifeDays: number): string =>
+  halfLifeDays === 0
+    ? `${entry.revisions} revisions`
+    : `${entry.revisions} revisions (${weightLabel(entry.weightedRevisions)} recent)`;
+
 const entryLines = (
   entry: Entry,
+  halfLifeDays: number,
   modules: ReadonlyArray<Module>,
   style: Style,
 ): ReadonlyArray<string> => [
   style.bold(escapeForTerminal(entry.path)),
   `rank #${entry.rank} of ${entry.of}, score ${entry.score.toFixed(2)}`,
-  `${entry.revisions} revisions, ${entry.breadth} co-changed files, +${entry.linesAdded} -${entry.linesDeleted} lines, ${entry.loc} loc`,
+  `${revisionsNote(entry, halfLifeDays)}, ${entry.breadth} co-changed files, +${entry.linesAdded} -${entry.linesDeleted} lines, ${entry.loc} loc`,
   `indentation complexity ${entry.complexity.total} (mean ${twoDecimals(entry.complexity.mean)}, max ${entry.complexity.max})`,
   ...moduleLine(modules.find(({ path }) => path === entry.module)),
   ...entry.reasons.map((reason) => `- ${escapeForTerminal(reason)}`),
@@ -130,9 +143,11 @@ const entryLines = (
  */
 export const renderInspect = (result: InspectResult, style: Style): string =>
   [
-    style.dim(`${day(result.window.since)} to ${day(result.window.until)}`),
+    style.dim(
+      `${day(result.window.since)} to ${day(result.window.until)}, ${weightingNote(result.halfLifeDays)}`,
+    ),
     ...result.matches.flatMap((entry) => [
       "",
-      ...entryLines(entry, result.modules, style),
+      ...entryLines(entry, result.halfLifeDays, result.modules, style),
     ]),
   ].join("\n");

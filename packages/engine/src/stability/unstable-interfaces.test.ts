@@ -27,6 +27,7 @@ const dependentsOf = (
 const commit = (...files: ReadonlyArray<string>) => ({
   files: Uint32Array.from(files.map((file) => PATHS.indexOf(file))),
   size: files.length,
+  weight: 1,
 });
 
 /** A history in which each path has the logical changes given and, unless `revisions` says otherwise, as many changes. */
@@ -42,6 +43,8 @@ const historyOf = (
       {
         revisions: revisions[path] ?? count,
         changes: count,
+        weightedRevisions: revisions[path] ?? count,
+        weightedChanges: count,
         linesAdded: 0,
         linesDeleted: 0,
       },

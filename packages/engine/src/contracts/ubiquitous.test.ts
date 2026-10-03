@@ -10,6 +10,7 @@ const commits = (count: number, ...ids: ReadonlyArray<number>) =>
   Array.from({ length: count }, () => ({
     files: Uint32Array.from(ids),
     size: ids.length,
+    weight: 1,
   }));
 
 const ubiquitousIn = (history: ReturnType<typeof commits>) =>
@@ -45,6 +46,7 @@ describe("findUbiquitous", () => {
     const huge = Array.from({ length: 80 }, () => ({
       files: Uint32Array.of(1),
       size: 51,
+      weight: 1,
     }));
     const history = [...commits(15, 0, 2), ...commits(25, 2), ...huge];
 

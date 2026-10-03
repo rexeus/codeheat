@@ -2,6 +2,7 @@
 import { Order } from "effect";
 
 import type { LogicalChange } from "../changes/logical-change.js";
+import { shrunkShare } from "../history/recency.js";
 import type { ModuleRef } from "../modules/detect.js";
 import type { FileKind } from "../report/contract-file.js";
 import { roundReported } from "../report/precision.js";
@@ -43,31 +44,47 @@ const byStrength = (a: Coupling, b: Coupling): number =>
   Order.String(a.b, b.b);
 
 /**
- * Shared commits per pair of file ids, nested as `low -> high -> count`.
+ * A number per pair of file ids, nested as `low -> high -> number`.
  * One map over all pairs would hit V8's limit of about 16.7M entries on a
  * large repository; every inner map stays far below it.
  */
 type SharedCommits = Map<number, Map<number, number>>;
 
-const countPairs = (commit: Uint32Array, shared: SharedCommits): void => {
-  for (const low of commit) {
-    for (const high of commit) {
+/** What the changes of each pair of file ids add up to, in the shape of `SharedCommits`. */
+type Shared = {
+  /** How many changes each pair shares. */
+  readonly commits: SharedCommits;
+  /** The sum of the weights of those changes. */
+  readonly weights: SharedCommits;
+};
+
+const addTo = (
+  shared: SharedCommits,
+  low: number,
+  high: number,
+  amount: number,
+): void => {
+  const partners = shared.get(low) ?? new Map<number, number>();
+  partners.set(high, (partners.get(high) ?? 0) + amount);
+  shared.set(low, partners);
+};
+
+const countPairs = ({ files, weight }: LogicalChange, shared: Shared): void => {
+  for (const low of files) {
+    for (const high of files) {
       if (low < high) {
-        const partners = shared.get(low) ?? new Map<number, number>();
-        partners.set(high, (partners.get(high) ?? 0) + 1);
-        shared.set(low, partners);
+        addTo(shared.commits, low, high, 1);
+        addTo(shared.weights, low, high, weight);
       }
     }
   }
 };
 
-/** Counts the commits each pair of file ids shares. Ids within one commit are distinct. */
-const countSharedCommits = (
-  changes: ReadonlyArray<LogicalChange>,
-): SharedCommits => {
-  const shared: SharedCommits = new Map();
+/** Counts, and sums the weights of, the changes each pair of file ids shares. Ids within one change are distinct. */
+const countSharedCommits = (changes: ReadonlyArray<LogicalChange>): Shared => {
+  const shared: Shared = { commits: new Map(), weights: new Map() };
   for (const change of changes) {
-    countPairs(change.files, shared);
+    countPairs(change, shared);
   }
   return shared;
 };
@@ -95,6 +112,57 @@ export type Places = {
   readonly contracts: ReadonlySet<string>;
 };
 
+const byPath = (one: string, other: string): readonly [string, string] =>
+  Order.String(one, other) <= 0 ? [one, other] : [other, one];
+
+/** A file's changes in a window: how many, and what they weigh. */
+type Changes = {
+  readonly changes: number;
+  readonly weightedChanges: number;
+};
+
+const meanOf = (one: number, other: number): number => (one + other) / 2;
+
+/**
+ * The weight of the changes two files share over the mean of their weighted
+ * changes, shrunk towards the plain degree (see `shrunkShare`). The shared
+ * weight is part of both files' weighted changes; the minimum absorbs float
+ * error in the sums.
+ */
+const degreeOf = (
+  sharedCommits: number,
+  sharedWeight: number,
+  one: Changes,
+  other: Changes,
+): number =>
+  Math.min(
+    1,
+    shrunkShare(
+      { plain: sharedCommits, weighted: sharedWeight },
+      {
+        plain: meanOf(one.changes, other.changes),
+        weighted: meanOf(one.weightedChanges, other.weightedChanges),
+      },
+    ),
+  );
+
+const couplingOf = (
+  [a, b]: readonly [string, string],
+  sharedCommits: number,
+  degree: number,
+  { modules, contracts }: Places,
+): Coupling => ({
+  a,
+  b,
+  sharedCommits,
+  degree: roundReported(degree),
+  distance: directoryDistance(a, b),
+  testPair: isTestPair(a, b),
+  kinds: { a: kindOf(a, contracts), b: kindOf(b, contracts) },
+  crossesModule: modules.get(a)?.path !== modules.get(b)?.path,
+  imports: null,
+});
+
 /** The couplings of one window with what was learned counting them. */
 export type Couplings = {
   readonly couplingCommits: number;
@@ -104,8 +172,16 @@ export type Couplings = {
 
 /**
  * Finds the coupled pairs among `changes`, each listing the distinct ids of
- * the files one change touched; an id is an index into `paths`. `changesPerFile` counts every
- * logical change per path, including the ones ignored here for being too large.
+ * the files one change touched; an id is an index into `paths`. `changes`
+ * counts every logical change per path and sums their weights
+ * (`LogicalChange.weight`), including the ones ignored here for being too large.
+ *
+ * A pair's `degree` is the weight of the changes it shares over the mean
+ * weighted changes of its files, so recent shared changes count more than old
+ * ones, shrunk towards the plain degree (see `shrunkShare`) so a few recent
+ * changes of one file do not collapse a pair built on many old shared ones;
+ * `sharedCommits` stays a plain count, and `MIN_SHARED_COMMITS` gates on it, so
+ * a pair is never dropped for being old alone.
  *
  * Every coupling comes back with `imports: null`; the import graph fills it in.
  * `couplingCommits` is the number of changes small enough to count. Pairs
@@ -119,37 +195,25 @@ export type Couplings = {
 export const findCouplings = (
   changes: ReadonlyArray<LogicalChange>,
   paths: ReadonlyArray<string>,
-  changesPerFile: ReadonlyMap<string, number>,
+  perFile: ReadonlyMap<string, Changes>,
   places: Places,
 ): Couplings => {
-  const { modules, contracts } = places;
   const counted = countedChanges(changes);
-  const changesById = paths.map((path) => changesPerFile.get(path) ?? 0);
+  const none: Changes = { changes: 0, weightedChanges: 0 };
+  const changesById = paths.map((path) => perFile.get(path) ?? none);
   const couplings: Array<Coupling> = [];
   const shared = countSharedCommits(counted);
-  for (const [low, partners] of shared) {
+  for (const [low, partners] of shared.commits) {
     for (const [high, sharedCommits] of partners) {
-      const lowPath = paths[low] ?? "";
-      const highPath = paths[high] ?? "";
-      const [a, b] =
-        Order.String(lowPath, highPath) <= 0
-          ? [lowPath, highPath]
-          : [highPath, lowPath];
-      const meanChanges =
-        ((changesById[low] ?? 0) + (changesById[high] ?? 0)) / 2;
-      const degree = sharedCommits / meanChanges;
+      const pair = byPath(paths[low] ?? "", paths[high] ?? "");
+      const degree = degreeOf(
+        sharedCommits,
+        shared.weights.get(low)?.get(high) ?? 0,
+        changesById[low] ?? none,
+        changesById[high] ?? none,
+      );
       if (sharedCommits >= MIN_SHARED_COMMITS && degree >= MIN_DEGREE) {
-        couplings.push({
-          a,
-          b,
-          sharedCommits,
-          degree: roundReported(degree),
-          distance: directoryDistance(a, b),
-          testPair: isTestPair(a, b),
-          kinds: { a: kindOf(a, contracts), b: kindOf(b, contracts) },
-          crossesModule: modules.get(a)?.path !== modules.get(b)?.path,
-          imports: null,
-        });
+        couplings.push(couplingOf(pair, sharedCommits, degree, places));
       }
     }
   }
@@ -157,7 +221,7 @@ export const findCouplings = (
     couplingCommits: counted.length,
     couplings: couplings.toSorted(byStrength),
     breadth: new Map(
-      breadthById(shared, paths.length).map((count, id) => [
+      breadthById(shared.commits, paths.length).map((count, id) => [
         paths[id] ?? "",
         count,
       ]),

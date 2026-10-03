@@ -14,6 +14,7 @@ const stats = (path: string, rank: number): FileStats => ({
   rank,
   score: 1 / rank,
   revisions: 5,
+  weightedRevisions: 5,
   changes: 5,
   linesAdded: 0,
   linesDeleted: 0,

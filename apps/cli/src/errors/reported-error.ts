@@ -67,6 +67,7 @@ const usageMessage = (
       _tag:
         | "InvalidSince"
         | "InvalidCompare"
+        | "InvalidHalfLife"
         | "FlagsConflict"
         | "MisplacedHtmlOutput"
         | "PathNotFound";
@@ -78,6 +79,9 @@ const usageMessage = (
   }
   if (error._tag === "InvalidCompare") {
     return `invalid --compare "${error.input}": use <n>d, <n>w, <n>m or <n>y`;
+  }
+  if (error._tag === "InvalidHalfLife") {
+    return `invalid --half-life "${error.input}": use <n>d, <n>w, <n>m, <n>y or 0`;
   }
   if (error._tag === "FlagsConflict") {
     return `${error.flags.join(" and ")} cannot be combined`;
@@ -100,6 +104,7 @@ const engineFailure = (
   if (
     error._tag === "InvalidSince" ||
     error._tag === "InvalidCompare" ||
+    error._tag === "InvalidHalfLife" ||
     error._tag === "FlagsConflict" ||
     error._tag === "MisplacedHtmlOutput" ||
     error._tag === "PathNotFound"
@@ -152,7 +157,7 @@ const reported = ({ message, exitCode }: Failure): CliReportedError =>
 
 /**
  * Words an expected failure and assigns its exit code: 2 for usage errors
- * (an invalid `--since` or `--compare`, flags that cannot be combined, a path
+ * (an invalid `--since`, `--compare`, or `--half-life`, flags that cannot be combined, a path
  * that does not exist, a `.html` path given to `--html` instead of `--out`),
  * 3 for no git repository or no git, 4 when `inspect` matched nothing, 1 for
  * the rest.

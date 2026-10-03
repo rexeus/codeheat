@@ -18,6 +18,7 @@ const commit = (
   files: Uint32Array.from(files),
   previousLives: new Uint32Array(0),
   size: files.length,
+  weight: 1,
 });
 
 /** The commit, also touching `previous` in earlier lives. */

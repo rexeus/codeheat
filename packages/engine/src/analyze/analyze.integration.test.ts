@@ -112,6 +112,7 @@ layer(NodeServices.layer)("analyze report", (it) => {
           [head, ".", 1],
         );
         assert.deepStrictEqual(report.thresholds, {
+          halfLifeDays: 0,
           maxCommitFiles: 50,
           hubMinBreadth: 10,
           hubMinRevisions: 5,

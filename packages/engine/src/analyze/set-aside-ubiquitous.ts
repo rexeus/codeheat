@@ -27,6 +27,7 @@ export const setAsideUbiquitous = (
   const ubiquitousFiles = findUbiquitous(histories.current, contracts);
   return {
     histories: {
+      ...histories,
       current: without(histories.current, ubiquitousFiles),
       previous:
         histories.previous === null

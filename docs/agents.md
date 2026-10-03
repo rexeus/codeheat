@@ -34,6 +34,10 @@ For orientation in an unfamiliar repository, run `npx codeheat analyze --json` o
 
 With `--compare`, a file's `trend.scoreDelta` means warming (positive) or cooling (negative) only where `trend.newlyActive` and `test` are both false: a newly active file had no revisions in the previous window, so its delta is just its score, and test files are left out of the terminal's rankings. Check `comparison.previousRealCommits` first (and `window.realCommits`, the commits that are not mechanical): 0 means there was nothing to compare, and `previousTruncated` means the previous window is cut off at the start of the history.
 
+Recent change counts more: every commit is weighed `0.5^(age / half-life)` from the end of its window, a logical change like its newest commit (`thresholds.halfLifeDays` days, default 180; `--half-life 0` weighs all changes the same, `--half-life 1y` forgets more slowly). `rank` and `score` follow `weightedRevisions`, a file's revisions at their weights, while `revisions` is the plain count, so a file with many `revisions` but a low `weightedRevisions` was busy long ago, and a coupling's `degree` and a module's `cohesion` favor recent commits too (`sharedCommits`, `commits`, and `localCommits` stay plain counts, `weightedCommits` and `weightedLocalCommits` the weights behind `cohesion`). Quote `revisions` when you say how often a file changed, and `weightedRevisions` or `rank` when you say how hot it is now.
+
+`inspect --json` carries the same half-life as `halfLifeDays` at the top level (0 when weighting is off), so read its `rank`, `score`, and `module` cohesion with that in mind.
+
 `mechanicalCommits` counts the commits of `window.commits` that the numbers leave out (`ignored`, `renames`, `whitespace`, `reverts`, `duplicates`): they add no `revisions`, `linesAdded`, `linesDeleted`, `breadth`, or coupling. A window dominated by them (a formatting run, a mass move, a revert pair) explains why a file has fewer revisions than `git log` shows; `window.couplingCommits` is what is left for coupling and cohesion.
 
 `logicalChanges` says how the real commits of the window were grouped into logical changes, the unit that coupling, cohesion, and interface churn count: `by` is `pr` (a squash-merge `(#123)` suffix, or a merge commit that names a pull or merge request, joined commits), `ticket` (a ticket key such as `PROJ-42` within 14 days did), `mixed` (both), or `commit` (nothing joined, every change is one commit); `count` is the number of changes before the 50-file limit, and `largest` the most commits one change holds. The direct commits of an integration branch (a pull request merge that names a release or `develop` branch as its source, or whose branch itself contains pull request merges or squash-merged pull requests such as `(#12)` suffixes, `Merged PR 12: …`, or `Pull request #12: …`) stay single commits, while the pull requests merged into it keep their own changes. Merge commits that are no pull request (`git pull`, a merge of the mainline into a branch, a tag, a plain `Merge branch 'x'`) group nothing. A pull request of more than 30 commits splits into its commits; one of at most 30 commits that touches more than 50 files (the union of its commits' files) is left out of coupling like a wide commit. Read `by: "commit"` as: no pull-request or ticket signal in the subjects or the merge commits, so a feature built in many commits still counts many times.
@@ -53,6 +57,8 @@ The files of a repository are grouped into modules: workspace packages (a direct
   "files": 9,
   "commits": 74,
   "localCommits": 41,
+  "weightedCommits": 33.3,
+  "weightedLocalCommits": 18.45,
   "cohesion": 0.5541,
   "partners": [
     { "path": "packages/web", "sharedCommits": 20, "contractsOnly": false }
@@ -65,7 +71,7 @@ The files of a repository are grouped into modules: workspace packages (a direct
 }
 ```
 
-- `cohesion` is the share of the module's counted changes that touched nothing outside it. At 0.55, nearly half of the changes to `packages/billing` reach into another module, and `partners` says which ones, here `packages/web` in 20 of 74 changes. Plan to check those modules too, and say so when you leave them untouched.
+- `cohesion` is the share of the module's counted changes that touched nothing outside it, recent changes counting more (`weightedLocalCommits / weightedCommits`, pulled towards the plain `localCommits / commits` by a prior worth three changes, so a module with little recent activity keeps a cohesion near its plain value). At 0.55, nearly half of the changes to `packages/billing` reach into another module, and `partners` says which ones, here `packages/web` in 20 of 74 changes. Plan to check those modules too, and say so when you leave them untouched.
 - A high `cohesion` means the module is usually safe to change alone.
 - `cohesion` is `null` when no counted change touched the module: there is no signal, not perfect cohesion. Trust a module with few counted `commits` (changes) less (the ranking covers only modules with at least `thresholds.minModuleCommits`, which is `max(5, 1% of window.couplingCommits)`, and skips `testOnly` modules, whose files are all test code).
 - A module partner with `contractsOnly: true` is no module but a place that holds only contract files, such as a code-free `spec/` folder: the module loses cohesion to a contract that lives outside every module. Read the contracts there before changing the module.
@@ -167,4 +173,4 @@ A copy family is a group of files whose content is largely the same and that cha
 
 ## Contract
 
-Stdout carries exactly one JSON document in `--json` mode; diagnostics go to stderr. The documents are versioned by `schemaVersion`: fields may be added in version 1, never renamed or removed. Exit codes: 0 success, 2 usage error, 3 not a git repository or no git, 4 `inspect` matched nothing, 1 anything else. The shapes are defined in [`packages/engine/src/report/`](../packages/engine/src/report/).
+Stdout carries exactly one JSON document in `--json` mode; diagnostics go to stderr. The documents are versioned by `schemaVersion`: fields may be added in version 1, never renamed or removed. The scores, degrees, and cohesion follow the half-life weighting (`thresholds.halfLifeDays`); `revisions`, `sharedCommits`, `commits`, and `localCommits` keep their plain meaning. Exit codes: 0 success, 2 usage error, 3 not a git repository or no git, 4 `inspect` matched nothing, 1 anything else. The shapes are defined in [`packages/engine/src/report/`](../packages/engine/src/report/).

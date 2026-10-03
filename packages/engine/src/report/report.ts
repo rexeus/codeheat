@@ -3,6 +3,7 @@
 // Additive fields keep schemaVersion 1; renaming or removing a field bumps it.
 import { Schema } from "effect";
 
+import { AnalysisWindow } from "./analysis-window.js";
 import { Clique } from "./clique.js";
 import { Comparison, FileTrend } from "./comparison.js";
 import { ContractFile, FileKind, UbiquitousFile } from "./contract-file.js";
@@ -20,38 +21,13 @@ import { UnstableInterface } from "./unstable-interface.js";
 
 const Rank = Schema.Int.check(Schema.isGreaterThanOrEqualTo(1));
 
-/** The history range an analysis covers, resolved to ISO timestamps. */
-export const AnalysisWindow = Schema.Struct({
-  since: Schema.String,
-  until: Schema.String,
-  /**
-   * Non-merge commits in the window that touched at least one universe file,
-   * or a file deleted at a universe path (a path recreated later starts afresh).
-   */
-  commits: Count,
-  /**
-   * The commits among `commits` that are not mechanical (see
-   * `Report.mechanicalCommits`). 0 means the window has no real change: with
-   * `--compare`, there is nothing to compare, even when `commits` is not 0.
-   */
-  realCommits: Count,
-  /**
-   * Logical changes that count for coupling, cohesion, and interface churn
-   * (see `Report.logicalChanges`; one per commit unless commits were
-   * grouped): made of real commits (not mechanical, see
-   * `Report.mechanicalCommits`) and not too large (see
-   * `Thresholds.maxCommitFiles`).
-   */
-  couplingCommits: Count,
-});
-
 /** One universe file: its hotspot score, the metrics behind it, and why. */
 export const FileStats = Schema.Struct({
   /** Repository-relative POSIX path. */
   path: Schema.String,
   /** 1 is the hottest file; ties break on path. */
   rank: Rank,
-  /** Normalized revisions × normalized weighted lines (`loc + complexity.total`); rounded to 4 decimals. */
+  /** Normalized `weightedRevisions` × normalized weighted lines (`loc + complexity.total`); rounded to 4 decimals. */
   score: UnitInterval,
   /**
    * Real commits that touched the file in the window, mechanical commits
@@ -59,6 +35,14 @@ export const FileStats = Schema.Struct({
    * `changes` for the logical changes they make up.
    */
   revisions: Count,
+  /**
+   * The revisions weighed by recency: each commit counts `0.5^(age /
+   * Thresholds.halfLifeDays)`, its age measured from the end of the window (1
+   * at the end, 0.5 a half-life earlier); equals `revisions` when weighting is
+   * off. Rounded to 4 decimals, or 4 significant digits below 0.1: never 0 for
+   * a dormant file. The score takes it as change frequency.
+   */
+  weightedRevisions: Schema.Finite.check(Schema.isGreaterThanOrEqualTo(0)),
   /**
    * Logical changes of the window (see `Report.logicalChanges`) that touched
    * the file, large ones included: at most `revisions`, and equal to it
@@ -107,7 +91,17 @@ export const Coupling = Schema.Struct({
   b: Schema.String,
   /** Counted changes (see `Report.logicalChanges`) that touched both files. */
   sharedCommits: Count,
-  /** `sharedCommits / mean(changes(a), changes(b))` (see `FileStats.changes`), rounded to 4 decimals. */
+  /**
+   * The weight of the shared changes over the mean weighted changes of both
+   * files (a change weighs its newest commit's `0.5^(age / halfLife)`), so
+   * recent shared changes count more than old ones, pulled towards the plain
+   * degree `sharedCommits / mean(changes(a), changes(b))` (see
+   * `FileStats.changes`) by a prior worth three changes: `(shared weight + 3 ×
+   * plain) / (mean weighted changes + 3)`. A few recent changes of one file
+   * cannot collapse a pair built on many old shared ones; many recent changes
+   * make the degree follow the weights. The plain degree when weighting is
+   * off. Rounded to 4 decimals.
+   */
   degree: UnitInterval,
   /** Directory hops between the parent directories; 0 means same directory. */
   distance: Count,

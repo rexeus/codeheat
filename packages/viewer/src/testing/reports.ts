@@ -10,6 +10,7 @@ export const fileStats = (
   rank: 1,
   score: 0.5,
   revisions: 10,
+  weightedRevisions: 10,
   changes: 10,
   linesAdded: 100,
   linesDeleted: 20,
@@ -50,6 +51,8 @@ export const moduleStats = (
   testOnly: false,
   commits: 10,
   localCommits: 6,
+  weightedCommits: 10,
+  weightedLocalCommits: 6,
   cohesion: 0.6,
   partners: [],
   entryPoints: [],
@@ -63,6 +66,7 @@ export const moduleStats = (
 });
 
 const THRESHOLDS: Report["thresholds"] = {
+  halfLifeDays: 0,
   maxCommitFiles: 50,
   hubMinBreadth: 10,
   hubMinRevisions: 5,
