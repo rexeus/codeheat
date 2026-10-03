@@ -18,6 +18,12 @@ const MIN_CLIQUE_SIZE = 3;
 /** The report keeps this many cliques, those whose members changed together in the most commits first. */
 const MAX_CLIQUES = 50;
 
+/** Maximal groups of the module pair graph that are searched for cliques, those with the strongest weakest pair first. */
+const MAX_SEARCHED_GROUPS = 1000;
+
+/** Maximal groups enumerated at all; a graph of many modules in pairs that never change together has exponentially many. */
+const MAX_ENUMERATED_GROUPS = 20000;
+
 type Adjacency = ReadonlyMap<string, ReadonlySet<string>>;
 
 /** Links two modules that share enough commits and a large enough share of the smaller one's. */
@@ -46,17 +52,28 @@ const intersection = (
 ): Set<string> => new Set([...a].filter((path) => b.has(path)));
 
 /**
- * Bron-Kerbosch with pivoting: every maximal clique of `adjacency` that extends
- * `members` with candidates from `candidates`, none of which is in `excluded`.
+ * Bron-Kerbosch with pivoting: pushes into `search.found` every maximal clique of
+ * `search.adjacency` that extends `members` with candidates from `candidates`, none of
+ * which is in `excluded`, and stops once `found` holds `MAX_ENUMERATED_GROUPS`.
  */
 const extend = (
-  adjacency: Adjacency,
+  search: {
+    readonly adjacency: Adjacency;
+    readonly found: Array<ReadonlyArray<string>>;
+  },
   members: ReadonlyArray<string>,
   candidates: Set<string>,
   excluded: Set<string>,
-): ReadonlyArray<ReadonlyArray<string>> => {
+): void => {
+  const { adjacency, found } = search;
+  if (found.length >= MAX_ENUMERATED_GROUPS) {
+    return;
+  }
   if (candidates.size === 0) {
-    return excluded.size === 0 ? [members] : [];
+    if (excluded.size === 0) {
+      found.push(members);
+    }
+    return;
   }
   const pivot = [...candidates, ...excluded].reduce((best, path) =>
     intersection(candidates, adjacency.get(path) ?? new Set()).size >
@@ -65,22 +82,33 @@ const extend = (
       : best,
   );
   const skipped = adjacency.get(pivot) ?? new Set<string>();
-  const found: Array<ReadonlyArray<string>> = [];
   for (const path of [...candidates].filter((each) => !skipped.has(each))) {
     const neighbours = adjacency.get(path) ?? new Set<string>();
-    found.push(
-      ...extend(
-        adjacency,
-        [...members, path],
-        intersection(candidates, neighbours),
-        intersection(excluded, neighbours),
-      ),
+    extend(
+      search,
+      [...members, path],
+      intersection(candidates, neighbours),
+      intersection(excluded, neighbours),
     );
     candidates.delete(path);
     excluded.add(path);
   }
-  return found;
 };
+
+/** The fewest commits any two members of the group shared: how well the group's weakest link is evidenced. */
+const weakestLink = (
+  members: ReadonlyArray<string>,
+  coChange: ModuleCoChange,
+): number =>
+  Math.min(
+    ...members.flatMap((low, index) =>
+      members.slice(index + 1).map((high) => {
+        const [first, second] =
+          Order.String(low, high) <= 0 ? [low, high] : [high, low];
+        return coChange.shared.get(first)?.get(second) ?? 0;
+      }),
+    ),
+  );
 
 const percentOf = (share: number): number => Math.round(share * 100);
 
@@ -122,7 +150,7 @@ const byUnity = (a: Clique, b: Clique): number =>
 /** The cliques of a window and whether the search for sub-groups hit a bound. */
 export type Cliques = {
   readonly cliques: ReadonlyArray<Clique>;
-  /** A group was too varied to search in full (see `supportedSubgroups`): a clique inside it may be missing. */
+  /** A bound was hit (more than 1000 maximal groups of modules, or a group too varied to search in full, see `supportedSubgroups`): a clique may be missing. */
   readonly partial: boolean;
 };
 
@@ -133,7 +161,8 @@ export type Cliques = {
  * and of which at least `MIN_SHARED_COMMITS` commits touched every member
  * (pairs that met only in different commits are no unit of change). A group
  * that fails the last rule is searched for its sub-groups that pass it, and
- * only the maximal ones are kept. A clique inside another is dropped, and of
+ * only the maximal ones are kept (the 1000 maximal groups with the best evidenced weakest
+ * link at most, see `Cliques.partial`). A clique inside another is dropped, and of
  * two variants of one unit (their union pairwise linked, almost all members in
  * common) only the stronger stays (see `distinctGroups`). `touched` lists the
  * modules each counted commit touched. The `MAX_CLIQUES` whose members changed
@@ -145,10 +174,26 @@ export const findCliques = (
   touched: ReadonlyArray<ReadonlySet<string>>,
 ): Cliques => {
   const adjacency = linkedModules(coChange);
-  const searched = extend(adjacency, [], new Set(adjacency.keys()), new Set())
+  const enumerated: Array<ReadonlyArray<string>> = [];
+  extend(
+    { adjacency, found: enumerated },
+    [],
+    new Set(adjacency.keys()),
+    new Set(),
+  );
+  const maximal = enumerated
     .filter((members) => members.length >= MIN_CLIQUE_SIZE)
-    .map((members) => members.toSorted((a, b) => Order.String(a, b)))
-    .map((members) =>
+    .map((members) => members.toSorted((a, b) => Order.String(a, b)));
+  const searched = maximal
+    .map((members) => ({ members, evidence: weakestLink(members, coChange) }))
+    .toSorted(
+      (a, b) =>
+        b.evidence - a.evidence ||
+        b.members.length - a.members.length ||
+        Order.String(a.members.join("\n"), b.members.join("\n")),
+    )
+    .slice(0, MAX_SEARCHED_GROUPS)
+    .map(({ members }) =>
       supportedSubgroups(members, touched, MIN_CLIQUE_SIZE, MIN_SHARED_COMMITS),
     );
   const groups = searched.flatMap(({ groups: found }) => found);
@@ -162,5 +207,11 @@ export const findCliques = (
   )
     .toSorted(byUnity)
     .slice(0, MAX_CLIQUES);
-  return { cliques, partial: searched.some(({ partial }) => partial) };
+  return {
+    cliques,
+    partial:
+      enumerated.length >= MAX_ENUMERATED_GROUPS ||
+      maximal.length > MAX_SEARCHED_GROUPS ||
+      searched.some(({ partial }) => partial),
+  };
 };

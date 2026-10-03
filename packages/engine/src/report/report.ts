@@ -225,9 +225,10 @@ export const Report = Schema.Struct({
    */
   cliques: Schema.Array(Clique),
   /**
-   * The search behind `cliques` hit a bound: in one group of modules, more
-   * than 500 intersections or 1000 distinct parts that different changes
-   * touch. A clique may be missing. False otherwise.
+   * The search behind `cliques` hit a bound: more than 1000 maximal groups of
+   * modules (only the 1000 with the best evidenced weakest link are searched),
+   * or, in one group, more than 500 intersections or 1000 distinct parts that
+   * different changes touch. A clique may be missing. False otherwise.
    */
   cliquesPartial: Schema.Boolean,
   /**

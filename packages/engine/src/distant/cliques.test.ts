@@ -222,3 +222,34 @@ describe("findCliques sub-groups", () => {
     ).toEqual([[["a", "b", "c"], 4]]);
   });
 });
+
+/** 2k modules in k pairs that never change together, every other pair of modules changing together in three commits. */
+const adversarial = (pairs: number) => {
+  const names = Array.from(
+    { length: 2 * pairs },
+    (_, index) => `m${String(index).padStart(2, "0")}`,
+  );
+  const touched = names.flatMap((low, i) =>
+    names
+      .slice(i + 1)
+      .filter((_, j) => !(i % 2 === 0 && j === 0))
+      .flatMap((high) => commitsOf(3, low, high)),
+  );
+  const modules = names.map((path) => moduleRecord(path, 10));
+  return findCliques(moduleCoChange(touched, modules, 5), touched);
+};
+
+describe("findCliques bounds", () => {
+  it("gives up on a graph with thousands of maximal groups, says so, and stays fast", () => {
+    const start = performance.now();
+    const found = adversarial(12);
+    const seconds = (performance.now() - start) / 1000;
+
+    expect(found.partial).toBe(true);
+    expect(seconds).toBeLessThan(10);
+  });
+
+  it("is not partial for a graph well within the bounds", () => {
+    expect(adversarial(4).partial).toBe(false);
+  });
+});
