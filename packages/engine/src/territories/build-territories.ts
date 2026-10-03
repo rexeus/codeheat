@@ -13,7 +13,7 @@ import { growTree } from "./grow-tree.js";
 import { NO_MEASURE, measureNodes } from "./node-measures.js";
 import type { NodeMeasure } from "./node-measures.js";
 import type { TreeNode } from "./part.js";
-import { hiddenHeat, isTerritoryKind, recommendedOf } from "./recommend.js";
+import { isTerritoryKind, recommendedOf, shownOf } from "./recommend.js";
 
 export type TerritoryInput = EvidenceInput & {
   /** The directories that hold a manifest, other than the repository root. */
@@ -157,11 +157,14 @@ export const buildTerritories = (input: TerritoryInput): TerritoryTree => {
       return draft === undefined ? [] : [[node, draft]];
     }),
   );
+  const shown = shownOf(flat, evidence);
   const visible = grown.details.map((level) =>
     level.flatMap((node) => draftOf.get(node) ?? []),
   );
   return {
-    recommended: recommendedOf(visible, hiddenHeat(flat, evidence)),
+    recommended: recommendedOf(
+      visible.map((drafts) => drafts.flatMap(({ id }) => shown.get(id) ?? [])),
+    ),
     details: visible.map((drafts, at) => ({
       level: at + 1,
       ids: idsAt(drafts),

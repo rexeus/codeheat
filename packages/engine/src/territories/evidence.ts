@@ -1,8 +1,6 @@
 // Owns what the counted changes and the files' heat say about the files that
 // shape the territory tree.
-import { isTestPath } from "../modules/test-path.js";
 import type { TestAttachment } from "./attach-tests.js";
-import { ancestorDirectories } from "./folders.js";
 import type { TerritoryFile } from "./node-measures.js";
 import type { Evidence } from "./part.js";
 
@@ -48,52 +46,7 @@ const placedHeat = (
   return heatOfHome;
 };
 
-/** The units below each of `directories`. */
-const unitsBelow = (
-  units: ReadonlyArray<string>,
-  directories: ReadonlyMap<string, number>,
-): ReadonlyMap<string, ReadonlyArray<string>> => {
-  const below = new Map<string, Array<string>>();
-  for (const unit of units) {
-    const reached = isTestPath(unit)
-      ? []
-      : ancestorDirectories(unit).filter((directory) =>
-          directories.has(directory),
-        );
-    for (const directory of reached) {
-      const inside = below.get(directory) ?? [];
-      inside.push(unit);
-      below.set(directory, inside);
-    }
-  }
-  return below;
-};
-
-/**
- * Test code placed in a directory heats the code of that directory: its heat
- * is shared out evenly over the units below the directory, so a folder is as
- * hot as the tests that belong to it make it, whichever of its parts the tests
- * would otherwise be put with.
- */
-const sharePlacedHeat = (
-  heat: Map<string, number>,
-  files: ReadonlyArray<TerritoryFile>,
-  attachment: TestAttachment,
-): void => {
-  const heatOfHome = placedHeat(files, attachment);
-  if (heatOfHome.size === 0) {
-    return;
-  }
-  const below = unitsBelow(attachment.units, heatOfHome);
-  for (const [directory, total] of heatOfHome) {
-    const inside = below.get(directory) ?? [];
-    for (const unit of inside) {
-      heat.set(unit, (heat.get(unit) ?? 0) + total / inside.length);
-    }
-  }
-};
-
-/** The heat of every unit: its own, that of the tests paired with it, and its share of the tests placed in its directories. */
+/** The heat of every unit: its own and that of the tests paired with it. */
 const heatByUnit = (
   files: ReadonlyArray<TerritoryFile>,
   units: ReadonlySet<string>,
@@ -106,7 +59,6 @@ const heatByUnit = (
       heat.set(unit, (heat.get(unit) ?? 0) + heatOfFile(file));
     }
   }
-  sharePlacedHeat(heat, files, attachment);
   return heat;
 };
 
@@ -147,6 +99,7 @@ export const evidenceOf = (
       Math.max(MIN_SIZE_BOUND, Math.floor(total / 4)),
     ),
     heat: heatByUnit(files, units, attachment),
+    placed: placedHeat(files, attachment),
     totalHeat: files.reduce((sum, file) => sum + heatOfFile(file), 0),
   };
 };

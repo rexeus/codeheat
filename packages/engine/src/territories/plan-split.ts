@@ -8,7 +8,12 @@ import { keepTogether } from "./keep-together.js";
 import type { Tally, Together } from "./keep-together.js";
 import { openKids } from "./open-kids.js";
 import type { Weight } from "./open-kids.js";
-import { TOO_BIG_SHARE, changesTouching, heatOf } from "./part.js";
+import {
+  TOO_BIG_SHARE,
+  changesTouching,
+  directoriesOf,
+  heatOf,
+} from "./part.js";
 import type { Evidence, Part } from "./part.js";
 import { reasonOf } from "./split-reason.js";
 import type { Why } from "./split-reason.js";
@@ -173,7 +178,7 @@ const valueOf = (
   const heat =
     evidence.totalHeat === 0
       ? 0
-      : heatOf(evidence, part.files) / evidence.totalHeat;
+      : heatOf(evidence, part.files, directoriesOf(part)) / evidence.totalHeat;
   return (
     (part.files.length / evidence.total + activity + heat) *
     (0.25 + gain) *
@@ -190,6 +195,7 @@ const weightOf = (
   heatOf(
     evidence,
     folders.flatMap((key) => cut.big.get(key) ?? []),
+    folders,
   ),
   folders.reduce((sum, key) => sum + (tally.per.get(key) ?? 0), 0),
   folders.reduce((sum, key) => sum + (cut.big.get(key)?.length ?? 0), 0),
