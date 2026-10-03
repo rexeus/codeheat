@@ -137,7 +137,9 @@ const withComparison = (
 
 describe("biggest changes without comparison data", () => {
   it("says there is no comparison data instead of listing nothing when the previous window has no commits", () => {
-    const view = plainView(withComparison({ previousCommits: 0 }));
+    const view = plainView(
+      withComparison({ previousCommits: 0, previousRealCommits: 0 }),
+    );
 
     expect(section(view, "Biggest changes")).toEqual([
       "No comparison data: the previous window has no commits.",
@@ -150,11 +152,28 @@ describe("biggest changes without comparison data", () => {
 
     const view = plainView({
       ...report,
-      window: Object.assign({}, report.window, { commits: 0 }),
+      window: Object.assign({}, report.window, { commits: 0, realCommits: 0 }),
     });
 
     expect(section(view, "Biggest changes")).toEqual([
       "No comparison data: the latest window has no commits.",
+    ]);
+  });
+
+  it("says so when a window holds only mechanical commits", () => {
+    const report = sampleReport();
+
+    const previous = plainView(withComparison({ previousRealCommits: 0 }));
+    const latest = plainView({
+      ...report,
+      window: Object.assign({}, report.window, { realCommits: 0 }),
+    });
+
+    expect(section(previous, "Biggest changes")).toEqual([
+      "No comparison data: the previous window has only mechanical commits.",
+    ]);
+    expect(section(latest, "Biggest changes")).toEqual([
+      "No comparison data: the latest window has only mechanical commits.",
     ]);
   });
 
@@ -170,7 +189,11 @@ describe("biggest changes without comparison data", () => {
   it("gives both reasons when an empty previous window is also cut off", () => {
     const lines = section(
       plainView(
-        withComparison({ previousCommits: 0, previousTruncated: true }),
+        withComparison({
+          previousCommits: 0,
+          previousRealCommits: 0,
+          previousTruncated: true,
+        }),
       ),
       "Biggest changes",
     );

@@ -14,14 +14,18 @@ export const MIN_SHARED_COMMITS = 3;
 export const MIN_DEGREE = 0.3;
 
 /**
- * The commits small enough to say something about coupling, modules, and
- * interfaces: those that touched at most `MAX_COMMIT_FILES` universe files,
- * counting files that are dead today (see `HistoryCommit.size`).
+ * The commits that say something about coupling, modules, and interfaces:
+ * the real changes (not `HistoryCommit.mechanical`) that touched at most
+ * `MAX_COMMIT_FILES` universe files, counting files that are dead today (see
+ * `HistoryCommit.size`).
  */
 export const countedCommits = (
   commits: ReadonlyArray<HistoryCommit>,
 ): ReadonlyArray<HistoryCommit> =>
-  commits.filter((commit) => commit.size <= MAX_COMMIT_FILES);
+  commits.filter(
+    (commit) =>
+      commit.mechanical === undefined && commit.size <= MAX_COMMIT_FILES,
+  );
 
 const kindOf = (path: string, contracts: ReadonlySet<string>): FileKind =>
   contracts.has(path) ? "contract" : "code";
