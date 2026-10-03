@@ -14,7 +14,12 @@ import { warnIfShallow } from "../output/shallow-warning.js";
 import { renderInspect } from "../output/terminal/inspect-view.js";
 import { version } from "../version.js";
 import { WorkingDirectory } from "../working-directory.js";
-import { entryFlag, jsonFlag, sinceFlag } from "./shared-flags.js";
+import {
+  entryFlag,
+  halfLifeFlag,
+  jsonFlag,
+  sinceFlag,
+} from "./shared-flags.js";
 
 export const inspectCommand = Command.make(
   "inspect",
@@ -27,13 +32,15 @@ export const inspectCommand = Command.make(
     ),
     json: jsonFlag,
     since: sinceFlag,
+    halfLife: halfLifeFlag,
     entry: entryFlag,
   },
-  Effect.fn(function* ({ patterns, json, since, entry }) {
+  Effect.fn(function* ({ patterns, json, since, halfLife, entry }) {
     const cwd = yield* WorkingDirectory;
     const report = yield* analyze({
       cwd,
       since,
+      halfLife,
       include: [],
       exclude: [],
       entry,

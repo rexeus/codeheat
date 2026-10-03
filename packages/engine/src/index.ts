@@ -1,6 +1,7 @@
 export type { LanguageAdapter } from "./code/language-adapter.js";
 export { typescriptAdapter } from "./code/typescript-adapter.js";
 export { analyze } from "./analyze/analyze.js";
+export { DEFAULT_HALF_LIFE } from "./analyze/half-life.js";
 export type { AnalyzeError } from "./analyze/analyze.js";
 export { inspectFrom } from "./inspect/inspect-from.js";
 export { InspectResult } from "./report/inspect-result.js";

@@ -18,6 +18,7 @@ import {
   DEFAULT_SINCE,
   entryFlag,
   explicitSinceFlag,
+  halfLifeFlag,
   jsonFlag,
 } from "./shared-flags.js";
 
@@ -41,6 +42,7 @@ export const analyzeCommand = Command.make(
       ),
       Flag.optional,
     ),
+    halfLife: halfLifeFlag,
     include: Flag.String("include").pipe(
       Flag.withDescription(
         "Glob of files to analyze instead of the language list; repeatable",
@@ -82,8 +84,17 @@ export const analyzeCommand = Command.make(
     ),
   },
   Effect.fn(function* (flags) {
-    const { path, json, since, compare, include, exclude, entry, limit } =
-      flags;
+    const {
+      path,
+      json,
+      since,
+      compare,
+      halfLife,
+      include,
+      exclude,
+      entry,
+      limit,
+    } = flags;
     if (Option.isSome(since) && Option.isSome(compare)) {
       return yield* new FlagsConflict({ flags: ["--compare", "--since"] });
     }
@@ -100,6 +111,7 @@ export const analyzeCommand = Command.make(
       ...target,
       since: Option.getOrElse(since, () => DEFAULT_SINCE),
       compare: Option.getOrUndefined(compare),
+      halfLife,
       include,
       exclude,
       entry,
@@ -140,6 +152,11 @@ export const analyzeCommand = Command.make(
       command: "codeheat analyze --compare 3m",
       description:
         "The last three months, and how hotspots and cohesion moved since the three before",
+    },
+    {
+      command: "codeheat analyze --half-life 0",
+      description:
+        "Count every change in the window the same instead of weighing recent ones more",
     },
     {
       command:
