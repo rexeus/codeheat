@@ -23,6 +23,7 @@ import {
   MIN_LEAKAGE,
 } from "../modules/interface-churn.js";
 import type { Report } from "../report/report.js";
+import { PROPAGATION_DEPTH } from "../spread/propagation-cost.js";
 import { MIN_VOLATILITY_RATIO } from "../stability/dependency-direction.js";
 import {
   MIN_FAN_IN,
@@ -52,6 +53,7 @@ export const thresholdsFor = (couplingCommits: number) =>
     minImplementationCommits: MIN_IMPLEMENTATION_COMMITS,
     minSharedCommits: MIN_SHARED_COMMITS,
     minDegree: MIN_DEGREE,
+    propagationDepth: PROPAGATION_DEPTH,
     ubiquitousShare: UBIQUITOUS_SHARE,
     ubiquitousMinCommits: UBIQUITOUS_MIN_COMMITS,
     maxMeanLineLength: MAX_MEAN_LINE_LENGTH,

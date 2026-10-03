@@ -63,7 +63,7 @@ export const measureLinked = (
     const cliqueSearch = findCliques(coChange, touched);
     return {
       ...measured,
-      ...measureSpread(touched, measured),
+      ...measureSpread(touched, measured, couplings),
       copyFamilies,
       distantCouplings: distantCouplings(
         couplings,
