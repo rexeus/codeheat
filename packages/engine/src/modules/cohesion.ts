@@ -129,6 +129,7 @@ const toModule = (
     depth: null,
     trend: null,
     erosion: null,
+    fixDensity: null,
   };
 };
 

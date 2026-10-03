@@ -62,7 +62,8 @@
     "minWindowChanges": 10,
     "minTrendWindows": 3,
     "minErosionShift": 0.1,
-    "hotTopShare": 0.1
+    "hotTopShare": 0.1,
+    "minConventionShare": 0.05
   },
   "totals": {
     "files": 36,
@@ -1244,6 +1245,13 @@
       "slope": 0.0078
     }
   },
+  "fixDensity": {
+    "changes": 178,
+    "fixes": 41,
+    "conventional": 0.7584,
+    "known": true,
+    "share": 0.2303
+  },
   "couplings": [
     {
       "a": "packages/billing/src/index.ts",
@@ -1425,6 +1433,11 @@
         "windows": 3,
         "cohesion": [0.35, 0.4, null, 0.45],
         "recent": true
+      },
+      "fixDensity": {
+        "fixes": 9,
+        "share": 0.3,
+        "spanning": 7
       }
     },
     {
@@ -1458,7 +1471,12 @@
         "previousCohesion": 0.58,
         "cohesionDelta": -0.08
       },
-      "erosion": null
+      "erosion": null,
+      "fixDensity": {
+        "fixes": 4,
+        "share": 0.1538,
+        "spanning": 1
+      }
     },
     {
       "path": "packages/web",
@@ -1503,6 +1521,11 @@
         "windows": 4,
         "cohesion": [0.6, 0.55, 0.52, 0.45],
         "recent": true
+      },
+      "fixDensity": {
+        "fixes": 13,
+        "share": 0.2241,
+        "spanning": 6
       }
     },
     {
@@ -1557,6 +1580,11 @@
         "windows": 4,
         "cohesion": [0.72, 0.6, 0.5, 0.42],
         "recent": true
+      },
+      "fixDensity": {
+        "fixes": 23,
+        "share": 0.3108,
+        "spanning": 9
       }
     },
     {
@@ -1599,7 +1627,12 @@
         "previousCohesion": 0.6636,
         "cohesionDelta": -0.05
       },
-      "erosion": null
+      "erosion": null,
+      "fixDensity": {
+        "fixes": 8,
+        "share": 0.1818,
+        "spanning": 2
+      }
     }
   ],
   "copyFamilies": [

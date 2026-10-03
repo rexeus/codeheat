@@ -59,6 +59,8 @@ export const Thresholds = Schema.Struct({
   minErosionShift: UnitInterval,
   /** Share of the files with revisions in a window of `Report.series` that are hot in it (see `Heat`). */
   hotTopShare: UnitInterval,
+  /** Smallest share of the counted changes whose subject must follow a commit convention for `Report.fixDensity` to be known; below it the fix density is unknown, not 0. */
+  minConventionShare: UnitInterval,
   maxMeanLineLength: Count,
   maxFileBytes: Count,
 });

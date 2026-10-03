@@ -63,6 +63,7 @@ const modules: Report["modules"] = [
     depth: null,
     trend: null,
     erosion: null,
+    fixDensity: null,
   },
   {
     path: "src",
@@ -82,6 +83,7 @@ const modules: Report["modules"] = [
     depth: null,
     trend: null,
     erosion: null,
+    fixDensity: null,
   },
 ];
 

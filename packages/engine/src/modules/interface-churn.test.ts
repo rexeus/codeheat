@@ -8,28 +8,29 @@ import {
   measureInterfaces,
 } from "./interface-churn.js";
 
-describe("measureInterfaces", () => {
-  const files = [
-    "m/index.ts",
-    "m/src/index.ts",
-    "m/src/impl.ts",
-    "m/src/__tests__/api.ts",
-    "m/src/impl.test.ts",
-  ];
-  const refs = new Map<string, ModuleRef>(
-    files.map((file) => [file, { path: "m", kind: "package" }]),
+const files = [
+  "m/index.ts",
+  "m/src/index.ts",
+  "m/src/impl.ts",
+  "m/src/__tests__/api.ts",
+  "m/src/impl.test.ts",
+];
+const refs = new Map<string, ModuleRef>(
+  files.map((file) => [file, { path: "m", kind: "package" }]),
+);
+const touching = (commit: ReadonlyArray<string>) => ({
+  files: Uint32Array.from(commit, (file) => files.indexOf(file)),
+  size: commit.length,
+  subjectKind: "other" as const,
+});
+const measure = (commits: ReadonlyArray<ReadonlyArray<string>>) =>
+  measureInterfaces(
+    { changes: commits.map((commit) => touching(commit)), paths: files },
+    refs,
+    new Map([["m", ["m/index.ts", "m/src/index.ts"]]]),
   );
-  const touching = (commit: ReadonlyArray<string>) => ({
-    files: Uint32Array.from(commit, (file) => files.indexOf(file)),
-    size: commit.length,
-  });
-  const measure = (commits: ReadonlyArray<ReadonlyArray<string>>) =>
-    measureInterfaces(
-      { changes: commits.map((commit) => touching(commit)), paths: files },
-      refs,
-      new Map([["m", ["m/index.ts", "m/src/index.ts"]]]),
-    );
 
+describe("measureInterfaces", () => {
   it("counts a commit of an entry point and test code only as interface, not implementation", () => {
     const { byModule } = measure([
       ["m/src/index.ts", "m/src/__tests__/api.ts"],
@@ -59,7 +60,11 @@ describe("measureInterfaces", () => {
   });
 
   it("ignores commits above the counted size", () => {
-    const huge = { files: Uint32Array.of(0, 1, 2, 3, 4), size: 51 };
+    const huge = {
+      files: Uint32Array.of(0, 1, 2, 3, 4),
+      size: 51,
+      subjectKind: "other" as const,
+    };
     const small = touching(["m/src/impl.ts", "m/src/index.ts"]);
 
     const { byModule } = measureInterfaces(
@@ -121,6 +126,7 @@ const module = (path: string, overrides: Partial<Module>): Module => ({
   depth: null,
   trend: null,
   erosion: null,
+  fixDensity: null,
   ...overrides,
 });
 

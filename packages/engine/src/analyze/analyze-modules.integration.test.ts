@@ -74,6 +74,7 @@ const unmeasured = {
   depth: null,
   trend: null,
   erosion: null,
+  fixDensity: null,
 } as const;
 
 // a is the only module with the 5 commits that rank it, so it leads; then b, c (least cohesive first); d has no commits

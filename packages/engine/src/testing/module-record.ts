@@ -24,4 +24,5 @@ export const moduleRecord = (
   depth: null,
   trend: null,
   erosion: null,
+  fixDensity: null,
 });

@@ -4,6 +4,7 @@ import { MAX_COMMIT_FILES } from "../coupling/coupling.js";
 import { pullRequestOf, ticketOf } from "./keys.js";
 import type { LogicalChange } from "./logical-change.js";
 import { Partition } from "./partition.js";
+import { subjectKindOf } from "./subject-kind.js";
 
 /** A real commit to group; grouping never sees mechanical commits. */
 export type Candidate = {
@@ -136,10 +137,20 @@ const changeOf = (
   const single =
     members.length === 1 ? candidates[members[0] ?? -1] : undefined;
   if (single !== undefined) {
-    return { files: single.files, size: single.size };
+    return {
+      files: single.files,
+      size: single.size,
+      subjectKind: subjectKindOf([single.subject]),
+    };
   }
   const { live, size } = touchedBy(members, candidates);
-  return { files: Uint32Array.from(live), size };
+  return {
+    files: Uint32Array.from(live),
+    size,
+    subjectKind: subjectKindOf(
+      members.map((index) => candidates[index]?.subject ?? ""),
+    ),
+  };
 };
 
 const byOf = (pullRequestGroups: boolean, ticketGroups: boolean): GroupedBy => {

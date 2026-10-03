@@ -5,6 +5,7 @@
 import { Schema } from "effect";
 
 import { ModuleErosion } from "./erosion.js";
+import { ModuleFixes } from "./fix-density.js";
 import { Count, UnitDelta, UnitInterval } from "./scalars.js";
 
 /** Another module that changes in the same logical changes (see `Report.logicalChanges`). */
@@ -135,5 +136,11 @@ export const Module = Schema.Struct({
    * `Thresholds.minTrendWindows` windows (see `ModuleErosion`).
    */
   erosion: Schema.NullOr(ModuleErosion),
+  /**
+   * The fixes among the counted changes that touched the module (see
+   * `FixDensity`); null unless `Report.fixDensity` is `known`, for a
+   * test-only module, and for one no counted change touched.
+   */
+  fixDensity: Schema.NullOr(ModuleFixes),
 });
 export type Module = typeof Module.Type;

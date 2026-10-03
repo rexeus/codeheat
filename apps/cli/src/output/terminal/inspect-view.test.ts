@@ -77,6 +77,7 @@ const billing: Module = {
   depth: null,
   trend: null,
   erosion: null,
+  fixDensity: null,
 };
 
 const result = (

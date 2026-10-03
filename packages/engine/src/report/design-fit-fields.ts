@@ -6,6 +6,7 @@ import { Schema } from "effect";
 
 import { ChangeRadius, PropagationCost } from "./change-radius.js";
 import { Erosion } from "./erosion.js";
+import { FixDensity } from "./fix-density.js";
 import { SeriesWindow } from "./series.js";
 
 /** Fields of `Report`; each is documented here, where it is defined. */
@@ -23,4 +24,6 @@ export const DesignFitFields = {
   series: Schema.Array(SeriesWindow),
   /** Whether the design keeps containing change over `series` (see `Erosion`); null exactly when `series` is empty. */
   erosion: Schema.NullOr(Erosion),
+  /** How many of the counted changes are fixes (see `FixDensity`), and whether commit subjects tell. */
+  fixDensity: FixDensity,
 };

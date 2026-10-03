@@ -1,3 +1,4 @@
+import { countedChanges } from "../coupling/coupling.js";
 import { findCliques } from "../distant/cliques.js";
 import {
   moduleCoChange,
@@ -8,6 +9,7 @@ import {
 // a change spreads, and how that moved over the consecutive windows.
 import { withModuleErosion } from "../erosion/module-erosion.js";
 import { judgeErosion } from "../erosion/repository-erosion.js";
+import { measureFixes } from "../fixes/fix-density.js";
 import { withHeat } from "../heat/with-heat.js";
 import { touchedModules } from "../modules/touched-modules.js";
 import type { Coupling } from "../report/report.js";
@@ -40,15 +42,20 @@ export const measureDesignFit = (
     modules: spread.modules,
   });
   const series = slices.map(({ window }) => window);
+  const fixes = measureFixes(
+    countedChanges(histories.current.changes),
+    touched,
+    withModuleErosion(
+      spread.modules,
+      slices.map((slice) => slice.touched),
+    ),
+  );
   return {
     ...spread,
+    ...fixes,
     files: withHeat(
       measured.files,
       slices.map((slice) => slice.heat),
-    ),
-    modules: withModuleErosion(
-      spread.modules,
-      slices.map((slice) => slice.touched),
     ),
     series,
     erosion: judgeErosion(series),

@@ -62,6 +62,7 @@ export const moduleStats = (
   depth: null,
   trend: null,
   erosion: null,
+  fixDensity: null,
   ...overrides,
 });
 
@@ -89,6 +90,7 @@ const THRESHOLDS: Report["thresholds"] = {
   minTrendWindows: 3,
   minErosionShift: 0.1,
   hotTopShare: 0.1,
+  minConventionShare: 0.05,
   maxMeanLineLength: 300,
   maxFileBytes: 1048576,
 };
@@ -99,6 +101,13 @@ const NO_FINDINGS = {
   propagationCost: null,
   series: [],
   erosion: null,
+  fixDensity: {
+    changes: 0,
+    fixes: 0,
+    conventional: 0,
+    known: false,
+    share: null,
+  },
   cliquesPartial: false,
   dependencyDirection: [],
   unstableInterfaces: [],

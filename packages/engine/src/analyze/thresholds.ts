@@ -11,6 +11,7 @@ import {
 } from "../coupling/coupling.js";
 import { MIN_CLIQUE_SHARE } from "../distant/cliques.js";
 import { MIN_LOCAL_DISTANCE } from "../distant/distant-couplings.js";
+import { MIN_CONVENTION_SHARE } from "../fixes/fix-density.js";
 import {
   HUB_MIN_BREADTH,
   HUB_MIN_REVISIONS,
@@ -58,6 +59,7 @@ export const thresholdsFor = (couplingCommits: number) =>
     ubiquitousShare: UBIQUITOUS_SHARE,
     ubiquitousMinCommits: UBIQUITOUS_MIN_COMMITS,
     ...OVER_TIME_THRESHOLDS,
+    minConventionShare: MIN_CONVENTION_SHARE,
     maxMeanLineLength: MAX_MEAN_LINE_LENGTH,
     maxFileBytes: MAX_FILE_BYTES,
   }) satisfies Report["thresholds"];
