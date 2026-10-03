@@ -12,13 +12,23 @@ export type TempRepository = {
   /** Runs `git <args>` in the repository and returns its stdout; a failure is a defect. */
   readonly git: (...args: ReadonlyArray<string>) => Effect.Effect<string>;
   /**
+   * Runs `git <args>` with author and committer dates set to `date` (ISO
+   * 8601), for commands that create a commit, such as `merge`, `revert`, and
+   * `cherry-pick`.
+   */
+  readonly gitAt: (
+    date: string,
+    ...args: ReadonlyArray<string>
+  ) => Effect.Effect<string>;
+  /**
    * Writes `files` (relative path to content, creating directories), stages
-   * every change in the work tree, and commits at `date` (ISO 8601).
-   * Commits even when nothing changed.
+   * every change in the work tree, and commits at `date` (ISO 8601) with
+   * `message`. Commits even when nothing changed.
    */
   readonly commit: (
     date: string,
     files?: Readonly<Record<string, string | Uint8Array>>,
+    message?: string,
   ) => Effect.Effect<void>;
 };
 
@@ -64,23 +74,36 @@ export const makeTempRepository: Effect.Effect<
       );
     });
 
-  const commit = (
-    date: string,
-    files: Readonly<Record<string, string | Uint8Array>> = {},
-  ) =>
+  const gitAt = (date: string, ...args: ReadonlyArray<string>) =>
     Effect.scoped(
       Effect.gen(function* () {
-        for (const [file, content] of Object.entries(files)) {
-          yield* write(file, content);
-        }
         yield* setScopedEnv({
           GIT_AUTHOR_DATE: date,
           GIT_COMMITTER_DATE: date,
         });
-        yield* run("add", "--all");
-        yield* run("commit", "--quiet", "--allow-empty", "--message", "test");
+        return yield* run(...args);
       }),
-    ).pipe(Effect.orDie);
+    );
 
-  return { directory, git: run, commit };
+  const commit = (
+    date: string,
+    files: Readonly<Record<string, string | Uint8Array>> = {},
+    message = "test",
+  ) =>
+    Effect.gen(function* () {
+      for (const [file, content] of Object.entries(files)) {
+        yield* write(file, content);
+      }
+      yield* run("add", "--all");
+      yield* gitAt(
+        date,
+        "commit",
+        "--quiet",
+        "--allow-empty",
+        "--message",
+        message,
+      );
+    }).pipe(Effect.orDie);
+
+  return { directory, git: run, gitAt, commit };
 });

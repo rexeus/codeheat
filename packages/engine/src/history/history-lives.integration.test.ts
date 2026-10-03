@@ -32,22 +32,6 @@ const revisionsOf = (
     Effect.map((result) => result.files.get(path)?.revisions),
   );
 
-/** Runs `git <args>` with author and committer dates set, for commands that create a commit. */
-const gitAt = (
-  repo: TempRepository,
-  date: string,
-  ...args: ReadonlyArray<string>
-) =>
-  Effect.scoped(
-    Effect.gen(function* () {
-      yield* setScopedEnv({
-        GIT_AUTHOR_DATE: date,
-        GIT_COMMITTER_DATE: date,
-      });
-      yield* repo.git(...args);
-    }),
-  );
-
 layer(NodeServices.layer)("readHistory names that are free again", (it) => {
   it.effect(
     "keeps the history of a moved file when a stub at its old name is deleted",
@@ -76,10 +60,10 @@ layer(NodeServices.layer)("readHistory names that are free again", (it) => {
           "lib-util.ts": `${tenLines}a\nb\nc\nd\n`,
         });
 
-        // creation, three edits, the move, and the last edit
+        // creation, three edits, and the last edit; the move adds none
         assert.strictEqual(
           yield* revisionsOf(repo, ["lib-util.ts", "main.ts"], "lib-util.ts"),
-          6,
+          5,
         );
       }),
   );
@@ -103,8 +87,8 @@ layer(NodeServices.layer)("readHistory names that are free again", (it) => {
         const result = yield* history(repo, ["util.ts", "lib-util.ts"]);
 
         assert.strictEqual(result.files.get("util.ts")?.revisions, 1);
-        // creation, edit, and the move
-        assert.strictEqual(result.files.get("lib-util.ts")?.revisions, 3);
+        // creation and edit; the move adds none
+        assert.strictEqual(result.files.get("lib-util.ts")?.revisions, 2);
       }),
   );
 });
@@ -124,8 +108,7 @@ layer(NodeServices.layer)("readHistory deletions that a merge undid", (it) => {
         yield* repo.git("checkout", "-");
         yield* repo.commit("2026-03-05T12:00:00Z", { "p.ts": "3\n" });
         // the merge keeps p.ts and, as a merge, is not part of the history
-        yield* gitAt(
-          repo,
+        yield* repo.gitAt(
           "2026-03-06T12:00:00Z",
           "merge",
           "-s",
@@ -186,8 +169,8 @@ layer(NodeServices.layer)("readHistory names created inside a merge", (it) => {
 
         const result = yield* history(repo, ["z.ts", "p.ts"]);
 
-        // creation, two edits, and the move
-        assert.strictEqual(result.files.get("z.ts")?.revisions, 4);
+        // creation and two edits; the move adds none
+        assert.strictEqual(result.files.get("z.ts")?.revisions, 3);
         assert.strictEqual(result.files.get("p.ts")?.revisions, 1);
       }),
   );
@@ -205,8 +188,7 @@ layer(NodeServices.layer)("readHistory names created inside a merge", (it) => {
         yield* repo.commit("2026-03-03T12:00:00Z");
         yield* repo.git("checkout", "-");
         yield* repo.commit("2026-03-04T12:00:00Z", { "other.ts": "o\n" });
-        yield* gitAt(
-          repo,
+        yield* repo.gitAt(
           "2026-03-05T12:00:00Z",
           "merge",
           "-s",
@@ -231,11 +213,11 @@ layer(NodeServices.layer)("readHistory restored files", (it) => {
       yield* repo.commit("2026-03-02T12:00:00Z", { "p.ts": "1\n" });
       yield* repo.git("rm", "p.ts");
       yield* repo.commit("2026-03-03T12:00:00Z");
-      yield* gitAt(repo, "2026-03-04T12:00:00Z", "revert", "--no-edit", "HEAD");
+      yield* repo.gitAt("2026-03-04T12:00:00Z", "revert", "--no-edit", "HEAD");
       yield* repo.commit("2026-03-05T12:00:00Z", { "p.ts": "2\n" });
 
-      // creation, edit, deletion, its revert, and the last edit
-      assert.strictEqual(yield* revisionsOf(repo, ["p.ts"], "p.ts"), 5);
+      // creation, edit, and the last edit; the deletion and its revert cancel out
+      assert.strictEqual(yield* revisionsOf(repo, ["p.ts"], "p.ts"), 3);
     }),
   );
 
@@ -244,12 +226,12 @@ layer(NodeServices.layer)("readHistory restored files", (it) => {
       const repo = yield* makeTempRepository;
       yield* repo.commit("2026-03-01T12:00:00Z", { "other.ts": "o\n" });
       yield* repo.commit("2026-03-02T12:00:00Z", { "p.ts": "x\n" });
-      yield* gitAt(repo, "2026-03-03T12:00:00Z", "revert", "--no-edit", "HEAD");
-      yield* gitAt(repo, "2026-03-04T12:00:00Z", "revert", "--no-edit", "HEAD");
+      yield* repo.gitAt("2026-03-03T12:00:00Z", "revert", "--no-edit", "HEAD");
+      yield* repo.gitAt("2026-03-04T12:00:00Z", "revert", "--no-edit", "HEAD");
       yield* repo.commit("2026-03-05T12:00:00Z", { "p.ts": "y\n" });
 
-      // creation, its revert, the revert of the revert, and the edit
-      assert.strictEqual(yield* revisionsOf(repo, ["p.ts"], "p.ts"), 4);
+      // creation and the edit; the revert and the revert of the revert cancel out
+      assert.strictEqual(yield* revisionsOf(repo, ["p.ts"], "p.ts"), 2);
     }),
   );
 });

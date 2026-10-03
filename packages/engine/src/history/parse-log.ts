@@ -1,8 +1,9 @@
 // Owns reading `git log -z --raw --numstat` output, incrementally.
 //
-// The log is requested with `--format=%x01%H%x00%ct`. Each commit then
+// The log is requested with `--format=%x01%H%x00%ct%x00%B`. Each commit then
 // arrives as NUL-terminated tokens:
-//   \u0001<sha> NUL <unix time> NUL [\n]<raw entries><numstat entries>
+//   \u0001<sha> NUL <unix time> NUL <message> NUL [\n]<raw entries><numstat entries>
+// (git 2.52 also puts the [\n] before the next marker when `-w` emptied a diff)
 // A raw entry is `:<modes> <ids> <status>` followed by one path token, or two
 // (old and new) for a rename or copy; it tells which files the commit adds and
 // deletes.
@@ -22,6 +23,13 @@ type Change = {
   readonly created?: true;
   /** The object id of the content a deletion removed or an addition created. */
   readonly blob?: string;
+  /**
+   * The object ids of the file before and after the commit, from its raw
+   * entry; the side that does not exist is all zeros.
+   */
+  readonly blobs?: { readonly old: string; readonly new: string };
+  /** Set when the commit changes the file's type, such as a file into a symlink. */
+  readonly typeChanged?: true;
   /** 0 for binary files. */
   readonly added: number;
   readonly deleted: number;
@@ -31,30 +39,48 @@ export type Commit = {
   readonly sha: string;
   /** Commit time in seconds since the epoch. */
   readonly time: number;
+  /**
+   * Every change of the commit is a rename with similarity 100 or a mode
+   * change: no content changed. False for a commit without changes.
+   */
+  readonly moveOnly: boolean;
+  /** The commit a `This reverts commit <sha>` line in the message names. */
+  readonly reverts: string | undefined;
   readonly changes: ReadonlyArray<Change>;
 };
-
-/** Arguments that make `git log` print what `LogParser` reads. */
-export const LOG_FORMAT_ARGS = [
-  "--no-merges",
-  "-M",
-  "--raw",
-  // Full object ids: an abbreviated one gains `...` under GIT_PRINT_SHA1_ELLIPSIS.
-  "--no-abbrev",
-  "--numstat",
-  "-z",
-  "--no-show-signature",
-  "--format=%x01%H%x00%ct",
-] as const;
 
 const COMMIT_MARKER = "\u0001";
 const NUMSTAT = /^(\d+|-)\t(\d+|-)\t(.*)$/su;
 const RAW_STATUS =
-  /^:\d+ \d+ ([0-9a-f]+)(?:\.{3})? ([0-9a-f]+)(?:\.{3})? ([A-Z])\d*$/u;
+  /^:\d+ \d+ ([0-9a-f]+)(?:\.{3})? ([0-9a-f]+)(?:\.{3})? ([A-Z])(\d*)$/u;
+const REVERTS_LINE = /^This reverts commit ([0-9a-f]{40}|[0-9a-f]{64})\b/mu;
 
-type Phase = "entry" | "time" | "rawPath" | "renamedFrom" | "renamedTo";
+type Phase =
+  | "entry"
+  | "time"
+  | "message"
+  | "rawPath"
+  | "renamedFrom"
+  | "renamedTo";
 
-type OpenCommit = { sha: string; time: number; changes: Array<Change> };
+type OpenCommit = {
+  sha: string;
+  time: number;
+  reverts: string | undefined;
+  /** Raw entries seen, and how many of them changed no content. */
+  entries: number;
+  moves: number;
+  changes: Array<Change>;
+};
+
+/** A rename that kept every byte, or a change of the mode alone (same blob on both sides). */
+const changesNoContent = (
+  status: string,
+  similarity: string,
+  blobs: { readonly old: string; readonly new: string },
+): boolean =>
+  (status === "R" && similarity === "100") ||
+  (status === "M" && blobs.old === blobs.new);
 
 const lineCount = (field: string | undefined): number =>
   field === undefined || field === "-" ? 0 : Number(field);
@@ -70,7 +96,10 @@ export class LogParser {
   #counts = { added: 0, deleted: 0 };
   #renamedFrom = "";
   /** What the open commit adds or deletes, per path, from its raw entries. */
-  #marks = new Map<string, Pick<Change, "removed" | "created" | "blob">>();
+  #marks = new Map<
+    string,
+    Pick<Change, "removed" | "created" | "blob" | "blobs" | "typeChanged">
+  >();
   #rawPaths = 0;
   #rawStatus = "";
   #rawBlobs = { old: "", new: "" };
@@ -93,6 +122,10 @@ export class LogParser {
     if (this.#phase === "time") {
       return this.#readTime(token);
     }
+    if (this.#phase === "message") {
+      this.#readMessage(token);
+      return [];
+    }
     if (this.#phase === "rawPath") {
       this.#readRawPath(token);
       return [];
@@ -105,9 +138,10 @@ export class LogParser {
     if (this.#phase === "renamedTo") {
       return this.#readRenamedTo(token);
     }
-    return token.startsWith(COMMIT_MARKER)
-      ? this.#begin(token.slice(COMMIT_MARKER.length))
-      : this.#readEntry(token);
+    const entry = token.replace(/^\n/u, "");
+    return entry.startsWith(COMMIT_MARKER)
+      ? this.#begin(entry.slice(COMMIT_MARKER.length))
+      : this.#readEntry(entry);
   }
 
   #readRenamedTo(path: string): ReadonlyArray<Commit> {
@@ -115,6 +149,7 @@ export class LogParser {
       path,
       renamedFrom: this.#renamedFrom,
       ...this.#counts,
+      ...this.#marks.get(path),
     });
     this.#phase = "entry";
     return [];
@@ -123,12 +158,23 @@ export class LogParser {
   #close(): ReadonlyArray<Commit> {
     const finished = this.#open;
     this.#open = undefined;
-    return finished === undefined ? [] : [finished];
+    if (finished === undefined) {
+      return [];
+    }
+    const { entries, moves, ...commit } = finished;
+    return [{ ...commit, moveOnly: entries > 0 && moves === entries }];
   }
 
   #begin(sha: string): ReadonlyArray<Commit> {
     const finished = this.#close();
-    this.#open = { sha, time: 0, changes: [] };
+    this.#open = {
+      sha,
+      time: 0,
+      reverts: undefined,
+      entries: 0,
+      moves: 0,
+      changes: [],
+    };
     this.#marks = new Map();
     this.#phase = "time";
     return finished;
@@ -138,15 +184,20 @@ export class LogParser {
     if (this.#open !== undefined) {
       this.#open.time = Number(token);
     }
-    this.#phase = "entry";
+    this.#phase = "message";
     return [];
   }
 
+  #readMessage(message: string): void {
+    if (this.#open !== undefined) {
+      this.#open.reverts = REVERTS_LINE.exec(message)?.[1];
+    }
+    this.#phase = "entry";
+  }
+
   #readRawPath(path: string): void {
-    if (this.#rawStatus === "D") {
-      this.#marks.set(path, { removed: true, blob: this.#rawBlobs.old });
-    } else if (this.#rawStatus === "A") {
-      this.#marks.set(path, { created: true, blob: this.#rawBlobs.new });
+    if (this.#rawPaths === 1) {
+      this.#marks.set(path, this.#markOfRawEntry());
     }
     this.#rawPaths -= 1;
     if (this.#rawPaths === 0) {
@@ -154,15 +205,38 @@ export class LogParser {
     }
   }
 
-  #readEntry(token: string): ReadonlyArray<Commit> {
-    const entry = token.replace(/^\n/u, "");
+  /** What the raw entry just read says about its file; a rename's new path carries it. */
+  #markOfRawEntry() {
+    const blobs = { ...this.#rawBlobs };
+    if (this.#rawStatus === "D") {
+      return { removed: true, blob: blobs.old, blobs } as const;
+    }
+    if (this.#rawStatus === "A") {
+      return { created: true, blob: blobs.new, blobs } as const;
+    }
+    return this.#rawStatus === "T"
+      ? ({ typeChanged: true, blobs } as const)
+      : { blobs };
+  }
+
+  #readRawEntry(raw: RegExpExecArray): void {
+    const status = raw[3] ?? "";
+    this.#rawBlobs = { old: raw[1] ?? "", new: raw[2] ?? "" };
+    this.#rawStatus = status;
+    if (this.#open !== undefined) {
+      this.#open.entries += 1;
+      if (changesNoContent(status, raw[4] ?? "", this.#rawBlobs)) {
+        this.#open.moves += 1;
+      }
+    }
+    this.#rawPaths = status === "R" || status === "C" ? 2 : 1;
+    this.#phase = "rawPath";
+  }
+
+  #readEntry(entry: string): ReadonlyArray<Commit> {
     const raw = RAW_STATUS.exec(entry);
-    const status = raw?.[3];
-    if (raw !== null && status !== undefined) {
-      this.#rawBlobs = { old: raw[1] ?? "", new: raw[2] ?? "" };
-      this.#rawStatus = status;
-      this.#rawPaths = status === "R" || status === "C" ? 2 : 1;
-      this.#phase = "rawPath";
+    if (raw !== null) {
+      this.#readRawEntry(raw);
       return [];
     }
     const match = NUMSTAT.exec(entry);

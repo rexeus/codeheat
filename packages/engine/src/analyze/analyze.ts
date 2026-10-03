@@ -153,7 +153,7 @@ const analyzeRepository = (
       timeline.histories,
       new Set(universe.contracts.keys()),
     );
-    const { commits, couplingCommits, thresholds, ...measured } =
+    const { commits, realCommits, couplingCommits, thresholds, ...measured } =
       yield* measureLinked(options, { root, scope }, universe, histories);
     return {
       schemaVersion: 1,
@@ -165,7 +165,7 @@ const analyzeRepository = (
         scope,
         shallow: shallowBoundary !== undefined,
       },
-      window: { ...windows.current, commits, couplingCommits },
+      window: { ...windows.current, commits, realCommits, couplingCommits },
       comparison: comparisonOf(windows, histories, timeline.oldestCommit),
       thresholds,
       totals: {
