@@ -20,6 +20,7 @@ import { spreadLines } from "./spread-view.js";
 import { stabilitySections } from "./stability-view.js";
 import type { Style } from "./style.js";
 import { plain, renderTable } from "./table.js";
+import { territoryLines } from "./territory-view.js";
 
 const TOP_HOTSPOTS = 10;
 const TOP_COUPLINGS = 5;
@@ -177,7 +178,7 @@ const leakyModules = (report: Report): ReadonlyArray<Module> =>
 /**
  * Renders the terminal view of an `analyze` report: how far a change spreads
  * (change radius and propagation cost, each left out when the report has
- * none), the ten hottest files, how the design moved over time (the verdict,
+ * none), how many territories the recommended detail has, the ten hottest files, how the design moved over time (the verdict,
  * the modules losing cohesion, hotspots by age, and the share of fixes; each
  * part is left out when the report has no data for it),
  * the five best ranked distant couplings and a line per clique of modules
@@ -217,6 +218,7 @@ export const renderAnalysis = (report: Report, style: Style): string => {
   return [
     style.bold(summary),
     ...spreadLines(report),
+    ...territoryLines(report),
     "",
     style.bold("Hotspots"),
     ...hotspots,
