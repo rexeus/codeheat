@@ -119,6 +119,13 @@ const byUnity = (a: Clique, b: Clique): number =>
   b.modules.length - a.modules.length ||
   Order.String(a.modules.join("\n"), b.modules.join("\n"));
 
+/** The cliques of a window and whether the search for sub-groups hit a bound. */
+export type Cliques = {
+  readonly cliques: ReadonlyArray<Clique>;
+  /** A group was too varied to search in full (see `supportedSubgroups`): a clique inside it may be missing. */
+  readonly partial: boolean;
+};
+
 /**
  * The cliques among the ranked modules of `coChange`: maximal groups of at
  * least three of which every pair shares at least `MIN_CLIQUE_SHARE` of the
@@ -127,28 +134,33 @@ const byUnity = (a: Clique, b: Clique): number =>
  * (pairs that met only in different commits are no unit of change). A group
  * that fails the last rule is searched for its sub-groups that pass it, and
  * only the maximal ones are kept. A clique inside another is dropped, and of
- * two that share all but one member only the stronger stays (see
- * `distinctGroups`). `touched` lists the modules each counted commit touched. The `MAX_CLIQUES` whose members changed together in the most
- * commits come first, then the higher weakest share, more members, and path.
+ * two variants of one unit (their union pairwise linked, almost all members in
+ * common) only the stronger stays (see `distinctGroups`). `touched` lists the
+ * modules each counted commit touched. The `MAX_CLIQUES` whose members changed
+ * together in the most commits come first, then the higher weakest share, more
+ * members, and path.
  */
 export const findCliques = (
   coChange: ModuleCoChange,
   touched: ReadonlyArray<ReadonlySet<string>>,
-): ReadonlyArray<Clique> => {
+): Cliques => {
   const adjacency = linkedModules(coChange);
-  const groups = extend(adjacency, [], new Set(adjacency.keys()), new Set())
+  const searched = extend(adjacency, [], new Set(adjacency.keys()), new Set())
     .filter((members) => members.length >= MIN_CLIQUE_SIZE)
     .map((members) => members.toSorted((a, b) => Order.String(a, b)))
-    .flatMap((members) =>
+    .map((members) =>
       supportedSubgroups(members, touched, MIN_CLIQUE_SIZE, MIN_SHARED_COMMITS),
     );
-  return distinctGroups(
+  const groups = searched.flatMap(({ groups: found }) => found);
+  const cliques = distinctGroups(
     [
       ...new Map(
         groups.map((members) => [members.join("\n"), members]),
       ).values(),
     ].map((members) => toClique(members, coChange, touched)),
+    (a, b) => adjacency.get(a)?.has(b) === true,
   )
     .toSorted(byUnity)
     .slice(0, MAX_CLIQUES);
+  return { cliques, partial: searched.some(({ partial }) => partial) };
 };

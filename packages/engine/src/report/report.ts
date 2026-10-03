@@ -206,44 +206,41 @@ export const Report = Schema.Struct({
    */
   copyFamilies: Schema.Array(CopyFamily),
   /**
-   * The coupled pairs that lie far apart in the design, best first, at most 50:
-   * across modules, or at least `Thresholds.minLocalDistance` directory hops
-   * apart within one, with no test-code file and no pair of two contract files
-   * among them. Ranked by `score`, so a hidden coupling between distant
-   * modules comes first.
+   * The coupled pairs that lie far apart in the design (see `DistantCoupling`),
+   * best first, at most 50. Ranked by `score`, so a hidden coupling between
+   * distant modules comes first.
    */
   distantCouplings: Schema.Array(DistantCoupling),
   /**
-   * How often pairs of ranked modules (`Module`: at least
-   * `Thresholds.minModuleCommits` counted commits, not test-only) changed in
-   * the same commits, for pairs that shared at least `Thresholds.minSharedCommits`
-   * of them: the data of a module coupling matrix. The 200 pairs with the
-   * largest `share` first, then more shared commits, then path.
+   * How often pairs of ranked modules changed in the same counted changes (see
+   * `ModuleCoupling`): the data of a module coupling matrix. The 200 pairs with
+   * the largest `share` first, then more shared changes, then path.
    */
   moduleCoupling: Schema.Array(ModuleCoupling),
   /**
-   * Groups of at least three ranked modules of which every pair shares at
-   * least `Thresholds.minCliqueShare` of the smaller module's counted commits,
-   * maximal, at most 50: the ones whose members changed together in the most
-   * commits first. Each has a one-sentence `reason`.
+   * Groups of modules that change together (see `Clique`), at most 50, the ones
+   * whose members changed together in the most changes first. A clique inside
+   * another is left out, and of two variants of one unit only the stronger is
+   * reported.
    */
   cliques: Schema.Array(Clique),
   /**
+   * The search behind `cliques` hit a bound: in one group of modules, more
+   * than 500 intersections or 1000 distinct parts that different changes
+   * touch. A clique may be missing. False otherwise.
+   */
+  cliquesPartial: Schema.Boolean,
+  /**
    * Files that many others depend on and that change more often than those
-   * dependents, TypeScript and JavaScript only: at least
-   * `Thresholds.minFanIn` dependents, at least `Thresholds.minInterfaceRevisions`
-   * revisions, and more revisions than the median dependent. At most 50, the
-   * ones that changed together with the most dependents first.
+   * dependents, TypeScript and JavaScript only (see `UnstableInterface`); at
+   * most 50, the ones that changed together with the most dependents first.
    */
   unstableInterfaces: Schema.Array(UnstableInterface),
   /**
-   * Import edges between modules that point from a module that rarely changes
-   * to one that changes often (the Stable Dependencies Principle), TypeScript
-   * and JavaScript only: the imported module has at least
-   * `Thresholds.minModuleCommits` counted commits and at least
-   * `Thresholds.minVolatilityRatio` times as many as the importing one. At
-   * most 50, ranked by `DependencyDirection.ratio` and the importers that
-   * changed with what they import.
+   * Import edges from a module that rarely changes to one that changes often
+   * (the Stable Dependencies Principle, see `DependencyDirection`),
+   * TypeScript and JavaScript only; at most 50, ranked by `ratio` and
+   * `changedImporters`.
    */
   dependencyDirection: Schema.Array(DependencyDirection),
 });

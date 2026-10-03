@@ -15,7 +15,7 @@ const commitsOf = (
 const MODULES = ["a", "b", "c", "d", "e"].map((path) => moduleRecord(path, 10));
 
 const cliquesOf = (touched: ReadonlyArray<ReadonlySet<string>>) =>
-  findCliques(moduleCoChange(touched, MODULES, 5), touched);
+  findCliques(moduleCoChange(touched, MODULES, 5), touched).cliques;
 
 describe("findCliques membership", () => {
   it("finds a triangle whose every pair shares enough, with the commits that touched all three", () => {
@@ -77,7 +77,7 @@ describe("findCliques overlap", () => {
     ]);
   });
 
-  it("reports two triangles that share an edge once, the stronger one", () => {
+  it("reports two triangles that share an edge when their other members never change together", () => {
     const touched = [
       ...commitsOf(5, "a", "b", "c"),
       ...commitsOf(4, "b", "c", "d"),
@@ -85,6 +85,28 @@ describe("findCliques overlap", () => {
 
     expect(cliquesOf(touched).map(({ modules }) => modules)).toEqual([
       ["a", "b", "c"],
+      ["b", "c", "d"],
+    ]);
+  });
+
+  it("reports the groups that share a core pair and each add a module of their own", () => {
+    const touched = [
+      ...commitsOf(9, "core", "api", "web"),
+      ...commitsOf(6, "core", "api", "mobile"),
+      ...commitsOf(5, "core", "api", "admin"),
+    ];
+    const modules = ["core", "api", "web", "mobile", "admin"].map((path) =>
+      moduleRecord(path, 15),
+    );
+
+    expect(
+      findCliques(moduleCoChange(touched, modules, 5), touched).cliques.map(
+        (clique) => clique.modules,
+      ),
+    ).toEqual([
+      ["api", "core", "web"],
+      ["api", "core", "mobile"],
+      ["admin", "api", "core"],
     ]);
   });
 
@@ -118,9 +140,9 @@ describe("findCliques exclusions and ranking", () => {
       ...commitsOf(4, "a", "b", "tests"),
     ];
 
-    expect(findCliques(moduleCoChange(touched, modules, 5), touched)).toEqual(
-      [],
-    );
+    expect(
+      findCliques(moduleCoChange(touched, modules, 5), touched).cliques,
+    ).toEqual([]);
   });
 
   it("ranks the clique whose members changed together in more commits first", () => {

@@ -87,6 +87,7 @@ const THRESHOLDS: Report["thresholds"] = {
 
 /** The design-fit lists of a report, all empty. */
 const NO_FINDINGS = {
+  cliquesPartial: false,
   dependencyDirection: [],
   unstableInterfaces: [],
   cliques: [],

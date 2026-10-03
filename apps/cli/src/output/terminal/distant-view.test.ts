@@ -87,6 +87,16 @@ describe("cliqueSection", () => {
     expect(lines[4]).toBe("+2 more; see cliques in --json");
   });
 
+  it("says when the search for cliques was cut short", () => {
+    const report = { ...sampleReport(), cliquesPartial: true };
+
+    expect(cliqueSection(report, makeStyle(false))).toEqual([
+      "Change together (modules)",
+      "The search was cut short; a clique may be missing (cliquesPartial in --json).",
+      "",
+    ]);
+  });
+
   it("has no lines without cliques", () => {
     expect(cliqueSection(sampleReport(), makeStyle(false))).toEqual([]);
   });

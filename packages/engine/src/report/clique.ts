@@ -12,6 +12,13 @@ import { Count, UnitInterval } from "./scalars.js";
  * commits), and at least `Thresholds.minSharedCommits` commits touched all
  * members. Such modules are one unit of change cut by boundaries, or share an
  * abstraction that is missing.
+ *
+ * `Report.cliques` lists distinct units: a group inside another is left out,
+ * and two groups that are variants of one unit (their union pairwise linked in
+ * the module pair graph, and at least `min(n − 1, ceil(0.8 n))` members in
+ * common, `n` being the size of the larger) are reported once, as the stronger
+ * (more `sharedCommits`, then more members, then path). Groups whose other
+ * members never change together stay separate however much they overlap.
  */
 export const Clique = Schema.Struct({
   /** `path` of each member, at least three, sorted. */

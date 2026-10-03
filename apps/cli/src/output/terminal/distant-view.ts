@@ -56,13 +56,14 @@ export const distantSection = (
  * The "Change together" section, with its heading and a closing blank line:
  * one line per clique (see `Report.cliques`), at most three, the members
  * joined by `+` and followed by the clique's reason, and a note counting the
- * cliques left out. None when the report has no clique.
+ * cliques left out, and a note when the search for cliques was cut short
+ * (`Report.cliquesPartial`). None when the report has neither.
  */
 export const cliqueSection = (
   report: Report,
   style: Style,
 ): ReadonlyArray<string> => {
-  if (report.cliques.length === 0) {
+  if (report.cliques.length === 0 && !report.cliquesPartial) {
     return [];
   }
   const shown = report.cliques.slice(0, TOP_CLIQUES);
@@ -74,6 +75,13 @@ export const cliqueSection = (
         `${modules.map((path) => escapeForTerminal(path)).join(" + ")}: ${escapeForTerminal(reason)}`,
     ),
     ...(hidden > 0 ? [`+${hidden} more; see cliques in --json`] : []),
+    ...(report.cliquesPartial
+      ? [
+          style.dim(
+            "The search was cut short; a clique may be missing (cliquesPartial in --json).",
+          ),
+        ]
+      : []),
     "",
   ];
 };

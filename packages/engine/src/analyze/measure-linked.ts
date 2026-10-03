@@ -59,6 +59,7 @@ export const measureLinked = (
       measured.modules,
       measured.thresholds.minModuleCommits,
     );
+    const cliqueSearch = findCliques(coChange, touched);
     return {
       ...measured,
       copyFamilies,
@@ -67,7 +68,8 @@ export const measureLinked = (
         new Map([...universe.modules, ...universe.contracts]),
       ),
       moduleCoupling: moduleCouplings(coChange),
-      cliques: findCliques(coChange, touched),
+      cliques: cliqueSearch.cliques,
+      cliquesPartial: cliqueSearch.partial,
       ...stability,
     };
   });
