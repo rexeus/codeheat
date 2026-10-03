@@ -241,7 +241,8 @@ export const Report = Schema.Struct({
    * and JavaScript only: the imported module has at least
    * `Thresholds.minModuleCommits` counted commits and at least
    * `Thresholds.minVolatilityRatio` times as many as the importing one. At
-   * most 50, the ones with the most importing files first.
+   * most 50, ranked by `DependencyDirection.ratio` and the importers that
+   * changed with what they import.
    */
   dependencyDirection: Schema.Array(DependencyDirection),
 });

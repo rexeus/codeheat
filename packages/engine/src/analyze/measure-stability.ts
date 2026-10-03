@@ -36,8 +36,11 @@ export const measureStability = (
     const dependencies = yield* loadDependencies(graph.sources, code, known);
     return {
       dependencyDirection: dependencyDirection(
-        dependencies,
-        universe.modules,
+        {
+          dependencies,
+          homes: universe.modules,
+          history: histories.current,
+        },
         measured.modules,
         measured.minModuleCommits,
       ),

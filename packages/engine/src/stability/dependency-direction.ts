@@ -3,10 +3,13 @@
 // changes should not rest on one that changes often.
 import { Order } from "effect";
 
+import { countedChanges } from "../coupling/coupling.js";
+import type { History } from "../history/history.js";
 import type { Dependencies } from "../imports/dependencies.js";
 import type { ModuleRef } from "../modules/detect.js";
 import type { DependencyDirection } from "../report/dependency-direction.js";
 import type { Module } from "../report/module.js";
+import { roundReported } from "../report/precision.js";
 
 /**
  * How many times as many counted commits as the importing module the imported
@@ -15,66 +18,131 @@ import type { Module } from "../report/module.js";
  */
 export const MIN_VOLATILITY_RATIO = 2;
 
-/** The report keeps this many edges, the ones with the most importing files first. */
+/** The report keeps this many edges, the highest ranked first. */
 const MAX_DEPENDENCY_DIRECTIONS = 50;
 
-type Edge = { readonly from: string; readonly to: string };
+type Edge = {
+  readonly from: string;
+  readonly to: string;
+  /** Each importing file with the files of `to` it imports. */
+  readonly imports: Map<string, Set<string>>;
+};
 
-/** The files of each module that import each other module, by `from -> to` edge. */
-const importingFilesByEdge = (
+/** The import edges between modules, keyed by `from\nto`. */
+const edgesOf = (
   dependencies: Dependencies,
   modules: ReadonlyMap<string, ModuleRef>,
-): ReadonlyMap<string, { edge: Edge; files: Set<string> }> => {
-  const edges = new Map<string, { edge: Edge; files: Set<string> }>();
+): ReadonlyMap<string, Edge> => {
+  const edges = new Map<string, Edge>();
   for (const [file, loaded] of dependencies) {
     const from = modules.get(file)?.path;
     for (const target of loaded) {
       const to = modules.get(target)?.path;
       if (from !== undefined && to !== undefined && from !== to) {
         const key = `${from}\n${to}`;
-        const known = edges.get(key) ?? {
-          edge: { from, to },
-          files: new Set(),
+        const edge = edges.get(key) ?? {
+          from,
+          to,
+          imports: new Map<string, Set<string>>(),
         };
-        known.files.add(file);
-        edges.set(key, known);
+        const known = edge.imports.get(file) ?? new Set<string>();
+        edge.imports.set(file, known.add(target));
+        edges.set(key, edge);
       }
     }
   }
   return edges;
 };
 
-const byImportingFiles = (
-  a: DependencyDirection,
-  b: DependencyDirection,
-): number =>
+/** The importing files of `edges` among `paths` whose commit also holds a file they import, with the edge each belongs to. */
+const feltIn = (
+  paths: ReadonlySet<string>,
+  edges: ReadonlyMap<string, Edge>,
+  importerEdges: ReadonlyMap<string, ReadonlyArray<string>>,
+): ReadonlyArray<readonly [string, string]> =>
+  [...paths].flatMap((file) =>
+    (importerEdges.get(file) ?? [])
+      .filter((key) =>
+        [...(edges.get(key)?.imports.get(file) ?? [])].some((target) =>
+          paths.has(target),
+        ),
+      )
+      .map((key) => [key, file] as const),
+  );
+
+/**
+ * Per edge, the importing files that changed in a counted commit together with
+ * a file of the imported module that they import: where the dependency was
+ * actually felt.
+ */
+const changedImporters = (
+  edges: ReadonlyMap<string, Edge>,
+  history: Pick<History, "changes" | "paths">,
+): ReadonlyMap<string, ReadonlySet<string>> => {
+  const importerEdges = new Map<string, Array<string>>();
+  for (const [key, { imports }] of edges) {
+    for (const file of imports.keys()) {
+      importerEdges.set(file, [...(importerEdges.get(file) ?? []), key]);
+    }
+  }
+  const changed = new Map<string, Set<string>>();
+  for (const change of countedChanges(history.changes)) {
+    const paths = new Set(
+      Array.from(change.files, (id) => history.paths[id] ?? ""),
+    );
+    for (const [key, file] of feltIn(paths, edges, importerEdges)) {
+      changed.set(key, (changed.get(key) ?? new Set<string>()).add(file));
+    }
+  }
+  return changed;
+};
+
+/** Volatility of the imported module over the importer's, times how often the importers changed with what they import (log scale). */
+const rankOf = ({ ratio, changedImporters: changed }: DependencyDirection) =>
+  ratio * Math.log2(1 + changed);
+
+const byRank = (a: DependencyDirection, b: DependencyDirection): number =>
+  rankOf(b) - rankOf(a) ||
   b.importingFiles - a.importingFiles ||
-  b.toCommits - b.fromCommits - (a.toCommits - a.fromCommits) ||
   Order.String(a.from, b.from) ||
   Order.String(a.to, b.to);
 
+type Counts = {
+  readonly importingFiles: number;
+  readonly changedImporters: number;
+  readonly fromCommits: number;
+  readonly toCommits: number;
+};
+
 const reasonFor = (
   { from, to }: Edge,
-  importingFiles: number,
-  fromCommits: number,
-  toCommits: number,
+  { importingFiles, changedImporters: changed, fromCommits, toCommits }: Counts,
 ): string =>
-  `${importingFiles} ${importingFiles === 1 ? "file" : "files"} of ${from}, which changed in ${fromCommits} ${fromCommits === 1 ? "commit" : "commits"}, import ${to}, which changed in ${toCommits}`;
+  `${importingFiles} ${importingFiles === 1 ? "file" : "files"} of ${from}, which changed in ${fromCommits} ${fromCommits === 1 ? "commit" : "commits"}, import ${to}, which changed in ${toCommits}; ${changed} of them changed together with what they import`;
 
 /**
  * The import edges between modules that point from a stable module to a
  * volatile one: `dependencies` says what each non-test file loads, `homes`
- * which module each file lives in, and `measured` how often each module
- * changed (`Module.commits`). An edge is flagged when neither module is
- * test-only, the imported one changed in at least `minModuleCommits` counted
- * commits (fewer say nothing about volatility), and in at least
- * `MIN_VOLATILITY_RATIO` times as many as the importing one, which may not
- * have changed at all. The `MAX_DEPENDENCY_DIRECTIONS` with the most importing
- * files come first, then the larger gap in commits, then path.
+ * which module each file lives in, `measured` how often each module changed
+ * (`Module.commits`), and `history` which files changed in the same commits.
+ * An edge is flagged when neither module is test-only, the imported one
+ * changed in at least `minModuleCommits` counted commits (fewer say nothing
+ * about volatility), and in at least `MIN_VOLATILITY_RATIO` times as many as
+ * the importing one, which may not have changed at all.
+ *
+ * `ratio` is the imported module's commits over the importing one's (at least
+ * 1). The edges rank by `ratio × log2(1 + changedImporters)`: how much more
+ * volatile the imported side is, and how often the importers really had to
+ * move with it, so that every module importing the same framework does not
+ * fill the list. Then more importing files and path break ties. The
+ * `MAX_DEPENDENCY_DIRECTIONS` best come back.
  */
 export const dependencyDirection = (
-  dependencies: Dependencies,
-  homes: ReadonlyMap<string, ModuleRef>,
+  inputs: {
+    readonly dependencies: Dependencies;
+    readonly homes: ReadonlyMap<string, ModuleRef>;
+    readonly history: Pick<History, "changes" | "paths">;
+  },
   measured: ReadonlyArray<Module>,
   minModuleCommits: number,
 ): ReadonlyArray<DependencyDirection> => {
@@ -83,25 +151,36 @@ export const dependencyDirection = (
       .filter((module) => !module.testOnly)
       .map((module) => [module.path, module.commits]),
   );
-  return [...importingFilesByEdge(dependencies, homes).values()]
-    .flatMap(({ edge, files }): ReadonlyArray<DependencyDirection> => {
+  const edges = edgesOf(inputs.dependencies, inputs.homes);
+  const changed = changedImporters(edges, inputs.history);
+  return [...edges]
+    .flatMap(([key, edge]): ReadonlyArray<DependencyDirection> => {
       const fromCommits = commitsOf.get(edge.from);
       const toCommits = commitsOf.get(edge.to);
-      return fromCommits !== undefined &&
-        toCommits !== undefined &&
-        toCommits >= minModuleCommits &&
-        toCommits >= MIN_VOLATILITY_RATIO * fromCommits
-        ? [
-            {
-              ...edge,
-              importingFiles: files.size,
-              fromCommits,
-              toCommits,
-              reason: reasonFor(edge, files.size, fromCommits, toCommits),
-            },
-          ]
-        : [];
+      if (
+        fromCommits === undefined ||
+        toCommits === undefined ||
+        toCommits < minModuleCommits ||
+        toCommits < MIN_VOLATILITY_RATIO * fromCommits
+      ) {
+        return [];
+      }
+      const counts = {
+        importingFiles: edge.imports.size,
+        changedImporters: changed.get(key)?.size ?? 0,
+        fromCommits,
+        toCommits,
+      };
+      return [
+        {
+          from: edge.from,
+          to: edge.to,
+          ...counts,
+          ratio: roundReported(toCommits / Math.max(1, fromCommits)),
+          reason: reasonFor(edge, counts),
+        },
+      ];
     })
-    .toSorted(byImportingFiles)
+    .toSorted(byRank)
     .slice(0, MAX_DEPENDENCY_DIRECTIONS);
 };
