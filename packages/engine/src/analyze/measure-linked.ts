@@ -10,8 +10,10 @@ import {
   moduleCoChange,
   moduleCouplings,
 } from "../distant/module-co-change.js";
+import { readImportGraph } from "../imports/import-graph.js";
 import { linkCouplings } from "../imports/link-couplings.js";
 import { touchedModules } from "../modules/touched-modules.js";
+import { measureStability } from "./measure-stability.js";
 import { coupleHistory, measureWindows } from "./measure.js";
 import type { Universe } from "./measure.js";
 import type { WindowHistories } from "./windows.js";
@@ -29,14 +31,15 @@ export const measureLinked = (
 ) =>
   Effect.gen(function* () {
     const coupled = coupleHistory(histories.current, universe);
-    const couplings = yield* linkCouplings(
+    const graph = yield* readImportGraph(
       {
         ...place,
         universe: new Set(universe.files.map((file) => file.path)),
         adapters,
       },
-      coupled.couplings,
+      new Set(coupled.couplings.flatMap(({ a, b }) => [a, b])),
     );
+    const couplings = linkCouplings(graph, coupled.couplings);
     const copyFamilies = yield* findCopyFamilies(
       place.root,
       couplings,
@@ -45,6 +48,10 @@ export const measureLinked = (
     const measured = measureWindows(universe, histories, {
       ...coupled,
       couplings,
+    });
+    const stability = yield* measureStability(graph, universe, histories, {
+      modules: measured.modules,
+      minModuleCommits: measured.thresholds.minModuleCommits,
     });
     const touched = touchedModules(histories.current, universe);
     const coChange = moduleCoChange(
@@ -61,5 +68,6 @@ export const measureLinked = (
       ),
       moduleCoupling: moduleCouplings(coChange),
       cliques: findCliques(coChange, touched),
+      ...stability,
     };
   });

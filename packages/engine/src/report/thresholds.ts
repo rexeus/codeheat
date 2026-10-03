@@ -25,6 +25,12 @@ export const Thresholds = Schema.Struct({
   minLocalDistance: Count,
   /** Smallest share of the smaller module's counted commits that every pair of a clique (`Report.cliques`) shares. */
   minCliqueShare: UnitInterval,
+  /** Fewest dependents (`UnstableInterface.fanIn`) that make a file an interface many rely on. */
+  minFanIn: Count,
+  /** Fewest revisions a file needs to be an unstable interface. */
+  minInterfaceRevisions: Count,
+  /** How many times as many counted commits as an importing module the imported one needs to be flagged in `Report.dependencyDirection`. */
+  minVolatilityRatio: Count,
   /**
    * Smallest `Partner.probability` at which a partner that no import links to
    * the file (hidden coupling) gets a reason line.

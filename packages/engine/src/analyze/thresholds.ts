@@ -23,6 +23,11 @@ import {
   MIN_LEAKAGE,
 } from "../modules/interface-churn.js";
 import type { Report } from "../report/report.js";
+import { MIN_VOLATILITY_RATIO } from "../stability/dependency-direction.js";
+import {
+  MIN_FAN_IN,
+  MIN_INTERFACE_REVISIONS,
+} from "../stability/unstable-interfaces.js";
 import {
   MAX_FILE_BYTES,
   MAX_MEAN_LINE_LENGTH,
@@ -38,6 +43,9 @@ export const thresholdsFor = (couplingCommits: number) =>
     minModuleCommits: minModuleCommitsFor(couplingCommits),
     minLocalDistance: MIN_LOCAL_DISTANCE,
     minCliqueShare: MIN_CLIQUE_SHARE,
+    minFanIn: MIN_FAN_IN,
+    minInterfaceRevisions: MIN_INTERFACE_REVISIONS,
+    minVolatilityRatio: MIN_VOLATILITY_RATIO,
     minHiddenProbability: MIN_HIDDEN_PROBABILITY,
     minCopySimilarity: MIN_COPY_SIMILARITY,
     minLeakage: MIN_LEAKAGE,

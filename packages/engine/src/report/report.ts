@@ -7,6 +7,7 @@ import { Clique } from "./clique.js";
 import { Comparison, FileTrend } from "./comparison.js";
 import { ContractFile, FileKind, UbiquitousFile } from "./contract-file.js";
 import { CopyFamily } from "./copy-family.js";
+import { DependencyDirection } from "./dependency-direction.js";
 import { DistantCoupling } from "./distant-coupling.js";
 import { ImportRelation } from "./import-relation.js";
 import { LogicalChanges } from "./logical-changes.js";
@@ -15,6 +16,7 @@ import { ModuleCoupling } from "./module-coupling.js";
 import { Module } from "./module.js";
 import { Count, UnitInterval } from "./scalars.js";
 import { Thresholds } from "./thresholds.js";
+import { UnstableInterface } from "./unstable-interface.js";
 
 const Rank = Schema.Int.check(Schema.isGreaterThanOrEqualTo(1));
 
@@ -225,5 +227,22 @@ export const Report = Schema.Struct({
    * commits first. Each has a one-sentence `reason`.
    */
   cliques: Schema.Array(Clique),
+  /**
+   * Files that many others depend on and that change more often than those
+   * dependents, TypeScript and JavaScript only: at least
+   * `Thresholds.minFanIn` dependents, at least `Thresholds.minInterfaceRevisions`
+   * revisions, and more revisions than the median dependent. At most 50, the
+   * ones that changed together with the most dependents first.
+   */
+  unstableInterfaces: Schema.Array(UnstableInterface),
+  /**
+   * Import edges between modules that point from a module that rarely changes
+   * to one that changes often (the Stable Dependencies Principle), TypeScript
+   * and JavaScript only: the imported module has at least
+   * `Thresholds.minModuleCommits` counted commits and at least
+   * `Thresholds.minVolatilityRatio` times as many as the importing one. At
+   * most 50, the ones with the most importing files first.
+   */
+  dependencyDirection: Schema.Array(DependencyDirection),
 });
 export type Report = typeof Report.Type;

@@ -58,6 +58,17 @@ export type LanguageAdapter = {
    */
   readonly imports: (file: string, source: string) => SourceImports | undefined;
   /**
+   * The specifiers `source` loads (imports, re-exports, literal `require` and
+   * `import()` calls), or undefined when the language cannot say. Read from the
+   * cheapest source of facts the language has, so it may miss a dependency that
+   * `imports` finds, or invent one: use it where an error in one edge of a large
+   * graph does not matter and the cost of parsing every file does.
+   */
+  readonly dependencies: (
+    file: string,
+    source: string,
+  ) => ReadonlyArray<string> | undefined;
+  /**
    * The symbols `source` exports, or undefined when they cannot be listed
    * exactly: the file does not parse, or exports in a way the adapter cannot
    * enumerate (CommonJS, `export =`). An unlistable file has unknown exports,

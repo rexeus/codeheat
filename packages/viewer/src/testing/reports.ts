@@ -68,6 +68,9 @@ const THRESHOLDS: Report["thresholds"] = {
   hubMinRevisions: 5,
   hubTopShare: 0.05,
   minModuleCommits: 5,
+  minVolatilityRatio: 2,
+  minInterfaceRevisions: 5,
+  minFanIn: 5,
   minCliqueShare: 0.3,
   minLocalDistance: 3,
   minHiddenProbability: 0.5,
@@ -84,6 +87,8 @@ const THRESHOLDS: Report["thresholds"] = {
 
 /** The design-fit lists of a report, all empty. */
 const NO_FINDINGS = {
+  dependencyDirection: [],
+  unstableInterfaces: [],
   cliques: [],
   moduleCoupling: [],
   distantCouplings: [],
