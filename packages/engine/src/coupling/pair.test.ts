@@ -138,6 +138,7 @@ describe("testedStems", () => {
       "test/a/b",
       "src/a/b",
       "lib/a/b",
+      "main/a/b",
       "a/b",
     ]);
     expect(testedStems("src/c_spec.rb")).toStrictEqual(["src/c"]);

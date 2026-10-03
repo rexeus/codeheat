@@ -10,9 +10,9 @@ import { fileLeaves } from "./file-leaves.js";
 import { flatten } from "./flatten-tree.js";
 import type { FlatNode } from "./flatten-tree.js";
 import { growTree } from "./grow-tree.js";
-import type { TreeNode } from "./grow-tree.js";
 import { NO_MEASURE, measureNodes } from "./node-measures.js";
 import type { NodeMeasure } from "./node-measures.js";
+import type { TreeNode } from "./part.js";
 import { hiddenHeat, isTerritoryKind, recommendedOf } from "./recommend.js";
 
 export type TerritoryInput = EvidenceInput & {
@@ -133,7 +133,12 @@ export const buildTerritories = (input: TerritoryInput): TerritoryTree => {
   }
   const attachment = attachTests(input.files.map(({ path }) => path));
   const evidence = evidenceOf(input, attachment);
-  const grown = growTree(attachment.units, evidence, input.packages);
+  const grown = growTree(
+    attachment.units,
+    evidence,
+    input.packages,
+    attachment.placedIn,
+  );
   const flat = flatten(grown.root, input.packages);
   const leaves = fileLeaves(flat, attachment);
   const nodes = draftsOf(

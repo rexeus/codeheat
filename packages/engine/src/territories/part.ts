@@ -23,6 +23,14 @@ export type Part = {
   readonly rest: ReadonlyArray<string>;
 };
 
+/** A part and, when it splits at some detail, its children. */
+export type TreeNode = {
+  readonly part: Part;
+  /** Why it splits; undefined for a part that does not. */
+  readonly reason: string | undefined;
+  readonly children: ReadonlyArray<TreeNode>;
+};
+
 /** A part with more than this share of the universe's files is too big to stay one territory. */
 export const TOO_BIG_SHARE = 0.4;
 

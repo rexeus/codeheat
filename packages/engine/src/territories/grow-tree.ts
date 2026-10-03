@@ -1,23 +1,16 @@
 // Owns growing the territory tree: which parts split, in what order, and at
 // which detail each split opens.
 import { folderPart } from "./folders.js";
-import type { Evidence, Part } from "./part.js";
+import type { Evidence, Part, TreeNode } from "./part.js";
 import { planSplit } from "./plan-split.js";
 import type { Split } from "./plan-split.js";
+import { withTestHomes } from "./test-homes.js";
 
 /** Detail levels run from 1 (the first cut) to at most this. */
 const MAX_DETAIL = 6;
 /** The tree never grows past this many territories, or a 60th of the files if that is more. */
 const MIN_TERRITORY_CAP = 60;
 const CAP_FILES_PER_TERRITORY = 60;
-
-/** A part and, when it splits at some detail, its children. */
-export type TreeNode = {
-  readonly part: Part;
-  /** Why it splits; undefined for a part that does not. */
-  readonly reason: string | undefined;
-  readonly children: ReadonlyArray<TreeNode>;
-};
 
 export type GrownTree = {
   readonly root: TreeNode;
@@ -160,11 +153,12 @@ export const growTree = (
   files: ReadonlyArray<string>,
   evidence: Evidence,
   packages: ReadonlySet<string>,
+  placedIn: ReadonlyMap<string, string>,
 ): GrownTree => {
-  const rootPart = folderPart("", files, packages);
-  const rootSplit = planSplit(rootPart, evidence, packages, true);
+  const top = folderPart("", files, packages);
+  const rootSplit = planSplit(top, evidence, packages, true);
   if (rootSplit === undefined || territoriesIn(rootSplit.kids) === 0) {
-    const root = nodeOf(rootPart, new Map());
+    const root = nodeOf(top, new Map());
     return { root, details: [[root]] };
   }
   const ranked = rankSplits(rootSplit, evidence, packages);
@@ -176,10 +170,10 @@ export const growTree = (
   const keep = counts.findLastIndex((count) => count <= cap);
   const kept = ranked.slice(0, Math.max(0, keep));
   const splits = new Map<Part, Split>([
-    [rootPart, rootSplit],
+    [top, rootSplit],
     ...kept.map(({ part, split }): [Part, Split] => [part, split]),
   ]);
-  const root = nodeOf(rootPart, splits);
+  const root = withTestHomes(nodeOf(top, splits), placedIn);
   const { levels, depth } = levelsOf(kept, counts);
   return {
     root,

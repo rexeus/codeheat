@@ -15,13 +15,39 @@ export type TestAttachment = {
   readonly placedIn: ReadonlyMap<string, string>;
 };
 
-/** Directories a mirrored test directory stands in for, beside it. */
-const SOURCE_ROOTS = ["src", "lib"];
+/** Directories a mirrored test directory stands in for, beside it (`main` for Maven and Gradle: `src/test` and `src/main`). */
+const SOURCE_ROOTS = ["src", "lib", "main"];
+
+/** A JVM test class name: the class it tests, then `Test`, `Tests`, `IT`, or `Spec`. */
+const JVM_TEST_NAME = /^(.+?)(?:Tests?|IT|Spec)$/u;
+
+/**
+ * The stems of the sources a test may test: those of `testedStems`, and for a
+ * JVM test class (`FooTest.java` below `src/test/java`), where its mirror in
+ * `src/main/java` puts the class it is named after.
+ */
+const stemsOf = (test: string): ReadonlyArray<string> => {
+  const direct = testedStems(test);
+  if (direct.length > 0) {
+    return direct;
+  }
+  const stem = stemOf(test);
+  const name = stem.slice(stem.lastIndexOf("/") + 1);
+  const tested = JVM_TEST_NAME.exec(name)?.[1];
+  return tested === undefined
+    ? []
+    : testedStems(
+        `${stem.slice(0, stem.length - name.length)}${tested}.test.x`,
+      );
+};
 
 const stemOf = (path: string): string => {
   const dot = path.lastIndexOf(".");
   return dot > path.lastIndexOf("/") + 1 ? path.slice(0, dot) : path;
 };
+
+const depthOf = (directory: string): number =>
+  directory === "" ? 0 : directory.split("/").length;
 
 const join = (...parts: ReadonlyArray<string>): string =>
   parts.filter((part) => part !== "").join("/");
@@ -60,9 +86,9 @@ const deepestWithCode = (
 /**
  * The directory whose code an unpaired test belongs to. A test beside its code
  * (a test suffix, no test directory) belongs to its own directory. A test below
- * a test directory belongs to the code the directory sits beside: below `src`
- * or `lib` next to it, else its parent, mirroring the path below the test
- * directory. A top-level test directory with no `src` or `lib` beside it
+ * a test directory belongs to the code the directory sits beside: below `src`,
+ * `lib`, or `main` next to it, else its parent, mirroring the path below the
+ * test directory; the deepest of those that holds code. A top-level test directory with no `src` or `lib` beside it
  * belongs to no code, since the whole repository would be its home.
  */
 const homeOf = (
@@ -82,13 +108,10 @@ const homeOf = (
     ...SOURCE_ROOTS.map((root) => join(parent, root, ...mirrored)),
     ...(parent === "" ? [] : [join(parent, ...mirrored)]),
   ];
-  for (const candidate of candidates) {
-    const home = deepestWithCode(candidate, parent, withCode);
-    if (home !== undefined && (home !== "" || parent !== "")) {
-      return home;
-    }
-  }
-  return undefined;
+  const homes = candidates
+    .flatMap((candidate) => deepestWithCode(candidate, parent, withCode) ?? [])
+    .filter((home) => home !== "" || parent !== "");
+  return homes.toSorted((a, b) => depthOf(b) - depthOf(a))[0];
 };
 
 /**
@@ -111,7 +134,7 @@ export const attachTests = (paths: ReadonlyArray<string>): TestAttachment => {
   const pairedWith = new Map<string, string>();
   const placedIn = new Map<string, string>();
   for (const test of paths.filter((path) => isTestPath(path))) {
-    const source = testedStems(test)
+    const source = stemsOf(test)
       .map((stem) => bySourceStem.get(stem))
       .find((found) => found !== undefined);
     const home = source === undefined ? homeOf(test, withCode) : undefined;

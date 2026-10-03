@@ -23,7 +23,7 @@ export const FIXTURE_DIRECTORIES: ReadonlySet<string> = new Set([
 ]);
 
 /** What a mirrored test directory stands in for: a source root beside it, or (undefined) the directory it sits in. */
-const SOURCE_ROOTS = ["src", "lib", undefined] as const;
+const SOURCE_ROOTS = ["src", "lib", "main", undefined] as const;
 
 const directoriesOf = (path: string): ReadonlyArray<string> =>
   path.split("/").slice(0, -1);
@@ -121,7 +121,7 @@ export const testedStems = (test: string): ReadonlyArray<string> => {
  * other's plus `.test`, `.spec`, `_test`, or `_spec`; or the test lies below a
  * mirrored test directory (`test`, `tests`, `__tests__`, `spec`, `specs`,
  * `e2e`) and the source is at the same path with that directory removed or
- * replaced by `src` or `lib`: `src/a/b.ts` and `test/a/b.test.ts`, `lib/x.ts`
+ * replaced by `src`, `lib`, or `main`: `src/a/b.ts` and `test/a/b.test.ts`, `lib/x.ts`
  * and `__tests__/x.test.ts`, `p/y.ts` and `p/tests/y.test.ts`. The test needs
  * a suffix: helpers, steps, mocks, and fixtures pair with nothing.
  */

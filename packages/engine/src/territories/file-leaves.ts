@@ -47,8 +47,9 @@ const majorityLeaf = (
 /**
  * The index of the node each file belongs to (the finest). Code files and
  * unattached tests are where the tree put them; a test that pairs with code is
- * where that code is; a test placed in a directory is in the leaf that holds
- * most of the directory's code.
+ * where that code is; a test placed in a directory is in the `tests` child of
+ * the node that holds all the directory's code when that code is split (see
+ * `withTestHomes`), else in the one leaf that holds it.
  */
 export const fileLeaves = (
   nodes: ReadonlyArray<FlatNode>,
@@ -64,7 +65,9 @@ export const fileLeaves = (
   }
   const below = attachment.placedIn.size === 0 ? undefined : leavesBelow(units);
   for (const [test, directory] of attachment.placedIn) {
-    const leaf = majorityLeaf(below?.get(directory));
+    const leaf = leaves.has(test)
+      ? undefined
+      : majorityLeaf(below?.get(directory));
     if (leaf !== undefined) {
       leaves.set(test, leaf);
     }

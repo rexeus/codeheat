@@ -1,7 +1,7 @@
 // Owns turning the grown tree into the flat list of nodes the report holds,
 // and what each node is called.
 import type { Territory } from "../report/territory.js";
-import type { TreeNode } from "./grow-tree.js";
+import type { TreeNode } from "./part.js";
 
 /** A node of the tree with its place in the flat list. */
 export type FlatNode = {
