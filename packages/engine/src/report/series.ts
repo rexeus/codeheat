@@ -1,5 +1,5 @@
-// Owns the part of the report contract that describes the analysis window as
-// consecutive windows: how far a change spread in each.
+// Owns the part of the report contract that describes the series, the last 24
+// months or more of history as consecutive windows: how far a change spread in each.
 // Additive fields keep schemaVersion 1; renaming or removing a field bumps it.
 import { Schema } from "effect";
 
@@ -12,7 +12,9 @@ import { Count } from "./scalars.js";
  * the modules and files of the report. The windows are measured like the
  * analysis window, so the numbers follow the same definitions, but each
  * window groups, couples, and counts only its own commits: a pull request
- * that spans two windows is split between them.
+ * that spans two windows is split between them. The windows are classified
+ * (which commits are mechanical) and their pull requests read over the whole
+ * series span, not over `Report.window`.
  */
 export const SeriesWindow = Schema.Struct({
   since: Schema.String,

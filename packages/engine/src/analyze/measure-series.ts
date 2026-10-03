@@ -1,5 +1,5 @@
-// Owns measuring the consecutive windows of the analysis window: what each
-// says about how far a change spread, over the universe the report describes.
+// Owns measuring the consecutive windows of the series: what each says about
+// how far a change spread and which files were hot, over the universe the report describes.
 import type { HeatWindow } from "../heat/classify-heat.js";
 import { heatWindow } from "../heat/heat-window.js";
 import type { SeriesSlice } from "../history/history.js";
@@ -23,8 +23,9 @@ export type MeasuredSlice = {
 };
 
 /**
- * Measures each slice of the analysis window over `universe`. `measured` supplies the modules, files, and
- * contracts the report lists, which every slice is measured over.
+ * Measures each slice of the series over `universe`. `measured` supplies the
+ * modules, files, and contracts the report lists, which every slice is
+ * measured over, whatever span the slice lies in.
  */
 export const measureSlices = (
   universe: Universe,

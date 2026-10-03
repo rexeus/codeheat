@@ -1,4 +1,4 @@
-// Owns how the analysis window is cut into the consecutive windows of the series.
+// Owns how the span of the series is cut into its consecutive windows.
 
 /** The most windows a series has, so the report stays small however long the history. */
 const MAX_SERIES_WINDOWS = 12;
@@ -47,7 +47,7 @@ export const sliceRanges = ({
   }));
 };
 
-/** The times in seconds since the epoch at which each window after the first starts, for `readHistoryAndSlices`. */
+/** The times in seconds since the epoch at which each window after the first starts, for `sliceSeries`. */
 export const sliceStarts = (
   ranges: ReadonlyArray<SliceRange>,
 ): ReadonlyArray<number> =>
