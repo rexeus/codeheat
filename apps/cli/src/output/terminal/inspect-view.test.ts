@@ -157,6 +157,21 @@ describe("renderInspect", () => {
   });
 });
 
+const markedWith = (heat: InspectResult["matches"][number]["heat"]) =>
+  renderInspect(result([{ ...entry, heat }]), makeStyle(false)).split("\n");
+
+describe("renderInspect hotspot age", () => {
+  it("marks a chronic or acute hotspot under the file's metrics", () => {
+    expect(markedWith({ kind: "chronic", hotWindows: 4, windows: 4 })[6]).toBe(
+      "chronic hotspot: hot in 4 of 4 windows, so a design problem rather than current work",
+    );
+    expect(markedWith({ kind: "acute", hotWindows: 2, windows: 5 })[6]).toBe(
+      "acute hotspot: hot in 2 of 5 windows, only lately, so current work",
+    );
+    expect(markedWith(null).join("\n")).not.toContain("hotspot");
+  });
+});
+
 describe("renderInspect modules", () => {
   it("says when the module has no counted changes or no partner", () => {
     const quiet: Module = {
