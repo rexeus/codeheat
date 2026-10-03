@@ -19,7 +19,7 @@ describe("stabilitySections", () => {
       "fan-in: files that import it; ripple: of those, files that changed in the same commits",
       "",
       "Dependency direction (modules that rarely change import ones that change often)",
-      "packages/shared (30 commits) imports packages/billing (74 commits) in 2 files",
+      "packages/shared (30 commits) imports packages/billing (74 commits) in 2 files; changed together in 1 commit",
       "",
     ]);
   });
@@ -61,7 +61,7 @@ describe("stabilitySections", () => {
     };
 
     expect(stabilitySections(report, makeStyle(false)).join("\n")).toContain(
-      "packages/shared (1 commit) imports packages/billing (4 commits) in 2 files",
+      "packages/shared (1 commit) imports packages/billing (4 commits) in 2 files; changed together in 1 commit",
     );
   });
 

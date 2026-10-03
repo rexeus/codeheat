@@ -78,8 +78,15 @@ const directionSection = (
       "Dependency direction (modules that rarely change import ones that change often)",
     ),
     ...shown.map(
-      ({ from, to, importingFiles, fromCommits, toCommits }) =>
-        `${escapeForTerminal(from)} (${commits(fromCommits)}) imports ${escapeForTerminal(to)} (${commits(toCommits)}) in ${importingFiles} ${importingFiles === 1 ? "file" : "files"}`,
+      ({
+        from,
+        to,
+        importingFiles,
+        changedImporters,
+        fromCommits,
+        toCommits,
+      }) =>
+        `${escapeForTerminal(from)} (${commits(fromCommits)}) imports ${escapeForTerminal(to)} (${commits(toCommits)}) in ${importingFiles} ${importingFiles === 1 ? "file" : "files"}; changed together in ${commits(changedImporters)}`,
     ),
     ...(hidden > 0
       ? [`+${hidden} more; see dependencyDirection in --json`]

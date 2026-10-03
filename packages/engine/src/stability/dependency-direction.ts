@@ -54,50 +54,50 @@ const edgesOf = (
   return edges;
 };
 
-/** The importing files of `edges` among `paths` whose commit also holds a file they import, with the edge each belongs to. */
-const feltIn = (
+/** The edges on which, in one commit touching `paths`, an importing file changed together with a file it imports. */
+const edgesFeltIn = (
   paths: ReadonlySet<string>,
   edges: ReadonlyMap<string, Edge>,
   importerEdges: ReadonlyMap<string, ReadonlyArray<string>>,
-): ReadonlyArray<readonly [string, string]> =>
-  [...paths].flatMap((file) =>
-    (importerEdges.get(file) ?? [])
-      .filter((key) =>
+): ReadonlySet<string> =>
+  new Set(
+    [...paths].flatMap((file) =>
+      (importerEdges.get(file) ?? []).filter((key) =>
         [...(edges.get(key)?.imports.get(file) ?? [])].some((target) =>
           paths.has(target),
         ),
-      )
-      .map((key) => [key, file] as const),
+      ),
+    ),
   );
 
 /**
- * Per edge, the importing files that changed in a counted commit together with
- * a file of the imported module that they import: where the dependency was
- * actually felt.
+ * Per edge, in how many counted commits an importing file changed together
+ * with a file of the imported module that it imports: how often the dependency
+ * was actually felt.
  */
-const changedImporters = (
+const changedTogether = (
   edges: ReadonlyMap<string, Edge>,
   history: Pick<History, "changes" | "paths">,
-): ReadonlyMap<string, ReadonlySet<string>> => {
+): ReadonlyMap<string, number> => {
   const importerEdges = new Map<string, Array<string>>();
   for (const [key, { imports }] of edges) {
     for (const file of imports.keys()) {
       importerEdges.set(file, [...(importerEdges.get(file) ?? []), key]);
     }
   }
-  const changed = new Map<string, Set<string>>();
+  const changed = new Map<string, number>();
   for (const change of countedChanges(history.changes)) {
     const paths = new Set(
       Array.from(change.files, (id) => history.paths[id] ?? ""),
     );
-    for (const [key, file] of feltIn(paths, edges, importerEdges)) {
-      changed.set(key, (changed.get(key) ?? new Set<string>()).add(file));
+    for (const key of edgesFeltIn(paths, edges, importerEdges)) {
+      changed.set(key, (changed.get(key) ?? 0) + 1);
     }
   }
   return changed;
 };
 
-/** Volatility of the imported module over the importer's, times how often the importers changed with what they import (log scale). */
+/** Volatility of the imported module over the importer's, times in how many commits an importer changed with what it imports (log scale). */
 const rankOf = ({ ratio, changedImporters: changed }: DependencyDirection) =>
   Math.log2(ratio) * Math.log2(1 + changed);
 
@@ -118,7 +118,7 @@ const reasonFor = (
   { from, to }: Edge,
   { importingFiles, changedImporters: changed, fromCommits, toCommits }: Counts,
 ): string =>
-  `${importingFiles} ${importingFiles === 1 ? "file" : "files"} of ${from}, which changed in ${fromCommits} ${fromCommits === 1 ? "commit" : "commits"}, import ${to}, which changed in ${toCommits}; ${changed} of them changed together with what they import`;
+  `${importingFiles} ${importingFiles === 1 ? "file" : "files"} of ${from}, which changed in ${fromCommits} ${fromCommits === 1 ? "commit" : "commits"}, import ${to}, which changed in ${toCommits}; ${changed} ${changed === 1 ? "commit" : "commits"} changed an importer together with what it imports`;
 
 /**
  * The import edges between modules that point from a stable module to a
@@ -132,7 +132,7 @@ const reasonFor = (
  *
  * `ratio` is the imported module's commits over the importing one's (at least
  * 1). The edges rank by `log2(ratio) × log2(1 + changedImporters)`: how much more
- * volatile the imported side is, and how often the importers really had to
+ * volatile the imported side is, and in how many commits an importer really had to
  * move with it, so that every module importing the same framework does not
  * fill the list. Then more importing files and path break ties. The
  * `MAX_DEPENDENCY_DIRECTIONS` best come back.
@@ -152,7 +152,7 @@ export const dependencyDirection = (
       .map((module) => [module.path, module.commits]),
   );
   const edges = edgesOf(inputs.dependencies, inputs.homes);
-  const changed = changedImporters(edges, inputs.history);
+  const changed = changedTogether(edges, inputs.history);
   return [...edges]
     .flatMap(([key, edge]): ReadonlyArray<DependencyDirection> => {
       const fromCommits = commitsOf.get(edge.from);
@@ -167,7 +167,7 @@ export const dependencyDirection = (
       }
       const counts = {
         importingFiles: edge.imports.size,
-        changedImporters: changed.get(key)?.size ?? 0,
+        changedImporters: changed.get(key) ?? 0,
         fromCommits,
         toCommits,
       };

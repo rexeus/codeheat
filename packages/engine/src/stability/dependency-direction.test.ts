@@ -87,7 +87,7 @@ describe("dependencyDirection flags", () => {
       toCommits: 20,
       ratio: 5,
       reason:
-        "1 file of stable, which changed in 4 commits, import volatile, which changed in 20; 1 of them changed together with what they import",
+        "1 file of stable, which changed in 4 commits, import volatile, which changed in 20; 1 commit changed an importer together with what it imports",
     });
   });
 });
