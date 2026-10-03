@@ -131,16 +131,21 @@ layer(NodeServices.layer)("analyze series windows", (it) => {
     }),
   );
 
-  it.effect("has no series for a window shorter than six weeks", () =>
-    Effect.gen(function* () {
-      yield* setNow;
-      const repo = yield* makeTempRepository;
-      yield* createTwoPackages(repo);
-      yield* commitInMonth(repo, "2026-05", repeated(12, FILE_A));
+  it.effect(
+    "cuts a window of 20 weeks in two, one and a half quarters, and leaves one of 19 weeks uncut",
+    () =>
+      Effect.gen(function* () {
+        yield* setNow;
+        const repo = yield* makeTempRepository;
+        yield* createTwoPackages(repo);
+        yield* commitInMonth(repo, "2026-05", repeated(12, FILE_A));
 
-      const report = yield* analyze(analyzeOptionsFor(repo, { since: "1m" }));
+        const short = yield* analyze(analyzeOptionsFor(repo, { since: "19w" }));
+        const long = yield* analyze(analyzeOptionsFor(repo, { since: "20w" }));
 
-      assert.deepStrictEqual(report.series, []);
-    }),
+        assert.deepStrictEqual(short.series, []);
+        assert.strictEqual(short.erosion, null);
+        assert.strictEqual(long.series.length, 2);
+      }),
   );
 });

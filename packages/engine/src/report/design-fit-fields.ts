@@ -16,9 +16,11 @@ export const DesignFitFields = {
   /** How much of the code a change drags along, read from `couplings` (see `PropagationCost`); null without two files to couple. */
   propagationCost: Schema.NullOr(PropagationCost),
   /**
-   * The analysis window cut into consecutive windows of about a quarter of a
-   * year each, oldest first, at most 12, with how far a change spread in each
-   * (see `SeriesWindow`). Empty when the window is shorter than six weeks: one
+   * The analysis window cut into consecutive windows of equal length, oldest
+   * first, with how far a change spread in each (see `SeriesWindow`). They
+   * are about a quarter of a year (91 days) long, at most 12: a window longer
+   * than three years has windows longer than a quarter. Empty when the window
+   * is shorter than one and a half quarters (about 4.5 months, 20 weeks): one
    * window has no series. With `--compare` it cuts the latest window only.
    */
   series: Schema.Array(SeriesWindow),
