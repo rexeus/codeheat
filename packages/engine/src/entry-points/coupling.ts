@@ -4,57 +4,59 @@ import { isJudgeablePair } from "../distant/distant-couplings.js";
 import type { Coupling } from "../report/report.js";
 import { evidenceOf } from "./candidate.js";
 import type { Candidate } from "./candidate.js";
+import type { EntryLimits } from "./limits.js";
 import { COUPLING_VERDICT, couplingMove } from "./moves.js";
-
-/** Fewest shared changes at which a hidden coupling is worth an entry. */
-const MIN_SHARED_CHANGES = 5;
 
 /**
  * The hidden couplings (see `Coupling.imports`: `none`; a coupling whose
  * relation is unknown never qualifies) between files that lie in different
- * territories of `areaOfFile` (the territory each file belongs to at the
+ * territories of `places.areaOfFile` (the territory each file belongs to at the
  * recommended detail; a file without one, such as a contract, is left out) and
  * are judgeable (see `isJudgeablePair`: no test code, no two contract files),
- * with at least `MIN_SHARED_CHANGES` shared changes. The score is `degree ×
- * activity`: `degree` is how tightly the two change together (see
- * `Coupling.degree`) and `activity` the share of all counted changes
- * (`changes`) that touched both. Of several pairs between the same two
- * territories, only the best is listed. `territoryOf` maps a path to its
- * finest territory, for the entry's `territories`.
+ * with at least `limits.minEntryCouplingChanges` shared changes. The score is
+ * the share of all the heat that the two files hold (`heatShareOf` gives it
+ * for a set of paths) times `Coupling.degree`, how tightly the two change
+ * together. Of several pairs between the same two territories, only the best
+ * is listed. `places.territoryOf` maps a path to its finest territory, for the
+ * entry's `territories`.
  */
 export const couplingEntries = (
   couplings: ReadonlyArray<Coupling>,
-  areaOfFile: ReadonlyMap<string, string>,
-  territoryOf: ReadonlyMap<string, string>,
-  changes: number,
+  places: {
+    readonly areaOfFile: ReadonlyMap<string, string>;
+    readonly territoryOf: ReadonlyMap<string, string>;
+  },
+  heatShareOf: (paths: Iterable<string>) => number,
+  limits: EntryLimits,
 ): ReadonlyArray<Candidate> => {
   const best = new Map<string, Candidate>();
   for (const coupling of couplings) {
-    const areas = [areaOfFile.get(coupling.a), areaOfFile.get(coupling.b)];
-    const [first, second] = areas;
+    const first = places.areaOfFile.get(coupling.a);
+    const second = places.areaOfFile.get(coupling.b);
     if (
       first === undefined ||
       second === undefined ||
       first === second ||
       coupling.imports !== "none" ||
-      coupling.sharedCommits < MIN_SHARED_CHANGES ||
-      changes === 0 ||
+      coupling.sharedCommits < limits.minEntryCouplingChanges ||
       !isJudgeablePair(coupling)
     ) {
       continue;
     }
+    const heatShare = heatShareOf([coupling.a, coupling.b]);
     const candidate: Candidate = {
       kind: "coupling",
-      score: coupling.degree * (coupling.sharedCommits / changes),
+      score: heatShare * coupling.degree,
       territories: [
         ...new Set(
           [coupling.a, coupling.b].flatMap(
-            (file) => territoryOf.get(file) ?? [],
+            (file) => places.territoryOf.get(file) ?? [],
           ),
         ),
       ].toSorted(),
       files: [coupling.a, coupling.b],
       evidence: evidenceOf({
+        heatShare,
         sharedChanges: coupling.sharedCommits,
         degree: coupling.degree,
         distance: coupling.distance,

@@ -7,6 +7,7 @@ import { percent } from "./format.js";
 import type { Style } from "./style.js";
 
 type EntryPoint = Report["entryPoints"][number];
+type Finding = EntryPoint["findings"][number];
 
 const KIND_LABELS: Readonly<Record<EntryPoint["kind"], string>> = {
   boundary: "boundary",
@@ -21,15 +22,15 @@ const KIND_LABELS: Readonly<Record<EntryPoint["kind"], string>> = {
 const counted = (count: number, noun: string): string =>
   `${count} ${count === 1 ? noun : `${noun}s`}`;
 
-/** What the entry is about, as paths: the territories of a territory kind, the files of a file kind. */
+/** What the entry is about, as paths: its files when it names some, else its territories. */
 const subject = (
   entry: EntryPoint,
   pathOf: ReadonlyMap<string, string>,
 ): string => {
   const names =
-    entry.kind === "boundary" || entry.kind === "clique"
-      ? entry.territories.map((id) => pathOf.get(id) ?? id)
-      : entry.files;
+    entry.files.length > 0
+      ? entry.files
+      : entry.territories.map((id) => pathOf.get(id) ?? id);
   // a group territory's path already joins its folders with " + "
   return names
     .map((name) => escapeForTerminal(name))
@@ -60,14 +61,18 @@ const EVIDENCE_LINES: Readonly<
 };
 
 /** The numbers behind the entry, in a sentence a newcomer can read. */
-const evidenceLine = ({ kind, evidence }: EntryPoint): string =>
+const evidenceLine = ({
+  kind,
+  evidence,
+}: Pick<Finding, "kind" | "evidence">): string =>
   EVIDENCE_LINES[kind]((name) => evidence[name] ?? 0, evidence);
 
 /**
  * The "Where to start" section: one block per entry point, best first, each
  * with its kind, what it is about (paths joined with `, `, the two files of a
- * coupling with `<->`), the verdict, the numbers, and the design move; the
- * paths are made safe to print. Empty when the report has no entry
+ * coupling with `<->`), the verdict, the numbers, and the design move, then
+ * the verdict, numbers, and move of each further finding of the entry under
+ * "Also"; the paths are made safe to print. Empty when the report has no entry
  * points. A trailing blank line closes the section.
  */
 export const entryPointLines = (
@@ -87,14 +92,22 @@ export const entryPointLines = (
       `${indent}${escapeForTerminal(entry.verdict)}`,
       `${indent}${style.dim(evidenceLine(entry))}`,
       `${indent}${escapeForTerminal(entry.designMove)}`,
+      ...entry.findings
+        .slice(1)
+        .flatMap((finding) => [
+          `${indent}Also ${finding.kind}: ${escapeForTerminal(finding.verdict)}`,
+          `${indent}${style.dim(evidenceLine(finding))}`,
+          `${indent}${escapeForTerminal(finding.designMove)}`,
+        ]),
     ]),
     "",
   ];
 };
 
 /**
- * One line pair per entry point a file belongs to, for `inspect`: the rank and
- * kind with the verdict, and the design move beneath. Empty for a file in none.
+ * One line pair per finding of each entry point a file belongs to, for
+ * `inspect`: the rank and kind with the verdict, and the design move beneath;
+ * a further finding of the entry follows as "also". Empty for a file in none.
  */
 export const fileEntryPointLines = (
   entryPoints: ReadonlyArray<EntryPoint>,
@@ -102,4 +115,10 @@ export const fileEntryPointLines = (
   entryPoints.flatMap((entry) => [
     `entry point #${entry.rank} (${entry.kind}): ${escapeForTerminal(entry.verdict)}`,
     `  ${escapeForTerminal(entry.designMove)}`,
+    ...entry.findings
+      .slice(1)
+      .flatMap((finding) => [
+        `  also ${finding.kind}: ${escapeForTerminal(finding.verdict)}`,
+        `  ${escapeForTerminal(finding.designMove)}`,
+      ]),
   ]);

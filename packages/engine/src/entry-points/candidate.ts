@@ -2,8 +2,11 @@
 import type { EntryPoint } from "../report/entry-point.js";
 import { roundReported } from "../report/precision.js";
 
-/** An entry point that waits to be ranked; `score` is exact. */
-export type Candidate = Omit<EntryPoint, "rank">;
+/** One finding about an entry point, with what it concerns, waiting to be ranked; `score` is exact. */
+export type Candidate = Omit<EntryPoint, "rank" | "findings">;
+
+/** An entry point that waits to be ranked: its findings are merged (see `entriesOf`). */
+export type Entry = Omit<EntryPoint, "rank">;
 
 /** The evidence with the numbers that do not exist left out, rounded as the report rounds. */
 export const evidenceOf = (

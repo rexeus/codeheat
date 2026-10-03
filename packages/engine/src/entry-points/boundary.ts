@@ -4,27 +4,22 @@ import { evidenceOf } from "./candidate.js";
 import type { Candidate } from "./candidate.js";
 import { isChronic } from "./judged-territories.js";
 import type { Judged } from "./judged-territories.js";
+import type { EntryLimits } from "./limits.js";
 import { boundaryMove, boundaryVerdict } from "./moves.js";
-
-/** A territory keeps its boundary when more than this share of its changes stay inside it. */
-const MAX_CONTAINMENT = 0.75;
-
-/** A territory with less of the repository's heat is not worth starting with. */
-export const MIN_HEAT_SHARE = 0.02;
 
 /** How much more a territory ranks when most of its heat is chronic. */
 const CHRONIC_BOOST = 1.5;
 
-/** Whether the territory has changes to judge, keeps at most `MAX_CONTAINMENT` of them inside, and holds at least `MIN_HEAT_SHARE` of the heat. */
-const leaks = ({ fit, heatShare }: Judged): boolean =>
+/** Whether the territory has changes to judge, keeps at most `maxEntryContainment` of them inside, and holds at least `minEntryHeatShare` of the heat. */
+const leaks = ({ fit, heatShare }: Judged, limits: EntryLimits): boolean =>
   fit.containment !== null &&
-  fit.containment <= MAX_CONTAINMENT &&
-  heatShare >= MIN_HEAT_SHARE;
+  fit.containment <= limits.maxEntryContainment &&
+  heatShare >= limits.minEntryHeatShare;
 
 /**
- * The territories whose boundary does not hold: at most `MAX_CONTAINMENT` of
- * their changes stay inside and they hold at least `MIN_HEAT_SHARE` of the
- * heat. The score is `heatShare × (1 − containment) × (chronic ? 1.5 : 1) ×
+ * The territories whose boundary does not hold: at most
+ * `limits.maxEntryContainment` of their changes stay inside and they hold at
+ * least `limits.minEntryHeatShare` of the heat. The score is `heatShare × (1 − containment) × (chronic ? 1.5 : 1) ×
  * (1 + fix share)`: the heat that leaks, more when it is the long-lived kind
  * and when it is spent on fixes. A territory is chronic when most of its heat
  * is in chronic hotspots (see `isChronic`); the fix share is 0 where subjects
@@ -33,10 +28,11 @@ const leaks = ({ fit, heatShare }: Judged): boolean =>
 export const boundaryEntries = (
   judged: ReadonlyArray<Judged>,
   pathOf: ReadonlyMap<string, string>,
+  limits: EntryLimits,
 ): ReadonlyArray<Candidate> =>
   judged.flatMap((territory): Array<Candidate> => {
     const { fit, heatShare } = territory;
-    if (!leaks(territory)) {
+    if (!leaks(territory, limits)) {
       return [];
     }
     const containment = fit.containment ?? 1;
@@ -46,7 +42,7 @@ export const boundaryEntries = (
         score:
           heatShare *
           (1 - containment) *
-          (isChronic(fit) ? CHRONIC_BOOST : 1) *
+          (isChronic(fit, limits.minEntryChronicShare) ? CHRONIC_BOOST : 1) *
           (1 + (fit.fixDensity?.share ?? 0)),
         territories: [territory.id],
         files: [],

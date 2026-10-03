@@ -2,9 +2,9 @@
 // across their boundaries.
 import type { Clique } from "../report/clique.js";
 import type { Territory } from "../report/territory.js";
-import { MIN_HEAT_SHARE } from "./boundary.js";
 import { evidenceOf } from "./candidate.js";
 import type { Candidate } from "./candidate.js";
+import type { EntryLimits } from "./limits.js";
 import { CLIQUE_VERDICT, cliqueMove } from "./moves.js";
 
 /** Shared changes at which a clique's evidence counts in full; fewer weigh in proportion. */
@@ -25,14 +25,12 @@ const overlap = (
 const scored = (
   cliques: ReadonlyArray<Clique>,
   byId: ReadonlyMap<string, Territory>,
+  minHeatShare: number,
 ): ReadonlyArray<Candidate> =>
   cliques.flatMap((clique): Array<Candidate> => {
     const members = clique.modules.flatMap((id) => byId.get(id) ?? []);
     const heatShare = members.reduce((sum, { heatShare: own }) => sum + own, 0);
-    if (
-      members.length !== clique.modules.length ||
-      heatShare < MIN_HEAT_SHARE
-    ) {
+    if (members.length !== clique.modules.length || heatShare < minHeatShare) {
       return [];
     }
     return [
@@ -59,7 +57,7 @@ const scored = (
 /**
  * The cliques among the territories at the recommended detail (see
  * `Clique`; the members are territory ids) whose members hold at least
- * `MIN_HEAT_SHARE` of the heat together. The score is `heat of the members ×
+ * `limits.minEntryHeatShare` of the heat together. The score is `heat of the members ×
  * weakest share × evidence`: the heat that moves as one unit, as tightly as
  * the weakest pair does, with `evidence` `min(1, shared changes / 10)` so that
  * a unit seen three times does not outrank one seen eleven times. A clique
@@ -69,11 +67,14 @@ const scored = (
 export const cliqueEntries = (
   cliques: ReadonlyArray<Clique>,
   byId: ReadonlyMap<string, Territory>,
+  limits: EntryLimits,
 ): ReadonlyArray<Candidate> => {
   const kept: Array<Candidate> = [];
-  for (const candidate of scored(cliques, byId).toSorted(
-    (a, b) => b.score - a.score,
-  )) {
+  for (const candidate of scored(
+    cliques,
+    byId,
+    limits.minEntryHeatShare,
+  ).toSorted((a, b) => b.score - a.score)) {
     if (
       kept.every(
         ({ territories }) =>

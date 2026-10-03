@@ -6,17 +6,31 @@ import { makeStyle } from "./style.js";
 
 type EntryPoint = Report["entryPoints"][number];
 
-const entry = (overrides: Partial<EntryPoint>): EntryPoint => ({
-  rank: 1,
-  kind: "boundary",
-  score: 0.2,
-  territories: ["t2"],
-  files: [],
-  evidence: {},
-  verdict: "Verdict.",
-  designMove: "Move.",
-  ...overrides,
-});
+const entry = (overrides: Partial<EntryPoint>): EntryPoint => {
+  const own = {
+    kind: "boundary" as const,
+    files: [],
+    evidence: {},
+    verdict: "Verdict.",
+    designMove: "Move.",
+    ...overrides,
+  };
+  return {
+    rank: 1,
+    score: 0.2,
+    territories: ["t2"],
+    findings: [
+      {
+        kind: own.kind,
+        verdict: own.verdict,
+        designMove: own.designMove,
+        evidence: own.evidence,
+        files: own.files,
+      },
+    ],
+    ...own,
+  };
+};
 
 const territories = (
   paths: Readonly<Record<string, string>>,
@@ -202,6 +216,61 @@ describe("entryPointLines layout", () => {
     expect(out[3]).toBe(
       "   30 files depend on it, 14 of them changed together with it; 8 changes touched it",
     );
+  });
+});
+
+describe("entries with two findings", () => {
+  const both = entry({
+    evidence: {
+      heatShare: 0.4,
+      containment: 0.5,
+      changes: 30,
+      chronicShare: 0.6,
+      chronicFiles: 2,
+    },
+    findings: [
+      {
+        kind: "boundary",
+        verdict: "Leaks.",
+        designMove: "Move it.",
+        evidence: { heatShare: 0.4, containment: 0.5, changes: 30 },
+        files: [],
+      },
+      {
+        kind: "hotspot",
+        verdict: "Chronic.",
+        designMove: "Split it.",
+        evidence: { heatShare: 0.4, chronicShare: 0.6, chronicFiles: 2 },
+        files: ["a/hot.ts"],
+      },
+    ],
+  });
+
+  it("prints the further finding under the entry as also", () => {
+    expect(lines([both]).slice(1, 8)).toStrictEqual([
+      "1. boundary  billing",
+      "   Verdict.",
+      "   40% of the heat; 50% of its 30 changes stay inside",
+      "   Move.",
+      "   Also hotspot: Chronic.",
+      "   40% of the heat; 60% of it in 2 chronic hotspots",
+      "   Split it.",
+    ]);
+  });
+
+  it("names the territories, not the hotspot files, when the primary finding is the hotspot", () => {
+    const hotspotFirst = entry({ kind: "hotspot", files: [] });
+
+    expect(lines([hotspotFirst])[1]).toBe("1. hotspot  billing");
+  });
+
+  it("lists the further finding of an entry in inspect", () => {
+    expect(fileEntryPointLines([both])).toStrictEqual([
+      "entry point #1 (boundary): Verdict.",
+      "  Move.",
+      "  also hotspot: Chronic.",
+      "  Split it.",
+    ]);
   });
 });
 

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { Coupling } from "../report/report.js";
+import { DEFAULT_THRESHOLDS } from "../testing/report-defaults.js";
 import { couplingEntries } from "./coupling.js";
 
 const AREAS = new Map([
@@ -37,19 +38,31 @@ const coupling = (
   ...overrides,
 });
 
-const entries = (couplings: ReadonlyArray<Coupling>, changes = 100) =>
-  couplingEntries(couplings, AREAS, TERRITORIES, changes);
+/** Every distinct path holds a tenth of all the heat. */
+const tenthEach = (paths: Iterable<string>): number => new Set(paths).size / 10;
+
+const entries = (
+  couplings: ReadonlyArray<Coupling>,
+  limits = DEFAULT_THRESHOLDS,
+) =>
+  couplingEntries(
+    couplings,
+    { areaOfFile: AREAS, territoryOf: TERRITORIES },
+    tenthEach,
+    limits,
+  );
 
 describe("couplingEntries", () => {
-  it("scores how tightly the files change together times the share of all changes that touched both", () => {
+  it("scores the heat of the two files times how tightly they change together", () => {
     const [entry] = entries([coupling("a/x.ts", "b/x.ts")]);
 
-    // degree 0.6, activity 10 / 100
-    expect(entry?.score).toBeCloseTo(0.06, 10);
+    // heat 2 / 10, degree 0.6
+    expect(entry?.score).toBeCloseTo(0.12, 10);
     expect(entry?.kind).toBe("coupling");
     expect(entry?.files).toStrictEqual(["a/x.ts", "b/x.ts"]);
     expect(entry?.territories).toStrictEqual(["t3", "t5"]);
     expect(entry?.evidence).toStrictEqual({
+      heatShare: 0.2,
       sharedChanges: 10,
       degree: 0.6,
       distance: 2,
@@ -79,16 +92,24 @@ describe("couplingEntries", () => {
     ).toStrictEqual([]);
   });
 
-  it("leaves out a file that belongs to no territory, and a window without changes", () => {
+  it("leaves out a file that belongs to no territory", () => {
     expect(entries([coupling("a/x.ts", "api/schema.tsp")])).toStrictEqual([]);
-    expect(entries([coupling("a/x.ts", "b/x.ts")], 0)).toStrictEqual([]);
+  });
+
+  it("reads the gate on the shared changes from the limits", () => {
+    const pair = coupling("a/x.ts", "b/x.ts", { sharedCommits: 4 });
+
+    expect(entries([pair])).toStrictEqual([]);
+    expect(
+      entries([pair], { ...DEFAULT_THRESHOLDS, minEntryCouplingChanges: 4 }),
+    ).toHaveLength(1);
   });
 
   it("lists only the best of several pairs between the same two territories", () => {
     const listed = entries([
-      coupling("a/x.ts", "b/x.ts", { sharedCommits: 6 }),
-      coupling("a/y.ts", "b/y.ts", { sharedCommits: 9 }),
-      coupling("a/x.ts", "c/x.ts", { sharedCommits: 7 }),
+      coupling("a/x.ts", "b/x.ts", { degree: 0.4 }),
+      coupling("a/y.ts", "b/y.ts", { degree: 0.8 }),
+      coupling("a/x.ts", "c/x.ts", { degree: 0.5 }),
     ]);
 
     expect(listed.map(({ files }) => files)).toStrictEqual([

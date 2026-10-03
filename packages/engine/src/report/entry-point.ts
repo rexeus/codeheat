@@ -23,6 +23,27 @@ const EntryPointKind = Schema.Literals([
 ]);
 
 /**
+ * What one kind of weakness says about an entry point: the verdict, the
+ * move, and the numbers behind it.
+ */
+const Finding = Schema.Struct({
+  kind: EntryPointKind,
+  /** One fixed sentence per kind (a variant when the territory also erodes) saying what is wrong, for a reader new to the repository. */
+  verdict: Schema.String,
+  /** One sentence per kind, built from a fixed template with the paths filled in, saying what to do: move a boundary, extract a shared abstraction, break up a hub, split a hotspot, or centralize a contract. */
+  designMove: Schema.String,
+  /**
+   * The numbers behind it by name, taken from the territory's `fit`, the
+   * clique, the copy family, the unstable interface, or the coupling (see
+   * GLOSSARY.md for each kind's names). A number that does not exist is left
+   * out.
+   */
+  evidence: Schema.Record(Schema.String, Schema.Finite),
+  /** The files this finding names, sorted; see `EntryPoint.files`. */
+  files: Schema.Array(Schema.String),
+});
+
+/**
  * One place to start: where the design fails, why, and what to do about it.
  * The report lists at most ten, best first, every one with the numbers that
  * put it there.
@@ -30,13 +51,16 @@ const EntryPointKind = Schema.Literals([
 export const EntryPoint = Schema.Struct({
   /** 1 is the best place to start. */
   rank: Schema.Int.check(Schema.isGreaterThanOrEqualTo(1)),
+  /** The kind of the primary finding, the stronger one when a territory has two. */
   kind: EntryPointKind,
   /**
-   * What put it on the list, in the unit of its kind (see GLOSSARY.md, "Entry
-   * point (of a report)"): a share of the repository's heat for `boundary`, `hotspot`, and
-   * `clique`, a share of the counted changes for `copies` and `hub`. Rounded
-   * to 4 decimals; scores of different kinds are only roughly comparable, so
-   * the list also keeps the best entry of each kind (see `Report.entryPoints`).
+   * What put it on the list: the share of all the heat (see
+   * `Territory.heatShare`; the heat of a file is `FileStats.changes × (loc +
+   * complexity.total)`) at stake, times how strong the weakness is, in the
+   * unit of every kind, so that scores of different kinds compare as the share
+   * of change effort at stake (see GLOSSARY.md, "Entry point (of a report)"
+   * for each kind's rule). Rounded to 4 decimals. The score of the primary
+   * finding.
    */
   score: Schema.Finite.check(Schema.isGreaterThan(0)),
   /**
@@ -46,20 +70,26 @@ export const EntryPoint = Schema.Struct({
    */
   territories: Schema.Array(Schema.String),
   /**
-   * The files it concerns, sorted: the chronic hotspots of `hotspot`, the
-   * members of `copies`, the file of `hub`, the two files of `coupling`; empty for `boundary` and
-   * `clique`, which concern whole territories.
+   * The files it concerns, sorted: the chronic hotspots of a `hotspot`, the
+   * members of `copies`, the file of `hub`, the two files of `coupling`. Empty
+   * for `boundary` and `clique`, which concern whole territories, and for a
+   * territory that is both a boundary and a hotspot (its hotspot files are
+   * in the finding).
    */
   files: Schema.Array(Schema.String),
-  /**
-   * The numbers behind it by name, taken from the territory's `fit`, the
-   * clique, the copy family, or the unstable interface (see GLOSSARY.md for
-   * each kind's names). A number that does not exist is left out.
-   */
+  /** The numbers behind the primary finding, completed by those of the other finding of the territory. */
   evidence: Schema.Record(Schema.String, Schema.Finite),
-  /** One fixed sentence per kind (a variant when the territory also erodes) saying what is wrong, for a reader new to the repository. */
+  /** The verdict of the primary finding. */
   verdict: Schema.String,
-  /** One sentence per kind, built from a fixed template with the paths filled in, saying what to do: move a boundary, extract a shared abstraction, break up a hub, or split a hotspot. */
+  /** The design move of the primary finding. */
   designMove: Schema.String,
+  /**
+   * Every finding about the entry, the primary one (the stronger, by its score
+   * among the findings) first. A territory that qualifies as both a
+   * `boundary` and a `hotspot` is one entry with two findings; every other
+   * entry has one, the one repeated in `kind`, `verdict`, `designMove`,
+   * `evidence`, and `files`.
+   */
+  findings: Schema.Array(Finding),
 });
 export type EntryPoint = typeof EntryPoint.Type;

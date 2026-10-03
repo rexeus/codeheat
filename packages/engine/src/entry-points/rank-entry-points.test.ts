@@ -4,6 +4,7 @@ import type { CopyFamily } from "../report/copy-family.js";
 import type { Coupling } from "../report/report.js";
 import type { Territories } from "../report/territory.js";
 import { fileRecord } from "../testing/file-record.js";
+import { DEFAULT_THRESHOLDS } from "../testing/report-defaults.js";
 import { fitRecord, territoryRecord } from "../testing/territory-record.js";
 import type { EntryPointInput } from "./gather-candidates.js";
 import { rankEntryPoints } from "./rank-entry-points.js";
@@ -64,6 +65,21 @@ const FOUR_HUBS = [10, 8, 6, 4].map((changedDependents) => ({
   reason: "",
 }));
 
+/** A file with `heat` units of heat and no other trait. */
+const heated = (path: string, territory: string, heat: number) =>
+  fileRecord(path, territory, {
+    changes: 1,
+    loc: heat,
+    complexity: { total: 0, mean: 0, max: 0 },
+  });
+
+/** Files holding 1000 units of heat; the two copies hold 10 each. */
+const HEAT_FILES = [
+  heated("a/x.ts", "a", 10),
+  heated("b/x.ts", "b", 10),
+  heated("c/x.ts", "c", 980),
+];
+
 const copies = (): CopyFamily => ({
   files: ["a/x.ts", "b/x.ts"],
   similarity: { min: 0.8, max: 0.9 },
@@ -79,8 +95,8 @@ const input = (overrides: Partial<EntryPointInput> = {}): EntryPointInput => ({
   copyFamilies: [],
   couplings: [],
   unstableInterfaces: [],
-  changes: 1000,
   minChanges: 10,
+  limits: DEFAULT_THRESHOLDS,
   ...overrides,
 });
 
@@ -102,9 +118,11 @@ describe("rankEntryPoints", () => {
   });
 
   it("lists at most four of a kind, but always the best of every kind", () => {
-    const ranked = rankEntryPoints(input({ copyFamilies: [copies()] }));
+    const ranked = rankEntryPoints(
+      input({ files: HEAT_FILES, copyFamilies: [copies()] }),
+    );
 
-    // the copies score 0.005, below every boundary, yet they are listed
+    // the copies score 0.02, below every boundary, yet they are listed
     expect(ranked.map(({ kind }) => kind)).toStrictEqual([
       "boundary",
       "boundary",
@@ -143,9 +161,9 @@ describe("rankEntryPoints of couplings and the cap", () => {
       input({
         territories: territories(["package", "other"]),
         files: [
-          fileRecord("a/x.ts", "a"),
-          fileRecord("c/x.ts", "c"),
-          fileRecord("b/x.ts", "b"),
+          heated("a/x.ts", "a", 100),
+          heated("c/x.ts", "c", 100),
+          heated("b/x.ts", "b", 100),
         ],
         couplings: [hidden("a/x.ts", "c/x.ts"), hidden("a/x.ts", "b/x.ts")],
       }),
@@ -165,7 +183,14 @@ describe("rankEntryPoints of couplings and the cap", () => {
 
   it("lists ten entries at most, the best of each kind among them", () => {
     const ranked = rankEntryPoints(
-      input({ cliques: FOUR_UNITS, unstableInterfaces: FOUR_HUBS }),
+      input({
+        files: [
+          ...FOUR_HUBS.map(({ path }) => heated(path, "a", 100)),
+          heated("c/x.ts", "c", 600),
+        ],
+        cliques: FOUR_UNITS,
+        unstableInterfaces: FOUR_HUBS,
+      }),
     );
 
     expect(ranked).toHaveLength(10);
@@ -178,5 +203,50 @@ describe("rankEntryPoints of couplings and the cap", () => {
     expect(ranked.map(({ score }) => score)).toStrictEqual(
       ranked.map(({ score }) => score).toSorted((x, y) => y - x),
     );
+  });
+});
+
+describe("rankEntryPoints of one territory", () => {
+  it("makes one entry of a territory that is both a boundary and a hotspot, with both findings, the stronger first", () => {
+    const chronic = { kind: "chronic" as const, hotWindows: 5, windows: 6 };
+    const both = territories();
+    const ranked = rankEntryPoints(
+      input({
+        territories: {
+          ...both,
+          nodes: both.nodes.map((node) =>
+            node.id === "a"
+              ? Object.assign({}, node, {
+                  fit: fitRecord({ containment: 0.1, chronicShare: 0.6 }),
+                })
+              : node,
+          ),
+        },
+        files: [fileRecord("a/hot.ts", "a", { heat: chronic, score: 0.9 })],
+      }),
+    );
+
+    const [first] = ranked;
+    expect(
+      ranked.filter(({ territories: ids }) => ids[0] === "a"),
+    ).toHaveLength(1);
+    // boundary 0.1 × 0.9 × 1.5 = 0.135 against hotspot 0.1 × 0.6 = 0.06
+    expect(first?.kind).toBe("boundary");
+    expect(first?.score).toBe(0.135);
+    expect(first?.files).toStrictEqual([]);
+    expect(
+      first?.findings.map(({ kind, files }) => [kind, files]),
+    ).toStrictEqual([
+      ["boundary", []],
+      ["hotspot", ["a/hot.ts"]],
+    ]);
+  });
+
+  it("reads the cap on the entries from the limits", () => {
+    expect(
+      rankEntryPoints(
+        input({ limits: { ...DEFAULT_THRESHOLDS, maxEntries: 2 } }),
+      ),
+    ).toHaveLength(2);
   });
 });

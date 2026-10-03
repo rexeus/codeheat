@@ -3,8 +3,8 @@ import { describe, expect, it } from "vitest";
 import type { Heat } from "../report/heat.js";
 import type { TerritoryFit } from "../report/territory-fit.js";
 import { fileRecord } from "../testing/file-record.js";
+import { DEFAULT_THRESHOLDS } from "../testing/report-defaults.js";
 import { fitRecord, territoryRecord } from "../testing/territory-record.js";
-import { chainsOf } from "./ancestry.js";
 import { hotspotEntries } from "./hotspot.js";
 import type { Judged } from "./judged-territories.js";
 
@@ -30,7 +30,7 @@ const chronic: Heat = { kind: "chronic", hotWindows: 6, windows: 8 };
 const entries = (
   territories: ReadonlyArray<Judged>,
   files: Parameters<typeof hotspotEntries>[1],
-) => hotspotEntries(territories, files, chainsOf(NODES));
+) => hotspotEntries(territories, files, NODES, DEFAULT_THRESHOLDS);
 
 describe("hotspotEntries", () => {
   it("scores the share of all the heat that sits in chronic hotspots, more with fixes", () => {

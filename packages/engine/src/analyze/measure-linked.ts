@@ -62,7 +62,7 @@ export const measureLinked = (
       couplings,
       copyFamilies,
       unstableInterfaces: stability.unstableInterfaces,
-      changes: measured.couplingCommits,
+      limits: measured.thresholds,
       histories,
       minChanges: measured.thresholds.minModuleCommits,
     });

@@ -1,8 +1,9 @@
 import { describe, expect, it } from "vitest";
 
 import type { TerritoryFit } from "../report/territory-fit.js";
+import { DEFAULT_THRESHOLDS } from "../testing/report-defaults.js";
 import { fitRecord, territoryRecord } from "../testing/territory-record.js";
-import { boundaryEntries } from "./boundary.js";
+import { boundaryEntries as boundaryEntriesWith } from "./boundary.js";
 import type { Judged } from "./judged-territories.js";
 
 const judged = (
@@ -16,6 +17,12 @@ const judged = (
   changes: 40,
   fit: fitRecord(fit),
 });
+
+const boundaryEntries = (
+  judgedTerritories: ReadonlyArray<Judged>,
+  paths: ReadonlyMap<string, string>,
+  limits = DEFAULT_THRESHOLDS,
+) => boundaryEntriesWith(judgedTerritories, paths, limits);
 
 const PATHS = new Map([
   ["a", "packages/a"],
@@ -83,6 +90,23 @@ describe("boundaryEntries gates", () => {
         PATHS,
       ).map(({ territories }) => territories),
     ).toStrictEqual([["b"]]);
+  });
+});
+
+describe("boundaryEntries limits", () => {
+  it("reads the gates from the limits", () => {
+    const territories = [
+      judged("a", 0.03, { containment: 0.8, chronicShare: 0.4 }),
+    ];
+
+    expect(boundaryEntries(territories, PATHS)).toStrictEqual([]);
+    const [entry] = boundaryEntries(territories, PATHS, {
+      ...DEFAULT_THRESHOLDS,
+      maxEntryContainment: 0.9,
+      minEntryChronicShare: 0.4,
+    });
+    // heat 0.03 × leak 0.2 × chronic 1.5
+    expect(entry?.score).toBeCloseTo(0.009, 10);
   });
 });
 

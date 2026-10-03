@@ -4,6 +4,7 @@
 import { Effect } from "effect";
 import type { FileSystem, Path } from "effect";
 
+import type { EntryLimits } from "../entry-points/limits.js";
 import { rankEntryPoints } from "../entry-points/rank-entry-points.js";
 import type { GitError } from "../git/git-errors.js";
 import type { Git } from "../git/git.js";
@@ -26,7 +27,8 @@ export type MeasuredTerritorial = MeasuredTerritories & {
  * and measures each one's design fit over the latest window, the series, and
  * the reported `couplings`, then ranks the entry points among them, the copy
  * families, and the unstable interfaces. `minChanges` is
- * `Thresholds.minModuleCommits`; `changes` the counted changes of the window.
+ * `Thresholds.minModuleCommits`; `limits` are the entry point gates of the
+ * report's thresholds.
  */
 export const measureTerritorial = (options: {
   readonly root: string;
@@ -36,9 +38,9 @@ export const measureTerritorial = (options: {
   readonly couplings: ReadonlyArray<Coupling>;
   readonly copyFamilies: ReadonlyArray<CopyFamily>;
   readonly unstableInterfaces: ReadonlyArray<UnstableInterface>;
-  readonly changes: number;
   readonly histories: WindowHistories;
   readonly minChanges: number;
+  readonly limits: EntryLimits;
 }): Effect.Effect<
   MeasuredTerritorial,
   GitError,
@@ -67,8 +69,8 @@ export const measureTerritorial = (options: {
         copyFamilies: options.copyFamilies,
         couplings,
         unstableInterfaces: options.unstableInterfaces,
-        changes: options.changes,
         minChanges,
+        limits: options.limits,
       }),
     };
   });

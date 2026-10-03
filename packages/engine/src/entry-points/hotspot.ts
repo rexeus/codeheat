@@ -1,32 +1,40 @@
 // Owns the entry points of kind `hotspot`: territories whose heat is mostly in
 // chronic hotspot files.
 import type { FileStats } from "../report/report.js";
-import { MIN_HEAT_SHARE } from "./boundary.js";
+import type { Territory } from "../report/territory.js";
+import { chainsOf } from "./ancestry.js";
 import { evidenceOf } from "./candidate.js";
 import type { Candidate } from "./candidate.js";
 import { isChronic } from "./judged-territories.js";
 import type { Judged } from "./judged-territories.js";
+import type { EntryLimits } from "./limits.js";
 import { HOTSPOT_VERDICT, hotspotMove } from "./moves.js";
 
 /** An entry names at most this many of the hotspots. */
 const MAX_FILES = 5;
 
 /**
- * The territories that are chronic (most of their heat is in chronic
- * hotspots, see `isChronic`) and hold at least `MIN_HEAT_SHARE` of the heat.
+ * The territories that are chronic (at least `limits.minEntryChronicShare` of their
+ * heat is in chronic hotspots, see `isChronic`) and hold at least
+ * `limits.minEntryHeatShare` of the heat.
  * The score is `heatShare × chronicShare × (1 + fix share)`: the share of all
  * the heat that sits in long-lived hotspots, more when it is spent on fixes.
  * The entry names up to five of the territory's chronic hotspots, the highest
- * scored first; `chainOf` gives the territory a file lies in and its ancestors.
+ * scored first; `nodes` is the territory tree, to find the files below a territory.
  */
 export const hotspotEntries = (
   judged: ReadonlyArray<Judged>,
   files: ReadonlyArray<FileStats>,
-  chainOf: (id: string) => ReadonlySet<string>,
-): ReadonlyArray<Candidate> =>
-  judged.flatMap((territory): Array<Candidate> => {
+  nodes: ReadonlyArray<Pick<Territory, "id" | "parent">>,
+  limits: EntryLimits,
+): ReadonlyArray<Candidate> => {
+  const chainOf = chainsOf(nodes);
+  return judged.flatMap((territory): Array<Candidate> => {
     const { fit, heatShare } = territory;
-    if (!isChronic(fit) || heatShare < MIN_HEAT_SHARE) {
+    if (
+      !isChronic(fit, limits.minEntryChronicShare) ||
+      heatShare < limits.minEntryHeatShare
+    ) {
       return [];
     }
     const hotspots = files
@@ -61,3 +69,4 @@ export const hotspotEntries = (
       },
     ];
   });
+};

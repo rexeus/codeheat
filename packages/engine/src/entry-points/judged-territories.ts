@@ -1,18 +1,17 @@
+import type { TerritoryFit } from "../report/territory-fit.js";
 // Owns which territories entry points judge: the real ones at the recommended
 // detail with enough changes to say anything.
-import type { TerritoryFit } from "../report/territory-fit.js";
 import type { Territories, Territory } from "../report/territory.js";
 import { isTerritoryKind } from "../territories/recommend.js";
 
 /** A territory with its design fit. */
 export type Judged = Territory & { readonly fit: TerritoryFit };
 
-/** Share of its code's heat in chronic hotspots at which a territory counts as chronic. */
-const CHRONIC_SHARE = 0.5;
-
-/** Whether most of the territory's heat is the long-lived kind. */
-export const isChronic = ({ chronicShare }: TerritoryFit): boolean =>
-  chronicShare >= CHRONIC_SHARE;
+/** Whether at least `minChronicShare` of the territory's heat is the long-lived kind (`Thresholds.minEntryChronicShare`). */
+export const isChronic = (
+  { chronicShare }: TerritoryFit,
+  minChronicShare: number,
+): boolean => chronicShare >= minChronicShare;
 
 /**
  * The territories visible at the recommended detail that are packages,

@@ -24,6 +24,7 @@ const entry = (
   evidence: {},
   verdict: "",
   designMove: "",
+  findings: [],
 });
 
 const FILES = [

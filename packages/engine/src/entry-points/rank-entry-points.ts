@@ -4,17 +4,13 @@ import { Order } from "effect";
 
 import type { EntryPoint } from "../report/entry-point.js";
 import { roundReported } from "../report/precision.js";
-import type { Candidate } from "./candidate.js";
+import type { Entry } from "./candidate.js";
+import { entriesOf } from "./entries-of.js";
 import { gatherCandidates } from "./gather-candidates.js";
 import type { EntryPointInput } from "./gather-candidates.js";
+import type { EntryLimits } from "./limits.js";
 
-/** The list has at most this many entry points. */
-const MAX_ENTRY_POINTS = 10;
-
-/** No kind has more than this many entry points. */
-const MAX_PER_KIND = 4;
-
-const byScore = (a: Candidate, b: Candidate): number =>
+const byScore = (a: Entry, b: Entry): number =>
   b.score - a.score ||
   Order.String(a.kind, b.kind) ||
   Order.String(
@@ -23,47 +19,48 @@ const byScore = (a: Candidate, b: Candidate): number =>
   );
 
 /**
- * Merges the candidates of every kind into the list: each kind keeps its four
- * best, the best of every kind is listed whatever its score, and the other
- * places are filled by score, up to ten. Ranked by score, then kind, then
- * what the entry concerns.
+ * Merges the entries of every kind into the list: each kind keeps its
+ * `limits.maxEntriesPerKind` best, the best of every kind is listed whatever
+ * its score, and the other places are filled by score, up to
+ * `limits.maxEntries`. Ranked by score, then kind, then what the entry
+ * concerns.
  */
 const pick = (
-  candidates: ReadonlyArray<Candidate>,
-): ReadonlyArray<Candidate> => {
-  const perKind = new Map<string, Array<Candidate>>();
-  for (const candidate of candidates.toSorted(byScore)) {
-    const own = perKind.get(candidate.kind) ?? [];
-    if (own.length < MAX_PER_KIND) {
-      own.push(candidate);
-      perKind.set(candidate.kind, own);
+  entries: ReadonlyArray<Entry>,
+  limits: EntryLimits,
+): ReadonlyArray<Entry> => {
+  const perKind = new Map<string, Array<Entry>>();
+  for (const entry of entries.toSorted(byScore)) {
+    const own = perKind.get(entry.kind) ?? [];
+    if (own.length < limits.maxEntriesPerKind) {
+      own.push(entry);
+      perKind.set(entry.kind, own);
     }
   }
   const best = [...perKind.values()].flatMap((own) => own.slice(0, 1));
   const rest = [...perKind.values()].flatMap((own) => own.slice(1));
   return [
     ...best,
-    ...rest.toSorted(byScore).slice(0, MAX_ENTRY_POINTS - best.length),
+    ...rest.toSorted(byScore).slice(0, limits.maxEntries - best.length),
   ]
-    .slice(0, MAX_ENTRY_POINTS)
+    .slice(0, limits.maxEntries)
     .toSorted(byScore);
 };
 
 /**
  * Ranks the places to start (see `EntryPoint`) among the candidates of every
- * kind; see `gatherCandidates` and the modules of the kinds for the rules.
- * Empty when nothing qualifies.
+ * kind, a territory that is both a boundary and a hotspot counting once (see
+ * `entriesOf`); see `gatherCandidates` and the modules of the kinds for the
+ * rules. Empty when nothing qualifies.
  */
 export const rankEntryPoints = (
   input: EntryPointInput,
 ): ReadonlyArray<EntryPoint> => {
   const ranked: Array<EntryPoint> = [];
-  for (const candidate of pick(gatherCandidates(input))) {
-    const score = roundReported(candidate.score);
+  for (const entry of pick(entriesOf(gatherCandidates(input)), input.limits)) {
+    const score = roundReported(entry.score);
     if (score > 0) {
-      ranked.push(
-        Object.assign({ rank: ranked.length + 1 }, candidate, { score }),
-      );
+      ranked.push(Object.assign({ rank: ranked.length + 1 }, entry, { score }));
     }
   }
   return ranked;
