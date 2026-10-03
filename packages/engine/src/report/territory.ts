@@ -98,8 +98,11 @@ export const Territories = Schema.Struct({
   /**
    * The `level` to read first: the finest detail with at most 25 territories
    * (`other` and `tests` nodes do not count) in which no bucket or node of
-   * loose files holds a folder hotter than the coolest territory opened beside
-   * it, also one with too few files to be a territory. When every detail with
+   * loose files holds a folder that is hotter than the coolest territory opened
+   * beside it and holds at least 1% of all heat (below that the comparison is
+   * noise); a folder with too few files to be a territory counts like any other
+   * when it holds that much, and is a territory of its own then. When every
+   * detail with
    * at most 25 territories hides such a folder, the finest of them: its bucket
    * is reported as it is. 0 when the universe has no files.
    */

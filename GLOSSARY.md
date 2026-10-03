@@ -46,7 +46,7 @@
 
 **Detail** — how fine the territories are: level 1 is the first cut (top-level folders), up to level 6, each splitting the most valuable territories further. `Territories.details` lists the territories visible at each level; together they hold every file once.
 
-**Recommended detail** — the finest detail with at most 25 territories (`Territories.recommended`; `other` nodes and test-only territories do not count) in which no bucket or node of loose files holds a folder hotter than the coolest territory opened beside it (also a folder with too few files to be a territory); when every detail with at most 25 territories hides such a folder, the finest of them, and its bucket is reported as it is: enough to tell areas apart, few enough to read. 0 for a universe without files.
+**Recommended detail** — the finest detail with at most 25 territories (`Territories.recommended`; `other` nodes and test-only territories do not count) in which no bucket or node of loose files holds a folder that is hotter than the coolest territory opened beside it and holds at least 1% of all heat (`MIN_VISIBLE_HEAT`); when every detail with at most 25 territories hides such a folder, the finest of them, and its bucket is reported as it is: enough to tell areas apart, few enough to read. 0 for a universe without files.
 
 **Split reason** — one line on a territory (`Territory.splitReason`) saying why it splits into its children: it is too big (with how many code files), its folders change independently (how much of its changes stay inside one), or it is a bucket of smaller folders opened one by one; it also says whether the parts still change together, and which folders stay together. Null for a territory that does not split.
 
