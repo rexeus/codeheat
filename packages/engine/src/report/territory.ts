@@ -97,7 +97,11 @@ const TerritoryDetail = Schema.Struct({
 export const Territories = Schema.Struct({
   /**
    * The `level` to read first: the finest detail with at most 25 territories
-   * (`other` and `tests` nodes do not count). 0 when the universe has no files.
+   * (`other` and `tests` nodes do not count) in which no bucket or node of
+   * loose files holds a folder hotter than the coolest territory opened beside
+   * it, also one with too few files to be a territory. When every detail with
+   * at most 25 territories hides such a folder, the finest of them: its bucket
+   * is reported as it is. 0 when the universe has no files.
    */
   recommended: Count,
   /** Level 1 up to 6, coarsest first; fewer for a small repository. Empty without files. */
