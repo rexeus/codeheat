@@ -111,6 +111,7 @@ const module = (path: string, overrides: Partial<Module>): Module => ({
   commits: 10,
   localCommits: 5,
   cohesion: 0.5,
+  radius: 1,
   partners: [],
   entryPoints: [`${path}/index.ts`, `${path}/src/index.ts`],
   interfaceCommits: 5,

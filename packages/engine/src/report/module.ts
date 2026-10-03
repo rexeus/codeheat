@@ -75,6 +75,14 @@ export const Module = Schema.Struct({
   localCommits: Count,
   /** `localCommits / commits`, rounded to 4 decimals; null when no counted change touched the module. */
   cohesion: Schema.NullOr(UnitInterval),
+  /**
+   * The change radius around the module: the median number of modules,
+   * itself included, that the counted changes touching it touched (see
+   * `Report.changeRadius`; test-only modules are not counted, and a lower
+   * median keeps it a whole number). 1 means its changes usually stay inside.
+   * Null when no counted change touched it, and for a test-only module.
+   */
+  radius: Schema.NullOr(Schema.Int.check(Schema.isGreaterThanOrEqualTo(1))),
   /** Modules it changes with, most shared changes first; at most five. */
   partners: Schema.Array(ModulePartner),
   /**

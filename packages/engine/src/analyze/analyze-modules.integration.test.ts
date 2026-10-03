@@ -73,6 +73,7 @@ const expectedModules: Report["modules"] = [
     commits: 6,
     localCommits: 2,
     cohesion: 0.3333,
+    radius: 2,
     partners: [
       { path: "packages/b", sharedCommits: 3, contractsOnly: false },
       { path: "packages/c", sharedCommits: 2, contractsOnly: false },
@@ -93,6 +94,7 @@ const expectedModules: Report["modules"] = [
     commits: 4,
     localCommits: 1,
     cohesion: 0.25,
+    radius: 2,
     partners: [
       { path: "packages/a", sharedCommits: 3, contractsOnly: false },
       { path: "packages/c", sharedCommits: 1, contractsOnly: false },
@@ -113,6 +115,7 @@ const expectedModules: Report["modules"] = [
     commits: 3,
     localCommits: 1,
     cohesion: 0.3333,
+    radius: 2,
     partners: [
       { path: "packages/a", sharedCommits: 2, contractsOnly: false },
       { path: "packages/b", sharedCommits: 1, contractsOnly: false },
@@ -133,6 +136,7 @@ const expectedModules: Report["modules"] = [
     commits: 0,
     localCommits: 0,
     cohesion: null,
+    radius: null,
     partners: [],
     entryPoints: [],
     interfaceCommits: 0,

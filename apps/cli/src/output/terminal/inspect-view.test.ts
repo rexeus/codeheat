@@ -63,6 +63,7 @@ const billing: Module = {
   commits: 74,
   localCommits: 41,
   cohesion: 0.5541,
+  radius: 2,
   partners: [
     { path: "packages/web", sharedCommits: 20, contractsOnly: false },
     { path: "packages/auth", sharedCommits: 9, contractsOnly: false },

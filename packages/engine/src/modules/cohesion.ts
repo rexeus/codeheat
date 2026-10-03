@@ -115,6 +115,7 @@ const toModule = (
       tally.commits === 0
         ? null
         : roundReported(tally.localCommits / tally.commits),
+    radius: null,
     partners: [...tally.shared]
       .map(([partner, sharedCommits]) => ({
         path: partner,

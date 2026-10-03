@@ -3,6 +3,7 @@
 // Additive fields keep schemaVersion 1; renaming or removing a field bumps it.
 import { Schema } from "effect";
 
+import { ChangeRadius } from "./change-radius.js";
 import { Clique } from "./clique.js";
 import { Comparison, FileTrend } from "./comparison.js";
 import { ContractFile, FileKind, UbiquitousFile } from "./contract-file.js";
@@ -182,6 +183,8 @@ export const Report = Schema.Struct({
    * own changes and this lists the latest window's.
    */
   ubiquitousFiles: Schema.Array(UbiquitousFile),
+  /** How far a counted change spreads over `modules` (see `ChangeRadius`); null when none touched a module. */
+  changeRadius: Schema.NullOr(ChangeRadius),
   /**
    * First the pairs with at least one code side, then the pairs of two contract
    * files (`kinds`), so a limit keeps code pairs: the files of one API

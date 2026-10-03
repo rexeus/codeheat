@@ -51,6 +51,7 @@ export const moduleStats = (
   commits: 10,
   localCommits: 6,
   cohesion: 0.6,
+  radius: 1,
   partners: [],
   entryPoints: [],
   interfaceCommits: 0,
@@ -87,6 +88,7 @@ const THRESHOLDS: Report["thresholds"] = {
 
 /** The design-fit lists of a report, all empty. */
 const NO_FINDINGS = {
+  changeRadius: null,
   cliquesPartial: false,
   dependencyDirection: [],
   unstableInterfaces: [],
