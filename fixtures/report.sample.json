@@ -1453,21 +1453,7 @@
         "b": "packages/auth"
       },
       "imports": "none",
-      "score": 3.375
-    },
-    {
-      "a": "packages/shared/src/config.ts",
-      "b": "apps/cli/src/commands/analyze.ts",
-      "sharedCommits": 9,
-      "strength": 0.419,
-      "distance": 7,
-      "crossesModule": true,
-      "modules": {
-        "a": "packages/shared",
-        "b": "apps/cli"
-      },
-      "imports": "b→a",
-      "score": 2.095
+      "score": 1.7448
     },
     {
       "a": "packages/billing/src/invoice.ts",
@@ -1481,7 +1467,21 @@
         "b": "packages/web"
       },
       "imports": "none",
-      "score": 1.881
+      "score": 1.6208
+    },
+    {
+      "a": "packages/shared/src/config.ts",
+      "b": "apps/cli/src/commands/analyze.ts",
+      "sharedCommits": 9,
+      "strength": 0.419,
+      "distance": 7,
+      "crossesModule": true,
+      "modules": {
+        "a": "packages/shared",
+        "b": "apps/cli"
+      },
+      "imports": "b→a",
+      "score": 1.2527
     },
     {
       "a": "packages/auth/src/session.ts",
@@ -1495,7 +1495,7 @@
         "b": "packages/web"
       },
       "imports": "b→a",
-      "score": 1.587
+      "score": 1.2307
     }
   ],
   "moduleCoupling": [

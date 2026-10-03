@@ -19,10 +19,10 @@ describe("distantSection", () => {
     expect(distantSection(sampleReport(), makeStyle(false))).toEqual([
       "Distant coupling (across modules or far apart, tests excluded)",
       "score  degree  shared  imports  files",
-      " 3.38     75%       6  hidden   packages/billing/src/index.ts <-> packages/auth/src/index.ts",
-      " 2.10     42%       9  b→a      packages/shared/src/config.ts <-> apps/cli/src/commands/analyze.ts",
-      " 1.88     42%      14  hidden   packages/billing/src/invoice.ts <-> packages/web/src/routes/invoices.tsx",
-      " 1.59     53%       9  b→a      packages/auth/src/session.ts <-> packages/web/src/hooks/use-session.ts",
+      " 1.74     75%       6  hidden   packages/billing/src/index.ts <-> packages/auth/src/index.ts",
+      " 1.62     42%      14  hidden   packages/billing/src/invoice.ts <-> packages/web/src/routes/invoices.tsx",
+      " 1.25     42%       9  b→a      packages/shared/src/config.ts <-> apps/cli/src/commands/analyze.ts",
+      " 1.23     53%       9  b→a      packages/auth/src/session.ts <-> packages/web/src/hooks/use-session.ts",
       "",
     ]);
   });

@@ -92,7 +92,7 @@ The files of a repository are grouped into modules: workspace packages (a direct
       "crossesModule": true,
       "modules": { "a": "packages/billing", "b": "packages/auth" },
       "imports": "none",
-      "score": 3.375
+      "score": 1.7448
     }
   ],
   "cliques": [
@@ -106,7 +106,7 @@ The files of a repository are grouped into modules: workspace packages (a direct
 }
 ```
 
-- `distantCouplings` (at most 50, best first) lists coupled files in different modules, or at least `thresholds.minLocalDistance` directory hops apart in one module. `score` is `strength × reach × hidden`: a module boundary counts more than directory steps, and `imports: "none"` (hidden coupling: no import explains the pairing) ranks a pair 1.5 times higher. `imports: null` means unknown, not hidden. Test code and pairs of two contract files never appear. Before changing one file of a pair, read the other, and say so when you leave it untouched.
+- `distantCouplings` (at most 50, best first) lists coupled files in different modules, or at least `thresholds.minLocalDistance` directory hops apart in one module. `score` is `strength × reach × hidden × evidence`: a module boundary counts more than directory steps (deeply nested modules only a little more), `imports: "none"` (hidden coupling: no import explains the pairing) ranks a pair 1.5 times higher, and a pair that met in fewer than ten commits ranks lower in proportion. `imports: null` means unknown, not hidden. Test code and pairs of two contract files never appear. Before changing one file of a pair, read the other, and say so when you leave it untouched.
 - `moduleCoupling` is the data of a coupling matrix: for pairs of ranked modules, `sharedCommits` and `share` of the smaller module's commits. A `share` near 1 means the smaller module almost never changes alone.
 - `cliques` are groups of at least three modules that change together: every pair shares at least `thresholds.minCliqueShare` of the smaller module's commits. A change in one member usually reaches the others, so plan for all of them. `reason` is one sentence for the report.
 - `unstableInterfaces` (TypeScript and JavaScript) lists files that at least `thresholds.minFanIn` files import and that change more often than their dependents: `fanIn`, `revisions`, `medianDependentRevisions`, `changedDependents` (dependents that changed in a commit that also changed the file), and the `dependents` that changed with it most often. Changing one of these ripples; add tests first, keep the change backwards compatible, and prefer splitting what keeps changing from what many rely on. Dependencies are read as text and only the ones that resolve to files count, so a repository that imports through path aliases shows a lower `fanIn` than it has.

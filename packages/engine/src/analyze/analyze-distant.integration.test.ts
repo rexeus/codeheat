@@ -53,9 +53,9 @@ layer(NodeServices.layer)("analyze distant couplings", (it) => {
             ({ a, b, imports, score }) => `${a} ${b} ${imports} ${score}`,
           ),
           [
-            "packages/app/src/c.ts packages/compiler/src/b.ts none 4.5",
-            "packages/compiler/src/b.ts packages/core/src/a.ts none 4.5",
-            "packages/app/src/c.ts packages/core/src/a.ts a→b 3",
+            "packages/app/src/c.ts packages/compiler/src/b.ts none 1.9387",
+            "packages/compiler/src/b.ts packages/core/src/a.ts none 1.9387",
+            "packages/app/src/c.ts packages/core/src/a.ts a→b 1.2925",
           ],
         );
         assert.deepStrictEqual(report.distantCouplings[0]?.modules, {

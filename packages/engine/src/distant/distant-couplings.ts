@@ -21,6 +21,9 @@ export const MIN_LOCAL_DISTANCE = 3;
 /** How much more a pair ranks when no import explains its coupling. */
 const HIDDEN_BOOST = 1.5;
 
+/** Shared commits at which a pair's evidence counts in full; fewer weigh in proportion. */
+const FULL_EVIDENCE_COMMITS = 10;
+
 /**
  * Whether a coupled pair is distant: it crosses modules or lies at least
  * `MIN_LOCAL_DISTANCE` directory hops apart within one, involves no test-code
@@ -71,9 +74,13 @@ export const distantCouplings = (
         b: modules.get(coupling.b)?.path ?? ".",
       };
       const reach = coupling.crossesModule
-        ? 1 + moduleDistance(module.a, module.b)
+        ? 1 + Math.log2(1 + moduleDistance(module.a, module.b))
         : coupling.distance / largest;
       const hidden = coupling.imports === "none" ? HIDDEN_BOOST : 1;
+      const evidence = Math.min(
+        1,
+        coupling.sharedCommits / FULL_EVIDENCE_COMMITS,
+      );
       return {
         a: coupling.a,
         b: coupling.b,
@@ -83,7 +90,7 @@ export const distantCouplings = (
         crossesModule: coupling.crossesModule,
         modules: module,
         imports: coupling.imports,
-        score: roundReported(coupling.degree * reach * hidden),
+        score: roundReported(coupling.degree * reach * hidden * evidence),
       };
     })
     .toSorted(byScore)

@@ -27,7 +27,7 @@ const coupling = (
 ): Coupling => ({
   a,
   b,
-  sharedCommits: 6,
+  sharedCommits: 10,
   distance: 2,
   testPair: false,
   kinds: { a: "code", b: "code" },
@@ -46,7 +46,7 @@ const scoresOf = (couplings: ReadonlyArray<Coupling>) =>
   }));
 
 describe("distantCouplings scores", () => {
-  it("scores a pair across modules as strength times one plus the hops between the module directories", () => {
+  it("scores a pair across modules as strength times one plus the log of one plus the hops between the module directories", () => {
     const result = distantCouplings(
       [
         coupling("packages/core/src/a.ts", "packages/compiler/src/x.ts", {
@@ -62,7 +62,7 @@ describe("distantCouplings scores", () => {
     );
 
     // packages/core to packages/compiler is 2 hops, to tools/cli 4 hops.
-    expect(result.map(({ score }) => score)).toEqual([2.5, 1.5]);
+    expect(result.map(({ score }) => score)).toEqual([1.661, 1.2925]);
     expect(result[0]?.modules).toEqual({
       a: "packages/core",
       b: "tools/cli",
@@ -82,7 +82,10 @@ describe("distantCouplings scores", () => {
     );
 
     expect(scoresOf([within, across])).toEqual([
-      { pair: "packages/core/src/a.ts packages/compiler/src/x.ts", score: 0.9 },
+      {
+        pair: "packages/core/src/a.ts packages/compiler/src/x.ts",
+        score: 0.7755,
+      },
       {
         pair: "packages/core/src/a.ts packages/core/src/deep/er/b.ts",
         score: 0.48,
@@ -108,6 +111,48 @@ describe("distantCouplings selection", () => {
   });
 });
 
+describe("distantCouplings evidence", () => {
+  it("does not rank a pair that met in three commits above one that met in eleven at a similar degree", () => {
+    const thin = coupling(
+      "packages/core/src/a.ts",
+      "packages/compiler/src/x.ts",
+      {
+        degree: 0.6,
+        sharedCommits: 3,
+      },
+    );
+    const solid = coupling(
+      "packages/core/src/a.ts",
+      "packages/compiler/src/y.ts",
+      {
+        degree: 0.55,
+        sharedCommits: 11,
+      },
+    );
+
+    expect(scoresOf([thin, solid]).map(({ score }) => score)).toEqual([
+      1.4217, 0.4653,
+    ]);
+  });
+
+  it("lets deeply nested modules rank only a little above shallow ones", () => {
+    const near = coupling(
+      "packages/core/src/a.ts",
+      "packages/compiler/src/x.ts",
+      {
+        degree: 0.5,
+      },
+    );
+    const far = coupling("packages/core/src/a.ts", "tools/cli/src/z.ts", {
+      degree: 0.5,
+    });
+
+    const [first, second] = scoresOf([near, far]).map(({ score }) => score);
+
+    expect((first ?? 0) / (second ?? 1)).toBeLessThan(1.3);
+  });
+});
+
 describe("distantCouplings hidden coupling, exclusions, and ranking", () => {
   it("ranks a hidden coupling a half higher and leaves an unknown or visible import neutral", () => {
     expect(
@@ -116,7 +161,7 @@ describe("distantCouplings hidden coupling, exclusions, and ranking", () => {
         pair("packages/compiler/src/y.ts", "none"),
         pair("packages/compiler/src/w.ts", "a→b"),
       ]).map(({ score }) => score),
-    ).toEqual([1.8, 1.2, 1.2]);
+    ).toEqual([1.551, 1.034, 1.034]);
   });
 
   it("leaves out every pair with a test-code file, recognized as a test pair or not", () => {

@@ -23,9 +23,9 @@ describe("codeheat shows distant coupling in the terminal", () => {
         expect(lines.slice(start, start + 8)).toStrictEqual([
           "Distant coupling (across modules or far apart, tests excluded)",
           "score  degree  shared  imports  files",
-          " 4.50    100%       5  hidden   packages/a/src/a.ts <-> packages/b/src/b.ts",
-          " 4.50    100%       5  hidden   packages/a/src/a.ts <-> packages/c/src/c.ts",
-          " 4.50    100%       5  hidden   packages/b/src/b.ts <-> packages/c/src/c.ts",
+          " 1.94    100%       5  hidden   packages/a/src/a.ts <-> packages/b/src/b.ts",
+          " 1.94    100%       5  hidden   packages/a/src/a.ts <-> packages/c/src/c.ts",
+          " 1.94    100%       5  hidden   packages/b/src/b.ts <-> packages/c/src/c.ts",
           "",
           "Change together (modules)",
           "packages/a + packages/b + packages/c: 3 modules of which every pair shares at least 100% of the smaller one's commits; 5 commits touched all of them",

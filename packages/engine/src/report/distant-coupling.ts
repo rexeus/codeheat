@@ -29,13 +29,16 @@ export const DistantCoupling = Schema.Struct({
   /** `Coupling.imports`: `none` is hidden coupling, null is unknown. */
   imports: ImportRelation,
   /**
-   * `strength × reach × hidden`, rounded to 4 decimals. `reach` is
-   * `1 + hops` between the two modules' directories for a pair that crosses
-   * modules (so at least 2), and `distance / the largest distance among the
-   * distant pairs` within one module (at most 1): a module boundary is a
-   * design statement, directory steps only order what stays inside one.
+   * `strength × reach × hidden × evidence`, rounded to 4 decimals. `reach` is
+   * `1 + log2(1 + hops)` between the two modules' directories for a pair that
+   * crosses modules (at least 2.58, growing slowly so that deeply nested paths
+   * do not dominate), and `distance` over the largest distance among the
+   * distant pairs for a pair within one module (at most 1): a module boundary
+   * is a design statement, directory steps only order what stays inside one.
    * `hidden` is 1.5 when no import links the files (`imports` is `none`) and 1
-   * otherwise, null included.
+   * otherwise, null included. `evidence` is `min(1, sharedCommits / 10)`, so a
+   * pair that met in three commits does not outrank one that met in eleven at
+   * a similar degree.
    */
   score: Schema.Finite.check(Schema.isGreaterThanOrEqualTo(0)),
 });
