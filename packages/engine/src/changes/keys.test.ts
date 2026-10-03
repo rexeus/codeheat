@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { pullRequestMergeKind, pullRequestOf, ticketOf } from "./keys.js";
+import {
+  isSquashedPullRequest,
+  pullRequestMergeKind,
+  pullRequestOf,
+  ticketOf,
+} from "./keys.js";
 
 describe("pullRequestOf", () => {
   it("reads the number a squash merge appends to the subject", () => {
@@ -63,10 +68,15 @@ describe("pullRequestMergeKind", () => {
   ])("recognizes a %s merge of a feature", (_service, message) => {
     expect(pullRequestMergeKind(message)).toBe("branch");
   });
+});
 
+describe("pullRequestMergeKind integration branches", () => {
   it.each([
     ["GitHub", "Merge pull request #12 from org/develop"],
     ["GitHub release branch", "Merge pull request #12 from org/release/v3"],
+    ["GitHub release-1.2", "Merge pull request #12 from org/release-1.2"],
+    ["GitHub release_2", "Merge pull request #12 from org/release_2"],
+    ["GitHub stable-2.x", "Merge pull request #12 from org/stable-2.x"],
     ["Gitea", "Merge pull request 'Release' (#12) from develop into main"],
     ["Bitbucket Cloud", "Merged in release/dev (pull request #7)"],
     [
@@ -121,5 +131,24 @@ describe("ticketOf stoplist", () => {
     "HTTP-2 support",
   ])("skips the look-alike in %j", (subject) => {
     expect(ticketOf(subject)).toBeUndefined();
+  });
+});
+
+describe("isSquashedPullRequest", () => {
+  it.each([
+    "fix(core): handle nulls (#1234)",
+    "Merged PR 26: Add the feature",
+    "Pull request #12: Add the feature",
+  ])("recognizes %j", (subject) => {
+    expect(isSquashedPullRequest(subject)).toBe(true);
+  });
+
+  it.each([
+    "fix: handle nulls",
+    "fix: same as #12",
+    "Merge pull request #12 from org/feature",
+    "feat: Merged PR 26 later",
+  ])("does not take %j for a squash merge", (subject) => {
+    expect(isSquashedPullRequest(subject)).toBe(false);
   });
 });

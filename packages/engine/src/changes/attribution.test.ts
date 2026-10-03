@@ -14,7 +14,8 @@ const attribution = (
   graph: ReturnType<typeof graphOf>,
   tip: string,
   pullRequests: ReturnType<typeof branches>,
-) => Object.fromEntries(mergesOf(graph, tip, pullRequests));
+  squashed: ReadonlyArray<string> = [],
+) => Object.fromEntries(mergesOf(graph, tip, pullRequests, new Set(squashed)));
 
 describe("mergesOf", () => {
   it("maps the commits of a merged branch to the pull request merge", () => {
@@ -160,7 +161,9 @@ describe("mergesOf integration branches", () => {
     const graph = graphOf(["m", "main1", "d2"], ["d2", "d1"], ["d1", "main1"]);
 
     expect(
-      Object.fromEntries(mergesOf(graph, "m", new Map([["m", "integration"]]))),
+      Object.fromEntries(
+        mergesOf(graph, "m", new Map([["m", "integration"]]), new Set()),
+      ),
     ).toStrictEqual({});
     expect(attribution(graph, "m", branches("m"))).toStrictEqual({
       d2: "m/1",
@@ -185,5 +188,71 @@ describe("mergesOf integration branches", () => {
       a2: "mi/1",
       a1: "mi/1",
     });
+  });
+});
+
+describe("mergesOf squash-merged pull requests", () => {
+  it("leaves the direct commits of a branch ungrouped when they include a squash-merged pull request", () => {
+    // Azure DevOps: the release pull request names no branch, and the features on develop are plain squash commits
+    const graph = graphOf(
+      ["M", "base", "d3"],
+      ["d3", "d2"],
+      ["d2", "d1"],
+      ["d1", "base"],
+      ["base"],
+    );
+
+    expect(attribution(graph, "M", branches("M"), ["d2"])).toStrictEqual({});
+    expect(attribution(graph, "M", branches("M"))).toStrictEqual({
+      d3: "M/1",
+      d2: "M/1",
+      d1: "M/1",
+    });
+  });
+
+  it("still groups a pull request merged into such a branch", () => {
+    const graph = graphOf(
+      ["M", "base", "mi"],
+      ["mi", "d2", "a1"],
+      ["d2", "d1"],
+      ["a1", "d1"],
+      ["d1", "base"],
+      ["base"],
+    );
+
+    expect(attribution(graph, "M", branches("M", "mi"), ["d1"])).toStrictEqual({
+      a1: "mi/1",
+    });
+  });
+});
+
+describe("mergesOf merges inside a pull request", () => {
+  it("keeps the commits a git pull brought into a pull request's branch with that pull request", () => {
+    const graph = graphOf(
+      ["m", "main1", "f3"],
+      ["f3", "f2", "u1"],
+      ["f2", "f1"],
+      ["u1", "f1"],
+      ["f1", "main1"],
+      ["main1"],
+    );
+
+    expect(attribution(graph, "m", branches("m"))).toStrictEqual({
+      f3: "m/1",
+      f2: "m/1",
+      u1: "m/1",
+      f1: "m/1",
+    });
+  });
+
+  it("still groups nothing for a git pull on the mainline", () => {
+    const graph = graphOf(
+      ["pull", "local1", "u1"],
+      ["u1", "base"],
+      ["local1", "base"],
+      ["base"],
+    );
+
+    expect(attribution(graph, "pull", branches())).toStrictEqual({});
   });
 });

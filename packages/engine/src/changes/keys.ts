@@ -38,7 +38,10 @@ const MERGED_BRANCHES = [
 
 /** A release or development branch that collects other work before it is merged on. */
 const INTEGRATION_BRANCH =
-  /^(?:main|master|trunk|develop|development|dev|staging|stable|next|integration|releases?(?:\/.*)?)$/iu;
+  /^(?:(?:main|master|trunk|develop|development|dev|staging|stable|next|integration)|(?:releases?|stable)(?:[/_-].*)?)$/iu;
+
+/** Subjects that a squash merge of a pull request gives its commit besides the `(#123)` suffix. */
+const SQUASHED_SUBJECTS = [/^Merged PR \d+:/u, /^Pull request #\d+:/u] as const;
 
 /**
  * Upper-case words that look like a ticket key (`UTF-8`, `SHA-256`, `X86-64`,
@@ -86,6 +89,15 @@ const TICKET = /(?<![A-Za-z0-9])([A-Z][A-Z0-9]+)-\d+(?![A-Za-z0-9])/gu;
 /** The number of the pull request a subject ends with, such as `123` for `fix: x (#123)`. */
 export const pullRequestOf = (subject: string): string | undefined =>
   PULL_REQUEST.exec(subject)?.[1];
+
+/**
+ * Whether the subject of a commit that is no merge says a squash merge of a
+ * pull request made it: a `(#123)` suffix, `Merged PR 12: …` (Azure DevOps), or
+ * `Pull request #12: …` (Bitbucket Server).
+ */
+export const isSquashedPullRequest = (subject: string): boolean =>
+  PULL_REQUEST.test(subject) ||
+  SQUASHED_SUBJECTS.some((pattern) => pattern.test(subject));
 
 /**
  * What a merge commit's message says about the pull or merge request it

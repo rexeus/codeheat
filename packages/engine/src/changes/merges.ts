@@ -6,14 +6,18 @@ import type { GitError } from "../git/git-errors.js";
 import { Git } from "../git/git.js";
 import { mergesOf } from "./attribution.js";
 import type { PullRequestMerges } from "./attribution.js";
-import { pullRequestMergeKind } from "./keys.js";
+import { isSquashedPullRequest, pullRequestMergeKind } from "./keys.js";
 
 /** A merge commit and its message, as `--format=%x01%H%x00%B` prints it. */
 const MERGE_RECORD = /^([0-9a-f]+)\0([\s\S]*)$/u;
 
-const parseLine = (line: string): readonly [string, ReadonlyArray<string>] => {
-  const [commit = "", ...parents] = line.split(" ");
-  return [commit, parents];
+/** A line of `--format=%H %P%x00%s`: the commit, its parents, and its subject. */
+const parseLine = (
+  line: string,
+): readonly [string, ReadonlyArray<string>, string] => {
+  const [ids = "", subject = ""] = line.split("\0");
+  const [commit = "", ...parents] = ids.split(" ");
+  return [commit, parents, subject];
 };
 
 /** The merge commits among the window's that are pull or merge requests, with their kind. */
@@ -44,7 +48,8 @@ const readPullRequestMerges = (selection: ReadonlyArray<string>) =>
  * cut the graph: which commits count is for the caller to decide. Only merge
  * commits whose message names a pull or merge request count (see
  * `pullRequestMergeKind`), so a window without one costs a single `git log`
- * over its merge commits; otherwise the parents are read once more.
+ * over its merge commits; otherwise the parents and subjects are read once
+ * more, and `HEAD` is resolved.
  */
 export const readMerges = (range: {
   readonly since: string;
@@ -58,15 +63,19 @@ export const readMerges = (range: {
     }
     const head = (yield* git.text(["rev-parse", "HEAD"])).trim();
     const graph = new Map<string, ReadonlyArray<string>>();
-    yield* git.stream(["log", "--format=%H %P", ...selection]).pipe(
+    const squashed = new Set<string>();
+    yield* git.stream(["log", "--format=%H %P%x00%s", ...selection]).pipe(
       Stream.splitLines,
       Stream.filter((line) => line !== ""),
       Stream.runForEach((line) =>
         Effect.sync(() => {
-          const [commit, parents] = parseLine(line);
+          const [commit, parents, subject] = parseLine(line);
           graph.set(commit, parents);
+          if (parents.length < 2 && isSquashedPullRequest(subject)) {
+            squashed.add(commit);
+          }
         }),
       ),
     );
-    return mergesOf(graph, head, pullRequests);
+    return mergesOf(graph, head, pullRequests, squashed);
   });

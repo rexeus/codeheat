@@ -33,17 +33,19 @@ const firstParentLine = (graph: Graph, tip: string): ReadonlyArray<string> => {
 
 /**
  * The branches that merge `commit` brought in, one per parent after the
- * first. Each is its own owner (an octopus merge joins unrelated topics), and
- * none when the merge is no pull request.
+ * first. Each is its own owner for a pull request merge (an octopus merge
+ * joins unrelated topics). Any other merge, such as a `git pull` inside a
+ * pull request's branch, keeps the `enclosing` owner of the branch it is on.
  */
 const mergedBranches = (
   graph: Graph,
   commit: string,
   kind: "branch" | "integration" | undefined,
+  enclosing: string | undefined,
 ): ReadonlyArray<Branch> =>
   (graph.get(commit) ?? []).slice(1).map((tip, index) => ({
     tip,
-    owner: kind === undefined ? undefined : `${commit}/${index + 1}`,
+    owner: kind === undefined ? enclosing : `${commit}/${index + 1}`,
     integration: kind === "integration",
   }));
 
@@ -78,6 +80,7 @@ type Walk = {
   readonly seen: Set<string>;
   readonly mergeOf: Map<string, string>;
   readonly pullRequests: PullRequestMerges;
+  readonly squashed: ReadonlySet<string>;
 };
 
 /**
@@ -86,12 +89,12 @@ type Walk = {
  * merge first.
  */
 const claim = (walk: Walk, branch: Branch): ReadonlyArray<Branch> => {
-  const { graph, pullRequests, seen, mergeOf } = walk;
+  const { graph, pullRequests, squashed, seen, mergeOf } = walk;
   const commits = directCommits(graph, branch, walk.onLine, seen);
-  const owner =
-    branch.integration || commits.some((commit) => pullRequests.has(commit))
-      ? undefined
-      : branch.owner;
+  const isIntegration =
+    branch.integration ||
+    commits.some((commit) => pullRequests.has(commit) || squashed.has(commit));
+  const owner = isIntegration ? undefined : branch.owner;
   for (const commit of commits) {
     seen.add(commit);
     if (owner !== undefined) {
@@ -101,7 +104,7 @@ const claim = (walk: Walk, branch: Branch): ReadonlyArray<Branch> => {
   return commits
     .toReversed()
     .flatMap((commit) =>
-      mergedBranches(graph, commit, pullRequests.get(commit)),
+      mergedBranches(graph, commit, pullRequests.get(commit), owner),
     );
 };
 
@@ -121,12 +124,16 @@ const claim = (walk: Walk, branch: Branch): ReadonlyArray<Branch> => {
  * before its fork point, and a branch merged into another branch belongs to
  * that inner merge. The direct commits of an integration branch, one that a
  * pull request merge names as a release or `develop` branch or whose line
- * itself contains pull request merges, belong to no change.
+ * itself contains pull request merges or `squashed` pull requests (commits
+ * that a squash merge made), belong to no change. Another kind of merge on a
+ * pull request's branch, such as a `git pull`, brings in commits of the same
+ * pull request.
  */
 export const mergesOf = (
   graph: Graph,
   tip: string,
   pullRequests: PullRequestMerges,
+  squashed: ReadonlySet<string>,
 ): ReadonlyMap<string, string> => {
   const line = firstParentLine(graph, tip);
   const walk: Walk = {
@@ -135,9 +142,15 @@ export const mergesOf = (
     seen: new Set(),
     mergeOf: new Map(),
     pullRequests,
+    squashed,
   };
   for (const merge of line.toReversed()) {
-    let level = mergedBranches(graph, merge, pullRequests.get(merge));
+    let level = mergedBranches(
+      graph,
+      merge,
+      pullRequests.get(merge),
+      undefined,
+    );
     while (level.length > 0) {
       level = level.flatMap((branch) => claim(walk, branch));
     }
