@@ -10,6 +10,7 @@ import { inspect } from "./inspect.js";
 const stats = (path: string, rank: number): FileStats => ({
   path,
   test: false,
+  territory: "t1",
   module: ".",
   rank,
   score: 1 / rank,

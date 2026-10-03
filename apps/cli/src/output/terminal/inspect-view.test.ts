@@ -15,6 +15,7 @@ const entry: InspectResult["matches"][number] = {
   linesDeleted: 672,
   breadth: 14,
   module: "packages/billing",
+  territory: "t2",
   loc: 964,
   complexity: { total: 1900, mean: 1.97, max: 9 },
   reasons: ["changed in 48 commits (#1 of 36)"],

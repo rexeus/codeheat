@@ -123,6 +123,8 @@ export const rankFiles = (
         path,
         test: isTestPath(path),
         module: measure.module,
+        // Territories come from the ranked files' own measures; `analyze` fills this in.
+        territory: "",
         rank: index + 1,
         score: roundReported(score),
         revisions,

@@ -23,6 +23,10 @@ const TEST_DIRECTORY_NAMES = new Set([
   ...SUPPORT_DIRECTORIES,
 ]);
 
+/** Whether a directory name is one of the test directories `isTestPath` knows. */
+export const isTestDirectoryName = (name: string): boolean =>
+  TEST_DIRECTORY_NAMES.has(name);
+
 /**
  * Whether a repository-relative path is test code: its file name has a test
  * suffix (`isTestFile`) or one of its directories is named like a test
@@ -43,4 +47,4 @@ export const isTestPath = (path: string): boolean =>
     path
       .split("/")
       .slice(0, -1)
-      .some((directory) => TEST_DIRECTORY_NAMES.has(directory)));
+      .some((directory) => isTestDirectoryName(directory)));

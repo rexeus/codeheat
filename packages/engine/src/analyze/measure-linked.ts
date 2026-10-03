@@ -9,6 +9,7 @@ import { readImportGraph } from "../imports/import-graph.js";
 import { linkCouplings } from "../imports/link-couplings.js";
 import { measureDesignFit } from "./measure-design-fit.js";
 import { measureStability } from "./measure-stability.js";
+import { measureTerritories } from "./measure-territories.js";
 import { coupleHistory, measureWindows } from "./measure.js";
 import type { Universe } from "./measure.js";
 import type { WindowHistories } from "./windows.js";
@@ -48,9 +49,21 @@ export const measureLinked = (
       modules: measured.modules,
       minModuleCommits: measured.thresholds.minModuleCommits,
     });
+    const designFit = measureDesignFit(
+      universe,
+      histories,
+      measured,
+      couplings,
+    );
     return {
       ...measured,
-      ...measureDesignFit(universe, histories, measured, couplings),
+      ...designFit,
+      ...measureTerritories({
+        packages: universe.packages,
+        files: designFit.files,
+        history: histories.current,
+        minChanges: measured.thresholds.minModuleCommits,
+      }),
       copyFamilies,
       distantCouplings: distantCouplings(
         couplings,

@@ -107,7 +107,8 @@
         "hotWindows": 5,
         "windows": 6
       },
-      "test": false
+      "test": false,
+      "territory": "t2"
     },
     {
       "path": "packages/billing/src/tax.ts",
@@ -141,7 +142,8 @@
         "hotWindows": 4,
         "windows": 6
       },
-      "test": false
+      "test": false,
+      "territory": "t2"
     },
     {
       "path": "packages/billing/src/invoice.test.ts",
@@ -170,7 +172,8 @@
         "newlyActive": false
       },
       "heat": null,
-      "test": true
+      "test": true,
+      "territory": "t2"
     },
     {
       "path": "packages/web/src/routes/invoices.tsx",
@@ -204,7 +207,8 @@
         "hotWindows": 2,
         "windows": 6
       },
-      "test": false
+      "test": false,
+      "territory": "t3"
     },
     {
       "path": "apps/cli/src/commands/analyze.ts",
@@ -234,7 +238,8 @@
         "newlyActive": false
       },
       "heat": null,
-      "test": false
+      "test": false,
+      "territory": "t5"
     },
     {
       "path": "packages/auth/src/session.ts",
@@ -264,7 +269,8 @@
         "newlyActive": false
       },
       "heat": null,
-      "test": false
+      "test": false,
+      "territory": "t4"
     },
     {
       "path": "packages/billing/src/tax.test.ts",
@@ -293,7 +299,8 @@
         "newlyActive": false
       },
       "heat": null,
-      "test": true
+      "test": true,
+      "territory": "t2"
     },
     {
       "path": "packages/shared/src/config.ts",
@@ -323,7 +330,8 @@
         "newlyActive": false
       },
       "heat": null,
-      "test": false
+      "test": false,
+      "territory": "t6"
     },
     {
       "path": "packages/auth/src/session.test.ts",
@@ -352,7 +360,8 @@
         "newlyActive": false
       },
       "heat": null,
-      "test": true
+      "test": true,
+      "territory": "t4"
     },
     {
       "path": "packages/web/src/hooks/use-session.ts",
@@ -382,7 +391,8 @@
         "newlyActive": false
       },
       "heat": null,
-      "test": false
+      "test": false,
+      "territory": "t3"
     },
     {
       "path": "packages/auth/src/tokens.ts",
@@ -411,7 +421,8 @@
         "newlyActive": false
       },
       "heat": null,
-      "test": false
+      "test": false,
+      "territory": "t4"
     },
     {
       "path": "packages/web/src/components/table.tsx",
@@ -440,7 +451,8 @@
         "newlyActive": false
       },
       "heat": null,
-      "test": false
+      "test": false,
+      "territory": "t3"
     },
     {
       "path": "apps/cli/src/commands/inspect.ts",
@@ -469,7 +481,8 @@
         "newlyActive": false
       },
       "heat": null,
-      "test": false
+      "test": false,
+      "territory": "t5"
     },
     {
       "path": "packages/shared/src/index.ts",
@@ -498,7 +511,8 @@
         "newlyActive": false
       },
       "heat": null,
-      "test": false
+      "test": false,
+      "territory": "t6"
     },
     {
       "path": "apps/cli/src/output/terminal.ts",
@@ -527,7 +541,8 @@
         "newlyActive": false
       },
       "heat": null,
-      "test": false
+      "test": false,
+      "territory": "t5"
     },
     {
       "path": "packages/billing/src/discounts.ts",
@@ -556,7 +571,8 @@
         "newlyActive": false
       },
       "heat": null,
-      "test": false
+      "test": false,
+      "territory": "t2"
     },
     {
       "path": "packages/web/src/routes/login.tsx",
@@ -585,7 +601,8 @@
         "newlyActive": false
       },
       "heat": null,
-      "test": false
+      "test": false,
+      "territory": "t3"
     },
     {
       "path": "apps/cli/src/commands/analyze.test.ts",
@@ -614,7 +631,8 @@
         "newlyActive": false
       },
       "heat": null,
-      "test": true
+      "test": true,
+      "territory": "t5"
     },
     {
       "path": "packages/web/src/app.tsx",
@@ -643,7 +661,8 @@
         "newlyActive": false
       },
       "heat": null,
-      "test": false
+      "test": false,
+      "territory": "t3"
     },
     {
       "path": "packages/shared/src/logger.ts",
@@ -672,7 +691,8 @@
         "newlyActive": false
       },
       "heat": null,
-      "test": false
+      "test": false,
+      "territory": "t6"
     },
     {
       "path": "packages/web/src/styles.css",
@@ -701,7 +721,8 @@
         "newlyActive": true
       },
       "heat": null,
-      "test": false
+      "test": false,
+      "territory": "t3"
     },
     {
       "path": "apps/cli/src/output/html.ts",
@@ -730,7 +751,8 @@
         "newlyActive": false
       },
       "heat": null,
-      "test": false
+      "test": false,
+      "territory": "t5"
     },
     {
       "path": "packages/auth/src/oauth/github.ts",
@@ -759,7 +781,8 @@
         "newlyActive": false
       },
       "heat": null,
-      "test": false
+      "test": false,
+      "territory": "t4"
     },
     {
       "path": "packages/billing/src/index.ts",
@@ -789,7 +812,8 @@
         "newlyActive": false
       },
       "heat": null,
-      "test": false
+      "test": false,
+      "territory": "t2"
     },
     {
       "path": "packages/shared/src/money.ts",
@@ -818,7 +842,8 @@
         "newlyActive": false
       },
       "heat": null,
-      "test": false
+      "test": false,
+      "territory": "t6"
     },
     {
       "path": "packages/billing/src/currency.ts",
@@ -847,7 +872,8 @@
         "newlyActive": false
       },
       "heat": null,
-      "test": false
+      "test": false,
+      "territory": "t2"
     },
     {
       "path": "packages/auth/src/index.ts",
@@ -877,7 +903,8 @@
         "newlyActive": false
       },
       "heat": null,
-      "test": false
+      "test": false,
+      "territory": "t4"
     },
     {
       "path": "packages/billing/src/legacy/export-csv.ts",
@@ -906,7 +933,8 @@
         "newlyActive": true
       },
       "heat": null,
-      "test": false
+      "test": false,
+      "territory": "t2"
     },
     {
       "path": "apps/cli/src/cli.ts",
@@ -935,7 +963,8 @@
         "newlyActive": false
       },
       "heat": null,
-      "test": false
+      "test": false,
+      "territory": "t5"
     },
     {
       "path": "packages/web/src/components/modal.tsx",
@@ -964,7 +993,8 @@
         "newlyActive": false
       },
       "heat": null,
-      "test": false
+      "test": false,
+      "territory": "t3"
     },
     {
       "path": "packages/auth/src/permissions.ts",
@@ -993,7 +1023,8 @@
         "newlyActive": true
       },
       "heat": null,
-      "test": false
+      "test": false,
+      "territory": "t4"
     },
     {
       "path": "apps/cli/src/output/json.ts",
@@ -1022,7 +1053,8 @@
         "newlyActive": false
       },
       "heat": null,
-      "test": false
+      "test": false,
+      "territory": "t5"
     },
     {
       "path": "packages/shared/src/dates.ts",
@@ -1051,7 +1083,8 @@
         "newlyActive": false
       },
       "heat": null,
-      "test": false
+      "test": false,
+      "territory": "t6"
     },
     {
       "path": "apps/cli/src/bin.ts",
@@ -1077,7 +1110,8 @@
         "newlyActive": false
       },
       "heat": null,
-      "test": false
+      "test": false,
+      "territory": "t5"
     },
     {
       "path": "packages/auth/src/oauth/google.ts",
@@ -1103,7 +1137,8 @@
         "newlyActive": false
       },
       "heat": null,
-      "test": false
+      "test": false,
+      "territory": "t4"
     },
     {
       "path": "packages/billing/src/legacy/import-sap.ts",
@@ -1129,7 +1164,8 @@
         "newlyActive": false
       },
       "heat": null,
-      "test": false
+      "test": false,
+      "territory": "t2"
     }
   ],
   "contracts": [
@@ -1315,7 +1351,7 @@
         "b": "code"
       },
       "crossesModule": false,
-      "imports": "b→a"
+      "imports": "b\u2192a"
     },
     {
       "a": "packages/billing/src/tax.ts",
@@ -1329,7 +1365,7 @@
         "b": "code"
       },
       "crossesModule": false,
-      "imports": "b→a"
+      "imports": "b\u2192a"
     },
     {
       "a": "packages/auth/src/session.ts",
@@ -1343,7 +1379,7 @@
         "b": "code"
       },
       "crossesModule": false,
-      "imports": "b→a"
+      "imports": "b\u2192a"
     },
     {
       "a": "packages/billing/src/invoice.ts",
@@ -1357,7 +1393,7 @@
         "b": "code"
       },
       "crossesModule": false,
-      "imports": "a→b"
+      "imports": "a\u2192b"
     },
     {
       "a": "packages/billing/api/billing.tsp",
@@ -1385,7 +1421,7 @@
         "b": "code"
       },
       "crossesModule": true,
-      "imports": "b→a"
+      "imports": "b\u2192a"
     },
     {
       "a": "packages/shared/src/config.ts",
@@ -1399,7 +1435,7 @@
         "b": "code"
       },
       "crossesModule": true,
-      "imports": "b→a"
+      "imports": "b\u2192a"
     },
     {
       "a": "packages/billing/src/invoice.ts",
@@ -1674,6 +1710,89 @@
       }
     }
   ],
+  "territories": {
+    "recommended": 1,
+    "details": [
+      {
+        "level": 1,
+        "ids": ["t2", "t3", "t4", "t5", "t6"]
+      }
+    ],
+    "nodes": [
+      {
+        "id": "t1",
+        "path": ".",
+        "kind": "folder",
+        "parent": null,
+        "children": ["t2", "t3", "t4", "t5", "t6"],
+        "files": 36,
+        "testFiles": 4,
+        "changes": 178,
+        "heatShare": 1,
+        "splitReason": "the first cut: packages and top-level folders"
+      },
+      {
+        "id": "t2",
+        "path": "packages/billing",
+        "kind": "package",
+        "parent": "t1",
+        "children": [],
+        "files": 9,
+        "testFiles": 2,
+        "changes": 74,
+        "heatShare": 0.6239,
+        "splitReason": null
+      },
+      {
+        "id": "t3",
+        "path": "packages/web",
+        "kind": "package",
+        "parent": "t1",
+        "children": [],
+        "files": 7,
+        "testFiles": 0,
+        "changes": 58,
+        "heatShare": 0.1298,
+        "splitReason": null
+      },
+      {
+        "id": "t4",
+        "path": "packages/auth",
+        "kind": "package",
+        "parent": "t1",
+        "children": [],
+        "files": 7,
+        "testFiles": 1,
+        "changes": 44,
+        "heatShare": 0.1058,
+        "splitReason": null
+      },
+      {
+        "id": "t5",
+        "path": "apps/cli",
+        "kind": "package",
+        "parent": "t1",
+        "children": [],
+        "files": 8,
+        "testFiles": 1,
+        "changes": 26,
+        "heatShare": 0.1014,
+        "splitReason": null
+      },
+      {
+        "id": "t6",
+        "path": "packages/shared",
+        "kind": "package",
+        "parent": "t1",
+        "children": [],
+        "files": 5,
+        "testFiles": 0,
+        "changes": 30,
+        "heatShare": 0.0391,
+        "splitReason": null
+      }
+    ]
+  },
   "copyFamilies": [
     {
       "files": ["packages/auth/src/index.ts", "packages/billing/src/index.ts"],
@@ -1726,7 +1845,7 @@
         "a": "packages/shared",
         "b": "apps/cli"
       },
-      "imports": "b→a",
+      "imports": "b\u2192a",
       "score": 1.2527
     },
     {
@@ -1740,7 +1859,7 @@
         "a": "packages/auth",
         "b": "packages/web"
       },
-      "imports": "b→a",
+      "imports": "b\u2192a",
       "score": 1.2307
     }
   ],

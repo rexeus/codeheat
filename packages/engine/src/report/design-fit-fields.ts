@@ -8,6 +8,7 @@ import { ChangeRadius, PropagationCost } from "./change-radius.js";
 import { Erosion } from "./erosion.js";
 import { FixDensity } from "./fix-density.js";
 import { SeriesWindow } from "./series.js";
+import { Territories } from "./territory.js";
 
 /** Fields of `Report`; each is documented here, where it is defined. */
 export const DesignFitFields = {
@@ -39,4 +40,6 @@ export const DesignFitFields = {
   erosion: Schema.NullOr(Erosion),
   /** How many of the counted changes are fixes (see `FixDensity`), and whether commit subjects tell. */
   fixDensity: FixDensity,
+  /** The areas of the code at every detail and the one to read first (see `Territories`); `modules` is unchanged. */
+  territories: Territories,
 };
