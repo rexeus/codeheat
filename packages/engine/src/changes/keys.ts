@@ -8,16 +8,37 @@ const PULL_REQUEST = /\(#(\d+)\)\s*$/u;
 /**
  * What a pull or merge request merge says about itself, anywhere in its
  * message: GitHub (`Merge pull request #12 from …`, Gitea's `Merge pull
- * request 'title' (#12) from …`), Bitbucket (`Merged in … (pull request
- * #12)`), GitLab (the body line `See merge request group/project!12`), and
- * Azure DevOps (`Merged PR 12: …`).
+ * request 'title' (#12) from …`), Bitbucket Cloud (`Merged in … (pull request
+ * #12)`), Bitbucket Server and Data Center (`Pull request #12: …`, `Merge pull
+ * request #12 in PROJ/repo from …`), GitLab (the body line `See merge request
+ * group/project!12`), and Azure DevOps (`Merged PR 12: …`).
  */
 const PULL_REQUEST_MERGES = [
   /^Merge pull request (?:#\d+ |.* \(#\d+\) )from /mu,
+  /^Merge pull request #\d+ in \S+ from /mu,
+  /^Pull request #\d+: /mu,
   /^Merged in .* \(pull request #\d+\)/mu,
   /^See merge request \S*!\d+/mu,
   /^Merged PR \d+:/mu,
 ] as const;
+
+/**
+ * Where a pull request merge names the branch it merged, in the order of the
+ * formats above: GitHub (`from owner/branch`), Gitea (`from branch into …`),
+ * Bitbucket Cloud (`Merged in branch (pull request …)`), Bitbucket Server
+ * (`in PROJ/repo from branch to …`), and GitLab (`Merge branch 'branch' into …`).
+ */
+const MERGED_BRANCHES = [
+  /^Merge pull request #\d+ from [^/\s]+\/(\S+)/mu,
+  /^Merge pull request '.*' \(#\d+\) from (\S+) into /mu,
+  /^Merged in (\S+) \(pull request #/mu,
+  /^Merge (?:pull request #\d+ )?in \S+ from (\S+) to /mu,
+  /^Merge branch '([^']+)' into /mu,
+] as const;
+
+/** A release or development branch that collects other work before it is merged on. */
+const INTEGRATION_BRANCH =
+  /^(?:main|master|trunk|develop|development|dev|staging|stable|next|integration|releases?(?:\/.*)?)$/iu;
 
 /**
  * Upper-case words that look like a ticket key (`UTF-8`, `SHA-256`, `X86-64`,
@@ -67,13 +88,26 @@ export const pullRequestOf = (subject: string): string | undefined =>
   PULL_REQUEST.exec(subject)?.[1];
 
 /**
- * Whether a merge commit's message says it merged a pull or merge request. A
- * merge that does not (`git pull`, `Merge remote-tracking branch`, `Merge
- * tag`, a plain `Merge branch 'x'`, a merge of the mainline into a branch)
- * brings in commits that belong to no one change.
+ * What a merge commit's message says about the pull or merge request it
+ * merged: a `branch` for a feature, an `integration` branch (a release or
+ * `develop` branch) whose commits belong to no one change, or nothing when it
+ * names none. A merge that does not (`git pull`, `Merge remote-tracking
+ * branch`, `Merge tag`, a plain `Merge branch 'x'`, a merge of the mainline
+ * into a branch) brings in commits that belong to no one change.
  */
-export const isPullRequestMerge = (message: string): boolean =>
-  PULL_REQUEST_MERGES.some((pattern) => pattern.test(message));
+export const pullRequestMergeKind = (
+  message: string,
+): "branch" | "integration" | undefined => {
+  if (!PULL_REQUEST_MERGES.some((pattern) => pattern.test(message))) {
+    return undefined;
+  }
+  const branch = MERGED_BRANCHES.map(
+    (pattern) => pattern.exec(message)?.[1],
+  ).find((name) => name !== undefined);
+  return branch !== undefined && INTEGRATION_BRANCH.test(branch)
+    ? "integration"
+    : "branch";
+};
 
 /** The first ticket key a subject mentions, such as `PROJ-42`; none for words like `UTF-8`. */
 export const ticketOf = (subject: string): string | undefined =>

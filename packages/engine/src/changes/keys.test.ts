@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { isPullRequestMerge, pullRequestOf, ticketOf } from "./keys.js";
+import { pullRequestMergeKind, pullRequestOf, ticketOf } from "./keys.js";
 
 describe("pullRequestOf", () => {
   it("reads the number a squash merge appends to the subject", () => {
@@ -42,18 +42,54 @@ describe("ticketOf", () => {
   });
 });
 
-describe("isPullRequestMerge", () => {
+describe("pullRequestMergeKind", () => {
   it.each([
     ["GitHub", "Merge pull request #12 from org/feature"],
     ["Gitea", "Merge pull request 'Add it' (#12) from feature into main"],
-    ["Bitbucket", "Merged in feature/x (pull request #12)"],
+    ["Bitbucket Cloud", "Merged in feature/x (pull request #12)"],
+    [
+      "Bitbucket Server",
+      "Merge pull request #12 in PROJ/repo from feature to master",
+    ],
+    [
+      "Bitbucket Server with a title",
+      "Pull request #12: Add it\n\nMerge in PROJ/repo from feature to master\n\n* commit 'abc': x",
+    ],
     [
       "GitLab",
       "Merge branch 'feature' into 'main'\n\nAdd it\n\nSee merge request group/project!12",
     ],
     ["Azure DevOps", "Merged PR 12: Add it"],
-  ])("recognizes a %s merge", (_service, message) => {
-    expect(isPullRequestMerge(message)).toBe(true);
+  ])("recognizes a %s merge of a feature", (_service, message) => {
+    expect(pullRequestMergeKind(message)).toBe("branch");
+  });
+
+  it.each([
+    ["GitHub", "Merge pull request #12 from org/develop"],
+    ["GitHub release branch", "Merge pull request #12 from org/release/v3"],
+    ["Gitea", "Merge pull request 'Release' (#12) from develop into main"],
+    ["Bitbucket Cloud", "Merged in release/dev (pull request #7)"],
+    [
+      "Bitbucket Server",
+      "Merge pull request #12 in PROJ/repo from develop to master",
+    ],
+    [
+      "GitLab",
+      "Merge branch 'develop' into 'main'\n\nSee merge request group/project!12",
+    ],
+  ])("names the merge of an integration branch for %s", (_service, message) => {
+    expect(pullRequestMergeKind(message)).toBe("integration");
+  });
+
+  it("does not take a branch that only contains the name of one for an integration branch", () => {
+    expect(
+      pullRequestMergeKind("Merge pull request #5 from org/develop-docs"),
+    ).toBe("branch");
+    expect(
+      pullRequestMergeKind(
+        "Merge pull request #5 from org/feature/release-notes",
+      ),
+    ).toBe("branch");
   });
 
   it.each([
@@ -64,8 +100,9 @@ describe("isPullRequestMerge", () => {
     "Merge branch 'main' into feature",
     "Merge branches 'a' and 'b'",
     "Merge branch 'x' into 'main'\n\nsee the merge request discussion",
+    "Merge in PROJ/repo from feature to master",
   ])("does not take %j for a pull request merge", (message) => {
-    expect(isPullRequestMerge(message)).toBe(false);
+    expect(pullRequestMergeKind(message)).toBeUndefined();
   });
 });
 

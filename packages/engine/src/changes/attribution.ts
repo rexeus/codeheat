@@ -4,8 +4,19 @@
 /** The parents of every commit of a window, by commit id, first parent first. */
 export type Graph = ReadonlyMap<string, ReadonlyArray<string>>;
 
-/** A branch tip to visit and the owner of its commits; none when the merge that brought it in is no pull request. */
-type Branch = readonly [commit: string, owner: string | undefined];
+/**
+ * The pull request merges among a window's merge commits. A merge of an
+ * `integration` branch (a release or `develop` branch, as its message names it)
+ * brings in work that is no one change.
+ */
+export type PullRequestMerges = ReadonlyMap<string, "branch" | "integration">;
+
+/** A branch tip, the owner of its direct commits, and whether it is an integration branch. */
+type Branch = {
+  readonly tip: string;
+  readonly owner: string | undefined;
+  readonly integration: boolean;
+};
 
 /** The commits on the first-parent line from `tip`, newest first. */
 const firstParentLine = (graph: Graph, tip: string): ReadonlyArray<string> => {
@@ -28,30 +39,70 @@ const firstParentLine = (graph: Graph, tip: string): ReadonlyArray<string> => {
 const mergedBranches = (
   graph: Graph,
   commit: string,
-  isPullRequest: boolean,
+  kind: "branch" | "integration" | undefined,
 ): ReadonlyArray<Branch> =>
-  (graph.get(commit) ?? [])
-    .slice(1)
-    .map((parent, index) => [
-      parent,
-      isPullRequest ? `${commit}/${index + 1}` : undefined,
-    ]);
+  (graph.get(commit) ?? []).slice(1).map((tip, index) => ({
+    tip,
+    owner: kind === undefined ? undefined : `${commit}/${index + 1}`,
+    integration: kind === "integration",
+  }));
 
 /**
- * The branches to visit after `commit`, which belongs to `owner`: its first
- * parent continues the same branch, the others are branches it merged.
+ * The commits of `branch` along first parents, newest first, up to the
+ * mainline, a commit that is already claimed, or the edge of the graph.
  */
-const branchesAfter = (
+const directCommits = (
   graph: Graph,
-  commit: string,
-  owner: string | undefined,
-  pullRequests: ReadonlySet<string>,
-): ReadonlyArray<Branch> => {
-  const first = graph.get(commit)?.[0];
-  return [
-    ...(first === undefined ? [] : [[first, owner] as const]),
-    ...mergedBranches(graph, commit, pullRequests.has(commit)),
-  ];
+  { tip }: Branch,
+  onLine: ReadonlySet<string>,
+  seen: ReadonlySet<string>,
+): ReadonlyArray<string> => {
+  const commits: Array<string> = [];
+  for (
+    let commit: string | undefined = tip;
+    commit !== undefined &&
+    graph.has(commit) &&
+    !onLine.has(commit) &&
+    !seen.has(commit);
+    commit = graph.get(commit)?.[0]
+  ) {
+    commits.push(commit);
+  }
+  return commits;
+};
+
+/** What a walk has learned: the mainline, the commits claimed so far, and who owns them. */
+type Walk = {
+  readonly graph: Graph;
+  readonly onLine: ReadonlySet<string>;
+  readonly seen: Set<string>;
+  readonly mergeOf: Map<string, string>;
+  readonly pullRequests: PullRequestMerges;
+};
+
+/**
+ * Claims the direct commits of `branch` for its owner, none when it is an
+ * integration branch, and returns the branches merged along them, oldest
+ * merge first.
+ */
+const claim = (walk: Walk, branch: Branch): ReadonlyArray<Branch> => {
+  const { graph, pullRequests, seen, mergeOf } = walk;
+  const commits = directCommits(graph, branch, walk.onLine, seen);
+  const owner =
+    branch.integration || commits.some((commit) => pullRequests.has(commit))
+      ? undefined
+      : branch.owner;
+  for (const commit of commits) {
+    seen.add(commit);
+    if (owner !== undefined) {
+      mergeOf.set(commit, owner);
+    }
+  }
+  return commits
+    .toReversed()
+    .flatMap((commit) =>
+      mergedBranches(graph, commit, pullRequests.get(commit)),
+    );
 };
 
 /**
@@ -62,33 +113,34 @@ const branchesAfter = (
  * outside the graph, and commits that only another kind of merge brought in
  * (`git pull`, a merge of the mainline into a branch, a tag) have no entry:
  * such a merge groups nothing, but the pull requests merged inside its
- * branches still do. A branch merged into another branch belongs to that
- * inner merge, so a long-lived branch merged into the mainline later does not
- * swallow the branches merged into it. The oldest merge on the line claims a
- * commit that several merges reach.
+ * branches still do.
+ *
+ * A branch is claimed whole along its first parents before the branches merged
+ * into it, which are claimed oldest merge first, level by level: a pull request
+ * merged into a long-lived branch cannot take the commits that branch had
+ * before its fork point, and a branch merged into another branch belongs to
+ * that inner merge. The direct commits of an integration branch, one that a
+ * pull request merge names as a release or `develop` branch or whose line
+ * itself contains pull request merges, belong to no change.
  */
 export const mergesOf = (
   graph: Graph,
   tip: string,
-  pullRequests: ReadonlySet<string>,
+  pullRequests: PullRequestMerges,
 ): ReadonlyMap<string, string> => {
   const line = firstParentLine(graph, tip);
-  const onLine = new Set(line);
-  const seen = new Set<string>();
-  const mergeOf = new Map<string, string>();
+  const walk: Walk = {
+    graph,
+    onLine: new Set(line),
+    seen: new Set(),
+    mergeOf: new Map(),
+    pullRequests,
+  };
   for (const merge of line.toReversed()) {
-    // Each entry is a branch tip and its owner; visited commits add their parents.
-    const open = [...mergedBranches(graph, merge, pullRequests.has(merge))];
-    for (const [commit, owner] of open) {
-      if (onLine.has(commit) || seen.has(commit) || !graph.has(commit)) {
-        continue;
-      }
-      seen.add(commit);
-      if (owner !== undefined) {
-        mergeOf.set(commit, owner);
-      }
-      open.push(...branchesAfter(graph, commit, owner, pullRequests));
+    let level = mergedBranches(graph, merge, pullRequests.get(merge));
+    while (level.length > 0) {
+      level = level.flatMap((branch) => claim(walk, branch));
     }
   }
-  return mergeOf;
+  return walk.mergeOf;
 };

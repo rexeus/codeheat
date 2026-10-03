@@ -4,6 +4,7 @@ import { Effect } from "effect";
 
 import {
   branchOff,
+  mergePullRequest,
   mergeRefs,
   pathsOfChanges,
   readChanges,
@@ -189,6 +190,99 @@ layer(NodeServices.layer)("readHistory octopus merges", (it) => {
         ["a.ts", "b.ts"],
         ["c.ts", "d.ts"],
       ]);
+    }),
+  );
+});
+
+layer(NodeServices.layer)("readHistory Bitbucket Server merges", (it) => {
+  it.effect(
+    "groups the commits of a merge in the plain Bitbucket Server format",
+    () =>
+      Effect.gen(function* () {
+        const result = yield* mergeFeature([
+          "Merge pull request #7 in PROJ/repo from feature to master",
+        ]);
+
+        assert.deepStrictEqual(pathsOfChanges(result), [["a.ts", "b.ts"]]);
+      }),
+  );
+
+  it.effect(
+    "groups the commits of a merge that starts with the pull request title",
+    () =>
+      Effect.gen(function* () {
+        const result = yield* mergeFeature([
+          "Pull request #7: Add the feature",
+          "Merge in PROJ/repo from feature to master",
+        ]);
+
+        assert.deepStrictEqual(pathsOfChanges(result), [["a.ts", "b.ts"]]);
+      }),
+  );
+});
+
+layer(NodeServices.layer)("readHistory integration branches", (it) => {
+  it.effect(
+    "leaves the direct commits of a released develop branch ungrouped",
+    () =>
+      Effect.gen(function* () {
+        const repo = yield* makeTempRepository;
+        const universe = ["a.ts", "b.ts", "c.ts"];
+        yield* startOn(repo, universe);
+        yield* branchOff(repo, "develop", 1, universe);
+        yield* mergePullRequest(repo, "2026-03-05T12:00:00Z", "develop", 101);
+
+        const result = yield* readChanges(repo, universe);
+
+        assert.deepStrictEqual(pathsOfChanges(result), [
+          ["a.ts"],
+          ["b.ts"],
+          ["c.ts"],
+        ]);
+        assert.strictEqual(result.logicalChanges.by, "commit");
+      }),
+  );
+
+  it.effect(
+    "does not let a pull request take the older commits of the branch it was merged into",
+    () =>
+      Effect.gen(function* () {
+        const repo = yield* makeTempRepository;
+        const universe = ["w.ts", "x.ts", "z.ts"];
+        yield* startOn(repo, universe);
+        yield* repo.git("checkout", "--quiet", "-b", "develop", "main");
+        yield* repo.commit("2026-03-01T12:00:00Z", { "z.ts": "z\n" });
+        yield* repo.git("checkout", "--quiet", "-b", "feature", "develop");
+        yield* repo.commit("2026-03-02T12:00:00Z", { "x.ts": "x\n" });
+        yield* repo.git("checkout", "--quiet", "develop");
+        yield* repo.commit("2026-03-03T12:00:00Z", { "w.ts": "w\n" });
+        yield* mergePullRequest(repo, "2026-03-04T12:00:00Z", "feature", 11);
+        yield* repo.git("checkout", "--quiet", "main");
+        yield* mergePullRequest(repo, "2026-03-05T12:00:00Z", "develop", 12);
+
+        const result = yield* readChanges(repo, universe);
+
+        assert.deepStrictEqual(pathsOfChanges(result), [
+          ["w.ts"],
+          ["x.ts"],
+          ["z.ts"],
+        ]);
+      }),
+  );
+
+  it.effect("walks from HEAD even when its merge lies after the window", () =>
+    Effect.gen(function* () {
+      const repo = yield* makeTempRepository;
+      yield* startOn(repo, ["a.ts", "b.ts"]);
+      yield* repo.git("checkout", "--quiet", "-b", "feature", "main");
+      yield* repo.commit("2026-12-29T12:00:00Z", { "a.ts": "a\n" });
+      yield* repo.commit("2026-12-30T12:00:00Z", { "b.ts": "b\n" });
+      yield* repo.git("checkout", "--quiet", "main");
+      yield* mergePullRequest(repo, "2027-01-05T12:00:00Z", "feature", 4);
+
+      const result = yield* readChanges(repo, ["a.ts", "b.ts"]);
+
+      assert.deepStrictEqual(pathsOfChanges(result), [["a.ts", "b.ts"]]);
     }),
   );
 });

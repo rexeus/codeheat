@@ -6,6 +6,16 @@ import { mergesOf } from "./attribution.js";
 const graphOf = (...rows: ReadonlyArray<readonly [string, ...Array<string>]>) =>
   new Map(rows.map(([commit, ...parents]) => [commit, parents]));
 
+/** Pull request merges of feature branches. */
+const branches = (...merges: ReadonlyArray<string>) =>
+  new Map(merges.map((merge) => [merge, "branch" as const]));
+
+const attribution = (
+  graph: ReturnType<typeof graphOf>,
+  tip: string,
+  pullRequests: ReturnType<typeof branches>,
+) => Object.fromEntries(mergesOf(graph, tip, pullRequests));
+
 describe("mergesOf", () => {
   it("maps the commits of a merged branch to the pull request merge", () => {
     const graph = graphOf(
@@ -16,28 +26,9 @@ describe("mergesOf", () => {
       ["main1"],
     );
 
-    expect(
-      Object.fromEntries(mergesOf(graph, "m", new Set(["m"]))),
-    ).toStrictEqual({ f2: "m/1", f1: "m/1" });
-  });
-
-  it("gives a branch merged into another branch to its own merge", () => {
-    const graph = graphOf(
-      ["outer", "main1", "d2"],
-      ["d2", "inner"],
-      ["inner", "d1", "f1"],
-      ["f1", "d1"],
-      ["d1", "main1"],
-      ["main1"],
-    );
-
-    expect(
-      Object.fromEntries(mergesOf(graph, "outer", new Set(["outer", "inner"]))),
-    ).toStrictEqual({
-      d2: "outer/1",
-      inner: "outer/1",
-      d1: "outer/1",
-      f1: "inner/1",
+    expect(attribution(graph, "m", branches("m"))).toStrictEqual({
+      f2: "m/1",
+      f1: "m/1",
     });
   });
 
@@ -50,9 +41,10 @@ describe("mergesOf", () => {
       ["main1"],
     );
 
-    expect(
-      Object.fromEntries(mergesOf(graph, "m", new Set(["m", "sync"]))),
-    ).toStrictEqual({ sync: "m/1", f1: "m/1" });
+    expect(attribution(graph, "m", branches("m"))).toStrictEqual({
+      sync: "m/1",
+      f1: "m/1",
+    });
   });
 
   it("gives a commit that two merges reach to the older merge", () => {
@@ -64,9 +56,19 @@ describe("mergesOf", () => {
       ["main1"],
     );
 
+    expect(attribution(graph, "m2", branches("m1", "m2"))).toStrictEqual({
+      f1: "m1/1",
+      f2: "m2/1",
+    });
+  });
+
+  it("stops at commits outside the graph and maps nothing without a merge", () => {
+    const graph = graphOf(["m", "main1", "f2"], ["f2", "f1"]);
+
+    expect(attribution(graph, "m", branches("m"))).toStrictEqual({ f2: "m/1" });
     expect(
-      Object.fromEntries(mergesOf(graph, "m2", new Set(["m1", "m2"]))),
-    ).toStrictEqual({ f1: "m1/1", f2: "m2/1" });
+      attribution(graphOf(["b", "a"], ["a"]), "b", branches()),
+    ).toStrictEqual({});
   });
 });
 
@@ -74,7 +76,7 @@ describe("mergesOf merges that are no pull request", () => {
   it("groups nothing for a merge outside the pull requests", () => {
     const graph = graphOf(["m", "main1", "f1"], ["f1", "main1"], ["main1"]);
 
-    expect(mergesOf(graph, "m", new Set()).size).toBe(0);
+    expect(attribution(graph, "m", branches())).toStrictEqual({});
   });
 
   it("still groups a pull request merged inside the branches of such a merge", () => {
@@ -90,9 +92,10 @@ describe("mergesOf merges that are no pull request", () => {
       ["base"],
     );
 
-    expect(
-      Object.fromEntries(mergesOf(graph, "pull", new Set(["pr"]))),
-    ).toStrictEqual({ p2: "pr/1", p1: "pr/1" });
+    expect(attribution(graph, "pull", branches("pr"))).toStrictEqual({
+      p2: "pr/1",
+      p1: "pr/1",
+    });
   });
 
   it("gives each branch of an octopus merge its own owner", () => {
@@ -103,23 +106,84 @@ describe("mergesOf merges that are no pull request", () => {
       ["main1"],
     );
 
-    expect(
-      Object.fromEntries(mergesOf(graph, "octopus", new Set(["octopus"]))),
-    ).toStrictEqual({ a1: "octopus/1", b1: "octopus/2" });
-    expect(mergesOf(graph, "octopus", new Set()).size).toBe(0);
+    expect(attribution(graph, "octopus", branches("octopus"))).toStrictEqual({
+      a1: "octopus/1",
+      b1: "octopus/2",
+    });
+    expect(attribution(graph, "octopus", branches())).toStrictEqual({});
   });
 });
 
-describe("mergesOf limits", () => {
-  it("stops at commits outside the graph", () => {
-    const graph = graphOf(["m", "main1", "f2"], ["f2", "f1"]);
+describe("mergesOf long-lived branches", () => {
+  it("does not let a pull request take the commits its integration branch had before the fork", () => {
+    // develop (d1..d6) merged into main without a pull request; a1 forked at d2 and was merged back by pull request mi
+    const graph = graphOf(
+      ["m", "main1", "mi"],
+      ["mi", "d6", "a1"],
+      ["d6", "d5"],
+      ["d5", "d4"],
+      ["d4", "d3"],
+      ["d3", "d2"],
+      ["a1", "d2"],
+      ["d2", "d1"],
+      ["d1", "main1"],
+      ["main1"],
+    );
 
-    expect(
-      Object.fromEntries(mergesOf(graph, "m", new Set(["m"]))),
-    ).toStrictEqual({ f2: "m/1" });
+    expect(attribution(graph, "m", branches("mi"))).toStrictEqual({
+      a1: "mi/1",
+    });
   });
 
-  it("maps nothing when the line has no merge", () => {
-    expect(mergesOf(graphOf(["b", "a"], ["a"]), "b", new Set()).size).toBe(0);
+  it("leaves the direct commits of a branch that merged pull requests ungrouped (gitflow)", () => {
+    // develop released by pull request M after pull requests mB and mA were merged into it; A forked before develop moved on
+    const graph = graphOf(
+      ["M", "base", "mA"],
+      ["mA", "mB", "a1"],
+      ["mB", "w", "b1"],
+      ["b1", "w"],
+      ["w", "z"],
+      ["a1", "z"],
+      ["z", "base"],
+      ["base"],
+    );
+
+    expect(attribution(graph, "M", branches("M", "mA", "mB"))).toStrictEqual({
+      a1: "mA/1",
+      b1: "mB/1",
+    });
+  });
+});
+
+describe("mergesOf integration branches", () => {
+  it("leaves the commits of a merged integration branch ungrouped", () => {
+    const graph = graphOf(["m", "main1", "d2"], ["d2", "d1"], ["d1", "main1"]);
+
+    expect(
+      Object.fromEntries(mergesOf(graph, "m", new Map([["m", "integration"]]))),
+    ).toStrictEqual({});
+    expect(attribution(graph, "m", branches("m"))).toStrictEqual({
+      d2: "m/1",
+      d1: "m/1",
+    });
+  });
+
+  it("still groups a pull request merged into a branch that is itself no pull request", () => {
+    // develop released by plain merge m, with pull request A merged into it after develop had moved on
+    const graph = graphOf(
+      ["m", "main1", "mi"],
+      ["mi", "d3", "a2"],
+      ["d3", "d2"],
+      ["a2", "a1"],
+      ["a1", "d1"],
+      ["d2", "d1"],
+      ["d1", "main1"],
+      ["main1"],
+    );
+
+    expect(attribution(graph, "m", branches("mi"))).toStrictEqual({
+      a2: "mi/1",
+      a1: "mi/1",
+    });
   });
 });
