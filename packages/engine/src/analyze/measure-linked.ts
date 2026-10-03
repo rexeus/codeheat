@@ -13,6 +13,7 @@ import {
 import { readImportGraph } from "../imports/import-graph.js";
 import { linkCouplings } from "../imports/link-couplings.js";
 import { touchedModules } from "../modules/touched-modules.js";
+import { measureSpread } from "../spread/measure-spread.js";
 import { measureStability } from "./measure-stability.js";
 import { coupleHistory, measureWindows } from "./measure.js";
 import type { Universe } from "./measure.js";
@@ -62,6 +63,7 @@ export const measureLinked = (
     const cliqueSearch = findCliques(coChange, touched);
     return {
       ...measured,
+      ...measureSpread(histories.current, touched, measured, couplings),
       copyFamilies,
       distantCouplings: distantCouplings(
         couplings,

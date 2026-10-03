@@ -1,0 +1,81 @@
+// Owns the change radius: how many modules the counted changes touched, for
+// the repository and for each module.
+import type { ChangeRadius } from "../report/change-radius.js";
+import type { Module } from "../report/module.js";
+import { roundReported } from "../report/precision.js";
+
+const MEDIAN = 0.5;
+const P90 = 0.9;
+
+/** The value at nearest rank `ceil(share × n)` of `sorted`, which must not be empty. */
+const nearestRank = (sorted: ReadonlyArray<number>, share: number): number =>
+  sorted[Math.max(0, Math.ceil(share * sorted.length) - 1)] ?? 1;
+
+const ascending = (a: number, b: number): number => a - b;
+
+/** The radius of changes that touched `counts` modules each; null without any. */
+const radiusOf = (counts: ReadonlyArray<number>): ChangeRadius | null => {
+  if (counts.length === 0) {
+    return null;
+  }
+  const sorted = counts.toSorted(ascending);
+  return {
+    changes: sorted.length,
+    median: nearestRank(sorted, MEDIAN),
+    p90: nearestRank(sorted, P90),
+    local: roundReported(
+      sorted.filter((count) => count === 1).length / sorted.length,
+    ),
+  };
+};
+
+/**
+ * Measures how far the counted changes spread, over `touched` (the modules
+ * each counted change touched, see `touchedModules`) and the partition of
+ * `modules`. Test-only modules are left out of every change: the test of a
+ * change is no spread, and a change that touched nothing else is not
+ * measured. The repository's `changeRadius` is null when no change is
+ * measured; a module's `radius` is the median number of modules, itself
+ * included, touched by the measured changes that touched it, null without
+ * any. Medians are lower medians (see `ChangeRadius.median`).
+ *
+ * Every module comes back with its `radius` set.
+ */
+export const measureRadius = (
+  touched: ReadonlyArray<ReadonlySet<string>>,
+  modules: ReadonlyArray<Module>,
+): {
+  readonly changeRadius: ChangeRadius | null;
+  readonly modules: ReadonlyArray<Module>;
+} => {
+  const testOnly = new Set(
+    modules.filter((module) => module.testOnly).map((module) => module.path),
+  );
+  const counts: Array<number> = [];
+  const countsByModule = new Map<string, Array<number>>();
+  for (const change of touched) {
+    const measured = [...change].filter((path) => !testOnly.has(path));
+    if (measured.length === 0) {
+      continue;
+    }
+    counts.push(measured.length);
+    for (const path of measured) {
+      const known = countsByModule.get(path) ?? [];
+      known.push(measured.length);
+      countsByModule.set(path, known);
+    }
+  }
+  return {
+    changeRadius: radiusOf(counts),
+    modules: modules.map((module) => {
+      const own = countsByModule.get(module.path);
+      return {
+        ...module,
+        radius:
+          own === undefined
+            ? null
+            : nearestRank(own.toSorted(ascending), MEDIAN),
+      };
+    }),
+  };
+};

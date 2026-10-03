@@ -15,6 +15,7 @@ import { shallowestLines } from "./depth-view.js";
 import { cliqueSection, distantSection } from "./distant-view.js";
 import { day, percent } from "./format.js";
 import { importsCell } from "./imports-cell.js";
+import { spreadLines } from "./spread-view.js";
 import { stabilitySections } from "./stability-view.js";
 import type { Style } from "./style.js";
 import { plain, renderTable } from "./table.js";
@@ -173,7 +174,9 @@ const leakyModules = (report: Report): ReadonlyArray<Module> =>
     .slice(0, TOP_MODULES);
 
 /**
- * Renders the terminal view of an `analyze` report: the ten hottest files,
+ * Renders the terminal view of an `analyze` report: how far a change spreads
+ * (change radius and propagation cost, each left out when the report has
+ * none), the ten hottest files,
  * the five best ranked distant couplings and a line per clique of modules
  * that change together (each section is left out when there is none),
  * the five strongest couplings that are neither test pairs nor pairs of two
@@ -210,6 +213,7 @@ export const renderAnalysis = (report: Report, style: Style): string => {
   const shallow = shallowestLines(report, style);
   return [
     style.bold(summary),
+    ...spreadLines(report),
     "",
     style.bold("Hotspots"),
     ...hotspots,

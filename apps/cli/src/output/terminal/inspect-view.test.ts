@@ -63,6 +63,7 @@ const billing: Module = {
   commits: 74,
   localCommits: 41,
   cohesion: 0.5541,
+  radius: 1,
   partners: [
     { path: "packages/web", sharedCommits: 20, contractsOnly: false },
     { path: "packages/auth", sharedCommits: 9, contractsOnly: false },
@@ -104,7 +105,7 @@ describe("renderInspect", () => {
         "rank #1 of 36, score 0.97",
         "48 revisions, 14 co-changed files, +384 -672 lines, 964 loc",
         "indentation complexity 1900 (mean 1.97, max 9)",
-        "module packages/billing: 55% of 74 changes stay inside, most often with packages/web (20)",
+        "module packages/billing: 55% of 74 changes stay inside; a typical change touching it touches 1 module, most often with packages/web (20)",
         "- changed in 48 commits (#1 of 36)",
         "",
         "Changes together with",
@@ -161,13 +162,19 @@ describe("renderInspect modules", () => {
       cohesion: null,
       partners: [],
     };
-    const alone: Module = { ...billing, commits: 8, cohesion: 1, partners: [] };
+    const alone: Module = {
+      ...billing,
+      commits: 8,
+      cohesion: 1,
+      radius: 1,
+      partners: [],
+    };
 
     expect(renderInspect(result([entry], [quiet]), makeStyle(false))).toContain(
       "module packages/billing: no counted changes\n",
     );
     expect(renderInspect(result([entry], [alone]), makeStyle(false))).toContain(
-      "module packages/billing: 100% of 8 changes stay inside\n",
+      "module packages/billing: 100% of 8 changes stay inside; a typical change touching it touches 1 module\n",
     );
   });
 
@@ -179,7 +186,7 @@ describe("renderInspect modules", () => {
     const silent: Module = { ...deep, commits: 0, cohesion: null };
 
     expect(renderInspect(result([entry], [deep]), makeStyle(false))).toContain(
-      "changes stay inside, most often with packages/web (20)\nmodule packages/billing depth: 6 exports over 3105 lines, 517.5 lines per export\n",
+      "touches 1 module, most often with packages/web (20)\nmodule packages/billing depth: 6 exports over 3105 lines, 517.5 lines per export\n",
     );
     expect(
       renderInspect(result([entry], [silent]), makeStyle(false)),
@@ -208,7 +215,7 @@ describe("renderInspect modules", () => {
 
     expect(view).toContain("module packages/billing: 55%");
     expect(view).toContain(
-      "module packages/web: 50% of 10 changes stay inside\n",
+      "module packages/web: 50% of 10 changes stay inside; a typical change touching it touches 1 module\n",
     );
   });
 });

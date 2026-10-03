@@ -51,6 +51,7 @@ export const moduleStats = (
   commits: 10,
   localCommits: 6,
   cohesion: 0.6,
+  radius: 1,
   partners: [],
   entryPoints: [],
   interfaceCommits: 0,
@@ -79,6 +80,7 @@ const THRESHOLDS: Report["thresholds"] = {
   minImplementationCommits: 5,
   minSharedCommits: 3,
   minDegree: 0.3,
+  propagationDepth: 3,
   ubiquitousShare: 0.3,
   ubiquitousMinCommits: 10,
   maxMeanLineLength: 300,
@@ -87,6 +89,8 @@ const THRESHOLDS: Report["thresholds"] = {
 
 /** The design-fit lists of a report, all empty. */
 const NO_FINDINGS = {
+  changeRadius: null,
+  propagationCost: null,
   cliquesPartial: false,
   dependencyDirection: [],
   unstableInterfaces: [],

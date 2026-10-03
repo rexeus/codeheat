@@ -14,6 +14,7 @@ export const moduleRecord = (
   commits,
   localCommits: 0,
   cohesion: 0,
+  radius: null,
   partners: [],
   entryPoints: [],
   interfaceCommits: 0,

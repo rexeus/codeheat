@@ -47,6 +47,7 @@
     "minCliqueShare": 0.3,
     "minSharedCommits": 3,
     "minDegree": 0.3,
+    "propagationDepth": 3,
     "ubiquitousShare": 0.3,
     "ubiquitousMinCommits": 10,
     "maxMeanLineLength": 300,
@@ -1101,6 +1102,16 @@
       "share": 0.4444
     }
   ],
+  "changeRadius": {
+    "changes": 170,
+    "median": 1,
+    "p90": 3,
+    "local": 0.6412
+  },
+  "propagationCost": {
+    "cost": 0.0612,
+    "files": 31
+  },
   "couplings": [
     {
       "a": "packages/billing/src/index.ts",
@@ -1238,6 +1249,7 @@
       "commits": 30,
       "localCommits": 12,
       "cohesion": 0.4,
+      "radius": 2,
       "partners": [
         {
           "path": "apps/cli",
@@ -1283,6 +1295,7 @@
       "commits": 26,
       "localCommits": 13,
       "cohesion": 0.5,
+      "radius": 1,
       "partners": [
         {
           "path": "packages/shared",
@@ -1314,6 +1327,7 @@
       "commits": 58,
       "localCommits": 31,
       "cohesion": 0.5345,
+      "radius": 1,
       "partners": [
         {
           "path": "packages/billing",
@@ -1350,6 +1364,7 @@
       "commits": 74,
       "localCommits": 41,
       "cohesion": 0.5541,
+      "radius": 1,
       "partners": [
         {
           "path": "packages/web",
@@ -1395,6 +1410,7 @@
       "commits": 44,
       "localCommits": 27,
       "cohesion": 0.6136,
+      "radius": 1,
       "partners": [
         {
           "path": "packages/web",

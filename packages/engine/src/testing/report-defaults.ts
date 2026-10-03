@@ -19,6 +19,7 @@ export const DEFAULT_THRESHOLDS: Report["thresholds"] = {
   minImplementationCommits: 5,
   minSharedCommits: 3,
   minDegree: 0.3,
+  propagationDepth: 3,
   ubiquitousShare: 0.3,
   ubiquitousMinCommits: 10,
   maxMeanLineLength: 300,
@@ -27,6 +28,8 @@ export const DEFAULT_THRESHOLDS: Report["thresholds"] = {
 
 /** The design-fit lists of a report, all empty. */
 export const NO_DESIGN_FINDINGS = {
+  changeRadius: null,
+  propagationCost: null,
   cliquesPartial: false,
   dependencyDirection: [],
   unstableInterfaces: [],

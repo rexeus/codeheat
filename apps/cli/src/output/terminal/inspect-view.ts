@@ -6,6 +6,7 @@ import { partnerName } from "./contract-view.js";
 import { copyFamilyLine } from "./copies-view.js";
 import { describeDepth } from "./depth-view.js";
 import { day, percent, twoDecimals } from "./format.js";
+import { radiusClause } from "./spread-view.js";
 import type { Style } from "./style.js";
 import { plain, renderTable } from "./table.js";
 import type { Cell } from "./table.js";
@@ -101,7 +102,7 @@ const moduleLine = (module: Module | undefined): ReadonlyArray<string> => {
       ? ""
       : `, most often with ${partnerName(partner)} (${partner.sharedCommits})`;
   return [
-    `${name}: ${percent(module.cohesion)} of ${module.commits} changes stay inside${partnerNote}`,
+    `${name}: ${percent(module.cohesion)} of ${module.commits} changes stay inside${radiusClause(module)}${partnerNote}`,
     ...depthLine(module),
   ];
 };

@@ -42,6 +42,8 @@ export const Thresholds = Schema.Struct({
   minLeakage: UnitInterval,
   /** Fewest `Module.implementationCommits` a module needs before its entry points get that reason line. */
   minImplementationCommits: Count,
+  /** Longest chain of couplings (`Report.couplings`, at least `minSharedCommits` shared changes and `minDegree`) that `Report.propagationCost` follows from a file. */
+  propagationDepth: Count,
   /**
    * A contract file that changed in more than this share of the counted
    * changes is ubiquitous (see `Report.ubiquitousFiles`).
