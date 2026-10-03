@@ -101,3 +101,60 @@ layer(NodeServices.layer)("analyze logical changes without history", (it) => {
     }),
   );
 });
+
+layer(NodeServices.layer)(
+  "analyze logical changes as the unit of ratios",
+  (it) => {
+    it.effect(
+      "measures degree and probability against the changes of a file, not its commits",
+      () =>
+        Effect.gen(function* () {
+          yield* setNow;
+          const repo = yield* makeTempRepository;
+          yield* repo.commit("2025-01-01T12:00:00Z", {
+            "a.ts": lines(3, "a"),
+            "b.ts": lines(3, "b"),
+          });
+          // pull request 1: three commits of a.ts, one of them also of b.ts
+          yield* repo.commit(
+            "2026-03-01T10:00:00Z",
+            { "a.ts": lines(4, "a") },
+            "feat: one (#1)",
+          );
+          yield* repo.commit(
+            "2026-03-01T11:00:00Z",
+            { "a.ts": lines(5, "a"), "b.ts": lines(4, "b") },
+            "feat: two (#1)",
+          );
+          yield* repo.commit(
+            "2026-03-01T12:00:00Z",
+            { "a.ts": lines(6, "a") },
+            "feat: three (#1)",
+          );
+          for (const pr of [2, 3]) {
+            yield* repo.commit(
+              `2026-03-0${pr}T12:00:00Z`,
+              { "a.ts": lines(6 + pr, "a"), "b.ts": lines(4 + pr, "b") },
+              `feat: more (#${pr})`,
+            );
+          }
+
+          const report = yield* analyze(analyzeOptionsFor(repo));
+
+          assert.deepStrictEqual(
+            report.files.map(({ path, revisions, changes }) => [
+              path,
+              revisions,
+              changes,
+            ]),
+            [
+              ["a.ts", 5, 3],
+              ["b.ts", 3, 3],
+            ],
+          );
+          const [pair] = report.couplings;
+          assert.deepStrictEqual([pair?.sharedCommits, pair?.degree], [3, 1]);
+        }),
+    );
+  },
+);

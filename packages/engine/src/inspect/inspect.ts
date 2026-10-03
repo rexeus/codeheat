@@ -21,7 +21,7 @@ const toEntry = (
 ): Entry => ({
   ...file,
   of: universeSize,
-  partners: partnersOf(file.path, file.revisions, couplings).slice(
+  partners: partnersOf(file.path, file.changes, couplings).slice(
     0,
     MAX_PARTNERS,
   ),

@@ -30,7 +30,7 @@ describe("codeheat finds hidden coupling", () => {
       ]);
       const config = report.files.find(({ path }) => path === "src/config.ts");
       expect(config?.reasons).toContain(
-        "changes with src/api.ts in 100% of its commits without an import between them",
+        "changes with src/api.ts in 100% of its changes without an import between them",
       );
     }).pipe(Effect.scoped),
   );
@@ -108,7 +108,7 @@ describe("codeheat without a parser", () => {
           null,
         ]);
         expect(report.files.flatMap(({ reasons }) => reasons)).not.toContain(
-          "changes with src/api.ts in 100% of its commits without an import between them",
+          "changes with src/api.ts in 100% of its changes without an import between them",
         );
       }).pipe(Effect.scoped),
   );

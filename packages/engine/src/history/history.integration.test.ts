@@ -67,11 +67,13 @@ layer(NodeServices.layer)("readHistory", (it) => {
         // creation and three edits; the two renames keep every byte and add none
         assert.deepStrictEqual(result.files.get("c.ts"), {
           revisions: 4,
+          changes: 4,
           linesAdded: 13,
           linesDeleted: 0,
         });
         assert.deepStrictEqual(result.files.get("other.ts"), {
           revisions: 1,
+          changes: 1,
           linesAdded: 1,
           linesDeleted: 0,
         });
@@ -117,6 +119,7 @@ layer(NodeServices.layer)("readHistory lives of a path", (it) => {
 
         assert.deepStrictEqual(result.files.get("a.ts"), {
           revisions: 2,
+          changes: 2,
           linesAdded: 2,
           linesDeleted: 0,
         });
@@ -141,6 +144,7 @@ layer(NodeServices.layer)("readHistory lives of a path", (it) => {
 
       assert.deepStrictEqual(result.files.get("a.ts"), {
         revisions: 2,
+        changes: 2,
         linesAdded: 11,
         linesDeleted: 10,
       });
@@ -166,6 +170,7 @@ layer(NodeServices.layer)("readHistory lives of a path and renames", (it) => {
         // b.ts's creation; its move onto a.ts adds none
         assert.deepStrictEqual(result.files.get("a.ts"), {
           revisions: 1,
+          changes: 1,
           linesAdded: 10,
           linesDeleted: 0,
         });
@@ -189,6 +194,7 @@ layer(NodeServices.layer)("readHistory lives of a path and renames", (it) => {
         // b.ts's creation, not its rename; the dead a.ts is a different file
         assert.deepStrictEqual(result.files.get("a.ts"), {
           revisions: 1,
+          changes: 1,
           linesAdded: 10,
           linesDeleted: 0,
         });
@@ -215,6 +221,7 @@ layer(NodeServices.layer)(
 
           assert.deepStrictEqual(result.files.get("p.ts"), {
             revisions: 1,
+            changes: 1,
             linesAdded: 1,
             linesDeleted: 0,
           });
@@ -237,6 +244,7 @@ layer(NodeServices.layer)(
 
           assert.deepStrictEqual(result.files.get("r.ts"), {
             revisions: 1,
+            changes: 1,
             linesAdded: 10,
             linesDeleted: 0,
           });
@@ -309,6 +317,7 @@ layer(NodeServices.layer)("readHistory content", (it) => {
 
       assert.deepStrictEqual(result.files.get("blob.ts"), {
         revisions: 1,
+        changes: 1,
         linesAdded: 0,
         linesDeleted: 0,
       });
@@ -338,11 +347,13 @@ layer(NodeServices.layer)("readHistoryHalves", (it) => {
         // recent: the edit and the last edit; earlier: creation and edit; the renames add none
         assert.deepStrictEqual(recent.files.get("c.ts"), {
           revisions: 2,
+          changes: 2,
           linesAdded: 2,
           linesDeleted: 0,
         });
         assert.deepStrictEqual(earlier.files.get("c.ts"), {
           revisions: 2,
+          changes: 2,
           linesAdded: 11,
           linesDeleted: 0,
         });

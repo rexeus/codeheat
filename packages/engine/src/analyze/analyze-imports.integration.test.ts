@@ -82,7 +82,7 @@ const relationsOf = (
   );
 
 const HIDDEN_REASON =
-  "changes with packages/app/src/main.ts in 100% of its commits without an import between them";
+  "changes with packages/app/src/main.ts in 100% of its changes without an import between them";
 
 layer(NodeServices.layer)("analyze hidden coupling", (it) => {
   it.effect(

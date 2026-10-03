@@ -10,6 +10,7 @@ const entry: InspectResult["matches"][number] = {
   rank: 1,
   score: 0.97,
   revisions: 48,
+  changes: 42,
   linesAdded: 384,
   linesDeleted: 672,
   breadth: 14,

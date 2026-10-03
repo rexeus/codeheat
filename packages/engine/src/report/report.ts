@@ -43,7 +43,7 @@ const Thresholds = Schema.Struct({
   maxCommitFiles: Count,
   /** Fewest distinct co-changed files (`FileStats.breadth`) that make a file a hub. */
   hubMinBreadth: Count,
-  /** Fewest revisions a file needs to be a hub candidate; test files are never candidates. */
+  /** Fewest logical changes (`FileStats.changes`) a file needs to be a hub candidate; test files are never candidates. */
   hubMinRevisions: Count,
   /** Share of the hub candidates that may be hubs: widest candidate files first, ties included. */
   hubTopShare: UnitInterval,
@@ -86,6 +86,14 @@ export const FileStats = Schema.Struct({
   score: UnitInterval,
   /** Real changes to the file in the window, mechanical commits excluded (see `Report.mechanicalCommits`). */
   revisions: Count,
+  /**
+   * Logical changes of the window (see `Report.logicalChanges`) that touched
+   * the file, large ones included: at most `revisions`, and equal to it
+   * when no commits were joined. The unit of `Coupling.degree`,
+   * `Partner.probability`, and `Thresholds.hubMinRevisions`, which compare
+   * shared changes with a file's own.
+   */
+  changes: Count,
   linesAdded: Count,
   linesDeleted: Count,
   /**
@@ -124,7 +132,7 @@ export const Coupling = Schema.Struct({
   a: Schema.String,
   b: Schema.String,
   sharedCommits: Count,
-  /** `sharedCommits / mean(revisions(a), revisions(b))`, rounded to 4 decimals. */
+  /** `sharedCommits / mean(changes(a), changes(b))` (see `FileStats.changes`), rounded to 4 decimals. */
   degree: UnitInterval,
   /** Directory hops between the parent directories; 0 means same directory. */
   distance: Count,

@@ -104,11 +104,11 @@ export type Couplings = {
 
 /**
  * Finds the coupled pairs among `changes`, each listing the distinct ids of
- * the files one change touched; an id is an index into `paths`. `revisions` counts every
- * commit per path, including the ones ignored here for being too large.
+ * the files one change touched; an id is an index into `paths`. `changesPerFile` counts every
+ * logical change per path, including the ones ignored here for being too large.
  *
  * Every coupling comes back with `imports: null`; the import graph fills it in.
- * `couplingCommits` is the number of commits small enough to count. Pairs
+ * `couplingCommits` is the number of changes small enough to count. Pairs
  * with a code side come before pairs of two contract files, each group sorted
  * by its reported (rounded) degree, then shared commits, then path.
  * `breadth` maps every path in `paths` to the number of distinct other files it
@@ -119,12 +119,12 @@ export type Couplings = {
 export const findCouplings = (
   changes: ReadonlyArray<LogicalChange>,
   paths: ReadonlyArray<string>,
-  revisions: ReadonlyMap<string, number>,
+  changesPerFile: ReadonlyMap<string, number>,
   places: Places,
 ): Couplings => {
   const { modules, contracts } = places;
   const counted = countedChanges(changes);
-  const revisionsById = paths.map((path) => revisions.get(path) ?? 0);
+  const changesById = paths.map((path) => changesPerFile.get(path) ?? 0);
   const couplings: Array<Coupling> = [];
   const shared = countSharedCommits(counted);
   for (const [low, partners] of shared) {
@@ -135,9 +135,9 @@ export const findCouplings = (
         Order.String(lowPath, highPath) <= 0
           ? [lowPath, highPath]
           : [highPath, lowPath];
-      const meanRevisions =
-        ((revisionsById[low] ?? 0) + (revisionsById[high] ?? 0)) / 2;
-      const degree = sharedCommits / meanRevisions;
+      const meanChanges =
+        ((changesById[low] ?? 0) + (changesById[high] ?? 0)) / 2;
+      const degree = sharedCommits / meanChanges;
       if (sharedCommits >= MIN_SHARED_COMMITS && degree >= MIN_DEGREE) {
         couplings.push({
           a,

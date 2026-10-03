@@ -20,6 +20,12 @@ import type { Entry } from "./scan.js";
 type FileHistory = {
   /** Commits that touched the file. */
   readonly revisions: number;
+  /**
+   * Logical changes that touched the file, of any size: the unit a coupling's
+   * shared count is measured in, so ratios of shared counts use this and not
+   * `revisions`.
+   */
+  readonly changes: number;
   readonly linesAdded: number;
   readonly linesDeleted: number;
 };
@@ -80,9 +86,25 @@ const addActivity = (
     const before = fileHistories.get(id);
     fileHistories.set(id, {
       revisions: (before?.revisions ?? 0) + 1,
+      changes: 0,
       linesAdded: (before?.linesAdded ?? 0) + (added[index] ?? 0),
       linesDeleted: (before?.linesDeleted ?? 0) + (deleted[index] ?? 0),
     });
+  }
+};
+
+/** Credits each logical change to the files it touched. */
+const countChanges = (
+  fileHistories: Map<number, FileHistory>,
+  changes: ReadonlyArray<LogicalChange>,
+): void => {
+  for (const { files } of changes) {
+    for (const id of files) {
+      const before = fileHistories.get(id);
+      if (before !== undefined) {
+        fileHistories.set(id, { ...before, changes: before.changes + 1 });
+      }
+    }
   }
 };
 
@@ -118,6 +140,7 @@ const buildHistory = (
     })),
     merges,
   );
+  countChanges(fileHistories, changes);
   const files = new Map<string, FileHistory>();
   for (const [id, path] of paths.entries()) {
     const fileHistory = fileHistories.get(id);

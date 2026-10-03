@@ -38,6 +38,7 @@ const measureFiles = (
       path,
       module: modules.get(path)?.path ?? ".",
       revisions: activity?.revisions ?? 0,
+      changes: activity?.changes ?? 0,
       linesAdded: activity?.linesAdded ?? 0,
       linesDeleted: activity?.linesDeleted ?? 0,
       breadth: breadth.get(path) ?? 0,
@@ -66,7 +67,7 @@ export const coupleHistory = (
     history.changes,
     history.paths,
     new Map(
-      [...history.files].map(([file, activity]) => [file, activity.revisions]),
+      [...history.files].map(([file, activity]) => [file, activity.changes]),
     ),
     {
       modules: new Map([...modules, ...contracts]),

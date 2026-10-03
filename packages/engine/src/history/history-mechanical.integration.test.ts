@@ -129,6 +129,7 @@ layer(NodeServices.layer)(
           // creation and two edits, under the name the file has today
           assert.deepStrictEqual(result.files.get("b.ts"), {
             revisions: 3,
+            changes: 3,
             linesAdded: 12,
             linesDeleted: 0,
           });
@@ -185,6 +186,7 @@ layer(NodeServices.layer)("readHistory mechanical reverts", (it) => {
       assert.strictEqual(result.mechanical.reverts, 0);
       assert.deepStrictEqual(result.files.get("a.ts"), {
         revisions: 1,
+        changes: 1,
         linesAdded: 0,
         linesDeleted: 1,
       });

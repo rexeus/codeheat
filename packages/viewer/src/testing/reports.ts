@@ -10,6 +10,7 @@ export const fileStats = (
   rank: 1,
   score: 0.5,
   revisions: 10,
+  changes: 10,
   linesAdded: 100,
   linesDeleted: 20,
   breadth: 3,

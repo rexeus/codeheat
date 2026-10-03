@@ -14,6 +14,8 @@ export type FileMeasure = {
   /** `path` of the file's module. */
   readonly module: string;
   readonly revisions: number;
+  /** Logical changes that touched the file (see `FileStats.changes`). */
+  readonly changes: number;
   readonly linesAdded: number;
   readonly linesDeleted: number;
   readonly complexity: Complexity;
@@ -55,14 +57,12 @@ const competitionRanks = (
 
 /** Ranks hub candidates by breadth; a file that is no candidate has no rank. */
 const hubRanking = (measures: ReadonlyArray<FileMeasure>) => {
-  const candidates = measures.filter((m) =>
-    isHubCandidate(m.path, m.revisions),
-  );
+  const candidates = measures.filter((m) => isHubCandidate(m.path, m.changes));
   const ranks = competitionRanks(candidates.map((m) => m.breadth));
   return {
     candidates: candidates.length,
-    rankOf: ({ path, revisions, breadth }: FileMeasure): number | undefined =>
-      isHubCandidate(path, revisions) ? ranks.get(breadth) : undefined,
+    rankOf: ({ path, changes, breadth }: FileMeasure): number | undefined =>
+      isHubCandidate(path, changes) ? ranks.get(breadth) : undefined,
   };
 };
 
@@ -112,6 +112,7 @@ export const rankFiles = (
         rank: index + 1,
         score: roundReported(score),
         revisions,
+        changes: measure.changes,
         linesAdded: measure.linesAdded,
         linesDeleted: measure.linesDeleted,
         loc: complexity.loc,
@@ -128,7 +129,7 @@ export const rankFiles = (
           complexityRank:
             complexityRanks.get(complexity.total) ?? measures.length,
           of: measures.length,
-          partners: partnersOf(path, revisions, coupled.get(path) ?? []),
+          partners: partnersOf(path, measure.changes, coupled.get(path) ?? []),
           breadth,
           breadthRank: hubs.rankOf(measure),
           candidates: hubs.candidates,
