@@ -239,3 +239,33 @@ describe("packages and small repositories", () => {
     });
   });
 });
+
+describe("hot folders", () => {
+  it("opens a small hot folder before bigger cold ones instead of hiding it in the bucket", () => {
+    const cold = Array.from({ length: 11 }, (_, index) => `c${index + 1}`);
+    const files = [
+      ...cold.flatMap((folder) =>
+        filesIn(folder, 20).map((path) => file(path, 1)),
+      ),
+      ...filesIn("hot", 4).map((path) =>
+        Object.assign(file(path, 5), { loc: 1000 }),
+      ),
+    ];
+    const tree = buildTerritories({
+      files,
+      changes: [
+        ...changed(5, "hot/f1.ts"),
+        ...cold.flatMap((folder) => changed(6, `${folder}/f1.ts`)),
+      ],
+      packages: new Set(),
+      minChanges: 5,
+    });
+
+    const recommended = idsAt(tree, tree.recommended).map(
+      (id) => nodeOf(tree, id).path,
+    );
+    expect(idsAt(tree, 1).map((id) => nodeOf(tree, id).path)[0]).toBe("hot");
+    expect(recommended).toContain("hot");
+    expect(nodeOf(tree, idsAt(tree, 1).at(-1) ?? "").kind).toBe("other");
+  });
+});

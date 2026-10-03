@@ -4,33 +4,20 @@
 import { roundReported } from "../report/precision.js";
 import type { Territories, Territory } from "../report/territory.js";
 import { attachTests } from "./attach-tests.js";
-import type { TestAttachment } from "./attach-tests.js";
+import { evidenceOf } from "./evidence.js";
+import type { EvidenceInput } from "./evidence.js";
 import { fileLeaves } from "./file-leaves.js";
 import { flatten } from "./flatten-tree.js";
 import type { FlatNode } from "./flatten-tree.js";
 import { growTree } from "./grow-tree.js";
 import type { TreeNode } from "./grow-tree.js";
 import { NO_MEASURE, measureNodes } from "./node-measures.js";
-import type { NodeMeasure, TerritoryFile } from "./node-measures.js";
-import type { Evidence } from "./part.js";
+import type { NodeMeasure } from "./node-measures.js";
+import { hiddenHeat, isTerritoryKind, recommendedOf } from "./recommend.js";
 
-/** Territories at the recommended detail number at most this many. */
-const RECOMMENDED_MAX_TERRITORIES = 25;
-/** A territory's changes say nothing below this many, however low the threshold of ranked modules. */
-const MIN_CHANGES = 8;
-/** The size bound of a territory: a quarter of the files, within these limits. */
-const MIN_SIZE_BOUND = 50;
-const MAX_SIZE_BOUND = 150;
-
-export type TerritoryInput = {
-  /** The code files of the universe. */
-  readonly files: ReadonlyArray<TerritoryFile>;
-  /** The counted changes, each as the paths of the files it touched (contract files included). */
-  readonly changes: ReadonlyArray<ReadonlyArray<string>>;
+export type TerritoryInput = EvidenceInput & {
   /** The directories that hold a manifest, other than the repository root. */
   readonly packages: ReadonlySet<string>;
-  /** `Thresholds.minModuleCommits`. */
-  readonly minChanges: number;
 };
 
 /** A territory without its description, with what the description is made from. */
@@ -56,50 +43,9 @@ const NOTHING: TerritoryTree = {
   territoryOf: new Map(),
 };
 
-/** The counted changes as the files that shape the tree: a test follows the code it is paired with, other tests and contract files are left out. */
-const evidenceOf = (
-  { changes, minChanges }: Pick<TerritoryInput, "changes" | "minChanges">,
-  attachment: TestAttachment,
-): Evidence => {
-  const units = new Set(attachment.units);
-  const touched = changes
-    .map((paths) => [
-      ...new Set(
-        paths.flatMap((path) => {
-          const unit = units.has(path) ? path : attachment.pairedWith.get(path);
-          return unit === undefined ? [] : [unit];
-        }),
-      ),
-    ])
-    .filter((files) => files.length > 0);
-  const byFile = new Map<string, Array<number>>();
-  for (const [index, files] of touched.entries()) {
-    for (const file of files) {
-      const indices = byFile.get(file) ?? [];
-      indices.push(index);
-      byFile.set(file, indices);
-    }
-  }
-  const total = attachment.units.length;
-  return {
-    total,
-    changeCount: touched.length,
-    byFile,
-    changes: touched,
-    minChanges: Math.max(MIN_CHANGES, minChanges),
-    sizeBound: Math.min(
-      MAX_SIZE_BOUND,
-      Math.max(MIN_SIZE_BOUND, Math.floor(total / 4)),
-    ),
-  };
-};
-
-const isTerritory = ({ kind }: Pick<Territory, "kind">): boolean =>
-  kind === "package" || kind === "folder" || kind === "group";
-
 /** Territories first, then test-only code, then buckets and loose files. */
 const roleOf = ({ kind }: Pick<Territory, "kind">): number => {
-  if (isTerritory({ kind })) {
+  if (isTerritoryKind(kind)) {
     return 0;
   }
   return kind === "tests" ? 1 : 2;
@@ -173,18 +119,6 @@ const idsAt = (visible: ReadonlyArray<TerritoryDraft>): ReadonlyArray<string> =>
     )
     .map(({ id }) => id);
 
-/** The detail to read first: the finest with at most 25 territories; the first when even that has more. */
-const recommendedOf = (
-  visible: ReadonlyArray<ReadonlyArray<TerritoryDraft>>,
-): number =>
-  Math.max(
-    1,
-    1 +
-      visible
-        .map((nodes) => nodes.filter((node) => isTerritory(node)).length)
-        .findLastIndex((count) => count <= RECOMMENDED_MAX_TERRITORIES),
-  );
-
 /**
  * Builds the territories. The tree is grown over the code files and the test
  * code that belongs to no code; test code that pairs with a source file or sits
@@ -198,11 +132,8 @@ export const buildTerritories = (input: TerritoryInput): TerritoryTree => {
     return NOTHING;
   }
   const attachment = attachTests(input.files.map(({ path }) => path));
-  const grown = growTree(
-    attachment.units,
-    evidenceOf(input, attachment),
-    input.packages,
-  );
+  const evidence = evidenceOf(input, attachment);
+  const grown = growTree(attachment.units, evidence, input.packages);
   const flat = flatten(grown.root, input.packages);
   const leaves = fileLeaves(flat, attachment);
   const nodes = draftsOf(
@@ -225,7 +156,7 @@ export const buildTerritories = (input: TerritoryInput): TerritoryTree => {
     level.flatMap((node) => draftOf.get(node) ?? []),
   );
   return {
-    recommended: recommendedOf(visible),
+    recommended: recommendedOf(visible, hiddenHeat(flat, evidence)),
     details: visible.map((drafts, at) => ({
       level: at + 1,
       ids: idsAt(drafts),

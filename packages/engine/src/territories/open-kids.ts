@@ -8,16 +8,17 @@ import type { Part } from "./part.js";
 /** At most this many children open at once; the rest wait in a "smaller folders" bucket. */
 const FANOUT = 8;
 
+/** What ranks a group of folders for opening: its heat, its changes, its files; compared in that order. */
+export type Weight = readonly [number, number, number];
+
+const heavier = (a: Weight, b: Weight): number =>
+  b[0] - a[0] || b[1] - a[1] || b[2] - a[2];
+
 /** What the kids are cut from. */
 export type Cut = {
   readonly cut: FolderCut;
   readonly packages: ReadonlySet<string>;
 };
-
-const filesOf = (
-  keys: ReadonlyArray<string>,
-  big: ReadonlyMap<string, ReadonlyArray<string>>,
-): ReadonlyArray<string> => keys.flatMap((key) => big.get(key) ?? []);
 
 const foldersOf = (
   paths: ReadonlyArray<string>,
@@ -80,21 +81,21 @@ const roleOf = ({ kind }: Part): number => {
 export const openKids = (
   groups: ReadonlyArray<Together>,
   context: Cut,
-  weigh: (folders: ReadonlyArray<string>) => number,
+  weigh: (folders: ReadonlyArray<string>) => Weight,
 ): ReadonlyArray<Part> => {
   const { cut } = context;
   const ranked = groups
     .map(({ folders }) => folders)
-    .toSorted((a, b) => weigh(b) - weigh(a));
+    .toSorted((a, b) => heavier(weigh(a), weigh(b)));
   const crowded = ranked.length > FANOUT;
-  const opened = (crowded ? ranked.slice(0, FANOUT - 1) : ranked)
-    .toSorted((a, b) => filesOf(b, cut.big).length - filesOf(a, cut.big).length)
-    .map((paths) => {
+  const opened = (crowded ? ranked.slice(0, FANOUT - 1) : ranked).map(
+    (paths) => {
       const [only] = paths;
       return paths.length === 1 && only !== undefined
         ? folderPart(only, cut.big.get(only) ?? [], context.packages)
         : groupPart(paths, context);
-    });
+    },
+  );
   const waiting = crowded
     ? [bucketPart(ranked.slice(FANOUT - 1).flat(), context)]
     : leftover(context);

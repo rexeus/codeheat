@@ -7,7 +7,8 @@ import type { FolderCut } from "./folders.js";
 import { keepTogether } from "./keep-together.js";
 import type { Tally, Together } from "./keep-together.js";
 import { openKids } from "./open-kids.js";
-import { TOO_BIG_SHARE, changesTouching } from "./part.js";
+import type { Weight } from "./open-kids.js";
+import { TOO_BIG_SHARE, changesTouching, heatOf } from "./part.js";
 import type { Evidence, Part } from "./part.js";
 import { reasonOf } from "./split-reason.js";
 import type { Why } from "./split-reason.js";
@@ -162,39 +163,37 @@ const worthSplitting = (
   );
 };
 
-/** How much a split is worth: big and busy parts first, independence a bonus, buckets half. */
+/** How much a split is worth: big, busy, and hot parts first, independence a bonus, buckets half. */
 const valueOf = (
   { part, evidence }: Context,
   { touching, independent, share }: Verdict,
 ): number => {
   const gain = independent ? Math.max(0, (share ?? 0) - 0.5) : 0;
   const activity = touching.size / Math.max(1, evidence.changeCount);
+  const heat =
+    evidence.totalHeat === 0
+      ? 0
+      : heatOf(evidence, part.files) / evidence.totalHeat;
   return (
-    (part.files.length / evidence.total + activity) *
+    (part.files.length / evidence.total + activity + heat) *
     (0.25 + gain) *
     (part.kind === "more" ? 0.5 : 1)
   );
 };
 
-/** How much of the part its folders hold and how much of its changes touch them: the stronger folders open first. */
+/** How much heat, how many changes, and how many files a group of folders holds: the stronger open first, in that order. */
 const weightOf = (
   folders: ReadonlyArray<string>,
-  { part, cut }: Context,
-  { touching, tally }: Verdict,
-): number => {
-  const files = folders.reduce(
-    (sum, key) => sum + (cut.big.get(key)?.length ?? 0),
-    0,
-  );
-  const changes = folders.reduce(
-    (sum, key) => sum + (tally.per.get(key) ?? 0),
-    0,
-  );
-  return (
-    files / part.files.length +
-    (touching.size === 0 ? 0 : changes / touching.size)
-  );
-};
+  { cut, evidence }: Context,
+  { tally }: Verdict,
+): Weight => [
+  heatOf(
+    evidence,
+    folders.flatMap((key) => cut.big.get(key) ?? []),
+  ),
+  folders.reduce((sum, key) => sum + (tally.per.get(key) ?? 0), 0),
+  folders.reduce((sum, key) => sum + (cut.big.get(key)?.length ?? 0), 0),
+];
 
 /**
  * Whether `part` splits, and into what. The root always splits (its first cut

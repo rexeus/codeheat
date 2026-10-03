@@ -40,7 +40,18 @@ export type Evidence = {
   readonly minChanges: number;
   /** Files above which a part is too big to stay one territory, if it changes enough. */
   readonly sizeBound: number;
+  /** Per file that shapes the tree, its heat (`changes × (loc + complexity)`) and that of the test code paired with it. */
+  readonly heat: ReadonlyMap<string, number>;
+  /** The heat of every code file, test code that is paired with none included. */
+  readonly totalHeat: number;
 };
+
+/** The heat of `files`. */
+export const heatOf = (
+  evidence: Evidence,
+  files: ReadonlyArray<string>,
+): number =>
+  files.reduce((sum, file) => sum + (evidence.heat.get(file) ?? 0), 0);
 
 /** The indices of the changes that touched any of `files`. */
 export const changesTouching = (
