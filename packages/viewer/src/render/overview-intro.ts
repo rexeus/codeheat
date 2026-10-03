@@ -21,7 +21,7 @@ const INTROS: ReadonlyArray<{
   {
     mode: "cohesion",
     title: "Modules",
-    hint: "Cohesion is the share of a module's commits that touch no other module; low means its changes spread. Tiles take the color of their module. Select a tile to outline the files that change together with it.",
+    hint: "Cohesion is the share of a module's changes that touch no other module; low means its changes spread. Tiles take the color of their module. Select a tile to outline the files that change together with it.",
   },
   {
     mode: "change",

@@ -28,7 +28,7 @@ const partnerModulesList = (module: Module): HTMLElement =>
         h(
           "span",
           "muted",
-          `${formatCount(partner.sharedCommits)} shared commits`,
+          `${formatCount(partner.sharedCommits)} shared changes`,
         ),
       ),
     ),
@@ -41,7 +41,7 @@ const cohesionLine = ({
   trend,
 }: Module): HTMLElement =>
   cohesion === null
-    ? h("p", "hint", "No counted commit touched this module in the window.")
+    ? h("p", "hint", "No counted change touched this module in the window.")
     : h(
         "div",
         "score-line",
@@ -54,7 +54,7 @@ const cohesionLine = ({
           h(
             "span",
             "",
-            `${formatCount(localCommits)} of ${formatCount(commits)} commits`,
+            `${formatCount(localCommits)} of ${formatCount(commits)} changes`,
           ),
           ...(trend === null
             ? []
@@ -73,7 +73,7 @@ const SHOWN_ENTRY_POINTS = 5;
 
 const leakageLine = (module: Module): HTMLElement =>
   module.leakage === null
-    ? h("p", "hint", "No implementation commit touched this module.")
+    ? h("p", "hint", "No implementation change touched this module.")
     : h(
         "div",
         "score-line",
@@ -81,11 +81,11 @@ const leakageLine = (module: Module): HTMLElement =>
         h(
           "span",
           "score-meta",
-          h("span", "", "of implementation commits also change it"),
+          h("span", "", "of implementation changes also change it"),
           h(
             "span",
             "",
-            `${formatCount(module.implementationCommits)} implementation commits`,
+            `${formatCount(module.implementationCommits)} implementation changes`,
           ),
         ),
         ...(module.leakyInterface ? [h("span", "badge", "leaky")] : []),
@@ -129,7 +129,7 @@ const entryPointList = (entryPoints: readonly string[]): HTMLElement =>
       : []),
   );
 
-/** The module's entry points, how often its implementation commits change them too, and how deep it is; nothing without entry points. */
+/** The module's entry points, how often its implementation changes change them too, and how deep it is; nothing without entry points. */
 const interfaceSection = (module: Module): HTMLElement[] =>
   module.entryPoints.length === 0
     ? []
@@ -184,7 +184,7 @@ const leastCohesiveRow = (module: Module): HTMLElement =>
       h(
         "span",
         "partner-meta",
-        h("span", "", `${formatCount(module.commits)} commits`),
+        h("span", "", `${formatCount(module.commits)} changes`),
         ...(module.partners[0] === undefined
           ? []
           : [h("span", "", `most with ${module.partners[0].path}`)]),
@@ -210,7 +210,7 @@ export const leastCohesiveSection = (
       ? h(
           "p",
           "hint",
-          `No module has ${formatCount(minModuleCommits)} or more counted commits yet.`,
+          `No module has ${formatCount(minModuleCommits)} or more counted changes yet.`,
         )
       : h("ul", "list", ...rows),
   );
