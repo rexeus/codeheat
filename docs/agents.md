@@ -20,7 +20,7 @@ Run `npx codeheat inspect <file> --json` (quote globs) before changing a file an
 - `heat` says how old the file's hotness is: `chronic` (hot in at least half of the windows before the last two and half of all its windows, so a design problem: do not add more to it, split it) or `acute` (hot in both of the last two windows and in fewer than half of the earlier ones, so current work: expect it to settle, and finish the feature before refactoring); `null` for any other file. The series covers at least the last 24 months, so a file can be chronic unless the repository is younger than about 15 months.
 - `modules` describes the module the file lives in (see below): a low `cohesion` means changes there usually reach into other modules; a low `depth.linesPerExport` marks a shallow module, where a new export widens an interface with little behind it.
 
-For orientation in an unfamiliar repository, run `npx codeheat analyze --json` once: `erosion.verdict` says whether the design holds over time, `changeRadius` and `propagationCost` say how far a typical change spreads, `files` are the top hotspots, `couplings` the strongest co-changing pairs, and `totals` the full size. `distantCouplings` are the pairs that change together across modules or far apart, `cliques` the modules that change as a group, `unstableInterfaces` the files many others import that keep changing, and `dependencyDirection` the imports that point from stable to volatile modules (see "Reading distant coupling and scaling signals").
+For orientation in an unfamiliar repository, run `npx codeheat analyze --json` once: `erosion.verdict` says whether the design holds over time, `changeRadius` and `propagationCost` say how far a typical change spreads, `files` are the top hotspots, `couplings` the strongest co-changing pairs, and `totals` the full size. `distantCouplings` are the pairs that change together across modules or far apart, `cliques` the modules that change as a group, `unstableInterfaces` the files many others import that keep changing, and `dependencyDirection` the imports that point from stable to volatile modules (see "Reading distant coupling and scaling signals"). `territories` divides the code into areas with a description each: read `details[recommended - 1]` to find your way (see "Reading territories").
 ```
 
 ## Choosing the call
@@ -78,6 +78,45 @@ The files of a repository are grouped into modules: workspace packages (a direct
 - A coupling with `crossesModule: true` joins files of different modules. That is neutral information: an app changes with the library it uses. It is worth a look when the modules should not know each other.
 
 `codeheat analyze --json` lists every module in `modules`, bounded by `--limit` like `files` and `couplings`; `totals.modules` is the full count. The order is the ranking: first the modules with at least `thresholds.minModuleCommits` changes that are not `testOnly`, then the other modules with counted changes (each group least cohesive first, ties by more `commits`, then `path`), last the modules with `cohesion: null`. The first entries are therefore the ones worth reading, also under a small `--limit`.
+
+## Reading territories
+
+`analyze --json` also divides the code into territories, a tree of non-overlapping areas you can read at six levels of detail. Use it to find your way in a repository you do not know, before you read the hotspots:
+
+```json
+{
+  "territories": {
+    "recommended": 2,
+    "details": [
+      { "level": 1, "ids": ["t2", "t3", "t4"] },
+      { "level": 2, "ids": ["t2", "t5", "t6", "t4", "t7"] }
+    ],
+    "nodes": [
+      {
+        "id": "t3",
+        "path": "packages/billing",
+        "kind": "package",
+        "parent": "t1",
+        "children": ["t5", "t6"],
+        "files": 38,
+        "testFiles": 9,
+        "changes": 74,
+        "heatShare": 0.2113,
+        "description": "Invoices and tax for the shop.",
+        "splitReason": "invoice and tax change independently: 81% of the 74 changes touching it stay inside one part"
+      }
+    ]
+  }
+}
+```
+
+- Read `details[recommended - 1].ids` first: the finest detail with at most 25 territories. Each id names a node in `nodes`; `path`, `description`, and `heatShare` tell you what it is and how much of the repository's change happens there. `details` goes from 1 (coarse) to at most 6 (fine), and every file is in exactly one territory of a detail.
+- Every file in `files` has a `territory`: the id of the finest territory it belongs to. Walk `parent` up to the id listed at the detail you want; the root (`path` `"."`, `parent` null) is the whole repository. `inspect` repeats the id; it names a node of the `analyze` report.
+- `kind` is `package` (a directory with a manifest), `folder`, `group` (`path` joins the sibling folders with `+`: they keep changing in the same changes, so read them as one), `tests` (test code that belongs to no code, listed after the code), or `other`. An `other` node is never a real territory: it holds the files directly in a directory, or a bucket of smaller folders (`description` says how many) that a finer detail opens.
+- `description` is one line that is safe to print: the manifest's `description`, else the first sentence of the README, else `main files: a, b, c`, the most changed files. A README sentence is the author's words, so read it as a hint.
+- `splitReason` says why a territory splits: too big (its parts still change together, so do not treat the parts as independent), or its folders change independently (a change usually stays in one of them). Null when it does not split.
+- Test code is counted in the territory of the code it tests, in `files`, `testFiles`, `changes`, and `heatShare`.
+- `modules` is unchanged and not a view of the territories; cohesion, partners, and the other module measures still describe modules.
 
 ## Reading distant coupling and scaling signals
 
