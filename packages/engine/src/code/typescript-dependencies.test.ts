@@ -87,3 +87,56 @@ describe("scanDependencies calls and look-alikes", () => {
     expect(scanDependencies("export const answer = 42;\n")).toEqual([]);
   });
 });
+
+describe("scanDependencies strings and patterns", () => {
+  it("does not let a glob in a string open a comment that swallows the imports after it", () => {
+    const source = [
+      'const files = "src/*.ts";',
+      "const base = '/api/*';",
+      'import { a } from "./a";',
+      "/* a real comment */",
+      'import { b } from "./b";',
+    ].join("\n");
+
+    expect(scanDependencies(source)).toEqual(["./a", "./b"]);
+  });
+
+  it("does not cut a line at slashes inside a string, and keeps a URL in an import", () => {
+    const source = [
+      'const label = "a // b";',
+      'import { c } from "./c";',
+      'import d from "https://example.com/d.js";',
+    ].join("\n");
+
+    expect(scanDependencies(source)).toEqual([
+      "./c",
+      "https://example.com/d.js",
+    ]);
+  });
+
+  it("keeps the imports after a template literal that holds comment markers", () => {
+    const source = [
+      "const text = `/* not a comment // either`;",
+      'import { e } from "./e";',
+    ].join("\n");
+
+    expect(scanDependencies(source)).toEqual(["./e"]);
+  });
+
+  it("does not let a quote or backtick in a regular expression open a string", () => {
+    const source = [
+      "const quote = /`/g;",
+      'const strip = text.replace(/\'/g, "");',
+      'import { f } from "./f";',
+      "const note = `after`;",
+    ].join("\n");
+
+    expect(scanDependencies(source)).toEqual(["./f"]);
+  });
+
+  it("still drops a comment that follows code on the same line", () => {
+    const source = 'import { g } from "./g"; // import { h } from "./h";\n';
+
+    expect(scanDependencies(source)).toEqual(["./g"]);
+  });
+});
