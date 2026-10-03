@@ -15,35 +15,46 @@ export type TestAttachment = {
   readonly placedIn: ReadonlyMap<string, string>;
 };
 
-/** Directories a mirrored test directory stands in for, beside it (`main` for Maven and Gradle: `src/test` and `src/main`). */
+/** Directories the code of a test directory's parent may sit in, beside the test directory: Maven and Gradle keep `src/main` beside `src/test`. Only the placing of unpaired test code reads this, never `Coupling.testPair`. */
 const SOURCE_ROOTS = ["src", "lib", "main"];
 
 /** A JVM test class name: the class it tests, then `Test`, `Tests`, `IT`, or `Spec`. */
 const JVM_TEST_NAME = /^(.+?)(?:Tests?|IT|Spec)$/u;
 
-/**
- * The stems of the sources a test may test: those of `testedStems`, and for a
- * JVM test class (`FooTest.java` below `src/test/java`), where its mirror in
- * `src/main/java` puts the class it is named after.
- */
-const stemsOf = (test: string): ReadonlyArray<string> => {
-  const direct = testedStems(test);
-  if (direct.length > 0) {
-    return direct;
-  }
-  const stem = stemOf(test);
-  const name = stem.slice(stem.lastIndexOf("/") + 1);
-  const tested = JVM_TEST_NAME.exec(name)?.[1];
-  return tested === undefined
-    ? []
-    : testedStems(
-        `${stem.slice(0, stem.length - name.length)}${tested}.test.x`,
-      );
-};
-
 const stemOf = (path: string): string => {
   const dot = path.lastIndexOf(".");
   return dot > path.lastIndexOf("/") + 1 ? path.slice(0, dot) : path;
+};
+
+/**
+ * The stem of the class a JVM test class tests in a Maven or Gradle layout: the
+ * test lies below `src/test` and the class below `src/main`, at the same path
+ * with the `Test`, `Tests`, `IT`, or `Spec` of the name left off. Nothing for
+ * any other path.
+ */
+const jvmStems = (test: string): ReadonlyArray<string> => {
+  const parts = stemOf(test).split("/");
+  const tested = JVM_TEST_NAME.exec(parts.at(-1) ?? "")?.[1];
+  const at = parts.findIndex(
+    (part, index) => part === "src" && parts[index + 1] === "test",
+  );
+  return tested === undefined || at < 0
+    ? []
+    : [
+        [
+          ...parts.slice(0, at),
+          "src",
+          "main",
+          ...parts.slice(at + 2, -1),
+          tested,
+        ].join("/"),
+      ];
+};
+
+/** The stems of the sources a test may test: those of `testedStems` (a test suffix, a mirrored test directory), else those of a JVM test class. */
+const stemsOf = (test: string): ReadonlyArray<string> => {
+  const direct = testedStems(test);
+  return direct.length > 0 ? direct : jvmStems(test);
 };
 
 const depthOf = (directory: string): number =>

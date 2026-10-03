@@ -105,6 +105,8 @@ describe("isTestPair for a mirrored test directory", () => {
     ["fixtures/a.ts", "test/fixtures/a.spec.ts"],
     ["src/a.ts", "__fixtures__/a.test.ts"],
     ["src/a/b.ts", "tests/__fixtures__/a/b.test.ts"],
+    ["main/a/b.ts", "test/a/b.test.ts"],
+    ["app/src/main/a.kt", "app/src/test/a.test.kt"],
   ])(
     "leaves %s and %s, a helper, test input, or another test, unpaired",
     (a, b) => {
@@ -138,7 +140,6 @@ describe("testedStems", () => {
       "test/a/b",
       "src/a/b",
       "lib/a/b",
-      "main/a/b",
       "a/b",
     ]);
     expect(testedStems("src/c_spec.rb")).toStrictEqual(["src/c"]);
