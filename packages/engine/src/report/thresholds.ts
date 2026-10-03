@@ -23,6 +23,8 @@ export const Thresholds = Schema.Struct({
   minModuleCommits: Count,
   /** Fewest directory hops (`Coupling.distance`) at which two files of one module are a distant coupling; files of different modules always are. */
   minLocalDistance: Count,
+  /** Smallest share of the smaller module's counted commits that every pair of a clique (`Report.cliques`) shares. */
+  minCliqueShare: UnitInterval,
   /**
    * Smallest `Partner.probability` at which a partner that no import links to
    * the file (hidden coupling) gets a reason line.

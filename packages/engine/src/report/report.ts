@@ -3,6 +3,7 @@
 // Additive fields keep schemaVersion 1; renaming or removing a field bumps it.
 import { Schema } from "effect";
 
+import { Clique } from "./clique.js";
 import { Comparison, FileTrend } from "./comparison.js";
 import { ContractFile, FileKind, UbiquitousFile } from "./contract-file.js";
 import { CopyFamily } from "./copy-family.js";
@@ -217,5 +218,12 @@ export const Report = Schema.Struct({
    * largest `share` first, then more shared commits, then path.
    */
   moduleCoupling: Schema.Array(ModuleCoupling),
+  /**
+   * Groups of at least three ranked modules of which every pair shares at
+   * least `Thresholds.minCliqueShare` of the smaller module's counted commits,
+   * maximal, at most 50: the ones whose members changed together in the most
+   * commits first. Each has a one-sentence `reason`.
+   */
+  cliques: Schema.Array(Clique),
 });
 export type Report = typeof Report.Type;

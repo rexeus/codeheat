@@ -44,6 +44,7 @@
     "hubTopShare": 0.05,
     "minModuleCommits": 5,
     "minLocalDistance": 3,
+    "minCliqueShare": 0.3,
     "minSharedCommits": 3,
     "minDegree": 0.3,
     "ubiquitousShare": 0.3,
@@ -1543,5 +1544,6 @@
       "sharedCommits": 3,
       "share": 0.1154
     }
-  ]
+  ],
+  "cliques": []
 }

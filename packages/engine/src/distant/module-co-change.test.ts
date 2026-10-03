@@ -1,25 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import type { Module } from "../report/module.js";
+import { moduleRecord } from "../testing/module-record.js";
 import { moduleCoChange, moduleCouplings } from "./module-co-change.js";
-
-const moduleOf = (path: string, commits: number, testOnly = false): Module => ({
-  path,
-  kind: "package",
-  files: 4,
-  testOnly,
-  commits,
-  localCommits: 0,
-  cohesion: 0,
-  partners: [],
-  entryPoints: [],
-  interfaceCommits: 0,
-  implementationCommits: 0,
-  leakage: null,
-  leakyInterface: false,
-  depth: null,
-  trend: null,
-});
 
 /** `count` commits that each touched exactly `paths`. */
 const commitsOf = (
@@ -29,11 +11,11 @@ const commitsOf = (
   Array.from({ length: count }, () => new Set(paths));
 
 const MODULES = [
-  moduleOf("core", 10),
-  moduleOf("compiler", 20),
-  moduleOf("cli", 5),
-  moduleOf("tiny", 2),
-  moduleOf("tests", 12, true),
+  moduleRecord("core", 10),
+  moduleRecord("compiler", 20),
+  moduleRecord("cli", 5),
+  moduleRecord("tiny", 2),
+  moduleRecord("tests", 12, true),
 ];
 
 describe("moduleCouplings", () => {

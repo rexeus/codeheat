@@ -54,7 +54,7 @@ export const moduleCoChange = (
 };
 
 /** The share of the smaller module's commits that touched both; 0 for a module that is not ranked. */
-const sharedShare = (
+export const sharedShare = (
   { commits, shared }: ModuleCoChange,
   a: string,
   b: string,

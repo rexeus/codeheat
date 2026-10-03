@@ -4,6 +4,7 @@ import { Effect } from "effect";
 
 import type { LanguageAdapter } from "../code/language-adapter.js";
 import { findCopyFamilies } from "../copies/find-copy-families.js";
+import { findCliques } from "../distant/cliques.js";
 import { distantCouplings } from "../distant/distant-couplings.js";
 import {
   moduleCoChange,
@@ -45,8 +46,9 @@ export const measureLinked = (
       ...coupled,
       couplings,
     });
+    const touched = touchedModules(histories.current, universe);
     const coChange = moduleCoChange(
-      touchedModules(histories.current, universe),
+      touched,
       measured.modules,
       measured.thresholds.minModuleCommits,
     );
@@ -58,5 +60,6 @@ export const measureLinked = (
         new Map([...universe.modules, ...universe.contracts]),
       ),
       moduleCoupling: moduleCouplings(coChange),
+      cliques: findCliques(coChange, touched),
     };
   });

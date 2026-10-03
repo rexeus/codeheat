@@ -2,7 +2,7 @@ import type { Report } from "@codeheat/engine";
 
 /**
  * Applies `--limit` to a report: `files`, `contracts`, `couplings`,
- * `modules`, `copyFamilies`, and `distantCouplings`, and `moduleCoupling` are each cut to their first `limit` entries,
+ * `modules`, `copyFamilies`, and `distantCouplings`, `moduleCoupling`, and `cliques` are each cut to their first `limit` entries,
  * `0` keeps everything, and `totals` still
  * describe the untruncated sizes.
  */
@@ -18,4 +18,5 @@ export const limitReport = (report: Report, limit: number): Report =>
         copyFamilies: report.copyFamilies.slice(0, limit),
         distantCouplings: report.distantCouplings.slice(0, limit),
         moduleCoupling: report.moduleCoupling.slice(0, limit),
+        cliques: report.cliques.slice(0, limit),
       };
