@@ -1,6 +1,6 @@
 // Owns what the analysis window's commits say about the universe's files:
-// revisions, changed lines, and which files changed together. A window can be
-// read as one History or split in two at a point in time.
+// revisions, changed lines, and which files changed together. One read of the
+// log is divided into the windows of an analysis and the slices of its series.
 import { Effect } from "effect";
 
 import { groupChanges } from "../changes/group.js";
@@ -13,9 +13,10 @@ import { classify } from "../mechanical/classify.js";
 import { readEvidence } from "../mechanical/evidence.js";
 import { countKinds } from "../mechanical/kinds.js";
 import type { MechanicalCounts, MechanicalKind } from "../mechanical/kinds.js";
+import type { SliceRange } from "../series/slice-ranges.js";
 import { scanCommits } from "./scan.js";
 import type { Entry } from "./scan.js";
-import { partitionEntries } from "./slices.js";
+import { sliceSeries } from "./slices.js";
 
 /** The window's activity on one file, under its current path. */
 type FileHistory = {
@@ -184,58 +185,43 @@ const readEntries = (
     };
   });
 
+/** One slice of the series and the time range it covers. */
+export type SeriesSlice = {
+  readonly range: SliceRange;
+  readonly history: History;
+};
+
+/** How one read of the log is divided into the windows an analysis needs. */
+export type HistoryParts = {
+  /** Seconds since the epoch: the commits from here on make the window the report describes. */
+  readonly currentFrom: number;
+  /** When comparing, the seconds at which the window before it starts; it ends at `currentFrom`. Null otherwise. */
+  readonly previousFrom: number | null;
+  /** ISO time at which the series starts; it ends at `options.until`. */
+  readonly seriesSince: string;
+};
+
 /**
- * Reads the non-merge commits of the window from newest to oldest.
+ * Reads the non-merge commits from `options.since`, newest to oldest, once,
+ * and divides them: `current` is the window from `parts.currentFrom`, `previous`
+ * the one before it when comparing, and `series` the commits from
+ * `parts.seriesSince` cut into slices (see `sliceSeries`), whatever the other
+ * two cover. `options.since` must not be later than any of them. Renames and
+ * deletions are followed across every boundary; reverts and duplicates are
+ * paired inside each window, and inside the series span for the slices, so a
+ * commit can be mechanical in a slice and not in the window, or the other way.
+ * A slice is grouped from its own commits.
  *
  * Git must run in the repository root, and the repository needs a `HEAD`.
  */
-export const readHistory = (
+export const readHistories = (
   options: HistoryOptions,
-): Effect.Effect<History, GitError, Git> =>
-  readHistoryAndSlices(options, []).pipe(Effect.map(({ history }) => history));
-
-/**
- * Reads the window like `readHistory` and, from the same read, the history of
- * each slice of it (see `partitionEntries` for `sliceStarts`; no slice without
- * starts). A slice is grouped from its own commits, but a commit is mechanical
- * in a slice exactly when it is in the window.
- */
-export const readHistoryAndSlices = (
-  options: HistoryOptions,
-  sliceStarts: ReadonlyArray<number>,
-): Effect.Effect<
-  { readonly history: History; readonly slices: ReadonlyArray<History> },
-  GitError,
-  Git
-> =>
-  Effect.gen(function* () {
-    const { paths, fileIds } = indexPaths(options);
-    const { entries, merges, kindsOf } = yield* readEntries(options, fileIds);
-    const kinds = kindsOf(entries);
-    return {
-      history: buildHistory(paths, entries, kinds, merges),
-      slices: partitionEntries(entries, sliceStarts).map((slice) =>
-        buildHistory(paths, slice, kinds, merges),
-      ),
-    };
-  });
-
-/**
- * Reads the window once and splits its commits at `splitAt`, the time in
- * seconds since the epoch: `recent` holds the commits at or after it,
- * `earlier` those before it. Renames and deletions are followed across the
- * split; reverts and duplicates are paired inside each half. `slices` are
- * those of `recent` (see `readHistoryAndSlices`).
- */
-export const readHistoryHalves = (
-  options: HistoryOptions,
-  splitAt: number,
-  sliceStarts: ReadonlyArray<number> = [],
+  parts: HistoryParts,
 ): Effect.Effect<
   {
-    readonly recent: History;
-    readonly earlier: History;
-    readonly slices: ReadonlyArray<History>;
+    readonly current: History;
+    readonly previous: History | null;
+    readonly series: ReadonlyArray<SeriesSlice>;
   },
   GitError,
   Git
@@ -243,14 +229,23 @@ export const readHistoryHalves = (
   Effect.gen(function* () {
     const { paths, fileIds } = indexPaths(options);
     const { entries, merges, kindsOf } = yield* readEntries(options, fileIds);
-    const recent = entries.filter(({ signals }) => signals.time >= splitAt);
-    const earlier = entries.filter(({ signals }) => signals.time < splitAt);
-    const recentKinds = kindsOf(recent);
+    const within = (from: number, until: number) =>
+      entries.filter(
+        ({ signals }) => signals.time >= from && signals.time < until,
+      );
+    const build = (window: ReadonlyArray<Entry>, kinds = kindsOf(window)) =>
+      buildHistory(paths, window, kinds, merges);
+    const series = sliceSeries(entries, parts.seriesSince, options.until);
+    const seriesKinds = kindsOf(series.entries);
     return {
-      recent: buildHistory(paths, recent, recentKinds, merges),
-      earlier: buildHistory(paths, earlier, kindsOf(earlier), merges),
-      slices: partitionEntries(recent, sliceStarts).map((slice) =>
-        buildHistory(paths, slice, recentKinds, merges),
-      ),
+      current: build(within(parts.currentFrom, Number.POSITIVE_INFINITY)),
+      previous:
+        parts.previousFrom === null
+          ? null
+          : build(within(parts.previousFrom, parts.currentFrom)),
+      series: series.slices.map(({ range, entries: slice }) => ({
+        range,
+        history: build(slice, seriesKinds),
+      })),
     };
   });

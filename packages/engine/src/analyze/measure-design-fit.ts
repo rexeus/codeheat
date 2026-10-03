@@ -58,6 +58,7 @@ export const measureDesignFit = (
       slices.map((slice) => slice.heat),
     ),
     series,
+    seriesSince: series[0]?.since ?? null,
     erosion: judgeErosion(series),
     moduleCoupling: moduleCouplings(coChange),
     cliques: cliqueSearch.cliques,

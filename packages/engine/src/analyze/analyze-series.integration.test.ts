@@ -9,19 +9,21 @@ import {
   commitQuarters,
   createTwoPackages,
   FILE_A,
+  FILE_B,
   quartersSpreading,
   repeated,
   touching,
-  FILE_B,
 } from "../testing/quarters.js";
 import { makeTempRepository } from "../testing/temp-repository.js";
 import { analyze } from "./analyze.js";
 
 const setNow = TestClock.setTime(Date.parse("2026-06-01T12:00:00Z"));
 
+const FOUR_QUIET_QUARTERS = [0, 0, 0, 0];
+
 layer(NodeServices.layer)("analyze series", (it) => {
   it.effect(
-    "measures the change radius and the propagation cost of each quarter of the window",
+    "measures the change radius and the propagation cost of each quarter of the series",
     () =>
       Effect.gen(function* () {
         yield* setNow;
@@ -32,9 +34,11 @@ layer(NodeServices.layer)("analyze series", (it) => {
 
         const { series } = yield* analyze(analyzeOptionsFor(repo));
 
+        // the series covers 24 months, so four quiet quarters come first
         assert.deepStrictEqual(
           series.map((window) => [window.changes, window.active]),
           [
+            ...FOUR_QUIET_QUARTERS.map((changes) => [changes, false]),
             [10, true],
             [10, true],
             [10, true],
@@ -42,44 +46,75 @@ layer(NodeServices.layer)("analyze series", (it) => {
           ],
         );
         assert.deepStrictEqual(
-          series.map((window) => window.changeRadius?.local),
+          series.slice(4).map((window) => window.changeRadius?.local),
           [1, 0.8, 0.5, 0.2],
         );
         // b has three changes only in the last two quarters, so only there are two files to couple
         assert.deepStrictEqual(
-          series.map((window) => window.propagationCost?.cost ?? null),
+          series.slice(4).map((window) => window.propagationCost?.cost ?? null),
           [null, null, 1, 1],
         );
       }),
   );
 
-  it.effect("cuts the window into equal quarters that meet and cover it", () =>
-    Effect.gen(function* () {
-      yield* setNow;
-      const repo = yield* makeTempRepository;
-      yield* createTwoPackages(repo);
+  it.effect(
+    "covers the last 24 months in equal windows that meet, with the 12 months of the window inside",
+    () =>
+      Effect.gen(function* () {
+        yield* setNow;
+        const repo = yield* makeTempRepository;
+        yield* createTwoPackages(repo);
 
-      const { series } = yield* analyze(analyzeOptionsFor(repo));
+        const report = yield* analyze(analyzeOptionsFor(repo));
 
-      assert.deepStrictEqual(
-        series.map((window) => window.since),
-        [
-          "2025-06-01T12:00:00.000Z",
-          "2025-08-31T18:00:00.000Z",
-          "2025-12-01T00:00:00.000Z",
-          "2026-03-02T06:00:00.000Z",
-        ],
-      );
-      assert.deepStrictEqual(
-        series.map((window) => window.until),
-        [
-          "2025-08-31T18:00:00.000Z",
-          "2025-12-01T00:00:00.000Z",
-          "2026-03-02T06:00:00.000Z",
-          "2026-06-01T12:00:00.000Z",
-        ],
-      );
-    }),
+        assert.strictEqual(report.window.since, "2025-06-01T12:00:00.000Z");
+        assert.strictEqual(report.seriesSince, "2024-06-01T12:00:00.000Z");
+        assert.strictEqual(report.series.length, 8);
+        assert.strictEqual(report.series[0]?.since, report.seriesSince);
+        assert.strictEqual(report.series[7]?.until, report.window.until);
+        assert.deepStrictEqual(
+          report.series.slice(1).map((window) => window.since),
+          report.series.slice(0, -1).map((window) => window.until),
+        );
+      }),
+  );
+});
+
+layer(NodeServices.layer)("analyze series span", (it) => {
+  it.effect(
+    "keeps the snapshot measures on the window, not on the series",
+    () =>
+      Effect.gen(function* () {
+        yield* setNow;
+        const repo = yield* makeTempRepository;
+        yield* createTwoPackages(repo);
+        yield* commitInMonth(repo, "2024-10", repeated(7, FILE_A));
+        yield* commitInMonth(repo, "2026-04", repeated(3, FILE_A));
+
+        const report = yield* analyze(analyzeOptionsFor(repo));
+
+        // the seven changes of 2024 are in the series only
+        assert.strictEqual(report.window.couplingCommits, 3);
+        assert.strictEqual(
+          report.series.reduce((sum, window) => sum + window.changes, 0),
+          10,
+        );
+      }),
+  );
+
+  it.effect(
+    "extends the series with a longer window, up to twelve windows",
+    () =>
+      Effect.gen(function* () {
+        yield* setNow;
+        const repo = yield* makeTempRepository;
+        yield* createTwoPackages(repo, "2018-01-01T12:00:00Z");
+
+        const report = yield* analyze(analyzeOptionsFor(repo, { since: "5y" }));
+
+        assert.strictEqual(report.seriesSince, report.window.since);
+        assert.strictEqual(report.series.length, 12);
+      }),
   );
 });
 
@@ -100,17 +135,18 @@ layer(NodeServices.layer)("analyze series windows", (it) => {
       assert.deepStrictEqual(
         series.map((window) => [window.changes, window.active]),
         [
+          ...FOUR_QUIET_QUARTERS.map((changes) => [changes, false]),
           [10, true],
           [2, false],
           [0, false],
           [0, false],
         ],
       );
-      assert.strictEqual(series[2]?.changeRadius, null);
+      assert.strictEqual(series[6]?.changeRadius, null);
     }),
   );
 
-  it.effect("cuts only the latest window when comparing", () =>
+  it.effect("cuts the series of a comparison over the last 24 months too", () =>
     Effect.gen(function* () {
       yield* setNow;
       const repo = yield* makeTempRepository;
@@ -121,31 +157,51 @@ layer(NodeServices.layer)("analyze series windows", (it) => {
 
       const report = yield* analyze(analyzeOptionsFor(repo, { compare: "6m" }));
 
-      // the latest 6 months are two windows; the 10 changes of August belong to the window before
+      // the window is the latest 6 months, the series the 24 before 2026-06-01
       assert.deepStrictEqual(
         report.series.map(({ changes }) => changes),
-        [10, 12],
+        [0, 0, 0, 0, 10, 0, 10, 12],
       );
-      assert.strictEqual(report.series[0]?.since, report.window.since);
-      assert.strictEqual(report.series[1]?.until, report.window.until);
+      assert.strictEqual(report.seriesSince, "2024-06-01T12:00:00.000Z");
+      assert.strictEqual(report.window.since, "2025-12-01T12:00:00.000Z");
     }),
   );
+});
 
+layer(NodeServices.layer)("analyze series of a young repository", (it) => {
   it.effect(
-    "cuts a window of 20 weeks in two, one and a half quarters, and leaves one of 19 weeks uncut",
+    "cuts the whole history of a repository younger than 24 months, 20 weeks being the least",
     () =>
       Effect.gen(function* () {
         yield* setNow;
-        const repo = yield* makeTempRepository;
-        yield* createTwoPackages(repo);
-        yield* commitInMonth(repo, "2026-05", repeated(12, FILE_A));
+        const twenty = yield* makeTempRepository;
+        yield* createTwoPackages(twenty, "2026-01-12T12:00:00Z");
+        const nineteen = yield* makeTempRepository;
+        yield* createTwoPackages(nineteen, "2026-01-19T12:00:00Z");
 
-        const short = yield* analyze(analyzeOptionsFor(repo, { since: "19w" }));
-        const long = yield* analyze(analyzeOptionsFor(repo, { since: "20w" }));
+        const long = yield* analyze(analyzeOptionsFor(twenty));
+        const short = yield* analyze(analyzeOptionsFor(nineteen));
 
-        assert.deepStrictEqual(short.series, []);
-        assert.strictEqual(short.erosion, null);
         assert.strictEqual(long.series.length, 2);
+        assert.strictEqual(long.seriesSince, "2026-01-12T12:00:00.000Z");
+        assert.deepStrictEqual(short.series, []);
+        assert.strictEqual(short.seriesSince, null);
+        assert.strictEqual(short.erosion, null);
       }),
+  );
+
+  it.effect("cuts a default run over a history of 18 months in full", () =>
+    Effect.gen(function* () {
+      yield* setNow;
+      const repo = yield* makeTempRepository;
+      yield* createTwoPackages(repo, "2024-12-01T12:00:00Z");
+      yield* commitQuarters(repo, quartersSpreading([0, 0, 0, 0, 5, 5]));
+
+      const report = yield* analyze(analyzeOptionsFor(repo));
+
+      assert.strictEqual(report.seriesSince, "2024-12-01T12:00:00.000Z");
+      assert.strictEqual(report.series.length, 6);
+      assert.strictEqual(report.series[5]?.until, report.window.until);
+    }),
   );
 });

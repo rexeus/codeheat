@@ -1,19 +1,17 @@
 // Owns the windows an analysis covers and reading their history in one pass.
-import { Effect } from "effect";
+import { DateTime, Effect } from "effect";
 
 import type { GitError } from "../git/git-errors.js";
 import type { Git } from "../git/git.js";
-import {
-  readHistory,
-  readHistoryAndSlices,
-  readHistoryHalves,
-  realCommitCount,
+import { readHistories, realCommitCount } from "../history/history.js";
+import type {
+  History,
+  HistoryOptions,
+  SeriesSlice,
 } from "../history/history.js";
-import type { History, HistoryOptions } from "../history/history.js";
 import { countKinds } from "../mechanical/kinds.js";
 import type { Report } from "../report/report.js";
-import { sliceRanges, sliceStarts } from "../series/slice-ranges.js";
-import type { SliceRange } from "../series/slice-ranges.js";
+import { SERIES_MIN_MONTHS } from "../series/slice-ranges.js";
 import {
   resolveComparisonRanges,
   resolveTimeRange,
@@ -34,24 +32,9 @@ export type Windows = {
 export type WindowHistories = {
   readonly current: History;
   readonly previous: History | null;
-  /** The consecutive slices of `current` (see `sliceRanges`), oldest first; none when the window is too short to cut. */
-  readonly series: ReadonlyArray<WindowSlice>;
+  /** The consecutive slices of the series span (see `seriesSinceOf`), oldest first; none when it is too short to cut. */
+  readonly series: ReadonlyArray<SeriesSlice>;
 };
-
-/** One slice of the latest window and the time range it covers. */
-export type WindowSlice = {
-  readonly range: SliceRange;
-  readonly history: History;
-};
-
-const paired = (
-  ranges: ReadonlyArray<SliceRange>,
-  histories: ReadonlyArray<History>,
-): ReadonlyArray<WindowSlice> =>
-  histories.map((history, index) => ({
-    range: ranges[index] ?? { since: "", until: "" },
-    history,
-  }));
 
 const NO_HISTORY: History = {
   paths: [],
@@ -60,6 +43,30 @@ const NO_HISTORY: History = {
   logicalChanges: { by: "commit", count: 0, largest: 0 },
   files: new Map(),
   mechanical: countKinds([]),
+};
+
+/**
+ * Where the series starts: the start of the latest window, or
+ * `SERIES_MIN_MONTHS` before its end if that is earlier, so the series covers
+ * at least that long whatever `--since` says; and never before the oldest
+ * commit (`oldestCommit`, in seconds since the epoch, null without commits),
+ * so a repository younger than that is cut over its whole history. An ISO time.
+ */
+const seriesSinceOf = (
+  { since, until }: TimeRange,
+  oldestCommit: number | null,
+): string => {
+  const minimum = Date.parse(
+    DateTime.formatIso(
+      DateTime.subtract(DateTime.makeUnsafe(until), {
+        months: SERIES_MIN_MONTHS,
+      }),
+    ),
+  );
+  const wanted = Math.min(minimum, Date.parse(since));
+  return new Date(
+    oldestCommit === null ? wanted : Math.max(wanted, oldestCommit * 1000),
+  ).toISOString();
 };
 
 /** Resolves `compare` to two adjacent windows; without it, `since` to one. */
@@ -80,38 +87,37 @@ export const noHistories = ({ previous }: Windows): WindowHistories => ({
   series: [],
 });
 
-/** Reads the history of every window, and the slices of the latest, in one pass over the log. */
+/**
+ * Reads the history of every window and of the series in one pass over the
+ * log, which starts at the earliest of them. `oldestCommit` is the time in
+ * seconds since the epoch of the oldest reachable commit, null for a
+ * repository without commits.
+ */
 export const readWindows = (
   { current, previous }: Windows,
   options: Omit<HistoryOptions, "since" | "until">,
+  oldestCommit: number | null,
 ): Effect.Effect<WindowHistories, GitError, Git> => {
-  const ranges = sliceRanges(current);
-  const starts = sliceStarts(ranges);
-  const read = { ...current, ...options };
-  return previous === null
-    ? (starts.length === 0
-        ? readHistory(read).pipe(
-            Effect.map((history) => ({ history, slices: [] })),
-          )
-        : readHistoryAndSlices(read, starts)
-      ).pipe(
-        Effect.map(({ history, slices }) => ({
-          current: history,
-          previous: null,
-          series: paired(ranges, slices),
-        })),
-      )
-    : readHistoryHalves(
-        { since: previous.since, until: current.until, ...options },
-        Math.floor(Date.parse(current.since) / 1000),
-        starts,
-      ).pipe(
-        Effect.map(({ recent, earlier, slices }) => ({
-          current: recent,
-          previous: earlier,
-          series: paired(ranges, slices),
-        })),
-      );
+  const seriesSince = seriesSinceOf(current, oldestCommit);
+  const earliest = Math.min(
+    Date.parse(previous?.since ?? current.since),
+    Date.parse(seriesSince),
+  );
+  return readHistories(
+    {
+      since: new Date(earliest).toISOString(),
+      until: current.until,
+      ...options,
+    },
+    {
+      currentFrom: Math.floor(Date.parse(current.since) / 1000),
+      previousFrom:
+        previous === null
+          ? null
+          : Math.floor(Date.parse(previous.since) / 1000),
+      seriesSince,
+    },
+  );
 };
 
 /**

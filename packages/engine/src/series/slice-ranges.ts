@@ -3,6 +3,9 @@
 /** The most windows a series has, so the report stays small however long the history. */
 const MAX_SERIES_WINDOWS = 12;
 
+/** The series covers at least this many months, or the whole history if it is shorter, whatever the analysis window is. */
+export const SERIES_MIN_MONTHS = 24;
+
 /** The length a series window aims at: a quarter of a year. */
 const QUARTER_MS = (365.25 / 4) * 24 * 60 * 60 * 1000;
 

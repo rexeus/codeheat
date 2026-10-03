@@ -22,11 +22,12 @@ export const repeated = (
 ): ReadonlyArray<Change> =>
   Array.from({ length: count }, () => touching(...files));
 
-/** Creates `files` at the start of 2024, long before any analysis window of the tests. */
+/** Creates `files` at `date`, by default the start of 2024: more than 24 months before the 2026-06-01 the tests analyze at. */
 export const createFiles = (
   repo: TempRepository,
   files: Readonly<Record<string, string>>,
-) => repo.commit("2024-01-01T12:00:00Z", files);
+  date = "2024-01-01T12:00:00Z",
+) => repo.commit(date, files);
 
 /**
  * Commits `changes` in `month` (`YYYY-MM`), one a day from the first, each
@@ -85,14 +86,18 @@ export const commitQuarters = (
 export const FILE_A = "packages/a/a.ts";
 export const FILE_B = "packages/b/b.ts";
 
-/** Two packages, `a` and `b`, each with one file. */
-export const createTwoPackages = (repo: TempRepository) =>
-  createFiles(repo, {
-    "packages/a/package.json": '{ "name": "a" }\n',
-    "packages/b/package.json": '{ "name": "b" }\n',
-    [FILE_A]: lines(3, "a"),
-    [FILE_B]: lines(3, "b"),
-  });
+/** Two packages, `a` and `b`, each with one file, created at `date` (see `createFiles`). */
+export const createTwoPackages = (repo: TempRepository, date?: string) =>
+  createFiles(
+    repo,
+    {
+      "packages/a/package.json": '{ "name": "a" }\n',
+      "packages/b/package.json": '{ "name": "b" }\n',
+      [FILE_A]: lines(3, "a"),
+      [FILE_B]: lines(3, "b"),
+    },
+    date,
+  );
 
 /**
  * Quarters of ten changes each over `createTwoPackages`' files, the ones of

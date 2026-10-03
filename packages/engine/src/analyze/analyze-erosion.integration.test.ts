@@ -48,7 +48,7 @@ layer(NodeServices.layer)("analyze erosion", (it) => {
           slope: -0.2833,
           verdict: "eroding",
           windows: 4,
-          cohesion: [1, 0.8, 0.5, 0.2],
+          cohesion: [null, null, null, null, 1, 0.8, 0.5, 0.2],
           recent: true,
         });
         // b has enough changes in two quarters only
@@ -87,9 +87,7 @@ layer(NodeServices.layer)("analyze erosion of a quiet repository", (it) => {
         // changes reaching more modules for three quarters, then nothing for two
         yield* commitQuarters(repo, [...quartersSpreading([0, 3, 6]), [], []]);
 
-        const report = yield* analyze(
-          analyzeOptionsFor(repo, { since: "24m" }),
-        );
+        const report = yield* analyze(analyzeOptionsFor(repo));
 
         assert.deepStrictEqual(
           report.series.map(({ active }) => active),
@@ -119,14 +117,14 @@ layer(NodeServices.layer)("analyze erosion of a quiet repository", (it) => {
     }),
   );
 
-  it.effect("has no erosion without a series", () =>
+  it.effect("has no erosion without a series, in a history of four weeks", () =>
     Effect.gen(function* () {
       yield* setNow;
       const repo = yield* makeTempRepository;
-      yield* createTwoPackages(repo);
+      yield* createTwoPackages(repo, "2026-05-01T12:00:00Z");
       yield* commitInMonth(repo, "2026-05", repeated(12, FILE_A));
 
-      const report = yield* analyze(analyzeOptionsFor(repo, { since: "1m" }));
+      const report = yield* analyze(analyzeOptionsFor(repo));
 
       assert.strictEqual(report.erosion, null);
     }),

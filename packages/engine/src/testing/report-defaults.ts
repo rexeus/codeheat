@@ -37,6 +37,7 @@ export const NO_DESIGN_FINDINGS = {
   changeRadius: null,
   propagationCost: null,
   series: [],
+  seriesSince: null,
   erosion: null,
   fixDensity: {
     changes: 0,

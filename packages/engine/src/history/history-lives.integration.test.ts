@@ -3,10 +3,10 @@ import { assert, layer } from "@effect/vitest";
 import { Effect } from "effect";
 
 import { Git } from "../git/git.js";
+import { readHistory } from "../testing/history.js";
 import { setScopedEnv } from "../testing/scoped-env.js";
 import { makeTempRepository } from "../testing/temp-repository.js";
 import type { TempRepository } from "../testing/temp-repository.js";
-import { readHistory } from "./history.js";
 
 // Ten distinct lines keep a file similar enough for git to detect a rename
 // after one appended line.

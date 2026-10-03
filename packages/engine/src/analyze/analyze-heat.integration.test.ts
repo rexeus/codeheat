@@ -49,9 +49,7 @@ layer(NodeServices.layer)("analyze heat", (it) => {
         );
         yield* commitQuarters(repo, quarters(repeated(5, ACUTE)));
 
-        const { files } = yield* analyze(
-          analyzeOptionsFor(repo, { since: "18m" }),
-        );
+        const { files } = yield* analyze(analyzeOptionsFor(repo));
 
         assert.deepStrictEqual(
           Object.fromEntries(files.map(({ path, heat }) => [path, heat])),
@@ -60,6 +58,40 @@ layer(NodeServices.layer)("analyze heat", (it) => {
             [ACUTE]: { kind: "acute", hotWindows: 2, windows: 2 },
             ...Object.fromEntries(QUIET.map((file) => [file, null])),
           },
+        );
+      }),
+  );
+});
+
+layer(NodeServices.layer)("analyze heat of a young repository", (it) => {
+  it.effect(
+    "classifies a chronic file in a default run over a history of 18 months",
+    () =>
+      Effect.gen(function* () {
+        yield* setNow;
+        const repo = yield* makeTempRepository;
+        yield* createFiles(
+          repo,
+          Object.fromEntries(
+            [CHRONIC, ACUTE, ...QUIET].map((file) => [file, lines(3, file)]),
+          ),
+          "2024-12-01T12:00:00Z",
+        );
+        yield* commitQuarters(repo, quarters(repeated(5, ACUTE)));
+
+        const report = yield* analyze(analyzeOptionsFor(repo));
+
+        // the window is the last 12 months; the series is the whole 18
+        assert.strictEqual(report.window.since, "2025-06-01T12:00:00.000Z");
+        assert.strictEqual(report.seriesSince, "2024-12-01T12:00:00.000Z");
+        assert.strictEqual(report.series.length, 6);
+        assert.deepStrictEqual(
+          report.files.find(({ path }) => path === CHRONIC)?.heat,
+          { kind: "chronic", hotWindows: 6, windows: 6 },
+        );
+        assert.strictEqual(
+          report.files.find(({ path }) => path === ACUTE)?.heat?.kind,
+          "acute",
         );
       }),
   );
@@ -99,11 +131,13 @@ layer(NodeServices.layer)("analyze heat without a basis", (it) => {
     Effect.gen(function* () {
       yield* setNow;
       const repo = yield* makeTempRepository;
-      yield* createFiles(repo, { [CHRONIC]: lines(3, CHRONIC) });
-
-      const { files } = yield* analyze(
-        analyzeOptionsFor(repo, { since: "1m" }),
+      yield* createFiles(
+        repo,
+        { [CHRONIC]: lines(3, CHRONIC) },
+        "2026-05-01T12:00:00Z",
       );
+
+      const { files } = yield* analyze(analyzeOptionsFor(repo));
 
       assert.deepStrictEqual(
         files.map(({ heat }) => heat),

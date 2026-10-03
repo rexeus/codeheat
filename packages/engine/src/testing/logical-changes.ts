@@ -3,7 +3,7 @@ import { Effect } from "effect";
 
 import { Git } from "../git/git.js";
 import type { History, HistoryOptions } from "../history/history.js";
-import { readHistory } from "../history/history.js";
+import { readHistory } from "./history.js";
 import type { TempRepository } from "./temp-repository.js";
 
 /** `count` distinct lines that start with `tag`. */

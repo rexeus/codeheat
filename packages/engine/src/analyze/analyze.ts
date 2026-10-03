@@ -69,7 +69,7 @@ export type AnalyzeOptions = {
   readonly toolVersion: string;
 };
 
-/** The history of each window and, when comparing, the time of the oldest commit; both are empty for a repository without commits. */
+/** The history of each window and of the series, and the time of the oldest commit; empty for a repository without commits. */
 const readTimeline = (
   windows: Windows,
   {
@@ -80,14 +80,11 @@ const readTimeline = (
   },
 ) =>
   Effect.gen(function* () {
+    const oldestCommit = head === null ? null : yield* readOldestCommitTime;
     const histories =
       head === null
         ? noHistories(windows)
-        : yield* readWindows(windows, options);
-    const oldestCommit =
-      head === null || windows.previous === null
-        ? null
-        : yield* readOldestCommitTime;
+        : yield* readWindows(windows, options, oldestCommit);
     return { histories, oldestCommit };
   });
 

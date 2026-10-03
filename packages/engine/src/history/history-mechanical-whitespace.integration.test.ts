@@ -3,9 +3,9 @@ import { assert, layer } from "@effect/vitest";
 import { Effect } from "effect";
 
 import { Git } from "../git/git.js";
+import { readHistory } from "../testing/history.js";
 import { makeTempRepository } from "../testing/temp-repository.js";
 import type { TempRepository } from "../testing/temp-repository.js";
-import { readHistory } from "./history.js";
 
 /** Ten distinct lines at one indentation. */
 const body = (indent: string) =>

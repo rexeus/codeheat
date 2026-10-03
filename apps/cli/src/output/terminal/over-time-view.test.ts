@@ -30,7 +30,7 @@ const withVerdict = (
 describe("overTimeSection", () => {
   it("states the verdict with the numbers behind it, the modules losing cohesion, the hotspots by age, and the fixes", () => {
     expect(plainSection(sampleReport())).toStrictEqual([
-      "Over time",
+      "Over time (since 2025-09)",
       "Eroding: changes that stay in one module fell from 78% to 51% over the active period of 4 quarters.",
       "  packages/billing: cohesion 79% to 29% over 4 quarters",
       "Hotspots by age: 0 chronic files (hot in most windows, so a design problem) and 2 acute files (hot only lately, so current work).",

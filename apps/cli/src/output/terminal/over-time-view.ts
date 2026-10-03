@@ -149,7 +149,8 @@ const fixLines = ({
 };
 
 /**
- * The "Over time" section: whether the design is holding or eroding, the
+ * The "Over time" section, headed with where the series starts (it can start
+ * before the analysis window: see `Report.seriesSince`): whether the design is holding or eroding, the
  * three modules whose cohesion fell most while still changing, how many
  * hotspots are chronic or acute, and how many changes are fixes. Parts the
  * report has no data for are left out, and so is the whole section when none
@@ -165,7 +166,11 @@ export const overTimeSection = (
     hotspotLines(report),
     fixLines(report),
   ].flat();
-  return lines.length === 0 ? [] : [style.bold("Over time"), ...lines, ""];
+  const span =
+    report.seriesSince === null ? "" : ` (since ${month(report.seriesSince)})`;
+  return lines.length === 0
+    ? []
+    : [style.bold(`Over time${span}`), ...lines, ""];
 };
 
 /** What a file's heat says on one line: nothing for a file that is neither chronic nor acute. */

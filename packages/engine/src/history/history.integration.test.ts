@@ -3,9 +3,9 @@ import { assert, layer } from "@effect/vitest";
 import { Effect } from "effect";
 
 import { Git } from "../git/git.js";
+import { readHistory, readHistoryHalves } from "../testing/history.js";
 import { makeTempRepository } from "../testing/temp-repository.js";
 import type { TempRepository } from "../testing/temp-repository.js";
-import { readHistory, readHistoryHalves } from "./history.js";
 import type { History, HistoryOptions } from "./history.js";
 
 // Ten distinct lines keep a file similar enough for git to detect a rename
