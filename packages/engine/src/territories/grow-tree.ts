@@ -1,6 +1,6 @@
 // Owns growing the territory tree: which parts split, in what order, and at
 // which detail each split opens.
-import { folderPart } from "./folders.js";
+import { rootPart } from "./folders.js";
 import type { Evidence, Part, TreeNode } from "./part.js";
 import { planSplit } from "./plan-split.js";
 import type { Split } from "./plan-split.js";
@@ -155,7 +155,7 @@ export const growTree = (
   packages: ReadonlySet<string>,
   placedIn: ReadonlyMap<string, string>,
 ): GrownTree => {
-  const top = folderPart("", files, packages);
+  const top = rootPart(files, packages);
   const rootSplit = planSplit(top, evidence, packages, true);
   if (rootSplit === undefined || territoriesIn(rootSplit.kids) === 0) {
     const root = nodeOf(top, new Map());

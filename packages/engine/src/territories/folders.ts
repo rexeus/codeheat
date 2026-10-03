@@ -104,3 +104,16 @@ export const folderPart = (
   base: "",
   rest: [],
 });
+
+/**
+ * The part of the whole repository. Its path is "" unless one package holds
+ * every file (the files all lie below a manifest's directory), which is then the
+ * root's path.
+ */
+export const rootPart = (
+  files: ReadonlyArray<string>,
+  packages: ReadonlySet<string>,
+): Part => {
+  const top = descend("", files, packages);
+  return folderPart(packages.has(top) ? top : "", files, packages);
+};

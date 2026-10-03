@@ -269,3 +269,19 @@ describe("hot folders", () => {
     expect(nodeOf(tree, idsAt(tree, 1).at(-1) ?? "").kind).toBe("other");
   });
 });
+
+describe("a package that holds every file", () => {
+  it("is the root territory", () => {
+    const tree = build(
+      [...filesIn("app/src/a", 3), ...filesIn("app/src/b", 3)],
+      [],
+      ["app"],
+    );
+
+    expect(tree.nodes.map(({ path, kind }) => [path, kind])).toStrictEqual([
+      ["app", "package"],
+      ["app/src/a", "folder"],
+      ["app/src/b", "folder"],
+    ]);
+  });
+});

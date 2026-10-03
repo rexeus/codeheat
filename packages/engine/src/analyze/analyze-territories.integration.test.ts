@@ -159,3 +159,32 @@ layer(NodeServices.layer)("analyze territories and links", (it) => {
       }),
   );
 });
+
+layer(NodeServices.layer)("analyze territories of one package", (it) => {
+  it.effect("makes a package that holds every file the root territory", () =>
+    Effect.gen(function* () {
+      yield* setNow;
+      const repo = yield* makeTempRepository;
+      yield* repo.commit(day(1), {
+        "app/package.json": '{ "description": "The only package." }\n',
+        ...filesIn("app/src/a", 1),
+        ...filesIn("app/src/b", 1),
+      });
+
+      const { territories } = yield* analyze(analyzeOptionsFor(repo));
+
+      assert.deepStrictEqual(
+        territories.nodes.map(({ path, kind, description }) => [
+          path,
+          kind,
+          description,
+        ]),
+        [
+          ["app", "package", "The only package."],
+          ["app/src/a", "folder", "main files: a, b, c"],
+          ["app/src/b", "folder", "main files: a, b, c"],
+        ],
+      );
+    }),
+  );
+});
