@@ -11,7 +11,7 @@ export const PROPAGATION_DEPTH = 3;
 /** A file that may take part in the co-change graph. */
 export type ReachFile = {
   readonly path: string;
-  /** Logical changes of the window that touched it (`FileStats.changes`). */
+  /** Counted changes of the window that touched it: large changes are left out, as they are for coupling. */
   readonly changes: number;
   readonly test: boolean;
 };
@@ -76,7 +76,7 @@ const reachFrom = (
  * the share of the other files they reach.
  *
  * The files are those of `files` that are not test code and took part in at
- * least `MIN_SHARED_COMMITS` changes, the fewest a file needs to be coupled at
+ * least `MIN_SHARED_COMMITS` counted changes, the fewest a file needs to be coupled at
  * all: a file with less history says nothing, and counting it would make the
  * cost a measure of how much code rarely changes. Tests are no part of the
  * design's structure, so a coupling with one never joins two files. The result is null
