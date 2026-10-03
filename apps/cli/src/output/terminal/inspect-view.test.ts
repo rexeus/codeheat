@@ -99,10 +99,10 @@ const result = (
 });
 
 describe("renderInspect", () => {
-  it("shows the standing, metrics, reasons and partners of a file", () => {
+  it("shows the standing, metrics, reasons and partners of a file, and that the numbers are unweighted", () => {
     expect(renderInspect(result([entry]), makeStyle(false))).toBe(
       [
-        "2025-09-29 to 2026-09-29",
+        "2025-09-29 to 2026-09-29, unweighted",
         "",
         "packages/billing/src/invoice.ts",
         "rank #1 of 36, score 0.97",
@@ -326,5 +326,23 @@ describe("renderInspect contract-only partners", () => {
     const view = renderInspect(result([entry], [module]), makeStyle(false));
 
     expect(view).toContain("most often with spec (contracts) (20)");
+  });
+});
+
+describe("renderInspect weighting", () => {
+  it("names the half-life once and shows the weighted revisions next to the plain ones", () => {
+    const weighted = {
+      ...result([{ ...entry, weightedRevisions: 4.2 }]),
+      halfLifeDays: 180,
+    };
+
+    const lines = renderInspect(weighted, makeStyle(false)).split("\n");
+
+    expect(lines[0]).toBe(
+      "2025-09-29 to 2026-09-29, weighted by recency, half-life 6m",
+    );
+    expect(lines[4]).toBe(
+      "48 revisions (4.2 recent), 14 co-changed files, +384 -672 lines, 964 loc",
+    );
   });
 });

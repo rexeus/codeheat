@@ -16,24 +16,32 @@ const section = (view: string, heading: string): ReadonlyArray<string> => {
 };
 
 describe("renderAnalysis", () => {
-  it("summarizes the repository, window and universe size", () => {
+  it("summarizes the repository, window, universe size and weighting", () => {
     expect(plainView().split("\n")[0]).toBe(
-      "acme-shop  2025-09-29 to 2026-09-29  212 commits, 36 files, 2 contract files",
+      "acme-shop  2025-09-29 to 2026-09-29  212 commits, 36 files, 2 contract files, weighted by recency, half-life 6m",
     );
   });
 
-  it("lists the ten hottest files with rank, score bar, revisions and complexity", () => {
+  it("lists the ten hottest files with rank, score bar, revisions with their recent weight, and complexity", () => {
     const hotspots = section(plainView(), "Hotspots");
 
     expect(hotspots).toHaveLength(11);
     expect(hotspots[0]).toBe(
-      "rank  score" + " ".repeat(12) + "revisions  complexity  path",
+      "rank  score" + " ".repeat(12) + "revisions (recent)  complexity  path",
     );
     expect(hotspots[1]).toBe(
-      "  #1  ██████████ 0.97         48        1900  packages/billing/src/invoice.ts",
+      "  #1  ██████████ 0.97" +
+        " ".repeat(13) +
+        "48 (19)" +
+        " ".repeat(8) +
+        "1900  packages/billing/src/invoice.ts",
     );
     expect(hotspots[10]).toBe(
-      " #10  ████░░░░░░ 0.43         12         160  packages/web/src/hooks/use-session.ts",
+      " #10  ████░░░░░░ 0.43" +
+        " ".repeat(12) +
+        "12 (4.8)" +
+        " ".repeat(9) +
+        "160  packages/web/src/hooks/use-session.ts",
     );
   });
 
