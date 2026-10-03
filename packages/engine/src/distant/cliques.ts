@@ -4,6 +4,7 @@ import { Order } from "effect";
 import { MIN_SHARED_COMMITS } from "../coupling/coupling.js";
 import type { Clique } from "../report/clique.js";
 import { roundReported } from "../report/precision.js";
+import { distinctGroups } from "./distinct-groups.js";
 import { sharedShare } from "./module-co-change.js";
 import type { ModuleCoChange } from "./module-co-change.js";
 import { supportedSubgroups } from "./supported-groups.js";
@@ -125,8 +126,9 @@ const byUnity = (a: Clique, b: Clique): number =>
  * and of which at least `MIN_SHARED_COMMITS` commits touched every member
  * (pairs that met only in different commits are no unit of change). A group
  * that fails the last rule is searched for its sub-groups that pass it, and
- * only the maximal ones are kept. `touched` lists the modules each counted
- * commit touched. The `MAX_CLIQUES` whose members changed together in the most
+ * only the maximal ones are kept. A clique inside another is dropped, and of
+ * two that share all but one member only the stronger stays (see
+ * `distinctGroups`). `touched` lists the modules each counted commit touched. The `MAX_CLIQUES` whose members changed together in the most
  * commits come first, then the higher weakest share, more members, and path.
  */
 export const findCliques = (
@@ -140,10 +142,13 @@ export const findCliques = (
     .flatMap((members) =>
       supportedSubgroups(members, touched, MIN_CLIQUE_SIZE, MIN_SHARED_COMMITS),
     );
-  return [
-    ...new Map(groups.map((members) => [members.join("\n"), members])).values(),
-  ]
-    .map((members) => toClique(members, coChange, touched))
+  return distinctGroups(
+    [
+      ...new Map(
+        groups.map((members) => [members.join("\n"), members]),
+      ).values(),
+    ].map((members) => toClique(members, coChange, touched)),
+  )
     .toSorted(byUnity)
     .slice(0, MAX_CLIQUES);
 };

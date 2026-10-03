@@ -66,7 +66,9 @@ describe("findCliques membership", () => {
 
     expect(cliquesOf(touched)).toEqual([]);
   });
+});
 
+describe("findCliques overlap", () => {
   it("reports a clique of four once, not the four triangles inside it", () => {
     const touched = commitsOf(5, "a", "b", "c", "d");
 
@@ -75,7 +77,7 @@ describe("findCliques membership", () => {
     ]);
   });
 
-  it("reports two triangles that share an edge as two cliques", () => {
+  it("reports two triangles that share an edge once, the stronger one", () => {
     const touched = [
       ...commitsOf(5, "a", "b", "c"),
       ...commitsOf(4, "b", "c", "d"),
@@ -83,7 +85,18 @@ describe("findCliques membership", () => {
 
     expect(cliquesOf(touched).map(({ modules }) => modules)).toEqual([
       ["a", "b", "c"],
-      ["b", "c", "d"],
+    ]);
+  });
+
+  it("reports two triangles that share a single module as two cliques", () => {
+    const touched = [
+      ...commitsOf(5, "a", "b", "c"),
+      ...commitsOf(4, "c", "d", "e"),
+    ];
+
+    expect(cliquesOf(touched).map(({ modules }) => modules)).toEqual([
+      ["a", "b", "c"],
+      ["c", "d", "e"],
     ]);
   });
 });
@@ -140,7 +153,7 @@ describe("findCliques sub-groups", () => {
     ).toEqual([[["a", "b", "c"], 5]]);
   });
 
-  it("finds two overlapping triples inside a group of four, each with its own commits", () => {
+  it("keeps one of two overlapping triples inside a group of four, the first by path on a tie", () => {
     const touched = [
       ...commitsOf(4, "a", "b", "c"),
       ...commitsOf(4, "b", "c", "d"),
@@ -152,10 +165,21 @@ describe("findCliques sub-groups", () => {
         modules,
         sharedCommits,
       ]),
-    ).toEqual([
-      [["a", "b", "c"], 4],
-      [["b", "c", "d"], 4],
-    ]);
+    ).toEqual([[["a", "b", "c"], 4]]);
+  });
+
+  it("reports a supported group of four without its supported triples", () => {
+    const touched = [
+      ...commitsOf(4, "a", "b", "c", "d"),
+      ...commitsOf(3, "a", "b", "c"),
+    ];
+
+    expect(
+      cliquesOf(touched).map(({ modules, sharedCommits }) => [
+        modules,
+        sharedCommits,
+      ]),
+    ).toEqual([[["a", "b", "c", "d"], 4]]);
   });
 
   it("finds the modules that different commits have in common when no single kind of commit repeats enough", () => {
