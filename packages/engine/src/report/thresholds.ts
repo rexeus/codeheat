@@ -57,6 +57,8 @@ export const Thresholds = Schema.Struct({
   minTrendWindows: Count,
   /** How far the fitted locality (`Erosion.locality`) must move, as a share of the changes, for the verdict to be `eroding` or `improving`. */
   minErosionShift: UnitInterval,
+  /** Share of the files with revisions in a window of `Report.series` that are hot in it (see `Heat`). */
+  hotTopShare: UnitInterval,
   maxMeanLineLength: Count,
   maxFileBytes: Count,
 });

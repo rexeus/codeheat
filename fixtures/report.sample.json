@@ -61,7 +61,8 @@
     "minVolatilityRatio": 2,
     "minWindowChanges": 10,
     "minTrendWindows": 3,
-    "minErosionShift": 0.1
+    "minErosionShift": 0.1,
+    "hotTopShare": 0.1
   },
   "totals": {
     "files": 36,
@@ -98,6 +99,11 @@
         "scoreDelta": 0.31,
         "newlyActive": false
       },
+      "heat": {
+        "kind": "chronic",
+        "hotWindows": 4,
+        "windows": 4
+      },
       "test": false
     },
     {
@@ -127,6 +133,11 @@
         "scoreDelta": -0.12,
         "newlyActive": false
       },
+      "heat": {
+        "kind": "chronic",
+        "hotWindows": 3,
+        "windows": 4
+      },
       "test": false
     },
     {
@@ -155,6 +166,7 @@
         "scoreDelta": 0.05,
         "newlyActive": false
       },
+      "heat": null,
       "test": true
     },
     {
@@ -183,6 +195,11 @@
         "previousRevisions": 24,
         "scoreDelta": -0.2,
         "newlyActive": false
+      },
+      "heat": {
+        "kind": "acute",
+        "hotWindows": 2,
+        "windows": 4
       },
       "test": false
     },
@@ -213,6 +230,7 @@
         "scoreDelta": 0.14,
         "newlyActive": false
       },
+      "heat": null,
       "test": false
     },
     {
@@ -242,6 +260,7 @@
         "scoreDelta": 0,
         "newlyActive": false
       },
+      "heat": null,
       "test": false
     },
     {
@@ -270,6 +289,7 @@
         "scoreDelta": -0.08,
         "newlyActive": false
       },
+      "heat": null,
       "test": true
     },
     {
@@ -299,6 +319,7 @@
         "scoreDelta": 0.22,
         "newlyActive": false
       },
+      "heat": null,
       "test": false
     },
     {
@@ -327,6 +348,7 @@
         "scoreDelta": -0.15,
         "newlyActive": false
       },
+      "heat": null,
       "test": true
     },
     {
@@ -356,6 +378,7 @@
         "scoreDelta": 0.02,
         "newlyActive": false
       },
+      "heat": null,
       "test": false
     },
     {
@@ -384,6 +407,7 @@
         "scoreDelta": 0.31,
         "newlyActive": false
       },
+      "heat": null,
       "test": false
     },
     {
@@ -412,6 +436,7 @@
         "scoreDelta": -0.12,
         "newlyActive": false
       },
+      "heat": null,
       "test": false
     },
     {
@@ -440,6 +465,7 @@
         "scoreDelta": 0.05,
         "newlyActive": false
       },
+      "heat": null,
       "test": false
     },
     {
@@ -468,6 +494,7 @@
         "scoreDelta": -0.2,
         "newlyActive": false
       },
+      "heat": null,
       "test": false
     },
     {
@@ -496,6 +523,7 @@
         "scoreDelta": 0.14,
         "newlyActive": false
       },
+      "heat": null,
       "test": false
     },
     {
@@ -524,6 +552,7 @@
         "scoreDelta": 0,
         "newlyActive": false
       },
+      "heat": null,
       "test": false
     },
     {
@@ -552,6 +581,7 @@
         "scoreDelta": -0.08,
         "newlyActive": false
       },
+      "heat": null,
       "test": false
     },
     {
@@ -580,6 +610,7 @@
         "scoreDelta": 0.22,
         "newlyActive": false
       },
+      "heat": null,
       "test": true
     },
     {
@@ -608,6 +639,7 @@
         "scoreDelta": -0.15,
         "newlyActive": false
       },
+      "heat": null,
       "test": false
     },
     {
@@ -636,6 +668,7 @@
         "scoreDelta": 0.02,
         "newlyActive": false
       },
+      "heat": null,
       "test": false
     },
     {
@@ -664,6 +697,7 @@
         "scoreDelta": 0.2783,
         "newlyActive": true
       },
+      "heat": null,
       "test": false
     },
     {
@@ -692,6 +726,7 @@
         "scoreDelta": -0.12,
         "newlyActive": false
       },
+      "heat": null,
       "test": false
     },
     {
@@ -720,6 +755,7 @@
         "scoreDelta": 0.05,
         "newlyActive": false
       },
+      "heat": null,
       "test": false
     },
     {
@@ -749,6 +785,7 @@
         "scoreDelta": -0.2,
         "newlyActive": false
       },
+      "heat": null,
       "test": false
     },
     {
@@ -777,6 +814,7 @@
         "scoreDelta": 0.14,
         "newlyActive": false
       },
+      "heat": null,
       "test": false
     },
     {
@@ -805,6 +843,7 @@
         "scoreDelta": 0,
         "newlyActive": false
       },
+      "heat": null,
       "test": false
     },
     {
@@ -834,6 +873,7 @@
         "scoreDelta": -0.08,
         "newlyActive": false
       },
+      "heat": null,
       "test": false
     },
     {
@@ -862,6 +902,7 @@
         "scoreDelta": 0.2179,
         "newlyActive": true
       },
+      "heat": null,
       "test": false
     },
     {
@@ -890,6 +931,7 @@
         "scoreDelta": -0.15,
         "newlyActive": false
       },
+      "heat": null,
       "test": false
     },
     {
@@ -918,6 +960,7 @@
         "scoreDelta": 0.02,
         "newlyActive": false
       },
+      "heat": null,
       "test": false
     },
     {
@@ -946,6 +989,7 @@
         "scoreDelta": 0.2093,
         "newlyActive": true
       },
+      "heat": null,
       "test": false
     },
     {
@@ -974,6 +1018,7 @@
         "scoreDelta": -0.12,
         "newlyActive": false
       },
+      "heat": null,
       "test": false
     },
     {
@@ -1002,6 +1047,7 @@
         "scoreDelta": 0.05,
         "newlyActive": false
       },
+      "heat": null,
       "test": false
     },
     {
@@ -1027,6 +1073,7 @@
         "scoreDelta": 0,
         "newlyActive": false
       },
+      "heat": null,
       "test": false
     },
     {
@@ -1052,6 +1099,7 @@
         "scoreDelta": 0,
         "newlyActive": false
       },
+      "heat": null,
       "test": false
     },
     {
@@ -1077,6 +1125,7 @@
         "scoreDelta": 0,
         "newlyActive": false
       },
+      "heat": null,
       "test": false
     }
   ],

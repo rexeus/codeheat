@@ -19,6 +19,7 @@ export const fileStats = (
   complexity: { total: 200, mean: 2, max: 5 },
   reasons: [],
   trend: null,
+  heat: null,
   ...overrides,
 });
 
@@ -87,6 +88,7 @@ const THRESHOLDS: Report["thresholds"] = {
   minWindowChanges: 10,
   minTrendWindows: 3,
   minErosionShift: 0.1,
+  hotTopShare: 0.1,
   maxMeanLineLength: 300,
   maxFileBytes: 1048576,
 };

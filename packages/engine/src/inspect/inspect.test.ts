@@ -22,6 +22,7 @@ const stats = (path: string, rank: number, revisions: number): FileStats => ({
   complexity: { total: 5, mean: 0.5, max: 2 },
   reasons: [],
   trend: null,
+  heat: null,
 });
 
 const coupling = (

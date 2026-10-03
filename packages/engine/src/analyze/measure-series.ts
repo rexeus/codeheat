@@ -1,5 +1,7 @@
 // Owns measuring the consecutive windows of the analysis window: what each
 // says about how far a change spread, over the universe the report describes.
+import type { HeatWindow } from "../heat/classify-heat.js";
+import { heatWindow } from "../heat/heat-window.js";
 import { touchedModules } from "../modules/touched-modules.js";
 import type { ContractFile } from "../report/contract-file.js";
 import type { Module } from "../report/module.js";
@@ -16,6 +18,8 @@ export type MeasuredSlice = {
   readonly window: SeriesWindow;
   /** The distinct modules each counted change touched (see `touchedModules`). */
   readonly touched: ReadonlyArray<ReadonlySet<string>>;
+  /** Which files the window touched and which were hot. */
+  readonly heat: HeatWindow;
 };
 
 /**
@@ -33,6 +37,7 @@ export const measureSlices = (
 ): ReadonlyArray<MeasuredSlice> =>
   slices.map(({ range, history }) => {
     const touched = touchedModules(history, universe);
+    const active = touched.length >= MIN_WINDOW_CHANGES;
     const { couplings } = coupleHistory(history, universe);
     const { changeRadius, propagationCost } = measureSpread(
       history,
@@ -44,10 +49,11 @@ export const measureSlices = (
       window: {
         ...range,
         changes: touched.length,
-        active: touched.length >= MIN_WINDOW_CHANGES,
+        active,
         changeRadius,
         propagationCost,
       },
       touched,
+      heat: heatWindow(universe.files, history, active),
     };
   });

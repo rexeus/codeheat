@@ -8,6 +8,7 @@ import {
 // a change spreads, and how that moved over the consecutive windows.
 import { withModuleErosion } from "../erosion/module-erosion.js";
 import { judgeErosion } from "../erosion/repository-erosion.js";
+import { withHeat } from "../heat/with-heat.js";
 import { touchedModules } from "../modules/touched-modules.js";
 import type { Coupling } from "../report/report.js";
 import { measureSpread } from "../spread/measure-spread.js";
@@ -41,6 +42,10 @@ export const measureDesignFit = (
   const series = slices.map(({ window }) => window);
   return {
     ...spread,
+    files: withHeat(
+      measured.files,
+      slices.map((slice) => slice.heat),
+    ),
     modules: withModuleErosion(
       spread.modules,
       slices.map((slice) => slice.touched),

@@ -11,8 +11,6 @@ import {
 } from "../coupling/coupling.js";
 import { MIN_CLIQUE_SHARE } from "../distant/cliques.js";
 import { MIN_LOCAL_DISTANCE } from "../distant/distant-couplings.js";
-import { MIN_EROSION_SHIFT } from "../erosion/repository-erosion.js";
-import { MIN_TREND_WINDOWS } from "../erosion/trend-line.js";
 import {
   HUB_MIN_BREADTH,
   HUB_MIN_REVISIONS,
@@ -25,7 +23,6 @@ import {
   MIN_LEAKAGE,
 } from "../modules/interface-churn.js";
 import type { Report } from "../report/report.js";
-import { MIN_WINDOW_CHANGES } from "../series/active-window.js";
 import { PROPAGATION_DEPTH } from "../spread/propagation-cost.js";
 import { MIN_VOLATILITY_RATIO } from "../stability/dependency-direction.js";
 import {
@@ -36,6 +33,7 @@ import {
   MAX_FILE_BYTES,
   MAX_MEAN_LINE_LENGTH,
 } from "../universe/source-file.js";
+import { OVER_TIME_THRESHOLDS } from "./over-time-thresholds.js";
 
 /** The limits an analysis applied; `couplingCommits` sets the floor of ranked modules. */
 export const thresholdsFor = (couplingCommits: number) =>
@@ -59,9 +57,7 @@ export const thresholdsFor = (couplingCommits: number) =>
     propagationDepth: PROPAGATION_DEPTH,
     ubiquitousShare: UBIQUITOUS_SHARE,
     ubiquitousMinCommits: UBIQUITOUS_MIN_COMMITS,
-    minWindowChanges: MIN_WINDOW_CHANGES,
-    minTrendWindows: MIN_TREND_WINDOWS,
-    minErosionShift: MIN_EROSION_SHIFT,
+    ...OVER_TIME_THRESHOLDS,
     maxMeanLineLength: MAX_MEAN_LINE_LENGTH,
     maxFileBytes: MAX_FILE_BYTES,
   }) satisfies Report["thresholds"];

@@ -66,17 +66,31 @@ const hubRanking = (measures: ReadonlyArray<FileMeasure>) => {
   };
 };
 
+/** What a file's score is made of. */
+type Scored = Pick<FileMeasure, "revisions" | "complexity">;
+
 /** Normalized revisions × normalized weighted lines, each against the largest among `measures`. */
-const scorer = (measures: ReadonlyArray<FileMeasure>) => {
+const scorer = (measures: ReadonlyArray<Scored>) => {
   const normalizeRevisions = logNormalizer(
     maximum(measures.map((m) => m.revisions)),
   );
   const normalizeWeight = logNormalizer(
     maximum(measures.map((m) => weightedLines(m.complexity))),
   );
-  return (measure: FileMeasure): number =>
+  return (measure: Scored): number =>
     normalizeRevisions(measure.revisions) *
     normalizeWeight(weightedLines(measure.complexity));
+};
+
+/**
+ * The score of each of `measures`, in order, normalized against the largest
+ * among them: the number `rankFiles` reports as `score`.
+ */
+export const scoreFiles = (
+  measures: ReadonlyArray<Scored>,
+): ReadonlyArray<number> => {
+  const scoreOf = scorer(measures);
+  return measures.map((measure) => scoreOf(measure));
 };
 
 /**
@@ -136,6 +150,7 @@ export const rankFiles = (
           interfaceLeakage: measure.interfaceLeakage,
         }),
         trend: null,
+        heat: null,
       };
     });
 };

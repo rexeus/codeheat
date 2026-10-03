@@ -10,6 +10,7 @@ import { CopyFamily } from "./copy-family.js";
 import { DependencyDirection } from "./dependency-direction.js";
 import { DesignFitFields } from "./design-fit-fields.js";
 import { DistantCoupling } from "./distant-coupling.js";
+import { Heat } from "./heat.js";
 import { ImportRelation } from "./import-relation.js";
 import { ModuleCoupling } from "./module-coupling.js";
 import { Module } from "./module.js";
@@ -73,6 +74,8 @@ export const FileStats = Schema.Struct({
   reasons: Schema.Array(Schema.String),
   /** Null without `--compare`, and when either window has no real (non-mechanical) commit touching the universe. */
   trend: Schema.NullOr(FileTrend),
+  /** How long the file has been among the hottest; null for a file that is neither a chronic nor an acute hotspot, for test code, and without `Report.series` (see `Heat`). */
+  heat: Schema.NullOr(Heat),
 });
 export type FileStats = typeof FileStats.Type;
 

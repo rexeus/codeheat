@@ -23,7 +23,7 @@ export const repeated = (
   Array.from({ length: count }, () => touching(...files));
 
 /** Creates `files` at the start of 2024, long before any analysis window of the tests. */
-const createFiles = (
+export const createFiles = (
   repo: TempRepository,
   files: Readonly<Record<string, string>>,
 ) => repo.commit("2024-01-01T12:00:00Z", files);

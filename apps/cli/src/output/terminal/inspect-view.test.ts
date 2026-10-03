@@ -19,6 +19,7 @@ const entry: InspectResult["matches"][number] = {
   complexity: { total: 1900, mean: 1.97, max: 9 },
   reasons: ["changed in 48 commits (#1 of 36)"],
   trend: null,
+  heat: null,
   copyFamily: null,
   of: 36,
   partners: [
