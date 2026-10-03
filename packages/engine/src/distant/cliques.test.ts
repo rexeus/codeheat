@@ -122,3 +122,57 @@ describe("findCliques exclusions and ranking", () => {
     ]);
   });
 });
+
+describe("findCliques sub-groups", () => {
+  it("finds the triple that changed together inside a group of four whose members never all met", () => {
+    const touched = [
+      ...commitsOf(5, "a", "b", "c"),
+      ...commitsOf(3, "d", "a"),
+      ...commitsOf(3, "d", "b"),
+      ...commitsOf(3, "d", "c"),
+    ];
+
+    expect(
+      cliquesOf(touched).map(({ modules, sharedCommits }) => [
+        modules,
+        sharedCommits,
+      ]),
+    ).toEqual([[["a", "b", "c"], 5]]);
+  });
+
+  it("finds two overlapping triples inside a group of four, each with its own commits", () => {
+    const touched = [
+      ...commitsOf(4, "a", "b", "c"),
+      ...commitsOf(4, "b", "c", "d"),
+      ...commitsOf(3, "a", "d"),
+    ];
+
+    expect(
+      cliquesOf(touched).map(({ modules, sharedCommits }) => [
+        modules,
+        sharedCommits,
+      ]),
+    ).toEqual([
+      [["a", "b", "c"], 4],
+      [["b", "c", "d"], 4],
+    ]);
+  });
+
+  it("finds the modules that different commits have in common when no single kind of commit repeats enough", () => {
+    const touched = [
+      ...commitsOf(2, "a", "b", "c", "d"),
+      ...commitsOf(2, "a", "b", "c", "e"),
+      ...commitsOf(3, "d", "e"),
+      ...["d", "e"].flatMap((other) =>
+        ["a", "b", "c"].flatMap((member) => commitsOf(1, other, member)),
+      ),
+    ];
+
+    expect(
+      cliquesOf(touched).map(({ modules, sharedCommits }) => [
+        modules,
+        sharedCommits,
+      ]),
+    ).toEqual([[["a", "b", "c"], 4]]);
+  });
+});

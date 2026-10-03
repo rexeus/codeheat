@@ -6,6 +6,7 @@ import type { Clique } from "../report/clique.js";
 import { roundReported } from "../report/precision.js";
 import { sharedShare } from "./module-co-change.js";
 import type { ModuleCoChange } from "./module-co-change.js";
+import { supportedSubgroups } from "./supported-groups.js";
 
 /** Smallest share of the smaller module's commits that every pair of a clique shares. */
 export const MIN_CLIQUE_SHARE = 0.3;
@@ -122,21 +123,27 @@ const byUnity = (a: Clique, b: Clique): number =>
  * least three of which every pair shares at least `MIN_CLIQUE_SHARE` of the
  * smaller module's counted commits and at least `MIN_SHARED_COMMITS` commits,
  * and of which at least `MIN_SHARED_COMMITS` commits touched every member
- * (pairs that met only in different commits are no unit of change).
- * `touched` lists the modules each counted commit touched. The `MAX_CLIQUES`
- * whose members changed
- * together in the most commits come first, then the higher weakest share,
- * more members, and path.
+ * (pairs that met only in different commits are no unit of change). A group
+ * that fails the last rule is searched for its sub-groups that pass it, and
+ * only the maximal ones are kept. `touched` lists the modules each counted
+ * commit touched. The `MAX_CLIQUES` whose members changed together in the most
+ * commits come first, then the higher weakest share, more members, and path.
  */
 export const findCliques = (
   coChange: ModuleCoChange,
   touched: ReadonlyArray<ReadonlySet<string>>,
 ): ReadonlyArray<Clique> => {
   const adjacency = linkedModules(coChange);
-  return extend(adjacency, [], new Set(adjacency.keys()), new Set())
+  const groups = extend(adjacency, [], new Set(adjacency.keys()), new Set())
     .filter((members) => members.length >= MIN_CLIQUE_SIZE)
+    .map((members) => members.toSorted((a, b) => Order.String(a, b)))
+    .flatMap((members) =>
+      supportedSubgroups(members, touched, MIN_CLIQUE_SIZE, MIN_SHARED_COMMITS),
+    );
+  return [
+    ...new Map(groups.map((members) => [members.join("\n"), members])).values(),
+  ]
     .map((members) => toClique(members, coChange, touched))
-    .filter(({ sharedCommits }) => sharedCommits >= MIN_SHARED_COMMITS)
     .toSorted(byUnity)
     .slice(0, MAX_CLIQUES);
 };
