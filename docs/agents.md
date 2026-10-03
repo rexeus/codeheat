@@ -19,7 +19,7 @@ Run `npx codeheat inspect <file> --json` (quote globs) before changing a file an
 - A non-null `copyFamily` lists files with largely the same content that keep changing in lockstep (see below). Apply the change to every member of the family in the same edit, or state why a copy stays as it is; when the same fix lands in all of them again, propose extracting the shared part.
 - `modules` describes the module the file lives in (see below): a low `cohesion` means changes there usually reach into other modules; a low `depth.linesPerExport` marks a shallow module, where a new export widens an interface with little behind it.
 
-For orientation in an unfamiliar repository, run `npx codeheat analyze --json` once: `files` are the top hotspots, `couplings` the strongest co-changing pairs, and `totals` the full size. `distantCouplings` are the pairs that change together across modules or far apart, `cliques` the modules that change as a group, `unstableInterfaces` the files many others import that keep changing, and `dependencyDirection` the imports that point from stable to volatile modules (see "Reading distant coupling and scaling signals").
+For orientation in an unfamiliar repository, run `npx codeheat analyze --json` once: `changeRadius` and `propagationCost` say how far a typical change spreads, `files` are the top hotspots, `couplings` the strongest co-changing pairs, and `totals` the full size. `distantCouplings` are the pairs that change together across modules or far apart, `cliques` the modules that change as a group, `unstableInterfaces` the files many others import that keep changing, and `dependencyDirection` the imports that point from stable to volatile modules (see "Reading distant coupling and scaling signals").
 ```
 
 ## Choosing the call
@@ -54,6 +54,7 @@ The files of a repository are grouped into modules: workspace packages (a direct
   "commits": 74,
   "localCommits": 41,
   "cohesion": 0.5541,
+  "radius": 2,
   "partners": [
     { "path": "packages/web", "sharedCommits": 20, "contractsOnly": false }
   ],
@@ -67,6 +68,7 @@ The files of a repository are grouped into modules: workspace packages (a direct
 
 - `cohesion` is the share of the module's counted changes that touched nothing outside it. At 0.55, nearly half of the changes to `packages/billing` reach into another module, and `partners` says which ones, here `packages/web` in 20 of 74 changes. Plan to check those modules too, and say so when you leave them untouched.
 - A high `cohesion` means the module is usually safe to change alone.
+- `radius` is the median number of modules, itself included, that the counted changes touching the module touched (test-only modules not counted; a lower median, so a whole number): 1 means its changes usually stay inside (the same as a `cohesion` of at least 0.5, test-only modules aside), 2 means a typical change here also touches one other module, which `partners` names. `null` when no counted change touched the module, and for a `testOnly` module.
 - `cohesion` is `null` when no counted change touched the module: there is no signal, not perfect cohesion. Trust a module with few counted `commits` (changes) less (the ranking covers only modules with at least `thresholds.minModuleCommits`, which is `max(5, 1% of window.couplingCommits)`, and skips `testOnly` modules, whose files are all test code).
 - A module partner with `contractsOnly: true` is no module but a place that holds only contract files, such as a code-free `spec/` folder: the module loses cohesion to a contract that lives outside every module. Read the contracts there before changing the module.
 - A partner in `inspect` with `crossesModule: true` lives in another module than the inspected file.
@@ -111,6 +113,21 @@ The files of a repository are grouped into modules: workspace packages (a direct
 - `cliques` are groups of at least three modules that change together: every pair shares at least `thresholds.minCliqueShare` of the smaller module's changes. Variants of one unit (nearly the same members, all of them changing together) are reported once, as the stronger; groups that share a core but whose other members never change together are separate cliques. `cliquesPartial: true` means a search bound was hit (a very large or varied set of module groups) and a clique may be missing. A change in one member usually reaches the others, so plan for all of them. `reason` is one sentence for the report.
 - `unstableInterfaces` (TypeScript and JavaScript) lists files that at least `thresholds.minFanIn` files import and that change more often than their dependents: `fanIn`, `changes` (logical changes: how often the file was changed as a whole), `medianDependentChanges`, `changedDependents` (dependents that changed in a change that also changed the file), and the `dependents` that changed with it most often. Changing one of these ripples; add tests first, keep the change backwards compatible, and prefer splitting what keeps changing from what many rely on. Dependencies are read as text and only the ones that resolve to files count, so a repository that imports through path aliases shows a lower `fanIn` than it has.
 - `dependencyDirection` (TypeScript and JavaScript) lists import edges from a module that rarely changes (`fromCommits`) to one that changes often (`toCommits`, at least `thresholds.minVolatilityRatio` times as many): a change to `to` reaches code that otherwise sits still. The list ranks by `ratio` (`toCommits` over `fromCommits`) and `changesTogether` (counted changes in which a file of `from` changed together with a file of `to` that it imports), so the first entries are where a change to `to` really did drag `from` along. Check `importingFiles` before changing `to`'s public API.
+
+## Reading how far a change spreads
+
+`analyze --json` summarizes whether the structure contains change:
+
+```json
+{
+  "changeRadius": { "changes": 170, "median": 1, "p90": 3, "local": 0.6412 },
+  "propagationCost": { "cost": 0.0612, "files": 31 }
+}
+```
+
+- `changeRadius` counts the modules each counted change touched (test-only modules left out; a change that touched no other module is not measured). `median` is the modules a typical change touches (a lower median, so a whole number), `p90` the most that nine in ten touch, `local` the share that touched exactly one module, and `changes` how many changes were measured. A `local` near 1 and a `median` of 1 mean the design holds: plan a change inside one module. A `p90` of 4 or more means a tenth of the changes spread widely; check `cliques` and `distantCouplings` for where. The numbers depend on the modules detected: finer modules give a larger radius, and a repository with a single module always reads 1. `null` when no counted change touched a module.
+- `propagationCost` is the mean share of the other files a file reaches through chains of at most `thresholds.propagationDepth` couplings (the pairs in `couplings`), over the `files` that are not test code and have at least `thresholds.minSharedCommits` changes. At 0.06, a change to a typical file drags along about 6% of the files that change regularly, through up to three hops of co-change. 0 means no file is coupled, 1 that everything reaches everything. Compare it across windows of one repository rather than across very different repositories, and read it with the change radius: a low radius with a high cost means coupling inside modules. `null` when fewer than two files have enough changes.
+- `modules[].radius` gives the radius around one module, and `inspect` shows it with the file's module.
 
 ## Reading module depth
 
