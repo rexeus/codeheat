@@ -41,6 +41,7 @@ const cutOf = (
   part: Part,
   packages: ReadonlySet<string>,
   evidence: Evidence,
+  isRoot: boolean,
 ): FolderCut =>
   part.kind === "group" || part.kind === "more"
     ? {
@@ -48,9 +49,11 @@ const cutOf = (
         big: new Map(part.members.map(({ path, files }) => [path, files])),
         rest: part.rest,
       }
-    : cutByFolders(part.path, part.files, packages, (folder, files) =>
-        isHotFolder(evidence, folder, files),
-      );
+    : cutByFolders(part.path, part.files, {
+        packages,
+        isHot: (folder, files) => isHotFolder(evidence, folder, files),
+        passThrough: !isRoot,
+      });
 
 type Verdict = {
   readonly touching: ReadonlySet<number>;
@@ -233,7 +236,7 @@ export const planSplit = (
   ) {
     return undefined;
   }
-  const cut = cutOf(part, packages, evidence);
+  const cut = cutOf(part, packages, evidence, isRoot);
   if (cut.big.size < 2 && !isRoot && part.kind !== "more") {
     return undefined;
   }

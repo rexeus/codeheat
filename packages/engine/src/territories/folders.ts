@@ -92,15 +92,38 @@ const groupByFolder = (
   return { big, rest };
 };
 
+/** How the child folders of a directory are cut. */
+export type CutOptions = {
+  readonly packages: ReadonlySet<string>;
+  /** Whether a folder with fewer than `MIN_CHILD` files is a part of its own. */
+  readonly isHot: IsHot;
+  /**
+   * When the directory has a single child folder and loose files (a package
+   * with its `src` and a config file), cut that folder's children instead and
+   * leave the loose files with theirs; never through a package.
+   */
+  readonly passThrough: boolean;
+};
+
 /** The child folders of `directory` (after descending through single subfolders) and the loose files. */
 export const cutByFolders = (
   directory: string,
   files: ReadonlyArray<string>,
-  packages: ReadonlySet<string>,
-  isHot: IsHot,
+  options: CutOptions,
 ): FolderCut => {
+  const { packages, isHot, passThrough } = options;
   const base = descend(directory, files, packages);
-  return { base, ...groupByFolder(base, files, isHot) };
+  const cut = { base, ...groupByFolder(base, files, isHot) };
+  const [only] = cut.big;
+  if (!passThrough || cut.big.size !== 1 || only === undefined) {
+    return cut;
+  }
+  const [folder, inside] = only;
+  if (packages.has(folder)) {
+    return cut;
+  }
+  const deeper = cutByFolders(folder, inside, options);
+  return { ...deeper, rest: [...deeper.rest, ...cut.rest] };
 };
 
 /** A folder part for the files below `path`, which is cut down to where the files actually branch unless it is a package. */
