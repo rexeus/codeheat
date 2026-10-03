@@ -76,15 +76,7 @@ export const reportOf = (
     since: "2025-09-29T12:00:00.000Z",
     until: "2026-09-29T12:00:00.000Z",
     commits: 12,
-    realCommits: 12,
     couplingCommits: 10,
-  },
-  mechanicalCommits: {
-    ignored: 0,
-    renames: 0,
-    whitespace: 0,
-    reverts: 0,
-    duplicates: 0,
   },
   comparison,
   thresholds: {

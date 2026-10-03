@@ -102,7 +102,6 @@ describe("renderReportHtml with a comparison", () => {
         previousSince: "2025-03-29T12:00:00.000Z",
         previousUntil: "2025-09-29T12:00:00.000Z",
         previousCommits: 12,
-        previousRealCommits: 12,
         previousTruncated: false,
       },
     );

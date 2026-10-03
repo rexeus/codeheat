@@ -36,15 +36,7 @@ const reportOf = (copyFamilies: Report["copyFamilies"]): Report => ({
     since: "2025-06-01T12:00:00.000Z",
     until: "2026-06-01T12:00:00.000Z",
     commits: 40,
-    realCommits: 40,
     couplingCommits: 38,
-  },
-  mechanicalCommits: {
-    ignored: 0,
-    renames: 0,
-    whitespace: 0,
-    reverts: 0,
-    duplicates: 0,
   },
   comparison: null,
   thresholds: {

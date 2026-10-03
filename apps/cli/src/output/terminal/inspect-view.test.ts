@@ -81,7 +81,6 @@ const result = (
     since: "2025-09-29T12:00:00.000Z",
     until: "2026-09-29T12:00:00.000Z",
     commits: 212,
-    realCommits: 212,
     couplingCommits: 198,
   },
   matches,
