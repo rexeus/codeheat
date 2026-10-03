@@ -2,17 +2,14 @@
 // description, else the first sentence of its README, else its most changed
 // files. Manifests and READMEs are read from the work tree, only those git
 // tracks as regular files.
-import { Effect, FileSystem, Path } from "effect";
+import { Effect, FileSystem, Option, Path } from "effect";
 
 import type { Territories } from "../report/territory.js";
 import type { TerritoryTree, TerritoryDraft } from "./build-territories.js";
-import {
-  mainFiles,
-  manifestDescription,
-  readmeSentence,
-  tidy,
-} from "./description-text.js";
+import { mainFiles, tidy } from "./description-text.js";
+import { manifestDescription } from "./manifest-description.js";
 import type { TerritoryFile } from "./node-measures.js";
+import { readmeSentence } from "./readme-sentence.js";
 
 /** Larger manifests and READMEs are not read. */
 const MAX_DOCUMENT_BYTES = 262_144;
@@ -99,6 +96,10 @@ const readDocument = (
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
     const location = path.join(root, file);
+    // git tracks a regular file, but the work tree may hold a link in its place.
+    if (Option.isSome(yield* Effect.option(fs.readLink(location)))) {
+      return undefined;
+    }
     const info = yield* fs.stat(location);
     if (info.type !== "File" || info.size > BigInt(MAX_DOCUMENT_BYTES)) {
       return undefined;

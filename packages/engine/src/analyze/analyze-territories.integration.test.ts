@@ -1,6 +1,6 @@
 import { NodeServices } from "@effect/platform-node";
 import { assert, layer } from "@effect/vitest";
-import { Effect } from "effect";
+import { Effect, FileSystem, Path } from "effect";
 import { TestClock } from "effect/testing";
 
 import { analyzeOptionsFor } from "../testing/analyze-options.js";
@@ -125,5 +125,37 @@ layer(NodeServices.layer)("analyze territories of nothing", (it) => {
         nodes: [],
       });
     }),
+  );
+});
+
+layer(NodeServices.layer)("analyze territories and links", (it) => {
+  it.effect(
+    "does not read a README that the work tree replaced with a link",
+    () =>
+      Effect.gen(function* () {
+        yield* setNow;
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const repo = yield* makeTempRepository;
+        yield* repo.commit(day(1), {
+          ...filesIn("billing", 1),
+          "billing/README.md": "Billing prose that is long enough.\n",
+          ...filesIn("web", 1),
+          "web/README.md": "The storefront of the shop.\n",
+        });
+        const secret = path.join(repo.directory, "outside.txt");
+        const readme = path.join(repo.directory, "billing/README.md");
+        yield* fs.writeFileString(secret, "A sentence from another file.\n");
+        yield* fs.remove(readme);
+        yield* fs.symlink(secret, readme);
+
+        const report = yield* analyze(analyzeOptionsFor(repo));
+
+        const described = Object.fromEntries(
+          report.territories.nodes.map((node) => [node.path, node.description]),
+        );
+        assert.strictEqual(described["billing"], "main files: a, b, c");
+        assert.strictEqual(described["web"], "The storefront of the shop.");
+      }),
   );
 });
