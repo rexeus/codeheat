@@ -3,10 +3,12 @@
 // Additive fields keep schemaVersion 1; renaming or removing a field bumps it.
 import { Schema } from "effect";
 
+import { Comparison, FileTrend } from "./comparison.js";
 import { ContractFile, FileKind, UbiquitousFile } from "./contract-file.js";
 import { CopyFamily } from "./copy-family.js";
+import { MechanicalCommits } from "./mechanical-commits.js";
 import { Module } from "./module.js";
-import { Count, UnitDelta, UnitInterval } from "./scalars.js";
+import { Count, UnitInterval } from "./scalars.js";
 
 const Rank = Schema.Int.check(Schema.isGreaterThanOrEqualTo(1));
 
@@ -19,44 +21,17 @@ export const AnalysisWindow = Schema.Struct({
    * or a file deleted at a universe path (a path recreated later starts afresh).
    */
   commits: Count,
-  /** Commits small enough to count for coupling (see `Thresholds.maxCommitFiles`). */
+  /**
+   * The commits among `commits` that are not mechanical (see
+   * `Report.mechanicalCommits`). 0 means the window has no real change: with
+   * `--compare`, there is nothing to compare, even when `commits` is not 0.
+   */
+  realCommits: Count,
+  /**
+   * Commits that count for coupling: neither mechanical (see
+   * `Report.mechanicalCommits`) nor too large (see `Thresholds.maxCommitFiles`).
+   */
   couplingCommits: Count,
-});
-
-/** The window before the analysis window that `analyze --compare` measured, adjacent to it. */
-const Comparison = Schema.Struct({
-  previousSince: Schema.String,
-  /** Equals `window.since`; no commit is in both windows. */
-  previousUntil: Schema.String,
-  /**
-   * Non-merge commits in the previous window that touched at least one
-   * universe file, counted as `window.commits` is. 0 means there is nothing
-   * to compare against: every trend is null, which is not the same as
-   * "nothing changed".
-   */
-  previousCommits: Count,
-  /**
-   * The previous window reaches back past the oldest reachable commit, because
-   * the repository is younger than the two windows together or a shallow clone
-   * cut its history. Its numbers then cover less than the full window.
-   */
-  previousTruncated: Schema.Boolean,
-});
-
-/** How a file's score changed against the window before (`analyze --compare`). */
-const FileTrend = Schema.Struct({
-  /** The score the file had in the previous window, normalized within that window; rounded to 4 decimals. */
-  previousScore: UnitInterval,
-  /** Revisions the file had in the previous window. */
-  previousRevisions: Count,
-  /** `score - previousScore`, rounded to 4 decimals; positive means the file got hotter relative to its window's hottest. */
-  scoreDelta: UnitDelta,
-  /**
-   * The file had no revision in the previous window but has in the latest one.
-   * Its `scoreDelta` is then just its score, not a file warming up; rank
-   * warming only among files where this is false.
-   */
-  newlyActive: Schema.Boolean,
 });
 
 /** The noise limits an analysis applied, reported so consumers see them. */
@@ -105,6 +80,7 @@ export const FileStats = Schema.Struct({
   rank: Rank,
   /** Normalized revisions × normalized weighted lines (`loc + complexity.total`); rounded to 4 decimals. */
   score: UnitInterval,
+  /** Real changes to the file in the window, mechanical commits excluded (see `Report.mechanicalCommits`). */
   revisions: Count,
   linesAdded: Count,
   linesDeleted: Count,
@@ -134,7 +110,7 @@ export const FileStats = Schema.Struct({
   }),
   /** Human- and agent-readable explanations, most significant first. */
   reasons: Schema.Array(Schema.String),
-  /** Null without `--compare`, and when either window has no commit touching the universe. */
+  /** Null without `--compare`, and when either window has no real (non-mechanical) commit touching the universe. */
   trend: Schema.NullOr(FileTrend),
 });
 export type FileStats = typeof FileStats.Type;
@@ -197,6 +173,8 @@ export const Report = Schema.Struct({
   }),
   /** The current window; with `--compare`, every field of the report describes it. */
   window: AnalysisWindow,
+  /** How many commits of `window.commits` are mechanical (see `MechanicalCommits`). */
+  mechanicalCommits: MechanicalCommits,
   /** Null without `--compare`. */
   comparison: Schema.NullOr(Comparison),
   thresholds: Thresholds,
