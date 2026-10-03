@@ -12,9 +12,10 @@ import { Count, UnitInterval } from "./scalars.js";
  * together, `path` joins their directories with ` + `. `other`: files that
  * belong to no territory of their own, either the loose files of a directory
  * or a bucket of smaller folders that wait for a finer detail; never a real
- * territory. `tests`: test code that belongs to no code, shown apart from the
- * code (test code that pairs with or sits beside code belongs to that code's
- * territory).
+ * territory. `tests`: test code shown apart from the code: test code that
+ * belongs to no code, or that belongs to code split into several territories
+ * (a `tests` child of the territory that holds them all); test code that pairs
+ * with code, or belongs to code in one territory, counts for that territory.
  */
 const TerritoryKind = Schema.Literals([
   "package",
@@ -29,7 +30,7 @@ export const Territory = Schema.Struct({
   /** Identifies the node within this report (`t1`, `t2`, …, in tree order); it carries no meaning across reports. */
   id: Schema.String,
   /**
-   * Repository-relative POSIX directory; "." for the whole repository (the root of the tree). A `group` joins its
+   * Repository-relative POSIX directory; "." for the whole repository (the root of the tree), or the package that holds every file. A `group` joins its
    * directories with ` + `. An `other` node of loose files names the directory
    * they are in, a bucket the directory its folders are in; its `parent` and `kind` tell it
    * from the territory of that directory.

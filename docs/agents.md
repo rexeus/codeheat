@@ -88,22 +88,87 @@ The files of a repository are grouped into modules: workspace packages (a direct
   "territories": {
     "recommended": 2,
     "details": [
-      { "level": 1, "ids": ["t2", "t3", "t4"] },
-      { "level": 2, "ids": ["t2", "t5", "t6", "t4", "t7"] }
+      { "level": 1, "ids": ["t2", "t3"] },
+      { "level": 2, "ids": ["t4", "t3", "t5", "t6"] }
     ],
     "nodes": [
       {
-        "id": "t3",
+        "id": "t1",
+        "path": ".",
+        "kind": "folder",
+        "parent": null,
+        "children": ["t2", "t3"],
+        "files": 52,
+        "testFiles": 14,
+        "changes": 120,
+        "heatShare": 1,
+        "description": "The shop: billing and a web app.",
+        "splitReason": "the first cut: top-level folders"
+      },
+      {
+        "id": "t2",
         "path": "packages/billing",
         "kind": "package",
         "parent": "t1",
-        "children": ["t5", "t6"],
+        "children": ["t4", "t5", "t6"],
         "files": 38,
         "testFiles": 9,
         "changes": 74,
-        "heatShare": 0.2113,
+        "heatShare": 0.7113,
         "description": "Invoices and tax for the shop.",
         "splitReason": "invoice and tax change independently: 81% of the 74 changes touching it stay inside one part"
+      },
+      {
+        "id": "t3",
+        "path": "apps/web",
+        "kind": "package",
+        "parent": "t1",
+        "children": [],
+        "files": 14,
+        "testFiles": 5,
+        "changes": 46,
+        "heatShare": 0.2887,
+        "description": "The web app: routes, hooks, and components.",
+        "splitReason": null
+      },
+      {
+        "id": "t4",
+        "path": "packages/billing/src/invoice",
+        "kind": "folder",
+        "parent": "t2",
+        "children": [],
+        "files": 17,
+        "testFiles": 2,
+        "changes": 41,
+        "heatShare": 0.41,
+        "description": "main files: invoice, line-item, totals",
+        "splitReason": null
+      },
+      {
+        "id": "t5",
+        "path": "packages/billing/src/tax",
+        "kind": "folder",
+        "parent": "t2",
+        "children": [],
+        "files": 16,
+        "testFiles": 2,
+        "changes": 24,
+        "heatShare": 0.22,
+        "description": "main files: tax, rates, rounding",
+        "splitReason": null
+      },
+      {
+        "id": "t6",
+        "path": "packages/billing/test",
+        "kind": "tests",
+        "parent": "t2",
+        "children": [],
+        "files": 5,
+        "testFiles": 5,
+        "changes": 12,
+        "heatShare": 0.0813,
+        "description": "test code; main files: setup, fixtures, helpers",
+        "splitReason": null
       }
     ]
   }
@@ -112,10 +177,10 @@ The files of a repository are grouped into modules: workspace packages (a direct
 
 - Read `details[recommended - 1].ids` first: the finest detail with at most 25 territories. Each id names a node in `nodes`; `path`, `description`, and `heatShare` tell you what it is and how much of the repository's change happens there. `details` goes from 1 (coarse) to at most 6 (fine), and every file is in exactly one territory of a detail.
 - Every file in `files` has a `territory`: the id of the finest territory it belongs to. Walk `parent` up to the id listed at the detail you want; the root (`path` `"."`, `parent` null) is the whole repository. `inspect` repeats the id; it names a node of the `analyze` report.
-- `kind` is `package` (a directory with a manifest), `folder`, `group` (`path` joins the sibling folders with `+`: they keep changing in the same changes, so read them as one), `tests` (test code that belongs to no code, listed after the code), or `other`. An `other` node is never a real territory: it holds the files directly in a directory, or a bucket of smaller folders (`description` says how many) that a finer detail opens.
+- `kind` is `package` (a directory with a manifest), `folder`, `group` (`path` joins the sibling folders with `+`: they keep changing in the same changes, so read them as one), `tests` (test code that belongs to no code, listed after the code), or `other`. A `tests` node is also the home of the tests of code that is split into several territories, a child of the territory that holds them all (`t6` above). An `other` node is never a real territory: it holds the files directly in a directory, or a bucket of smaller folders (`description` says how many) that a finer detail opens.
 - `description` is one line that is safe to print: the manifest's `description`, else the first sentence of the README, else `main files: a, b, c`, the most changed files. A README sentence is the author's words, so read it as a hint.
 - `splitReason` says why a territory splits: too big (its parts still change together, so do not treat the parts as independent), or its folders change independently (a change usually stays in one of them). Null when it does not split.
-- Test code is counted in the territory of the code it tests, in `files`, `testFiles`, `changes`, and `heatShare`.
+- Test code is counted in the territory of the code it tests, in `files`, `testFiles`, `changes`, and `heatShare`; the children of a split territory open hottest first, and a bucket never hides a folder hotter than a territory opened beside it at the recommended detail.
 - `--limit` does not cut `territories`: the tree is complete in every report.
 - `modules` is unchanged and not a view of the territories; cohesion, partners, and the other module measures still describe modules.
 
