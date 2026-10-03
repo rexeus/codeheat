@@ -2,7 +2,7 @@
 // inside one module as often as they used to.
 import type { Erosion } from "../report/erosion.js";
 import type { SeriesWindow } from "../report/series.js";
-import { judgeShift } from "./shift-gate.js";
+import { judgeRobustShift } from "./shift-gate.js";
 import type { WindowShare } from "./shift-gate.js";
 import { fitLine } from "./trend-line.js";
 import type { WindowValue } from "./trend-line.js";
@@ -38,9 +38,10 @@ const inactiveSince = (windows: ReadonlyArray<SeriesWindow>): string | null => {
  *
  * Only active windows count, wherever they lie: a robust line is fitted
  * through the locality of the active windows (see `fitLine`), and the verdict
- * follows how far it moved (see `judgeShift`): down is `eroding`, up
- * `improving`, anything within what chance and the minimum shift allow
- * `holding`; `unknown` without enough windows. Inactive windows are left out,
+ * follows how far it moved (see `judgeRobustShift`): down is `eroding`, up
+ * `improving`, anything within what chance and the minimum shift allow, or
+ * that one window at either end could have made, `holding`; `unknown`
+ * without enough windows. Inactive windows are left out,
  * so they can neither cause nor hide a verdict; a quiet end of the series is
  * reported as `inactiveSince` next to it.
  */
@@ -62,6 +63,6 @@ export const judgeErosion = (
   };
   return {
     ...base,
-    verdict: line === null ? "unknown" : judgeShift(shares, line),
+    verdict: line === null ? "unknown" : judgeRobustShift(shares, line),
   };
 };

@@ -36,9 +36,10 @@ export const ModuleErosion = Schema.Struct({
   /**
    * `eroding` or `improving` only when the line moved by at least
    * `Thresholds.minErosionShift` and `Thresholds.minErosionSigmas` standard
-   * errors of the shift (see `Erosion.verdict`), computed from the windows'
-   * numbers of counted changes; otherwise `holding`: the module's share only
-   * wobbled.
+   * errors of the shift, and the same follows without its first and last
+   * window (see `Erosion.verdict`; at least `Thresholds.minVerdictWindows`
+   * windows), computed from the windows' numbers of counted changes; otherwise
+   * `holding`: the module's share only wobbled.
    */
   verdict: Schema.Literals(["eroding", "improving", "holding"]),
   /** Windows with evidence the line is fitted through. */
@@ -72,6 +73,12 @@ export const Erosion = Schema.Struct({
    * Theil–Sen estimator and for changes that burst together. A flat design
    * therefore reads `holding` in more than 95 % of the cases at 60 changes a
    * year and up. `improving`: the same, upward; `holding`: neither.
+   * A fall or a rise is believed only when the same verdict follows from the
+   * windows without the first and the last (a line fitted through the others
+   * and the same gate), so one odd window at either end cannot decide it. That
+   * needs at least `Thresholds.minVerdictWindows` windows with evidence: with
+   * fewer the verdict is `holding` (or `unknown` below
+   * `Thresholds.minTrendWindows`).
    * `unknown`: fewer than `Thresholds.minTrendWindows` active windows with
    * counted changes to fit a line through.
    * The verdict is judged over the active windows (see `SeriesWindow.active`)

@@ -1,6 +1,7 @@
 // Owns deciding whether a share moved over the series by more than chance
 // explains, so that a flat design is not reported as eroding or improving.
 import type { TrendLine } from "../report/erosion.js";
+import { fitLine } from "./trend-line.js";
 import type { WindowValue } from "./trend-line.js";
 
 /** How far (as a share of the changes) a line must move to be called eroding or improving, however sure we are. */
@@ -55,6 +56,13 @@ const standardErrorOfShift = (points: ReadonlyArray<WindowShare>): number => {
 };
 
 /**
+ * Fewest windows with evidence that a verdict other than `holding` rests on:
+ * it must survive leaving out the first and the last of them, which leaves a
+ * trend's three.
+ */
+export const MIN_VERDICT_WINDOWS = 5;
+
+/**
  * Whether `line`, fitted through `points` (the windows with evidence, in
  * order), fell, rose, or held: it moved only when the shift from its first to
  * its last value is at least `MIN_EROSION_SHIFT` and at least
@@ -62,7 +70,7 @@ const standardErrorOfShift = (points: ReadonlyArray<WindowShare>): number => {
  * `standardErrorOfShift`), so a series that only wobbles around one level
  * holds.
  */
-export const judgeShift = (
+const judgeShift = (
   points: ReadonlyArray<WindowShare>,
   line: TrendLine,
 ): "eroding" | "improving" | "holding" => {
@@ -75,4 +83,27 @@ export const judgeShift = (
     return "eroding";
   }
   return shift >= needed ? "improving" : "holding";
+};
+
+/**
+ * Whether `points` (the windows with evidence, in order) fell, rose, or held,
+ * with `line` fitted through them (see `judgeShift`). A fall or a rise is
+ * only believed when it survives leaving out the first and the last window:
+ * the same verdict from a line fitted through the others (and the same gate),
+ * so that one odd window at either end cannot decide it. That needs at least
+ * `MIN_VERDICT_WINDOWS` windows; with fewer the verdict is `holding`.
+ */
+export const judgeRobustShift = (
+  points: ReadonlyArray<WindowShare>,
+  line: TrendLine,
+): "eroding" | "improving" | "holding" => {
+  const verdict = judgeShift(points, line);
+  if (verdict === "holding" || points.length < MIN_VERDICT_WINDOWS) {
+    return "holding";
+  }
+  const inner = points.slice(1, -1);
+  const innerLine = fitLine(inner);
+  return innerLine !== null && judgeShift(inner, innerLine) === verdict
+    ? verdict
+    : "holding";
 };

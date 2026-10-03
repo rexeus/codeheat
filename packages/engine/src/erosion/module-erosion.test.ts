@@ -30,11 +30,13 @@ const erosionOf = (
     windows,
   ).find((module) => module.path === path)?.erosion;
 
-/** Three windows of 50 changes whose cohesion falls from 0.8 to 0.4. */
+/** Five windows of 100 changes whose cohesion falls from 0.8 to 0.4. */
 const FALLING = [
-  quarter("a", 40, 10),
-  quarter("a", 30, 20),
-  quarter("a", 20, 30),
+  quarter("a", 80, 20),
+  quarter("a", 70, 30),
+  quarter("a", 60, 40),
+  quarter("a", 50, 50),
+  quarter("a", 40, 60),
 ];
 
 describe("withModuleErosion", () => {
@@ -42,24 +44,36 @@ describe("withModuleErosion", () => {
     expect(erosionOf("a", FALLING)).toStrictEqual({
       from: 0.8,
       to: 0.4,
-      slope: -0.2,
+      slope: -0.1,
       verdict: "eroding",
-      windows: 3,
-      cohesion: [0.8, 0.6, 0.4],
+      windows: 5,
+      cohesion: [0.8, 0.7, 0.6, 0.5, 0.4],
       recent: true,
     });
   });
 
   it("calls a fall that chance explains holding, as the repository's is", () => {
-    // 0.8, 0.6, 0.4 of ten changes each: a fall of 40 points, but of 10 changes a window
+    // the same fall of 40 points, but of 10 changes a window
     const erosion = erosionOf("a", [
       quarter("a", 8, 2),
+      quarter("a", 7, 3),
       quarter("a", 6, 4),
+      quarter("a", 5, 5),
       quarter("a", 4, 6),
     ]);
 
     expect(erosion?.verdict).toBe("holding");
     expect(erosion?.from).toBe(0.8);
+  });
+
+  it("calls a fall holding with fewer than five windows, or when one end window made it", () => {
+    expect(erosionOf("a", FALLING.slice(0, 4))?.verdict).toBe("holding");
+    expect(
+      erosionOf("a", [
+        ...Array.from({ length: 5 }, () => quarter("a", 80, 20)),
+        quarter("a", 20, 80),
+      ])?.verdict,
+    ).toBe("holding");
   });
 
   it("calls a rise improving", () => {
@@ -69,33 +83,29 @@ describe("withModuleErosion", () => {
   it("calls a flat module holding", () => {
     const flat = quarter("a", 30, 20);
 
-    expect(erosionOf("a", [flat, flat, flat])?.verdict).toBe("holding");
+    expect(erosionOf("a", [flat, flat, flat, flat, flat])?.verdict).toBe(
+      "holding",
+    );
   });
 
   it("leaves out a window where the module had fewer changes than a ranked module needs, and fewer than ten", () => {
     // 9 changes is above the floor of 5 that ranks a module, but below 10
     const erosion = erosionOf("a", [
-      quarter("a", 40, 10),
+      FALLING[0] ?? [],
       quarter("a", 5, 4),
-      quarter("a", 30, 20),
-      quarter("a", 20, 30),
+      ...FALLING.slice(1),
     ]);
 
-    expect(erosion?.cohesion).toStrictEqual([0.8, null, 0.6, 0.4]);
-    expect(erosion?.windows).toBe(3);
+    expect(erosion?.cohesion).toStrictEqual([0.8, null, 0.7, 0.6, 0.5, 0.4]);
+    expect(erosion?.windows).toBe(5);
   });
 
   it("raises the floor with the window's own changes: 1% of them, at least 10", () => {
     // the busy window counts 1500 changes, so a module needs 15 in it; a has 12
     const busy = [...quarter("a", 8, 4), ...quarter("x", 1488, 0)];
-    const erosion = erosionOf("a", [
-      quarter("a", 40, 10),
-      quarter("a", 30, 20),
-      quarter("a", 20, 30),
-      busy,
-    ]);
+    const erosion = erosionOf("a", [...FALLING, busy]);
 
-    expect(erosion?.cohesion).toStrictEqual([0.8, 0.6, 0.4, null]);
+    expect(erosion?.cohesion).toStrictEqual([0.8, 0.7, 0.6, 0.5, 0.4, null]);
   });
 });
 

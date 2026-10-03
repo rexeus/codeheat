@@ -100,13 +100,15 @@ export const createTwoPackages = (repo: TempRepository, date?: string) =>
   );
 
 /**
- * Quarters of ten changes each over `createTwoPackages`' files, the ones of
- * `both` touching both packages and the rest only `a`.
+ * Quarters of `perQuarter` changes each (at most 28, one a day) over
+ * `createTwoPackages`' files, the ones of `both` touching both packages and
+ * the rest only `a`.
  */
 export const quartersSpreading = (
   both: ReadonlyArray<number>,
+  perQuarter = 10,
 ): ReadonlyArray<ReadonlyArray<Change>> =>
   both.map((count) => [
     ...repeated(count, FILE_A, FILE_B),
-    ...repeated(10 - count, FILE_A),
+    ...repeated(perQuarter - count, FILE_A),
   ]);

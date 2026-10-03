@@ -11,7 +11,7 @@ const plainSection = (report: Report): ReadonlyArray<string> =>
 /** The sample report with its verdict replaced. */
 const withVerdict = (
   verdict: NonNullable<Report["erosion"]>["verdict"],
-  windows = 4,
+  windows = 6,
   inactiveSince: string | null = null,
 ): Report => {
   const report = sampleReport();
@@ -30,10 +30,12 @@ const withVerdict = (
 describe("overTimeSection", () => {
   it("states the verdict with the numbers behind it, the modules losing cohesion, the hotspots by age, and the fixes", () => {
     expect(plainSection(sampleReport())).toStrictEqual([
-      "Over time (since 2025-09)",
-      "Eroding: changes that stay in one module fell from 78% to 51% over the active period of 4 quarters.",
-      "  packages/billing: cohesion 79% to 29% over 4 quarters",
-      "Hotspots by age: 0 chronic files (hot in most windows, so a design problem) and 2 acute files (hot only lately, so current work).",
+      "Over time (since 2025-03)",
+      "Eroding: changes that stay in one module fell from 88% to 53% over the active period of 6 quarters.",
+      "  packages/billing: cohesion 84% to 32% over 6 quarters",
+      "Hotspots by age: 2 chronic files (hot in at least half of its windows, so a design problem) and 1 acute file (hot only lately, so current work).",
+      "  #1 packages/billing/src/invoice.ts: hot in 5 of 6 windows",
+      "  #2 packages/billing/src/tax.ts: hot in 4 of 6 windows",
       "Fixes: 23% of 178 changes fix something; most in packages/billing (31%, 9 of its 23 fixes also touched another module).",
       "",
     ]);
@@ -41,20 +43,20 @@ describe("overTimeSection", () => {
 
   it("says improving or holding in the same terms", () => {
     expect(plainSection(withVerdict("improving"))[1]).toBe(
-      "Improving: changes that stay in one module rose from 78% to 51% over the active period of 4 quarters.",
+      "Improving: changes that stay in one module rose from 88% to 53% over the active period of 6 quarters.",
     );
     expect(plainSection(withVerdict("holding"))[1]).toBe(
-      "Holding: no lasting change in the share of changes that stay in one module (78% to 51%) over the active period of 4 quarters.",
+      "Holding: no lasting change in the share of changes that stay in one module (88% to 53%) over the active period of 6 quarters.",
     );
   });
 
   it("judges the active period of a repository that has gone quiet, and says since when", () => {
     const [, verdict] = plainSection(
-      withVerdict("eroding", 4, "2026-04-02T00:00:00.000Z"),
+      withVerdict("eroding", 6, "2026-04-02T00:00:00.000Z"),
     );
 
     expect(verdict).toBe(
-      "Eroding: changes that stay in one module fell from 78% to 51% over the active period of 4 quarters (quiet since 2026-04: fewer than 10 changes a window).",
+      "Eroding: changes that stay in one module fell from 88% to 53% over the active period of 6 quarters (quiet since 2026-04: fewer than 10 changes a window).",
     );
   });
 
@@ -87,7 +89,7 @@ describe("overTimeSection parts", () => {
       ),
     };
 
-    expect(plainSection(longer)[1]).toContain("of 4 12-month windows");
+    expect(plainSection(longer)[1]).toContain("of 6 18-month windows");
   });
 
   it("lists a module only when it is still changing and its cohesion fell by more than chance explains", () => {
@@ -125,7 +127,7 @@ describe("overTimeSection parts", () => {
         (line) => line.startsWith("Hotspots by age") || line.startsWith("  #"),
       ),
     ).toStrictEqual([
-      "Hotspots by age: 2 chronic files (hot in most windows, so a design problem) and 1 acute file (hot only lately, so current work).",
+      "Hotspots by age: 2 chronic files (hot in at least half of its windows, so a design problem) and 1 acute file (hot only lately, so current work).",
       "  #1 packages/billing/src/invoice.ts: hot in 5 of 6 windows",
       "  #2 packages/billing/src/tax.ts: hot in 5 of 6 windows",
     ]);

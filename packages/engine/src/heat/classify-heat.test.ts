@@ -22,11 +22,13 @@ describe("heatOf chronic hotspots", () => {
       hotWindows: 3,
       windows: 6,
     });
-    expect(heatOf(FILE, [hot, warm, hot, warm, warm, warm])).toStrictEqual({
+    expect(heatOf(FILE, [hot, hot, warm, hot, warm, warm])).toStrictEqual({
       kind: "chronic",
-      hotWindows: 2,
+      hotWindows: 3,
       windows: 6,
     });
+    // hot in two of six windows is less than half of all, however the earlier ones fall
+    expect(heatOf(FILE, [hot, warm, hot, warm, warm, warm])).toBeNull();
   });
 
   it("is chronic when it is still hot in the last two windows", () => {
@@ -62,6 +64,50 @@ describe("heatOf chronic hotspots", () => {
       hotWindows: 2,
       windows: 5,
     });
+  });
+});
+
+/**
+ * Windows of a file from its revisions in each: none is untouched, five or
+ * more is hot, fewer is touched only.
+ */
+const byRevisions = (...revisions: ReadonlyArray<number>) =>
+  revisions.map((count): HeatWindow => {
+    if (count === 0) {
+      return untouched;
+    }
+    return count >= 5 ? hot : warm;
+  });
+
+describe("heatOf by revisions per window", () => {
+  it.each([
+    [
+      "is chronic when hot in the windows before the last two and in most of all",
+      [12, 12, 12, 12, 12, 12, 1, 1],
+      "chronic",
+    ],
+    [
+      "is chronic when hot in every window",
+      [8, 8, 8, 8, 8, 8, 8, 8],
+      "chronic",
+    ],
+    [
+      "is acute when it became hot in the last two windows",
+      [1, 1, 1, 1, 1, 1, 12, 12],
+      "acute",
+    ],
+    [
+      "is neither when hot all along in a series of four",
+      [7, 5, 30, 38],
+      undefined,
+    ],
+    [
+      "is neither when it was hot early and cooled: hot in less than half of all its windows",
+      [0, 0, 0, 12, 12, 1, 1, 1],
+      undefined,
+    ],
+  ] as const)("%s", (_, revisions, kind) => {
+    expect(heatOf(FILE, byRevisions(...revisions))?.kind).toBe(kind);
   });
 });
 

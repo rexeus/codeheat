@@ -22,9 +22,10 @@ const RECENT_WINDOWS = 2;
  *
  * The windows that count for the file are the active ones from its first
  * revision on. It is chronic when at least `MIN_TREND_WINDOWS` of them lie
- * before the last two and it was hot in at least half of those: how it was
- * hot now cannot make a file chronic, or a file that became hot in the last
- * two windows of a short series would be. Otherwise it is acute when it was
+ * before the last two and it was hot in at least half of those, and in at
+ * least half of all that count (the last two included): the first keeps a
+ * file that became hot in the last two windows of a short series from being
+ * chronic, the second one that was hot early and has long since cooled. Otherwise it is acute when it was
  * hot in both of the last two windows, in fewer than half of the windows
  * before them that count for it (so a file that was hot all along, in a
  * series too short to call it chronic, is neither), and an active window
@@ -51,7 +52,11 @@ export const heatOf = (
     hotWindows: counting.filter(({ hot }) => hot).length,
     windows: counting.length,
   };
-  if (earlier.length >= MIN_TREND_WINDOWS && hotEarlier * 2 >= earlier.length) {
+  if (
+    earlier.length >= MIN_TREND_WINDOWS &&
+    hotEarlier * 2 >= earlier.length &&
+    base.hotWindows * 2 >= base.windows
+  ) {
     return { ...base, kind: "chronic" };
   }
   const hotNow = counting.filter(

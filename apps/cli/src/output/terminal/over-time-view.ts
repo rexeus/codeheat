@@ -101,7 +101,7 @@ const hotspotLines = (report: Report): ReadonlyArray<string> => {
     return [];
   }
   return [
-    `Hotspots by age: ${plural(chronic.length, "chronic file", "chronic files")} (hot in most windows, so a design problem) and ${plural(acute.length, "acute file", "acute files")} (hot only lately, so current work).`,
+    `Hotspots by age: ${plural(chronic.length, "chronic file", "chronic files")} (hot in at least half of its windows, so a design problem) and ${plural(acute.length, "acute file", "acute files")} (hot only lately, so current work).`,
     ...chronic
       .slice(0, TOP_CHRONIC_HOTSPOTS)
       .map(

@@ -57,6 +57,8 @@ export const Thresholds = Schema.Struct({
   minTrendWindows: Count,
   /** How far the fitted locality (`Erosion.locality`) must move, as a share of the changes, for the verdict to be `eroding` or `improving`; it must also move by `minErosionSigmas` standard errors. */
   minErosionShift: UnitInterval,
+  /** Fewest windows with evidence a verdict of `eroding` or `improving` needs, so that it can be checked without the first and the last (`Erosion.verdict`); with fewer it is `holding`. */
+  minVerdictWindows: Count,
   /** How many standard errors of the shift (from the windows' binomial variances, see `Erosion.verdict`) a fitted line must move to count as eroding or improving, for the repository and for a module. */
   minErosionSigmas: Count,
   /** Share of the files with revisions in a window of `Report.series` that are hot in it (see `Heat`). */

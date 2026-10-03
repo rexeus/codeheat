@@ -4,7 +4,7 @@ import type { ModuleErosion } from "../report/erosion.js";
 import type { Module } from "../report/module.js";
 import { roundReported } from "../report/precision.js";
 import { MIN_WINDOW_CHANGES } from "../series/active-window.js";
-import { judgeShift } from "./shift-gate.js";
+import { judgeRobustShift } from "./shift-gate.js";
 import type { WindowShare } from "./shift-gate.js";
 import { fitLine } from "./trend-line.js";
 
@@ -62,7 +62,7 @@ const erosionOf = (
   }
   return {
     ...line,
-    verdict: judgeShift(points, line),
+    verdict: judgeRobustShift(points, line),
     windows: points.length,
     cohesion: cohesion.map((window) =>
       window === null ? null : roundReported(window.value),
@@ -75,7 +75,7 @@ const erosionOf = (
  * Sets `erosion` on every module that is not test-only: its cohesion in each
  * window, given the distinct modules each counted change of the window touched
  * (see `touchedModules`), oldest window first, and whether it fell, rose, or
- * held (see `judgeShift`). A module has no `erosion` without evidence in
+ * held (see `judgeRobustShift`). A module has no `erosion` without evidence in
  * enough windows (see `fitLine`).
  */
 export const withModuleErosion = (

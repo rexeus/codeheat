@@ -3,6 +3,7 @@
 import {
   MIN_EROSION_SHIFT,
   MIN_EROSION_SIGMAS,
+  MIN_VERDICT_WINDOWS,
 } from "../erosion/shift-gate.js";
 import { MIN_TREND_WINDOWS } from "../erosion/trend-line.js";
 import { HOT_TOP_SHARE } from "../heat/hot-files.js";
@@ -13,5 +14,6 @@ export const OVER_TIME_THRESHOLDS = {
   minTrendWindows: MIN_TREND_WINDOWS,
   minErosionShift: MIN_EROSION_SHIFT,
   minErosionSigmas: MIN_EROSION_SIGMAS,
+  minVerdictWindows: MIN_VERDICT_WINDOWS,
   hotTopShare: HOT_TOP_SHARE,
 };

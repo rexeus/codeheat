@@ -63,6 +63,7 @@
     "minTrendWindows": 3,
     "minErosionShift": 0.1,
     "minErosionSigmas": 2,
+    "minVerdictWindows": 5,
     "hotTopShare": 0.1,
     "minConventionShare": 0.05
   },
@@ -102,9 +103,9 @@
         "newlyActive": false
       },
       "heat": {
-        "kind": "acute",
-        "hotWindows": 2,
-        "windows": 4
+        "kind": "chronic",
+        "hotWindows": 5,
+        "windows": 6
       },
       "test": false
     },
@@ -135,7 +136,11 @@
         "scoreDelta": -0.12,
         "newlyActive": false
       },
-      "heat": null,
+      "heat": {
+        "kind": "chronic",
+        "hotWindows": 4,
+        "windows": 6
+      },
       "test": false
     },
     {
@@ -197,7 +202,7 @@
       "heat": {
         "kind": "acute",
         "hotWindows": 2,
-        "windows": 4
+        "windows": 6
       },
       "test": false
     },
@@ -1162,11 +1167,43 @@
     "cost": 0.0612,
     "files": 31
   },
-  "seriesSince": "2025-09-29T12:00:00.000Z",
+  "seriesSince": "2025-03-29T12:00:00.000Z",
   "series": [
     {
-      "since": "2025-09-29T12:00:00.000Z",
-      "until": "2025-12-29T18:00:00.000Z",
+      "since": "2025-03-29T12:00:00.000Z",
+      "until": "2025-06-29T00:00:00.000Z",
+      "changes": 30,
+      "active": true,
+      "changeRadius": {
+        "changes": 30,
+        "median": 1,
+        "p90": 3,
+        "local": 0.8667
+      },
+      "propagationCost": {
+        "cost": 0.0512,
+        "files": 22
+      }
+    },
+    {
+      "since": "2025-06-29T00:00:00.000Z",
+      "until": "2025-09-28T12:00:00.000Z",
+      "changes": 32,
+      "active": true,
+      "changeRadius": {
+        "changes": 32,
+        "median": 1,
+        "p90": 3,
+        "local": 0.8125
+      },
+      "propagationCost": {
+        "cost": 0.0467,
+        "files": 23
+      }
+    },
+    {
+      "since": "2025-09-28T12:00:00.000Z",
+      "until": "2025-12-29T00:00:00.000Z",
       "changes": 38,
       "active": true,
       "changeRadius": {
@@ -1181,8 +1218,8 @@
       }
     },
     {
-      "since": "2025-12-29T18:00:00.000Z",
-      "until": "2026-03-31T00:00:00.000Z",
+      "since": "2025-12-29T00:00:00.000Z",
+      "until": "2026-03-30T12:00:00.000Z",
       "changes": 44,
       "active": true,
       "changeRadius": {
@@ -1197,8 +1234,8 @@
       }
     },
     {
-      "since": "2026-03-31T00:00:00.000Z",
-      "until": "2026-06-30T06:00:00.000Z",
+      "since": "2026-03-30T12:00:00.000Z",
+      "until": "2026-06-30T00:00:00.000Z",
       "changes": 41,
       "active": true,
       "changeRadius": {
@@ -1213,7 +1250,7 @@
       }
     },
     {
-      "since": "2026-06-30T06:00:00.000Z",
+      "since": "2026-06-30T00:00:00.000Z",
       "until": "2026-09-29T12:00:00.000Z",
       "changes": 47,
       "active": true,
@@ -1232,16 +1269,16 @@
   "erosion": {
     "verdict": "eroding",
     "inactiveSince": null,
-    "windows": 4,
+    "windows": 6,
     "locality": {
-      "from": 0.7812,
-      "to": 0.5078,
-      "slope": -0.0911
+      "from": 0.8827,
+      "to": 0.5319,
+      "slope": -0.0701
     },
     "propagationCost": {
-      "from": 0.0499,
-      "to": 0.0733,
-      "slope": 0.0078
+      "from": 0.0405,
+      "to": 0.0714,
+      "slope": 0.0062
     }
   },
   "fixDensity": {
@@ -1426,12 +1463,12 @@
         "cohesionDelta": 0.12
       },
       "erosion": {
-        "from": 0.35,
-        "to": 0.45,
-        "slope": 0.0333,
+        "from": 0.3542,
+        "to": 0.4458,
+        "slope": 0.0183,
         "verdict": "holding",
-        "windows": 3,
-        "cohesion": [0.35, 0.4, null, 0.45],
+        "windows": 4,
+        "cohesion": [0.35, 0.4, null, 0.4, null, 0.45],
         "recent": true
       },
       "fixDensity": {
@@ -1515,12 +1552,12 @@
         "cohesionDelta": -0.2
       },
       "erosion": {
-        "from": 0.6,
-        "to": 0.45,
-        "slope": -0.05,
+        "from": 0.625,
+        "to": 0.5,
+        "slope": -0.025,
         "verdict": "holding",
-        "windows": 4,
-        "cohesion": [0.6, 0.55, 0.52, 0.45],
+        "windows": 6,
+        "cohesion": [0.62, 0.6, 0.58, 0.55, 0.52, 0.5],
         "recent": true
       },
       "fixDensity": {
@@ -1575,12 +1612,12 @@
         "cohesionDelta": 0.03
       },
       "erosion": {
-        "from": 0.7942,
-        "to": 0.2892,
-        "slope": -0.1683,
+        "from": 0.84,
+        "to": 0.315,
+        "slope": -0.105,
         "verdict": "eroding",
-        "windows": 4,
-        "cohesion": [0.8, 0.62, 0.45, 0.3],
+        "windows": 6,
+        "cohesion": [0.82, 0.75, 0.7, 0.55, 0.4, 0.3],
         "recent": true
       },
       "fixDensity": {

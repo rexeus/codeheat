@@ -18,7 +18,9 @@ export const Heat = Schema.Struct({
   /**
    * `chronic`: at least `Thresholds.minTrendWindows` windows that count for
    * the file lie before the last two, and it was hot in at least half of
-   * those: a design problem rather than a feature that was being built. The
+   * those and in at least half of all that count (`hotWindows` of
+   * `windows`): a design problem rather than a feature that was being built,
+   * and not one that cooled long ago. The
    * last two windows do not count towards this, so a series needs at least
    * five windows (about 15 months) before any file can be chronic. `acute`:
    * hot in both of the last two windows and in fewer than half of the windows
