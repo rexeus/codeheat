@@ -56,6 +56,14 @@ export const Territory = Schema.Struct({
    */
   heatShare: UnitInterval,
   /**
+   * One line, safe to print (no control characters, one line, at most 160
+   * characters): the `description` of the territory's manifest, else the first
+   * sentence of its README, else `main files: a, b, c` naming its most changed
+   * files. A territory of kind `other` or `tests` says what it is
+   * (`12 smaller folders in packages`, `test code`) before its main files.
+   */
+  description: Schema.String,
+  /**
    * Why the territory splits into its children, in plain words (a territory
    * too big, folders that change independently, folders that still change
    * together); null when it does not split.

@@ -22,6 +22,46 @@ const filesIn = (
     ["a", "b", "c"].map((name) => [`${folder}/${name}.ts`, code(version)]),
   );
 
+layer(NodeServices.layer)("analyze territories", (it) => {
+  it.effect(
+    "describes a territory by its manifest, its README, or its most changed files, and keeps the text safe to print",
+    () =>
+      Effect.gen(function* () {
+        yield* setNow;
+        const repo = yield* makeTempRepository;
+        yield* repo.commit(day(1), {
+          ...filesIn("billing", 1),
+          "billing/package.json": '{ "description": "Invoices and tax." }\n',
+          "billing/README.md": "# billing\n\nIgnored: the manifest wins.\n",
+          ...filesIn("web", 1),
+          "web/README.md":
+            "# web\n\n[![ci](https://ci/badge.svg)](https://ci)\n\nThe **storefront** of the shop. It sells things.\n",
+          ...filesIn("auth", 1),
+          ...filesIn("shell", 1),
+          "shell/README.md": "The \u001B[31mshell\u001B[0m\u202E front.\n",
+        });
+        yield* repo.commit(day(2), { "auth/b.ts": code(2) });
+        yield* repo.commit(day(3), { "auth/b.ts": code(3) });
+
+        const report = yield* analyze(analyzeOptionsFor(repo));
+
+        const described = Object.fromEntries(
+          report.territories.nodes.map((node) => [node.path, node.description]),
+        );
+        assert.deepStrictEqual(described, {
+          ".": "main files: b, a, c",
+          auth: "main files: b, a, c",
+          billing: "Invoices and tax.",
+          shell: "The [31mshell [0m front.",
+          web: "The storefront of the shop.",
+        });
+        for (const { description } of report.territories.nodes) {
+          assert.notMatch(description, /\p{Cc}|\p{Cf}/u);
+        }
+      }),
+  );
+});
+
 layer(NodeServices.layer)("analyze territories of files", (it) => {
   it.effect(
     "names the territory of every file and lists every file once per detail",

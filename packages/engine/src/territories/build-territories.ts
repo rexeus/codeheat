@@ -34,7 +34,7 @@ export type TerritoryInput = {
 };
 
 /** A territory without its description, with what the description is made from. */
-type TerritoryDraft = Omit<Territory, "description"> & {
+export type TerritoryDraft = Omit<Territory, "description"> & {
   /** Every file in the territory, test code included. */
   readonly members: ReadonlyArray<string>;
   /** What an `other` or `tests` node is, to put before its main files; undefined for a real territory. */

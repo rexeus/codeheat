@@ -58,12 +58,13 @@ export const measureLinked = (
     return {
       ...measured,
       ...designFit,
-      ...measureTerritories({
+      ...(yield* measureTerritories({
+        ...place,
         packages: universe.packages,
         files: designFit.files,
         history: histories.current,
         minChanges: measured.thresholds.minModuleCommits,
-      }),
+      })),
       copyFamilies,
       distantCouplings: distantCouplings(
         couplings,

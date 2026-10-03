@@ -1351,7 +1351,7 @@
         "b": "code"
       },
       "crossesModule": false,
-      "imports": "b\u2192a"
+      "imports": "b→a"
     },
     {
       "a": "packages/billing/src/tax.ts",
@@ -1365,7 +1365,7 @@
         "b": "code"
       },
       "crossesModule": false,
-      "imports": "b\u2192a"
+      "imports": "b→a"
     },
     {
       "a": "packages/auth/src/session.ts",
@@ -1379,7 +1379,7 @@
         "b": "code"
       },
       "crossesModule": false,
-      "imports": "b\u2192a"
+      "imports": "b→a"
     },
     {
       "a": "packages/billing/src/invoice.ts",
@@ -1393,7 +1393,7 @@
         "b": "code"
       },
       "crossesModule": false,
-      "imports": "a\u2192b"
+      "imports": "a→b"
     },
     {
       "a": "packages/billing/api/billing.tsp",
@@ -1421,7 +1421,7 @@
         "b": "code"
       },
       "crossesModule": true,
-      "imports": "b\u2192a"
+      "imports": "b→a"
     },
     {
       "a": "packages/shared/src/config.ts",
@@ -1435,7 +1435,7 @@
         "b": "code"
       },
       "crossesModule": true,
-      "imports": "b\u2192a"
+      "imports": "b→a"
     },
     {
       "a": "packages/billing/src/invoice.ts",
@@ -1729,6 +1729,7 @@
         "testFiles": 4,
         "changes": 178,
         "heatShare": 1,
+        "description": "The shop: billing, web app, auth, and a command line tool.",
         "splitReason": "the first cut: packages and top-level folders"
       },
       {
@@ -1741,6 +1742,7 @@
         "testFiles": 2,
         "changes": 74,
         "heatShare": 0.6239,
+        "description": "Invoices, tax, and discounts for the shop.",
         "splitReason": null
       },
       {
@@ -1753,6 +1755,7 @@
         "testFiles": 0,
         "changes": 58,
         "heatShare": 0.1298,
+        "description": "The web app: routes, hooks, and components.",
         "splitReason": null
       },
       {
@@ -1765,6 +1768,7 @@
         "testFiles": 1,
         "changes": 44,
         "heatShare": 0.1058,
+        "description": "Sessions, tokens, and sign-in with GitHub and Google.",
         "splitReason": null
       },
       {
@@ -1777,6 +1781,7 @@
         "testFiles": 1,
         "changes": 26,
         "heatShare": 0.1014,
+        "description": "main files: analyze, inspect, terminal",
         "splitReason": null
       },
       {
@@ -1789,6 +1794,7 @@
         "testFiles": 0,
         "changes": 30,
         "heatShare": 0.0391,
+        "description": "main files: config, logger, index",
         "splitReason": null
       }
     ]
@@ -1845,7 +1851,7 @@
         "a": "packages/shared",
         "b": "apps/cli"
       },
-      "imports": "b\u2192a",
+      "imports": "b→a",
       "score": 1.2527
     },
     {
@@ -1859,7 +1865,7 @@
         "a": "packages/auth",
         "b": "packages/web"
       },
-      "imports": "b\u2192a",
+      "imports": "b→a",
       "score": 1.2307
     }
   ],
