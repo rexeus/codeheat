@@ -27,7 +27,7 @@ export type ModuleCoChange = {
  */
 export const moduleCoChange = (
   touched: ReadonlyArray<ReadonlySet<string>>,
-  modules: ReadonlyArray<Module>,
+  modules: ReadonlyArray<Pick<Module, "path" | "commits" | "testOnly">>,
   minModuleCommits: number,
 ): ModuleCoChange => {
   const commits = new Map(

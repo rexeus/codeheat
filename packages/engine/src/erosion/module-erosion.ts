@@ -76,12 +76,15 @@ const erosionOf = (
  * window, given the distinct modules each counted change of the window touched
  * (see `touchedModules`), oldest window first, and whether it fell, rose, or
  * held (see `judgeRobustShift`). A module has no `erosion` without evidence in
- * enough windows (see `fitLine`).
+ * enough windows (see `fitLine`). Any area with a `path` and a `testOnly`
+ * flag can stand in for a module, as long as the windows name the same paths.
  */
-export const withModuleErosion = (
-  modules: ReadonlyArray<Module>,
+export const withModuleErosion = <
+  Area extends Pick<Module, "path" | "testOnly">,
+>(
+  modules: ReadonlyArray<Area>,
   windows: ReadonlyArray<ReadonlyArray<ReadonlySet<string>>>,
-): ReadonlyArray<Module> => {
+): ReadonlyArray<Area & Pick<Module, "erosion">> => {
   const tallied = windows.map((touched) => ({
     size: touched.length,
     tallies: tallyWindow(touched),
