@@ -99,7 +99,7 @@ const changedImporters = (
 
 /** Volatility of the imported module over the importer's, times how often the importers changed with what they import (log scale). */
 const rankOf = ({ ratio, changedImporters: changed }: DependencyDirection) =>
-  ratio * Math.log2(1 + changed);
+  Math.log2(ratio) * Math.log2(1 + changed);
 
 const byRank = (a: DependencyDirection, b: DependencyDirection): number =>
   rankOf(b) - rankOf(a) ||
@@ -131,7 +131,7 @@ const reasonFor = (
  * the importing one, which may not have changed at all.
  *
  * `ratio` is the imported module's commits over the importing one's (at least
- * 1). The edges rank by `ratio × log2(1 + changedImporters)`: how much more
+ * 1). The edges rank by `log2(ratio) × log2(1 + changedImporters)`: how much more
  * volatile the imported side is, and how often the importers really had to
  * move with it, so that every module importing the same framework does not
  * fill the list. Then more importing files and path break ties. The

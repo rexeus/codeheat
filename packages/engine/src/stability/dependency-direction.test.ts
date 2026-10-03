@@ -154,7 +154,7 @@ describe("dependencyDirection ranking", () => {
     ]);
   });
 
-  it("puts the edge whose importers changed with the imported files before one with a larger ratio", () => {
+  it("puts the edge with the larger ratio first when importers changed with the imported files on both", () => {
     const history = historyOf(
       ["stable/a.ts", "volatile/x.ts"],
       ["stable/b.ts", "volatile/x.ts"],
@@ -162,7 +162,7 @@ describe("dependencyDirection ranking", () => {
       ["steady/s.ts", "volatile/y.ts"],
     );
 
-    // stable: 5 × log2(3) = 7.9; quiet: 20 × log2(2) = 20; steady: 2.5 × log2(2) = 2.5.
+    // stable: log2(5) × log2(3) = 3.7; quiet: log2(20) × log2(2) = 4.3; steady: log2(2.5) × log2(2) = 1.3.
     expect(edgesOf(dependencies, history)).toEqual([
       "quiet -> volatile (1)",
       "stable -> volatile (2)",
