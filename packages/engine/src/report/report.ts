@@ -79,7 +79,8 @@ export const FileStats = Schema.Struct({
    * The path is test code: its name has a test suffix (`.test`, `.spec`,
    * `_test`, `_spec`) or a directory above it is named like a test directory
    * (`test`, `tests`, `__tests__`, `spec`, `specs`, `e2e`, `fixtures`,
-   * `__fixtures__`). Tests are left out of the terminal's rankings of
+   * `__fixtures__`) or test support directory (`testing`, `test-utils`,
+   * `test-helpers`, `__mocks__`, `mocks`, `__snapshots__`). Tests are left out of the terminal's rankings of
    * warming files; apply the same rule to `trend`.
    */
   test: Schema.Boolean,
