@@ -25,7 +25,7 @@ describe("measureInterfaces", () => {
   });
   const measure = (commits: ReadonlyArray<ReadonlyArray<string>>) =>
     measureInterfaces(
-      { commits: commits.map((commit) => touching(commit)), paths: files },
+      { changes: commits.map((commit) => touching(commit)), paths: files },
       refs,
       new Map([["m", ["m/index.ts", "m/src/index.ts"]]]),
     );
@@ -63,7 +63,7 @@ describe("measureInterfaces", () => {
     const small = touching(["m/src/impl.ts", "m/src/index.ts"]);
 
     const { byModule } = measureInterfaces(
-      { commits: [huge, small], paths: files },
+      { changes: [huge, small], paths: files },
       refs,
       new Map([["m", ["m/src/index.ts"]]]),
     );

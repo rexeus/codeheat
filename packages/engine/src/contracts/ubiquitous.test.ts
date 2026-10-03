@@ -13,7 +13,7 @@ const commits = (count: number, ...ids: ReadonlyArray<number>) =>
   }));
 
 const ubiquitousIn = (history: ReturnType<typeof commits>) =>
-  findUbiquitous({ commits: history, paths: PATHS }, CONTRACTS);
+  findUbiquitous({ changes: history, paths: PATHS }, CONTRACTS);
 
 describe("findUbiquitous", () => {
   it("reports a contract in more than 30 % of the counted commits, with its share", () => {

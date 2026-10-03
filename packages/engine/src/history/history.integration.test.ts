@@ -26,9 +26,9 @@ const history = (
     ...options,
   }).pipe(Effect.provide(Git.layer(repo.directory)));
 
-/** Each commit's touched paths, sorted. */
-const pathsOfCommits = (result: History): Array<Array<string>> =>
-  result.commits.map(({ files }) =>
+/** Each real change's touched paths, sorted. */
+const pathsOfChanges = (result: History): Array<Array<string>> =>
+  result.changes.map(({ files }) =>
     Array.from(files, (id) => result.paths[id] ?? "").toSorted(),
   );
 
@@ -78,7 +78,7 @@ layer(NodeServices.layer)("readHistory", (it) => {
       }),
   );
 
-  it.effect("lists the universe paths of each commit, newest first", () =>
+  it.effect("lists the universe paths of each real change, newest first", () =>
     Effect.gen(function* () {
       const repo = yield* makeTempRepository;
       yield* commitRenamedTwice(repo);
@@ -87,9 +87,8 @@ layer(NodeServices.layer)("readHistory", (it) => {
         universe: new Set(["c.ts", "other.ts"]),
       });
 
-      assert.deepStrictEqual(pathsOfCommits(result), [
-        ["c.ts"],
-        ["c.ts"],
+      // the two renames are mechanical and no change
+      assert.deepStrictEqual(pathsOfChanges(result), [
         ["c.ts"],
         ["c.ts"],
         ["c.ts"],
@@ -121,7 +120,7 @@ layer(NodeServices.layer)("readHistory lives of a path", (it) => {
           linesAdded: 2,
           linesDeleted: 0,
         });
-        assert.deepStrictEqual(pathsOfCommits(result), [
+        assert.deepStrictEqual(pathsOfChanges(result), [
           ["a.ts"],
           ["a.ts"],
           [],
@@ -255,7 +254,7 @@ layer(NodeServices.layer)("readHistory universe and window", (it) => {
       const result = yield* history(repo, { universe: new Set(["other.ts"]) });
 
       assert.deepStrictEqual([...result.files.keys()], ["other.ts"]);
-      assert.deepStrictEqual(pathsOfCommits(result), [["other.ts"]]);
+      assert.deepStrictEqual(pathsOfChanges(result), [["other.ts"]]);
     }),
   );
 
@@ -349,11 +348,7 @@ layer(NodeServices.layer)("readHistoryHalves", (it) => {
         });
         assert.isFalse(recent.files.has("other.ts"));
         assert.strictEqual(earlier.files.get("other.ts")?.revisions, 1);
-        assert.deepStrictEqual(pathsOfCommits(recent), [
-          ["c.ts"],
-          ["c.ts"],
-          ["c.ts"],
-        ]);
+        assert.deepStrictEqual(pathsOfChanges(recent), [["c.ts"], ["c.ts"]]);
       }),
   );
 });

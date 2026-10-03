@@ -36,6 +36,7 @@ export type WindowHistories = {
 const NO_HISTORY: History = {
   paths: [],
   commits: [],
+  changes: [],
   files: new Map(),
   mechanical: countKinds([]),
 };

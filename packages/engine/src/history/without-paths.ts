@@ -2,9 +2,9 @@
 import type { History } from "./history.js";
 
 /**
- * The history with the commits' files that lie at `paths` left out. A commit
- * keeps its `size`, so the commits that count for coupling stay the same, and
- * `files` keeps the revisions of every path: only what a commit says about
+ * The history with the changes' files that lie at `paths` left out. A change
+ * keeps its `size`, so the changes that count for coupling stay the same, and
+ * `files` keeps the revisions of every path: only what a change says about
  * who changed together with whom shrinks.
  */
 export const withoutPaths = (
@@ -16,9 +16,9 @@ export const withoutPaths = (
   }
   return {
     ...history,
-    commits: history.commits.map((commit) => ({
-      ...commit,
-      files: commit.files.filter((id) => !paths.has(history.paths[id] ?? "")),
+    changes: history.changes.map((change) => ({
+      ...change,
+      files: change.files.filter((id) => !paths.has(history.paths[id] ?? "")),
     })),
   };
 };

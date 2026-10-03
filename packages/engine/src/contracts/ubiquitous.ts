@@ -3,7 +3,7 @@
 // to everything and drown out the real pairs, so such files are set aside.
 import { Order } from "effect";
 
-import { countedCommits } from "../coupling/coupling.js";
+import { countedChanges } from "../coupling/coupling.js";
 import type { History } from "../history/history.js";
 import type { UbiquitousFile } from "../report/contract-file.js";
 import { roundReported } from "../report/precision.js";
@@ -16,14 +16,14 @@ export const UBIQUITOUS_MIN_COMMITS = 10;
 /**
  * The contract files among `contracts` that changed in more than
  * `UBIQUITOUS_SHARE` of the counted commits of `history` (see
- * `countedCommits`), and in at least `UBIQUITOUS_MIN_COMMITS` of them, most
+ * `countedChanges`), and in at least `UBIQUITOUS_MIN_COMMITS` of them, most
  * changed first, ties by path.
  */
 export const findUbiquitous = (
-  history: Pick<History, "commits" | "paths">,
+  history: Pick<History, "changes" | "paths">,
   contracts: ReadonlySet<string>,
 ): ReadonlyArray<UbiquitousFile> => {
-  const counted = countedCommits(history.commits);
+  const counted = countedChanges(history.changes);
   const commitsOf = new Map<string, number>();
   for (const commit of counted) {
     for (const id of commit.files) {

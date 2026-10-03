@@ -3,6 +3,7 @@
 // read as one History or split in two at a point in time.
 import { Effect } from "effect";
 
+import type { LogicalChange } from "../changes/logical-change.js";
 import type { GitError } from "../git/git-errors.js";
 import type { Git } from "../git/git.js";
 import { classify } from "../mechanical/classify.js";
@@ -21,18 +22,7 @@ type FileHistory = {
 };
 
 /** A commit that touched the universe. */
-export type HistoryCommit = {
-  /**
-   * The distinct ids of the files whose current file the commit touched; none
-   * when it only touched earlier files that lived at a universe path.
-   */
-  readonly files: Uint32Array;
-  /**
-   * How many distinct universe files it touched, earlier ones included: the
-   * size that decides whether a commit is too large to count. It never
-   * shrinks for files that are dead today.
-   */
-  readonly size: number;
+type HistoryCommit = {
   /**
    * Why the commit is mechanical (see `MechanicalKind`), or undefined for a
    * real change. A mechanical commit adds no revisions, churn, or coupling.
@@ -45,6 +35,8 @@ export type History = {
   readonly paths: ReadonlyArray<string>;
   /** Per commit that touched the universe. */
   readonly commits: ReadonlyArray<HistoryCommit>;
+  /** The real changes among them: what coupling, cohesion, and interface churn count. */
+  readonly changes: ReadonlyArray<LogicalChange>;
   /** Only files with at least one revision; mechanical commits give none. */
   readonly files: ReadonlyMap<string, FileHistory>;
   /** How many of `commits` are mechanical, per kind. */
@@ -90,11 +82,13 @@ const buildHistory = (
   kinds: ReadonlyMap<string, MechanicalKind>,
 ): History => {
   const commits: Array<HistoryCommit> = [];
+  const changes: Array<LogicalChange> = [];
   const fileHistories = new Map<number, FileHistory>();
   for (const entry of entries) {
     const mechanical = kinds.get(entry.signals.sha);
-    commits.push({ files: entry.files, size: entry.size, mechanical });
+    commits.push({ mechanical });
     if (mechanical === undefined) {
+      changes.push({ files: entry.files, size: entry.size });
       addActivity(fileHistories, entry);
     }
   }
@@ -105,7 +99,13 @@ const buildHistory = (
       files.set(path, fileHistory);
     }
   }
-  return { paths, commits, files, mechanical: countKinds(kinds.values()) };
+  return {
+    paths,
+    commits,
+    changes,
+    files,
+    mechanical: countKinds(kinds.values()),
+  };
 };
 
 const indexPaths = (options: HistoryOptions) => {

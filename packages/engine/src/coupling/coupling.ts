@@ -1,7 +1,7 @@
 // Owns change coupling: which pairs of files repeatedly change in the same commits.
 import { Order } from "effect";
 
-import type { HistoryCommit } from "../history/history.js";
+import type { LogicalChange } from "../changes/logical-change.js";
 import type { ModuleRef } from "../modules/detect.js";
 import type { FileKind } from "../report/contract-file.js";
 import { roundReported } from "../report/precision.js";
@@ -14,18 +14,14 @@ export const MIN_SHARED_COMMITS = 3;
 export const MIN_DEGREE = 0.3;
 
 /**
- * The commits that say something about coupling, modules, and interfaces:
- * the real changes (not `HistoryCommit.mechanical`) that touched at most
- * `MAX_COMMIT_FILES` universe files, counting files that are dead today (see
- * `HistoryCommit.size`).
+ * The changes that say something about coupling, modules, and interfaces:
+ * those that touched at most `MAX_COMMIT_FILES` universe files, counting files
+ * that are dead today (see `LogicalChange.size`).
  */
-export const countedCommits = (
-  commits: ReadonlyArray<HistoryCommit>,
-): ReadonlyArray<HistoryCommit> =>
-  commits.filter(
-    (commit) =>
-      commit.mechanical === undefined && commit.size <= MAX_COMMIT_FILES,
-  );
+export const countedChanges = (
+  changes: ReadonlyArray<LogicalChange>,
+): ReadonlyArray<LogicalChange> =>
+  changes.filter((change) => change.size <= MAX_COMMIT_FILES);
 
 const kindOf = (path: string, contracts: ReadonlySet<string>): FileKind =>
   contracts.has(path) ? "contract" : "code";
@@ -67,11 +63,11 @@ const countPairs = (commit: Uint32Array, shared: SharedCommits): void => {
 
 /** Counts the commits each pair of file ids shares. Ids within one commit are distinct. */
 const countSharedCommits = (
-  commits: ReadonlyArray<HistoryCommit>,
+  changes: ReadonlyArray<LogicalChange>,
 ): SharedCommits => {
   const shared: SharedCommits = new Map();
-  for (const commit of commits) {
-    countPairs(commit.files, shared);
+  for (const change of changes) {
+    countPairs(change.files, shared);
   }
   return shared;
 };
@@ -107,8 +103,8 @@ export type Couplings = {
 };
 
 /**
- * Finds the coupled pairs among `commits`, each listing the distinct ids of
- * the files one commit touched; an id is an index into `paths`. `revisions` counts every
+ * Finds the coupled pairs among `changes`, each listing the distinct ids of
+ * the files one change touched; an id is an index into `paths`. `revisions` counts every
  * commit per path, including the ones ignored here for being too large.
  *
  * Every coupling comes back with `imports: null`; the import graph fills it in.
@@ -121,13 +117,13 @@ export type Couplings = {
  * contract files, which `kinds` tells apart from code.
  */
 export const findCouplings = (
-  commits: ReadonlyArray<HistoryCommit>,
+  changes: ReadonlyArray<LogicalChange>,
   paths: ReadonlyArray<string>,
   revisions: ReadonlyMap<string, number>,
   places: Places,
 ): Couplings => {
   const { modules, contracts } = places;
-  const counted = countedCommits(commits);
+  const counted = countedChanges(changes);
   const revisionsById = paths.map((path) => revisions.get(path) ?? 0);
   const couplings: Array<Coupling> = [];
   const shared = countSharedCommits(counted);

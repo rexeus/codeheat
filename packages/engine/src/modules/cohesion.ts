@@ -3,7 +3,7 @@
 // module records, adding the interface churn measured next to it.
 import { Order } from "effect";
 
-import { countedCommits } from "../coupling/coupling.js";
+import { countedChanges } from "../coupling/coupling.js";
 import type { History } from "../history/history.js";
 import type { Module } from "../report/module.js";
 import { roundReported } from "../report/precision.js";
@@ -80,7 +80,7 @@ const tallyFiles = (
   return tallies;
 };
 
-/** Credits one commit, given the distinct modules it touched, to each of them. */
+/** Credits one change, given the distinct modules it touched, to each of them. */
 const countCommit = (
   touched: ReadonlySet<string>,
   tallies: ReadonlyMap<string, Tally>,
@@ -136,7 +136,7 @@ const toModule = (
 };
 
 /**
- * Measures every module over the counted commits (see `countedCommits`) of
+ * Measures every module over the counted commits (see `countedChanges`) of
  * `history`; `homes` maps every code file to its module and every contract
  * file to the module it lives in (a contract counts as a touch of its
  * module, never for its size), and
@@ -148,7 +148,7 @@ const toModule = (
  * ranked when it has at least `minModuleCommits` commits and is not test-only.
  */
 export const measureModules = (
-  { commits, paths }: Pick<History, "commits" | "paths">,
+  { changes, paths }: Pick<History, "changes" | "paths">,
   { modules: refs, contracts: contractRefs }: ModuleHomes,
   minModuleCommits: number,
   interfaces: ReadonlyMap<string, InterfaceChurn>,
@@ -157,9 +157,9 @@ export const measureModules = (
   const moduleOfId = paths.map(
     (path) => (refs.get(path) ?? contractRefs.get(path))?.path ?? ".",
   );
-  for (const commit of countedCommits(commits)) {
+  for (const change of countedChanges(changes)) {
     countCommit(
-      new Set(Array.from(commit.files, (id) => moduleOfId[id] ?? ".")),
+      new Set(Array.from(change.files, (id) => moduleOfId[id] ?? ".")),
       tallies,
     );
   }

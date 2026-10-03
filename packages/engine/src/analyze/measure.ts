@@ -63,7 +63,7 @@ export const coupleHistory = (
   { modules, contracts }: Pick<Universe, "modules" | "contracts">,
 ): Couplings =>
   findCouplings(
-    history.commits,
+    history.changes,
     history.paths,
     new Map(
       [...history.files].map(([file, activity]) => [file, activity.revisions]),
