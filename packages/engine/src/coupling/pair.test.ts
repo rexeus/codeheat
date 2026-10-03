@@ -42,6 +42,20 @@ describe("isTestPair", () => {
   });
 });
 
+describe("isTestPair below fixture and support directories", () => {
+  it.each([
+    ["src/testing/a.ts", "src/testing/a.test.ts"],
+    ["src/fixtures/a.ts", "src/fixtures/a.test.ts"],
+    ["src/__mocks__/a.ts", "src/__mocks__/a_spec.ts"],
+  ])("pairs %s with its test %s beside it", (source, test) => {
+    expect(isTestPair(source, test)).toBe(true);
+  });
+
+  it("never mirrors a test below a fixtures directory to a source", () => {
+    expect(isTestPair("src/a.ts", "test/fixtures/a.test.ts")).toBe(false);
+  });
+});
+
 describe("isTestPair for a mirrored test directory", () => {
   it.each([
     ["src/a/b.ts", "test/a/b.test.ts"],
