@@ -227,8 +227,7 @@ layer(NodeServices.layer)("analyze history", (it) => {
 
       assert.deepStrictEqual(
         report.files.map(({ path, revisions }) => [path, revisions]),
-        // creation and the edit; the move adds none
-        [["new.ts", 2]],
+        [["new.ts", 3]],
       );
     }),
   );
@@ -251,7 +250,6 @@ layer(NodeServices.layer)("analyze window", (it) => {
           since: "2026-03-01T12:00:00.000Z",
           until: "2026-06-01T12:00:00.000Z",
           commits: 1,
-          realCommits: 1,
           couplingCommits: 1,
         });
         assert.strictEqual(report.generatedAt, "2026-06-01T12:00:00.000Z");
@@ -308,9 +306,9 @@ layer(NodeServices.layer)("analyze scope and history", (it) => {
       const scoped = yield* analyze(analyzeOptionsFor(repo, { scope: "pkg" }));
       const whole = yield* analyze(analyzeOptionsFor(repo));
 
-      // creation, edit, and edit after the move; the move changes no content
-      assert.strictEqual(scoped.files[0]?.revisions, 3);
-      assert.strictEqual(whole.files[0]?.revisions, 3);
+      // creation, edit, move, and edit after the move
+      assert.strictEqual(scoped.files[0]?.revisions, 4);
+      assert.strictEqual(whole.files[0]?.revisions, 4);
     }),
   );
 

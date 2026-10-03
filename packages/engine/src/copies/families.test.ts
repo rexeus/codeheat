@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 
 import type { History, HistoryCommit } from "../history/history.js";
-import { countKinds } from "../mechanical/kinds.js";
 import { familiesOf } from "./families.js";
 
 const PATHS = ["a.ts", "b.ts", "c.ts", "d.ts", "e.ts", "f.ts"];
@@ -16,7 +15,6 @@ const historyOf = (...commits: ReadonlyArray<HistoryCommit>): History => ({
   paths: PATHS,
   files: new Map(),
   commits,
-  mechanical: countKinds([]),
 });
 
 /** The similarity of every pair named as `"a.ts b.ts"`, in either order; 0 for any other. */

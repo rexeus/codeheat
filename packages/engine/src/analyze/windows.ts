@@ -3,13 +3,8 @@ import { Effect } from "effect";
 
 import type { GitError } from "../git/git-errors.js";
 import type { Git } from "../git/git.js";
-import {
-  readHistory,
-  readHistoryHalves,
-  realCommitCount,
-} from "../history/history.js";
+import { readHistory, readHistoryHalves } from "../history/history.js";
 import type { History, HistoryOptions } from "../history/history.js";
-import { countKinds } from "../mechanical/kinds.js";
 import type { Report } from "../report/report.js";
 import {
   resolveComparisonRanges,
@@ -37,7 +32,6 @@ const NO_HISTORY: History = {
   paths: [],
   commits: [],
   files: new Map(),
-  mechanical: countKinds([]),
 };
 
 /** Resolves `compare` to two adjacent windows; without it, `since` to one. */
@@ -92,7 +86,6 @@ export const comparisonOf = (
         previousSince: previous.since,
         previousUntil: previous.until,
         previousCommits: histories.previous.commits.length,
-        previousRealCommits: realCommitCount(histories.previous),
         previousTruncated:
           oldestCommit !== null &&
           Date.parse(previous.since) < oldestCommit * 1000,

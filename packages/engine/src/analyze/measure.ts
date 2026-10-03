@@ -3,7 +3,6 @@
 import { measureContracts } from "../contracts/stats.js";
 import { findCouplings } from "../coupling/coupling.js";
 import type { Couplings } from "../coupling/coupling.js";
-import { realCommitCount } from "../history/history.js";
 import type { History } from "../history/history.js";
 import { withoutPaths } from "../history/without-paths.js";
 import { rankFiles } from "../hotspots/hotspots.js";
@@ -95,8 +94,6 @@ const measure = (
   );
   return {
     commits: history.commits.length,
-    realCommits: realCommitCount(history),
-    mechanicalCommits: history.mechanical,
     couplingCommits,
     thresholds,
     files: rankFiles(

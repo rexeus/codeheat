@@ -131,29 +131,6 @@ describe("findCouplings commit size", () => {
 
     expect(result).toMatchObject({ couplingCommits: 0, couplings: [] });
   });
-
-  it("gives mechanical commits no say in coupling, whatever their size", () => {
-    const mechanical = {
-      files: Uint32Array.of(0, 1),
-      size: 2,
-      mechanical: "whitespace" as const,
-    };
-    const real = { files: Uint32Array.of(0, 1), size: 2 };
-    const paths = ["a.ts", "b.ts"];
-
-    const result = findCouplingsByFileId(
-      [...repeat(3, mechanical), ...repeat(2, real)],
-      paths,
-      new Map([
-        ["a.ts", 2],
-        ["b.ts", 2],
-      ]),
-      { modules: new Map(), contracts: new Set() },
-    );
-
-    expect(result).toMatchObject({ couplingCommits: 2, couplings: [] });
-    expect(result.breadth.get("a.ts")).toBe(1);
-  });
 });
 
 describe("findCouplings pair facts", () => {

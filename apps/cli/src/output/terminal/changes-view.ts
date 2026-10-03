@@ -125,17 +125,13 @@ const moduleLines = (report: Report, style: Style) => {
 const TRUNCATED_NOTE =
   "Note: the previous window reaches back past the oldest commit of this repository (or of its shallow clone), so it covers less history than the latest one.";
 
-/** What a window without real changes holds: nothing, or only mechanical commits. */
-const emptyWindow = (commits: number): string =>
-  commits === 0 ? "has no commits" : "has only mechanical commits";
-
-/** Why there is nothing to compare, or `undefined` when both windows have real changes. */
+/** Why there is nothing to compare, or `undefined` when both windows have commits. */
 const noDataReason = ({ comparison, window }: Report): string | undefined => {
-  if (comparison?.previousRealCommits === 0) {
-    return `No comparison data: the previous window ${emptyWindow(comparison.previousCommits)}.`;
+  if (comparison?.previousCommits === 0) {
+    return "No comparison data: the previous window has no commits.";
   }
-  return window.realCommits === 0
-    ? `No comparison data: the latest window ${emptyWindow(window.commits)}.`
+  return window.commits === 0
+    ? "No comparison data: the latest window has no commits."
     : undefined;
 };
 
