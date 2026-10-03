@@ -73,6 +73,7 @@ layer(NodeServices.layer)("analyze contract files", (it) => {
             path: CONTRACT,
             module: "packages/a",
             revisions: 6,
+            changes: 6,
             linesAdded: 6,
             linesDeleted: 5,
           },
@@ -101,7 +102,7 @@ layer(NodeServices.layer)("analyze contract modules and reasons", (it) => {
         const code = report.files.find((file) => file.path === CODE);
         assert.isTrue(
           code?.reasons.includes(
-            `co-changes with the contract ${CONTRACT} in 100% of its commits`,
+            `co-changes with the contract ${CONTRACT} in 100% of its changes`,
           ),
         );
       }),

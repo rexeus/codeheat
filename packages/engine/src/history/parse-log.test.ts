@@ -20,6 +20,7 @@ describe("LogParser changes", () => {
         time: 200,
         moveOnly: false,
         reverts: undefined,
+        subject: "m",
         changes: [
           { path: "src/a.ts", added: 3, deleted: 1 },
           { path: "src/b.ts", added: 0, deleted: 5 },
@@ -30,6 +31,7 @@ describe("LogParser changes", () => {
         time: 100,
         moveOnly: false,
         reverts: undefined,
+        subject: "m",
         changes: [{ path: "README.md", added: 10, deleted: 0 }],
       },
     ]);
@@ -42,6 +44,7 @@ describe("LogParser changes", () => {
         time: 5,
         moveOnly: false,
         reverts: undefined,
+        subject: "m",
         changes: [{ path: "image.png", added: 0, deleted: 0 }],
       },
     ]);
@@ -57,6 +60,7 @@ describe("LogParser changes", () => {
         time: 7,
         moveOnly: false,
         reverts: undefined,
+        subject: "m",
         changes: [
           { path: "new.ts", renamedFrom: "old name.ts", added: 2, deleted: 1 },
           { path: "other.ts", added: 4, deleted: 0 },
@@ -78,6 +82,7 @@ describe("LogParser odd commits", () => {
         time: 1,
         moveOnly: false,
         reverts: undefined,
+        subject: "\u0001fake",
         changes: [{ path: "real.ts", added: 1, deleted: 0 }],
       },
     ]);
@@ -106,12 +111,20 @@ describe("LogParser odd commits", () => {
     const raw = "\u0001e\u00009\0m\0\u0001f\u00008\0m\0\n1\t1\tz.ts\0";
 
     expect(parse([raw])).toStrictEqual([
-      { sha: "e", time: 9, moveOnly: false, reverts: undefined, changes: [] },
+      {
+        sha: "e",
+        time: 9,
+        moveOnly: false,
+        reverts: undefined,
+        subject: "m",
+        changes: [],
+      },
       {
         sha: "f",
         time: 8,
         moveOnly: false,
         reverts: undefined,
+        subject: "m",
         changes: [{ path: "z.ts", added: 1, deleted: 1 }],
       },
     ]);
@@ -323,6 +336,16 @@ describe("LogParser mechanical shape", () => {
     expect(parse([raw]).map((commit) => commit.reverts)).toStrictEqual([
       sha,
       undefined,
+    ]);
+  });
+});
+
+describe("LogParser subject", () => {
+  it("takes the subject from the first line of the message", () => {
+    const raw = "\u0001a\u00001\0 fix: x (#12) \n\nbody (#9)\n\0\n1\t0\tz.ts\0";
+
+    expect(parse([raw]).map((commit) => commit.subject)).toStrictEqual([
+      "fix: x (#12)",
     ]);
   });
 });

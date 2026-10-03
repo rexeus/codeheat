@@ -46,6 +46,8 @@ export type Commit = {
   readonly moveOnly: boolean;
   /** The commit a `This reverts commit <sha>` line in the message names. */
   readonly reverts: string | undefined;
+  /** The first line of the message. */
+  readonly subject: string;
   readonly changes: ReadonlyArray<Change>;
 };
 
@@ -67,6 +69,7 @@ type OpenCommit = {
   sha: string;
   time: number;
   reverts: string | undefined;
+  subject: string;
   /** Raw entries seen, and how many of them changed no content. */
   entries: number;
   moves: number;
@@ -171,6 +174,7 @@ export class LogParser {
       sha,
       time: 0,
       reverts: undefined,
+      subject: "",
       entries: 0,
       moves: 0,
       changes: [],
@@ -191,6 +195,7 @@ export class LogParser {
   #readMessage(message: string): void {
     if (this.#open !== undefined) {
       this.#open.reverts = REVERTS_LINE.exec(message)?.[1];
+      this.#open.subject = (message.split("\n", 1)[0] ?? "").trim();
     }
     this.#phase = "entry";
   }

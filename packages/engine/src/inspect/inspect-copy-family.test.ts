@@ -10,6 +10,7 @@ const stats = (path: string, rank: number): FileStats => ({
   rank,
   score: 1 / rank,
   revisions: 5,
+  changes: 5,
   linesAdded: 0,
   linesDeleted: 0,
   breadth: 0,
@@ -46,6 +47,7 @@ const reportOf = (copyFamilies: Report["copyFamilies"]): Report => ({
     reverts: 0,
     duplicates: 0,
   },
+  logicalChanges: { by: "commit", count: 0, largest: 0 },
   comparison: null,
   thresholds: {
     maxCommitFiles: 50,

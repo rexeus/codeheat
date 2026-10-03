@@ -24,7 +24,7 @@ describe("copyLines", () => {
     expect(copyLines(sampleReport(), makeStyle(false))).toEqual([
       "copies  similar  shared  all  files",
       "     2      58%       6    6  packages/auth/src/index.ts, packages/billing/src/index.ts",
-      "shared: commits that touched two or more copies; all: commits that touched every copy",
+      "shared: changes that touched two or more copies; all: changes that touched every copy",
     ]);
   });
 
@@ -64,7 +64,7 @@ describe("copyLines", () => {
 
     expect(lines.slice(1)).toEqual([
       "     2      60%       5    5  src/a.ts, src/b.ts",
-      "shared: commits that touched two or more copies; all: commits that touched every copy",
+      "shared: changes that touched two or more copies; all: changes that touched every copy",
       "2 families of test code only left out; see copyFamilies in --json",
     ]);
   });
@@ -98,13 +98,13 @@ describe("copyFamilyLine", () => {
         }),
       ),
     ).toEqual([
-      "changes with its 2 copies: a.ts, c.ts (6 commits touched at least two of the 3 files, 4 touched all of them)",
+      "changes with its 2 copies: a.ts, c.ts (6 changes touched at least two of the 3 files, 4 touched all of them)",
     ]);
   });
 
   it("says one copy for a family of two", () => {
     expect(copyFamilyLine("a.ts", family())).toEqual([
-      "changes with its 1 copy: b.ts (5 commits touched both)",
+      "changes with its 1 copy: b.ts (5 changes touched both)",
     ]);
   });
 

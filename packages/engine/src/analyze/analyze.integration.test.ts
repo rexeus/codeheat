@@ -174,7 +174,7 @@ layer(NodeServices.layer)("analyze coupling", (it) => {
         assert.strictEqual(report.totals.couplings, 1);
         assert.deepStrictEqual(
           report.files[0]?.reasons.at(-1),
-          "co-changes with b.ts in 75% of its commits",
+          "co-changes with b.ts in 75% of its changes",
         );
       }),
   );

@@ -85,7 +85,7 @@ const moduleLine = (module: Module | undefined): ReadonlyArray<string> => {
   }
   const name = `module ${escapeForTerminal(module.path)}`;
   if (module.cohesion === null) {
-    return [`${name}: no counted commits`, ...depthLine(module)];
+    return [`${name}: no counted changes`, ...depthLine(module)];
   }
   const [partner] = module.partners;
   const partnerNote =
@@ -93,7 +93,7 @@ const moduleLine = (module: Module | undefined): ReadonlyArray<string> => {
       ? ""
       : `, most often with ${partnerName(partner)} (${partner.sharedCommits})`;
   return [
-    `${name}: ${percent(module.cohesion)} of ${module.commits} commits stay inside${partnerNote}`,
+    `${name}: ${percent(module.cohesion)} of ${module.commits} changes stay inside${partnerNote}`,
     ...depthLine(module),
   ];
 };

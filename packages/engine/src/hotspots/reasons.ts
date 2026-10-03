@@ -4,7 +4,7 @@ import { isTestPath } from "../modules/test-path.js";
 
 /** Fewest distinct co-changed files that make a file a hub. */
 export const HUB_MIN_BREADTH = 10;
-/** Fewest revisions a file needs to be a hub candidate, so one big commit cannot make a hub. */
+/** Fewest logical changes a file needs to be a hub candidate, so one big change cannot make a hub. */
 export const HUB_MIN_REVISIONS = 5;
 /** Share of the hub candidates, widest first, that may be hubs; ties at the cut-off are included. */
 export const HUB_TOP_SHARE = 0.05;
@@ -13,8 +13,8 @@ export const HUB_TOP_SHARE = 0.05;
 export const MIN_HIDDEN_PROBABILITY = 0.5;
 
 /** Only frequently changed files that are not test code (`isTestPath`) can be hubs and are ranked by breadth. */
-export const isHubCandidate = (path: string, revisions: number): boolean =>
-  revisions >= HUB_MIN_REVISIONS && !isTestPath(path);
+export const isHubCandidate = (path: string, changes: number): boolean =>
+  changes >= HUB_MIN_REVISIONS && !isTestPath(path);
 
 export type ReasonFacts = {
   readonly revisions: number;
@@ -68,8 +68,8 @@ const describePartner = (
       : strongest.path;
   return [
     isHidden
-      ? `changes with ${partner} in ${percent}% of its commits without an import between them`
-      : `co-changes with ${partner} in ${percent}% of its commits`,
+      ? `changes with ${partner} in ${percent}% of its changes without an import between them`
+      : `co-changes with ${partner} in ${percent}% of its changes`,
   ];
 };
 

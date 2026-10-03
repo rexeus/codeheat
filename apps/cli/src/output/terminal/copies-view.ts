@@ -49,13 +49,13 @@ const familyRows = (
     style,
   ),
   style.dim(
-    "shared: commits that touched two or more copies; all: commits that touched every copy",
+    "shared: changes that touched two or more copies; all: changes that touched every copy",
   ),
 ];
 
 /**
  * The lines of the "Copies" section: a table of the five families with
- * production code that had the most commits touching every copy, with a note
+ * production code that had the most changes touching every copy, with a note
  * on what its counts mean, and a note counting the families of test code only,
  * which the table leaves out (they stay in `--json`). None when the report has
  * no family.
@@ -94,8 +94,8 @@ export const copyFamilyLine = (
   const count = copies.length === 1 ? "1 copy" : `${copies.length} copies`;
   const touched =
     family.files.length === 2
-      ? `${family.sharedChanges} commits touched both`
-      : `${family.sharedChanges} commits touched at least two of the ${family.files.length} files, ${family.changesToAll} touched all of them`;
+      ? `${family.sharedChanges} changes touched both`
+      : `${family.sharedChanges} changes touched at least two of the ${family.files.length} files, ${family.changesToAll} touched all of them`;
   return [
     `changes with its ${count}: ${copies.map((file) => escapeForTerminal(file)).join(", ")} (${touched})`,
   ];

@@ -65,11 +65,11 @@ const couplingLines = (
   contracts: Report["contracts"],
   style: Style,
 ): ReadonlyArray<string> => {
-  const revisions = new Map(
-    [...files, ...contracts].map((file) => [file.path, file.revisions]),
+  const changes = new Map(
+    [...files, ...contracts].map((file) => [file.path, file.changes]),
   );
   const coChange = (coupling: Coupling, from: string): string => {
-    const total = revisions.get(from);
+    const total = changes.get(from);
     if (total === undefined) {
       throw new Error(
         `Coupled file ${escapeForTerminal(from)} is missing from the report's files and contracts; render an untruncated report.`,
@@ -112,7 +112,7 @@ const moduleLines = (
   renderTable(
     [
       { header: "cohesion", align: "right" },
-      { header: "commits", align: "right" },
+      { header: "changes", align: "right" },
       { header: "module", align: "left" },
       { header: "changes most with", align: "left" },
     ],
@@ -157,7 +157,7 @@ const leakageLines = (
   renderTable(
     [
       { header: "leakage", align: "right" },
-      { header: "commits", align: "right" },
+      { header: "changes", align: "right" },
       { header: "module", align: "left" },
       { header: "entry points", align: "left" },
     ],
@@ -180,8 +180,8 @@ const leakyModules = (report: Report): ReadonlyArray<Module> =>
  * Renders the terminal view of an `analyze` report: the ten hottest files,
  * the five strongest couplings that are neither test pairs nor pairs of two
  * contract files, each with the co-change probability in both directions
- * (`shared / revisions(side)`) and a contract file marked `(contract)`, the
- * five copy families with production code and the most commits touching every
+ * (`shared / changes(side)`) and a contract file marked `(contract)`, the
+ * five copy families with production code and the most changes touching every
  * copy (the section is left out when there is none), the five least cohesive
  * modules, the first five modules with a leaky interface,
  * the five shallowest ranked modules (fewest implementation lines per exported
@@ -230,7 +230,7 @@ export const renderAnalysis = (report: Report, style: Style): string => {
     ...(modules.length > 0
       ? moduleLines(modules, style)
       : [
-          `No module has ${report.thresholds.minModuleCommits} or more counted commits.`,
+          `No module has ${report.thresholds.minModuleCommits} or more counted changes.`,
         ]),
     "",
     style.bold("Leaky interfaces"),

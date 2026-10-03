@@ -21,6 +21,7 @@ export const measureContracts = (
         path,
         module,
         revisions: activity?.revisions ?? 0,
+        changes: activity?.changes ?? 0,
         linesAdded: activity?.linesAdded ?? 0,
         linesDeleted: activity?.linesDeleted ?? 0,
       };

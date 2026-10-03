@@ -10,6 +10,7 @@ export const fileStats = (
   rank: 1,
   score: 0.5,
   revisions: 10,
+  changes: 10,
   linesAdded: 100,
   linesDeleted: 20,
   breadth: 3,
@@ -86,6 +87,7 @@ export const reportOf = (
     reverts: 0,
     duplicates: 0,
   },
+  logicalChanges: { by: "commit", count: 0, largest: 0 },
   comparison,
   thresholds: {
     maxCommitFiles: 50,

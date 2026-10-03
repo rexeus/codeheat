@@ -1,7 +1,7 @@
 // Owns grouping similar, coupled files into families and counting how often each family changed together.
 import { Order } from "effect";
 
-import { countedCommits } from "../coupling/coupling.js";
+import { countedChanges } from "../coupling/coupling.js";
 import type { History } from "../history/history.js";
 import { isTestPath } from "../modules/test-path.js";
 import type { CopyFamily } from "../report/copy-family.js";
@@ -56,7 +56,7 @@ const similarityRange = (
   return { min: roundReported(min), max: roundReported(max) };
 };
 
-/** How many members of each family a commit touched, for the families it touched at all. */
+/** How many members of each family a change touched, for the families it touched at all. */
 const membersTouched = (
   files: Uint32Array,
   familyOfId: ReadonlyArray<number | undefined>,
@@ -71,7 +71,7 @@ const membersTouched = (
   return touched;
 };
 
-/** How many counted commits touched at least two members, and how many touched all of them, per family. */
+/** How many counted changes touched at least two members, and how many touched all of them, per family. */
 const countChanges = (
   families: ReadonlyArray<ReadonlyArray<string>>,
   history: History,
@@ -83,8 +83,8 @@ const countChanges = (
   );
   const familyOfId = history.paths.map((path) => familyOfPath.get(path));
   const counts = families.map(() => ({ shared: 0, all: 0 }));
-  for (const commit of countedCommits(history.commits)) {
-    for (const [family, touched] of membersTouched(commit.files, familyOfId)) {
+  for (const change of countedChanges(history.changes)) {
+    for (const [family, touched] of membersTouched(change.files, familyOfId)) {
       const count = counts[family];
       if (count !== undefined && touched >= 2) {
         count.shared += 1;
@@ -109,7 +109,7 @@ const byImportance = (a: CopyFamily, b: CopyFamily): number =>
  * and path. A family's `similarity` range covers all
  * pairs of its members, so its minimum can lie below the threshold that
  * linked them (A is like B, B like C, A not like C). `history` is the window
- * whose counted commits (see `countedCommits`) tell how often the members
+ * whose counted changes (see `countedChanges`) tell how often the members
  * changed together. A family is `testOnly` when every member is test code (see
  * `isTestPath`, which a contract file never is).
  */

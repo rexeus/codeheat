@@ -56,6 +56,8 @@ export type Touch = {
   readonly lines: ReadonlyMap<number, Lines>;
   /** How many distinct universe files the commit changed, dead ones included. */
   readonly size: number;
+  /** The ids of the universe files among them that it changed only in an earlier life. */
+  readonly previousLives: Uint32Array;
   /** The changes at a universe path, dead files included, as the log shows them. */
   readonly analyzed: ReadonlyArray<Change>;
 };
@@ -167,5 +169,8 @@ export const touchUniverse = (
       lineage.deadNames.add(name);
     }
   }
-  return { lines, size: touched.size, analyzed };
+  const previousLives = Uint32Array.from(
+    [...touched].filter((id) => !lines.has(id)),
+  );
+  return { lines, size: touched.size, previousLives, analyzed };
 };

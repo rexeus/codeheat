@@ -1,21 +1,24 @@
 import { describe, expect, it } from "vitest";
 
-import type { History, HistoryCommit } from "../history/history.js";
+import type { LogicalChange } from "../changes/logical-change.js";
+import type { History } from "../history/history.js";
 import { countKinds } from "../mechanical/kinds.js";
 import { familiesOf } from "./families.js";
 
 const PATHS = ["a.ts", "b.ts", "c.ts", "d.ts", "e.ts", "f.ts"];
 
-/** A commit that touched the files with these ids; `size` defaults to how many they are. */
+/** A change that touched the files with these ids; `size` defaults to how many they are. */
 const commit = (
   ids: ReadonlyArray<number>,
   size = ids.length,
-): HistoryCommit => ({ files: Uint32Array.from(ids), size });
+): LogicalChange => ({ files: Uint32Array.from(ids), size });
 
-const historyOf = (...commits: ReadonlyArray<HistoryCommit>): History => ({
+const historyOf = (...changes: ReadonlyArray<LogicalChange>): History => ({
   paths: PATHS,
   files: new Map(),
-  commits,
+  commits: [],
+  changes,
+  logicalChanges: { by: "commit", count: changes.length, largest: 1 },
   mechanical: countKinds([]),
 });
 

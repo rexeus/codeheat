@@ -31,15 +31,17 @@ export const ContractFile = Schema.Struct({
   module: Schema.String,
   /** Commits of the window that touched the file, large ones included. */
   revisions: Count,
+  /** Logical changes of the window that touched the file, large ones included (see `FileStats.changes`). */
+  changes: Count,
   linesAdded: Count,
   linesDeleted: Count,
 });
 export type ContractFile = typeof ContractFile.Type;
 
-/** A contract file that changes in so many commits that it says nothing about any one of them. */
+/** A contract file that is part of so many changes that it says nothing about any one of them. */
 export const UbiquitousFile = Schema.Struct({
   path: Schema.String,
-  /** Counted commits of the window that touched it (at most `Thresholds.maxCommitFiles` files each). */
+  /** Counted changes of the window that touched it (at most `Thresholds.maxCommitFiles` files each). */
   commits: Count,
   /** `commits / window.couplingCommits`, rounded to 4 decimals. */
   share: UnitInterval,

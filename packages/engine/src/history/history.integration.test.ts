@@ -26,9 +26,9 @@ const history = (
     ...options,
   }).pipe(Effect.provide(Git.layer(repo.directory)));
 
-/** Each commit's touched paths, sorted. */
-const pathsOfCommits = (result: History): Array<Array<string>> =>
-  result.commits.map(({ files }) =>
+/** Each real change's touched paths, sorted. */
+const pathsOfChanges = (result: History): Array<Array<string>> =>
+  result.changes.map(({ files }) =>
     Array.from(files, (id) => result.paths[id] ?? "").toSorted(),
   );
 
@@ -67,18 +67,20 @@ layer(NodeServices.layer)("readHistory", (it) => {
         // creation and three edits; the two renames keep every byte and add none
         assert.deepStrictEqual(result.files.get("c.ts"), {
           revisions: 4,
+          changes: 4,
           linesAdded: 13,
           linesDeleted: 0,
         });
         assert.deepStrictEqual(result.files.get("other.ts"), {
           revisions: 1,
+          changes: 1,
           linesAdded: 1,
           linesDeleted: 0,
         });
       }),
   );
 
-  it.effect("lists the universe paths of each commit, newest first", () =>
+  it.effect("lists the universe paths of each real change, newest first", () =>
     Effect.gen(function* () {
       const repo = yield* makeTempRepository;
       yield* commitRenamedTwice(repo);
@@ -87,9 +89,8 @@ layer(NodeServices.layer)("readHistory", (it) => {
         universe: new Set(["c.ts", "other.ts"]),
       });
 
-      assert.deepStrictEqual(pathsOfCommits(result), [
-        ["c.ts"],
-        ["c.ts"],
+      // the two renames are mechanical and no change
+      assert.deepStrictEqual(pathsOfChanges(result), [
         ["c.ts"],
         ["c.ts"],
         ["c.ts"],
@@ -118,10 +119,11 @@ layer(NodeServices.layer)("readHistory lives of a path", (it) => {
 
         assert.deepStrictEqual(result.files.get("a.ts"), {
           revisions: 2,
+          changes: 2,
           linesAdded: 2,
           linesDeleted: 0,
         });
-        assert.deepStrictEqual(pathsOfCommits(result), [
+        assert.deepStrictEqual(pathsOfChanges(result), [
           ["a.ts"],
           ["a.ts"],
           [],
@@ -142,6 +144,7 @@ layer(NodeServices.layer)("readHistory lives of a path", (it) => {
 
       assert.deepStrictEqual(result.files.get("a.ts"), {
         revisions: 2,
+        changes: 2,
         linesAdded: 11,
         linesDeleted: 10,
       });
@@ -167,6 +170,7 @@ layer(NodeServices.layer)("readHistory lives of a path and renames", (it) => {
         // b.ts's creation; its move onto a.ts adds none
         assert.deepStrictEqual(result.files.get("a.ts"), {
           revisions: 1,
+          changes: 1,
           linesAdded: 10,
           linesDeleted: 0,
         });
@@ -190,6 +194,7 @@ layer(NodeServices.layer)("readHistory lives of a path and renames", (it) => {
         // b.ts's creation, not its rename; the dead a.ts is a different file
         assert.deepStrictEqual(result.files.get("a.ts"), {
           revisions: 1,
+          changes: 1,
           linesAdded: 10,
           linesDeleted: 0,
         });
@@ -216,6 +221,7 @@ layer(NodeServices.layer)(
 
           assert.deepStrictEqual(result.files.get("p.ts"), {
             revisions: 1,
+            changes: 1,
             linesAdded: 1,
             linesDeleted: 0,
           });
@@ -238,6 +244,7 @@ layer(NodeServices.layer)(
 
           assert.deepStrictEqual(result.files.get("r.ts"), {
             revisions: 1,
+            changes: 1,
             linesAdded: 10,
             linesDeleted: 0,
           });
@@ -255,7 +262,7 @@ layer(NodeServices.layer)("readHistory universe and window", (it) => {
       const result = yield* history(repo, { universe: new Set(["other.ts"]) });
 
       assert.deepStrictEqual([...result.files.keys()], ["other.ts"]);
-      assert.deepStrictEqual(pathsOfCommits(result), [["other.ts"]]);
+      assert.deepStrictEqual(pathsOfChanges(result), [["other.ts"]]);
     }),
   );
 
@@ -310,6 +317,7 @@ layer(NodeServices.layer)("readHistory content", (it) => {
 
       assert.deepStrictEqual(result.files.get("blob.ts"), {
         revisions: 1,
+        changes: 1,
         linesAdded: 0,
         linesDeleted: 0,
       });
@@ -339,21 +347,19 @@ layer(NodeServices.layer)("readHistoryHalves", (it) => {
         // recent: the edit and the last edit; earlier: creation and edit; the renames add none
         assert.deepStrictEqual(recent.files.get("c.ts"), {
           revisions: 2,
+          changes: 2,
           linesAdded: 2,
           linesDeleted: 0,
         });
         assert.deepStrictEqual(earlier.files.get("c.ts"), {
           revisions: 2,
+          changes: 2,
           linesAdded: 11,
           linesDeleted: 0,
         });
         assert.isFalse(recent.files.has("other.ts"));
         assert.strictEqual(earlier.files.get("other.ts")?.revisions, 1);
-        assert.deepStrictEqual(pathsOfCommits(recent), [
-          ["c.ts"],
-          ["c.ts"],
-          ["c.ts"],
-        ]);
+        assert.deepStrictEqual(pathsOfChanges(recent), [["c.ts"], ["c.ts"]]);
       }),
   );
 });

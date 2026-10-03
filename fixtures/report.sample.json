@@ -16,7 +16,7 @@
     "until": "2026-09-29T12:00:00.000Z",
     "commits": 212,
     "realCommits": 197,
-    "couplingCommits": 198
+    "couplingCommits": 178
   },
   "mechanicalCommits": {
     "ignored": 2,
@@ -24,6 +24,11 @@
     "whitespace": 3,
     "reverts": 4,
     "duplicates": 1
+  },
+  "logicalChanges": {
+    "by": "mixed",
+    "count": 181,
+    "largest": 6
   },
   "comparison": {
     "previousSince": "2024-09-29T12:00:00.000Z",
@@ -61,6 +66,7 @@
       "rank": 1,
       "score": 0.97,
       "revisions": 48,
+      "changes": 48,
       "linesAdded": 384,
       "linesDeleted": 672,
       "breadth": 14,
@@ -74,7 +80,7 @@
       "reasons": [
         "changed in 48 commits (#1 of 36)",
         "indentation complexity 1900 (#2 of 36)",
-        "co-changes with packages/billing/src/tax.ts in 50% of its commits",
+        "co-changes with packages/billing/src/tax.ts in 50% of its changes",
         "changes together with 14 different files"
       ],
       "trend": {
@@ -90,6 +96,7 @@
       "rank": 2,
       "score": 0.8013,
       "revisions": 31,
+      "changes": 31,
       "linesAdded": 217,
       "linesDeleted": 248,
       "breadth": 6,
@@ -103,7 +110,7 @@
       "reasons": [
         "changed in 31 commits (#3 of 36)",
         "indentation complexity 1100 (#4 of 36)",
-        "co-changes with packages/billing/src/invoice.ts in 77% of its commits"
+        "co-changes with packages/billing/src/invoice.ts in 77% of its changes"
       ],
       "trend": {
         "previousScore": 0.9213,
@@ -118,6 +125,7 @@
       "rank": 3,
       "score": 0.7811,
       "revisions": 36,
+      "changes": 36,
       "linesAdded": 324,
       "linesDeleted": 108,
       "breadth": 5,
@@ -145,6 +153,7 @@
       "rank": 4,
       "score": 0.7092,
       "revisions": 19,
+      "changes": 19,
       "linesAdded": 646,
       "linesDeleted": 95,
       "breadth": 5,
@@ -158,7 +167,7 @@
       "reasons": [
         "changed in 19 commits (#7 of 36)",
         "indentation complexity 1300 (#3 of 36)",
-        "changes with packages/billing/src/invoice.ts in 74% of its commits without an import between them"
+        "changes with packages/billing/src/invoice.ts in 74% of its changes without an import between them"
       ],
       "trend": {
         "previousScore": 0.9092,
@@ -173,6 +182,7 @@
       "rank": 5,
       "score": 0.7032,
       "revisions": 26,
+      "changes": 26,
       "linesAdded": 598,
       "linesDeleted": 104,
       "breadth": 5,
@@ -186,7 +196,7 @@
       "reasons": [
         "changed in 26 commits (#4 of 36)",
         "indentation complexity 640 (#7 of 36)",
-        "co-changes with packages/shared/src/config.ts in 35% of its commits"
+        "co-changes with packages/shared/src/config.ts in 35% of its changes"
       ],
       "trend": {
         "previousScore": 0.5632,
@@ -201,6 +211,7 @@
       "rank": 6,
       "score": 0.6946,
       "revisions": 22,
+      "changes": 22,
       "linesAdded": 396,
       "linesDeleted": 220,
       "breadth": 6,
@@ -214,7 +225,7 @@
       "reasons": [
         "changed in 22 commits (#5 of 36)",
         "indentation complexity 820 (#5 of 36)",
-        "co-changes with packages/web/src/hooks/use-session.ts in 41% of its commits"
+        "co-changes with packages/web/src/hooks/use-session.ts in 41% of its changes"
       ],
       "trend": {
         "previousScore": 0.6946,
@@ -229,6 +240,7 @@
       "rank": 7,
       "score": 0.6255,
       "revisions": 22,
+      "changes": 22,
       "linesAdded": 198,
       "linesDeleted": 330,
       "breadth": 5,
@@ -256,6 +268,7 @@
       "rank": 8,
       "score": 0.5445,
       "revisions": 17,
+      "changes": 17,
       "linesAdded": 527,
       "linesDeleted": 255,
       "breadth": 5,
@@ -269,7 +282,7 @@
       "reasons": [
         "changed in 17 commits (#8 of 36)",
         "indentation complexity 300 (#22 of 36)",
-        "co-changes with apps/cli/src/commands/analyze.ts in 53% of its commits"
+        "co-changes with apps/cli/src/commands/analyze.ts in 53% of its changes"
       ],
       "trend": {
         "previousScore": 0.3245,
@@ -284,6 +297,7 @@
       "rank": 9,
       "score": 0.5313,
       "revisions": 14,
+      "changes": 14,
       "linesAdded": 434,
       "linesDeleted": 210,
       "breadth": 5,
@@ -311,6 +325,7 @@
       "rank": 10,
       "score": 0.4303,
       "revisions": 12,
+      "changes": 12,
       "linesAdded": 324,
       "linesDeleted": 72,
       "breadth": 5,
@@ -324,7 +339,7 @@
       "reasons": [
         "changed in 12 commits (#10 of 36)",
         "indentation complexity 160 (#30 of 36)",
-        "co-changes with packages/auth/src/session.ts in 75% of its commits"
+        "co-changes with packages/auth/src/session.ts in 75% of its changes"
       ],
       "trend": {
         "previousScore": 0.4103,
@@ -339,6 +354,7 @@
       "rank": 11,
       "score": 0.4237,
       "revisions": 7,
+      "changes": 7,
       "linesAdded": 35,
       "linesDeleted": 35,
       "breadth": 2,
@@ -366,6 +382,7 @@
       "rank": 12,
       "score": 0.4163,
       "revisions": 9,
+      "changes": 9,
       "linesAdded": 63,
       "linesDeleted": 18,
       "breadth": 3,
@@ -393,6 +410,7 @@
       "rank": 13,
       "score": 0.4143,
       "revisions": 7,
+      "changes": 7,
       "linesAdded": 161,
       "linesDeleted": 35,
       "breadth": 2,
@@ -420,6 +438,7 @@
       "rank": 14,
       "score": 0.3996,
       "revisions": 6,
+      "changes": 6,
       "linesAdded": 162,
       "linesDeleted": 54,
       "breadth": 2,
@@ -447,6 +466,7 @@
       "rank": 15,
       "score": 0.3777,
       "revisions": 6,
+      "changes": 6,
       "linesAdded": 150,
       "linesDeleted": 30,
       "breadth": 2,
@@ -474,6 +494,7 @@
       "rank": 16,
       "score": 0.3671,
       "revisions": 5,
+      "changes": 5,
       "linesAdded": 155,
       "linesDeleted": 25,
       "breadth": 1,
@@ -501,6 +522,7 @@
       "rank": 17,
       "score": 0.336,
       "revisions": 5,
+      "changes": 5,
       "linesAdded": 80,
       "linesDeleted": 75,
       "breadth": 1,
@@ -528,6 +550,7 @@
       "rank": 18,
       "score": 0.3304,
       "revisions": 4,
+      "changes": 4,
       "linesAdded": 32,
       "linesDeleted": 36,
       "breadth": 1,
@@ -555,6 +578,7 @@
       "rank": 19,
       "score": 0.3271,
       "revisions": 4,
+      "changes": 4,
       "linesAdded": 20,
       "linesDeleted": 60,
       "breadth": 1,
@@ -582,6 +606,7 @@
       "rank": 20,
       "score": 0.3248,
       "revisions": 6,
+      "changes": 6,
       "linesAdded": 144,
       "linesDeleted": 90,
       "breadth": 2,
@@ -609,6 +634,7 @@
       "rank": 21,
       "score": 0.2783,
       "revisions": 3,
+      "changes": 3,
       "linesAdded": 15,
       "linesDeleted": 45,
       "breadth": 1,
@@ -636,6 +662,7 @@
       "rank": 22,
       "score": 0.2701,
       "revisions": 6,
+      "changes": 6,
       "linesAdded": 60,
       "linesDeleted": 96,
       "breadth": 2,
@@ -663,6 +690,7 @@
       "rank": 23,
       "score": 0.2614,
       "revisions": 4,
+      "changes": 4,
       "linesAdded": 84,
       "linesDeleted": 48,
       "breadth": 1,
@@ -690,6 +718,7 @@
       "rank": 24,
       "score": 0.261,
       "revisions": 9,
+      "changes": 9,
       "linesAdded": 108,
       "linesDeleted": 45,
       "breadth": 4,
@@ -703,7 +732,7 @@
       "reasons": [
         "changed in 9 commits (#11 of 36)",
         "indentation complexity 30 (#35 of 36)",
-        "changes with packages/auth/src/index.ts in 67% of its commits without an import between them"
+        "changes with packages/auth/src/index.ts in 67% of its changes without an import between them"
       ],
       "trend": {
         "previousScore": 0.461,
@@ -718,6 +747,7 @@
       "rank": 25,
       "score": 0.253,
       "revisions": 3,
+      "changes": 3,
       "linesAdded": 33,
       "linesDeleted": 30,
       "breadth": 1,
@@ -745,6 +775,7 @@
       "rank": 26,
       "score": 0.2443,
       "revisions": 3,
+      "changes": 3,
       "linesAdded": 18,
       "linesDeleted": 39,
       "breadth": 1,
@@ -772,6 +803,7 @@
       "rank": 27,
       "score": 0.221,
       "revisions": 7,
+      "changes": 7,
       "linesAdded": 182,
       "linesDeleted": 84,
       "breadth": 3,
@@ -785,7 +817,7 @@
       "reasons": [
         "changed in 7 commits (#14 of 36)",
         "indentation complexity 24 (#36 of 36)",
-        "changes with packages/billing/src/index.ts in 86% of its commits without an import between them"
+        "changes with packages/billing/src/index.ts in 86% of its changes without an import between them"
       ],
       "trend": {
         "previousScore": 0.301,
@@ -800,6 +832,7 @@
       "rank": 28,
       "score": 0.2179,
       "revisions": 3,
+      "changes": 3,
       "linesAdded": 57,
       "linesDeleted": 6,
       "breadth": 1,
@@ -827,6 +860,7 @@
       "rank": 29,
       "score": 0.2177,
       "revisions": 2,
+      "changes": 2,
       "linesAdded": 16,
       "linesDeleted": 30,
       "breadth": 0,
@@ -854,6 +888,7 @@
       "rank": 30,
       "score": 0.2108,
       "revisions": 2,
+      "changes": 2,
       "linesAdded": 16,
       "linesDeleted": 24,
       "breadth": 0,
@@ -881,6 +916,7 @@
       "rank": 31,
       "score": 0.2093,
       "revisions": 2,
+      "changes": 2,
       "linesAdded": 62,
       "linesDeleted": 4,
       "breadth": 0,
@@ -908,6 +944,7 @@
       "rank": 32,
       "score": 0.1969,
       "revisions": 2,
+      "changes": 2,
       "linesAdded": 62,
       "linesDeleted": 28,
       "breadth": 0,
@@ -935,6 +972,7 @@
       "rank": 33,
       "score": 0.1257,
       "revisions": 1,
+      "changes": 1,
       "linesAdded": 34,
       "linesDeleted": 16,
       "breadth": 0,
@@ -962,6 +1000,7 @@
       "rank": 34,
       "score": 0,
       "revisions": 0,
+      "changes": 0,
       "linesAdded": 0,
       "linesDeleted": 0,
       "breadth": 0,
@@ -986,6 +1025,7 @@
       "rank": 35,
       "score": 0,
       "revisions": 0,
+      "changes": 0,
       "linesAdded": 0,
       "linesDeleted": 0,
       "breadth": 0,
@@ -1010,6 +1050,7 @@
       "rank": 36,
       "score": 0,
       "revisions": 0,
+      "changes": 0,
       "linesAdded": 0,
       "linesDeleted": 0,
       "breadth": 0,
@@ -1035,6 +1076,7 @@
       "path": "api/openapi.yaml",
       "module": ".",
       "revisions": 93,
+      "changes": 93,
       "linesAdded": 1204,
       "linesDeleted": 890
     },
@@ -1042,6 +1084,7 @@
       "path": "packages/billing/api/billing.tsp",
       "module": "packages/billing",
       "revisions": 28,
+      "changes": 28,
       "linesAdded": 410,
       "linesDeleted": 236
     }

@@ -40,7 +40,7 @@ export const partnerName = (partner: {
 
 /**
  * The contract files that were left out of coupling for changing in most
- * commits, with their share; no lines when there are none.
+ * changes, with their share; no lines when there are none.
  */
 export const ubiquitousLines = (report: Report): ReadonlyArray<string> => {
   const { ubiquitousFiles, thresholds } = report;
@@ -52,6 +52,6 @@ export const ubiquitousLines = (report: Report): ReadonlyArray<string> => {
     .map((file) => `${escapeForTerminal(file.path)} (${percent(file.share)})`);
   const hidden = ubiquitousFiles.length - shown.length;
   return [
-    `Left out for changing in over ${percent(thresholds.ubiquitousShare)} of commits: ${shown.join(", ")}${hidden > 0 ? ` +${hidden} more` : ""}`,
+    `Left out for changing in over ${percent(thresholds.ubiquitousShare)} of changes: ${shown.join(", ")}${hidden > 0 ? ` +${hidden} more` : ""}`,
   ];
 };

@@ -10,6 +10,7 @@ const stats = (path: string, rank: number, revisions: number): FileStats => ({
   rank,
   score: 1 / rank,
   revisions,
+  changes: revisions,
   linesAdded: 0,
   linesDeleted: 0,
   breadth: 0,
@@ -97,6 +98,7 @@ const reportOf = (
     reverts: 0,
     duplicates: 0,
   },
+  logicalChanges: { by: "commit", count: 0, largest: 0 },
   comparison: null,
   thresholds: {
     maxCommitFiles: 50,
@@ -371,6 +373,7 @@ const withContracts = (paths: ReadonlyArray<string>): Report => ({
     path,
     module: ".",
     revisions: 3,
+    changes: 3,
     linesAdded: 1,
     linesDeleted: 0,
   })),

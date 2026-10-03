@@ -55,13 +55,13 @@ describe("renderAnalysis coupling table", () => {
       "   58%      22         2    79%    46%  -        packages/billing/api/billing.tsp (contract) <-> packages/billing/src/invoice.ts",
       "   53%       9         5    41%    75%  b→a      packages/auth/src/session.ts <-> packages/web/src/hooks/use-session.ts",
       "   42%       9         7    53%    35%  b→a      packages/shared/src/config.ts <-> apps/cli/src/commands/analyze.ts",
-      "Left out for changing in over 30% of commits: api/openapi.yaml (44%)",
+      "Left out for changing in over 30% of changes: api/openapi.yaml (44%)",
     ]);
   });
 
-  it("shows the co-change probability of each side from its own revisions", () => {
+  it("shows the co-change probability of each side from its own changes, not its commits", () => {
     const report = sampleReport();
-    const revisionsByPath = new Map([
+    const changesByPath = new Map([
       ["packages/billing/src/index.ts", 8],
       ["packages/auth/src/index.ts", 12],
     ]);
@@ -69,7 +69,9 @@ describe("renderAnalysis coupling table", () => {
       ...report,
       files: report.files.map((file) =>
         Object.assign({}, file, {
-          revisions: revisionsByPath.get(file.path) ?? file.revisions,
+          // more commits than changes: a pull request of several commits
+          revisions: 90,
+          changes: changesByPath.get(file.path) ?? file.changes,
         }),
       ),
     };
@@ -115,7 +117,7 @@ describe("renderAnalysis modules", () => {
     const modules = section(plainView(), "Least cohesive modules");
 
     expect(modules).toEqual([
-      "cohesion  commits  module            changes most with",
+      "cohesion  changes  module            changes most with",
       "     40%       30  packages/shared   apps/cli (11)",
       "     50%       26  apps/cli          packages/shared (11)",
       "     53%       58  packages/web      packages/billing (20)",
@@ -194,7 +196,7 @@ describe("renderAnalysis module ranking", () => {
 
     expect(
       section(plainView({ ...report, modules }), "Least cohesive"),
-    ).toEqual(["No module has 5 or more counted commits."]);
+    ).toEqual(["No module has 5 or more counted changes."]);
   });
 });
 
@@ -220,9 +222,9 @@ describe("renderAnalysis leaky interfaces", () => {
 
     const interfaces = section(plainView(report), "Leaky interfaces");
 
-    // the sample lists shared before billing; leakage 6 of 29 and 9 of 71 implementation commits
+    // the sample lists shared before billing; leakage 6 of 29 and 9 of 71 implementation changes
     expect(interfaces).toEqual([
-      "leakage  commits  module            entry points",
+      "leakage  changes  module            entry points",
       "    21%       29  packages/shared   packages/shared/src/index.ts",
       "    13%       71  packages/billing  packages/billing/src/index.ts",
     ]);
@@ -308,8 +310,15 @@ describe("renderAnalysis styling and safety", () => {
 });
 
 describe("renderAnalysis contract files", () => {
-  it("marks a contract file in the table and takes its revisions from the contracts", () => {
-    const couplings = section(plainView(), "Change coupling");
+  it("marks a contract file in the table and takes its changes from the contracts", () => {
+    const report = sampleReport();
+    const manyCommits = {
+      ...report,
+      contracts: report.contracts.map((contract) =>
+        Object.assign({}, contract, { revisions: 999 }),
+      ),
+    };
+    const couplings = section(plainView(manyCommits), "Change coupling");
 
     expect(couplings[3]).toBe(
       "   58%      22         2    79%    46%  -        packages/billing/api/billing.tsp (contract) <-> packages/billing/src/invoice.ts",

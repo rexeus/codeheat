@@ -13,7 +13,7 @@ import { Count, UnitInterval } from "./scalars.js";
 const Partner = Schema.Struct({
   path: Schema.String,
   sharedCommits: Count,
-  /** `sharedCommits / revisions(inspected file)`: how likely a change here also changes the partner; rounded to 4 decimals. */
+  /** `sharedCommits / changes(inspected file)` (see `FileStats.changes`): how likely a change here also changes the partner; rounded to 4 decimals. */
   probability: UnitInterval,
   /** What the partner is; a contract has no score and is listed in `Report.contracts`. */
   kind: FileKind,

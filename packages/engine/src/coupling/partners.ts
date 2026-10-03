@@ -39,18 +39,18 @@ const importsFrom = (path: string, coupling: Coupling): Partner["imports"] => {
 
 /**
  * The partners of `path` among its `couplings`, most likely to change along
- * with it first. `revisions` is the number of commits that touched `path`.
+ * with it first. `changes` is the number of logical changes that touched `path`.
  */
 export const partnersOf = (
   path: string,
-  revisions: number,
+  changes: number,
   couplings: ReadonlyArray<Coupling>,
 ): ReadonlyArray<Partner> =>
   couplings
     .map((coupling) => ({
       path: coupling.a === path ? coupling.b : coupling.a,
       sharedCommits: coupling.sharedCommits,
-      probability: roundReported(coupling.sharedCommits / revisions),
+      probability: roundReported(coupling.sharedCommits / changes),
       kind: coupling.a === path ? coupling.kinds.b : coupling.kinds.a,
       testPair: coupling.testPair,
       crossesModule: coupling.crossesModule,

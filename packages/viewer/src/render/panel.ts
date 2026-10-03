@@ -86,7 +86,7 @@ const partnerRow = (context: Context, partner: Partner): HTMLElement => {
     "span",
     "partner-meta",
     h("span", "degree", bar, formatPercent(partner.degree)),
-    h("span", "", `${formatCount(partner.sharedCommits)} shared commits`),
+    h("span", "", `${formatCount(partner.sharedCommits)} shared changes`),
     h("span", "", distanceLabel(partner.distance)),
   );
   if (partner.kind === "contract") {
@@ -123,7 +123,7 @@ const partnersSection = (
       ? h(
           "p",
           "hint",
-          `No file changes with this one in at least ${minSharedCommits} commits at a coupling of ${formatPercent(minDegree)} or more.`,
+          `No file changes with this one in at least ${minSharedCommits} changes at a coupling of ${formatPercent(minDegree)} or more.`,
         )
       : h(
           "ul",

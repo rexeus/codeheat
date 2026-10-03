@@ -22,7 +22,7 @@ describe("codeheat finds copy families", () => {
         "Copies (similar files that change in lockstep)",
         "copies  similar  shared  all  files",
         "     3      70%       4    4  lib/billing/handler.ts, src/orders/handler.ts, src/users/handler.ts",
-        "shared: commits that touched two or more copies; all: commits that touched every copy",
+        "shared: changes that touched two or more copies; all: changes that touched every copy",
       ]);
     }).pipe(Effect.scoped),
   );
@@ -37,7 +37,7 @@ describe("codeheat finds copy families", () => {
       });
 
       expect(result.stdout).toContain(
-        "changes with its 2 copies: lib/billing/handler.ts, src/users/handler.ts (4 commits touched at least two of the 3 files, 4 touched all of them)",
+        "changes with its 2 copies: lib/billing/handler.ts, src/users/handler.ts (4 changes touched at least two of the 3 files, 4 touched all of them)",
       );
     }).pipe(Effect.scoped),
   );

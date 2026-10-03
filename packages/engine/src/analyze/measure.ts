@@ -38,6 +38,7 @@ const measureFiles = (
       path,
       module: modules.get(path)?.path ?? ".",
       revisions: activity?.revisions ?? 0,
+      changes: activity?.changes ?? 0,
       linesAdded: activity?.linesAdded ?? 0,
       linesDeleted: activity?.linesDeleted ?? 0,
       breadth: breadth.get(path) ?? 0,
@@ -63,10 +64,10 @@ export const coupleHistory = (
   { modules, contracts }: Pick<Universe, "modules" | "contracts">,
 ): Couplings =>
   findCouplings(
-    history.commits,
+    history.changes,
     history.paths,
     new Map(
-      [...history.files].map(([file, activity]) => [file, activity.revisions]),
+      [...history.files].map(([file, activity]) => [file, activity.changes]),
     ),
     {
       modules: new Map([...modules, ...contracts]),
@@ -97,6 +98,7 @@ const measure = (
     commits: history.commits.length,
     realCommits: realCommitCount(history),
     mechanicalCommits: history.mechanical,
+    logicalChanges: history.logicalChanges,
     couplingCommits,
     thresholds,
     files: rankFiles(
