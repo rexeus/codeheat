@@ -28,7 +28,7 @@ const HIDDEN_BOOST = 1.5;
  * next to nothing in particular), and is no pair of two contract files (the
  * files of one API definition change together by design).
  */
-const isDistantCoupling = (coupling: Coupling): boolean =>
+export const isDistantCoupling = (coupling: Coupling): boolean =>
   !isTestPath(coupling.a) &&
   !isTestPath(coupling.b) &&
   !(coupling.kinds.a === "contract" && coupling.kinds.b === "contract") &&

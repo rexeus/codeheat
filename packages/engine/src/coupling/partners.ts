@@ -1,6 +1,7 @@
 // Owns the directional view of coupling: what tends to change along with one file.
 import { Order } from "effect";
 
+import { isDistantCoupling } from "../distant/distant-couplings.js";
 import type { InspectResult } from "../report/inspect-result.js";
 import { roundReported } from "../report/precision.js";
 import type { Coupling } from "../report/report.js";
@@ -54,6 +55,7 @@ export const partnersOf = (
       kind: coupling.a === path ? coupling.kinds.b : coupling.kinds.a,
       testPair: coupling.testPair,
       crossesModule: coupling.crossesModule,
+      distant: isDistantCoupling(coupling),
       imports: importsFrom(path, coupling),
     }))
     .toSorted(

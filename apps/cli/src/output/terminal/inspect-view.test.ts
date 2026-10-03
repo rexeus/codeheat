@@ -29,6 +29,7 @@ const entry: InspectResult["matches"][number] = {
       kind: "code" as const,
       testPair: true,
       crossesModule: false,
+      distant: false,
       imports: "both",
     },
     {
@@ -38,6 +39,7 @@ const entry: InspectResult["matches"][number] = {
       kind: "code" as const,
       testPair: false,
       crossesModule: false,
+      distant: false,
       imports: "file→partner",
     },
     {
@@ -47,6 +49,7 @@ const entry: InspectResult["matches"][number] = {
       kind: "code" as const,
       testPair: false,
       crossesModule: true,
+      distant: true,
       imports: "none",
     },
   ],
@@ -108,7 +111,7 @@ describe("renderInspect", () => {
         "co-change  shared  import   partner",
         "      65%      31  both     packages/billing/src/invoice.test.ts (test)",
         "      50%      24  imports  packages/billing/src/tax.ts",
-        "      25%      12  hidden   packages/web/src/checkout.ts (other module)",
+        "      25%      12  hidden   packages/web/src/checkout.ts (other module, distant)",
       ].join("\n"),
     );
   });
@@ -265,6 +268,7 @@ describe("renderInspect import relations", () => {
         kind: "code" as const,
         testPair: true,
         crossesModule: false,
+        distant: false,
         imports: "none" as const,
       },
     ];
@@ -294,6 +298,7 @@ describe("renderInspect contract partners", () => {
         kind: "contract" as const,
         testPair: false,
         crossesModule: true,
+        distant: false,
         imports: null,
       },
     ];

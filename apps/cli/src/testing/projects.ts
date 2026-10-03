@@ -73,6 +73,25 @@ export const makeDepthProject = Effect.map(makeGitRepository, (repo) => {
 });
 
 /**
+ * Three packages whose files change together in five commits and import
+ * nothing from each other: every pair of files is a hidden, distant coupling,
+ * and the packages form a clique.
+ */
+export const makeCliqueProject = Effect.map(makeGitRepository, (repo) => {
+  for (const day of [30, 20, 10, 5, 3]) {
+    repo.commit(day, {
+      "packages/a/package.json": '{ "name": "a" }\n',
+      "packages/a/src/a.ts": `export const a = ${day};\n`,
+      "packages/b/package.json": '{ "name": "b" }\n',
+      "packages/b/src/b.ts": `export const b = ${day};\n`,
+      "packages/c/package.json": '{ "name": "c" }\n',
+      "packages/c/src/c.ts": `export const c = ${day};\n`,
+    });
+  }
+  return repo;
+});
+
+/**
  * `a.ts` and its test change together most often, so they are the strongest
  * coupling; `b.ts` and `c.ts` change together just as often, as a weaker pair.
  */

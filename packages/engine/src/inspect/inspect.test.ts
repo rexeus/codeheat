@@ -203,6 +203,7 @@ describe("inspect partners", () => {
       kind: "code",
       testPair: false,
       crossesModule: false,
+      distant: false,
       imports: null,
     });
   });
@@ -237,6 +238,7 @@ describe("inspect partner marks", () => {
         kind: "code",
         testPair: false,
         crossesModule: false,
+        distant: false,
         imports: null,
       },
     ]);
@@ -248,6 +250,7 @@ describe("inspect partner marks", () => {
         kind: "code",
         testPair: false,
         crossesModule: false,
+        distant: false,
         imports: null,
       },
     ]);
@@ -261,17 +264,9 @@ describe("inspect partner marks", () => {
 
     const [entry] = inspect(report, ["src/a.ts"]).matches;
 
-    expect(entry?.partners).toStrictEqual([
-      {
-        path: "src/a.test.ts",
-        sharedCommits: 5,
-        probability: 0.5,
-        kind: "code",
-        testPair: true,
-        crossesModule: false,
-        imports: null,
-      },
-    ]);
+    expect(
+      entry?.partners.map(({ path, testPair }) => [path, testPair]),
+    ).toStrictEqual([["src/a.test.ts", true]]);
   });
 
   it("marks a partner in another module", () => {

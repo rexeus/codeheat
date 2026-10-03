@@ -12,10 +12,11 @@ import {
 } from "./contract-view.js";
 import { copyLines } from "./copies-view.js";
 import { shallowestLines } from "./depth-view.js";
+import { cliqueSection, distantSection } from "./distant-view.js";
 import { day, percent } from "./format.js";
+import { importsCell } from "./imports-cell.js";
 import type { Style } from "./style.js";
 import { plain, renderTable } from "./table.js";
-import type { Cell } from "./table.js";
 
 const TOP_HOTSPOTS = 10;
 const TOP_COUPLINGS = 5;
@@ -52,12 +53,6 @@ const hotspotLines = (
     ]),
     style,
   );
-
-/** Which of the two files imports the other; no import at all is hidden coupling, which stands out. */
-const importsCell = ({ imports }: Coupling, style: Style): Cell =>
-  imports === "none"
-    ? { text: "hidden", paint: style.bold }
-    : plain(imports ?? "-");
 
 const couplingLines = (
   couplings: ReadonlyArray<Coupling>,
@@ -178,6 +173,8 @@ const leakyModules = (report: Report): ReadonlyArray<Module> =>
 
 /**
  * Renders the terminal view of an `analyze` report: the ten hottest files,
+ * the five best ranked distant couplings and a line per clique of modules
+ * that change together (each section is left out when there is none),
  * the five strongest couplings that are neither test pairs nor pairs of two
  * contract files, each with the co-change probability in both directions
  * (`shared / changes(side)`) and a contract file marked `(contract)`, the
@@ -213,6 +210,8 @@ export const renderAnalysis = (report: Report, style: Style): string => {
     style.bold("Hotspots"),
     ...hotspots,
     "",
+    ...distantSection(report, style),
+    ...cliqueSection(report, style),
     style.bold("Change coupling (test pairs and contract pairs excluded)"),
     ...(couplings.length > 1
       ? couplings
