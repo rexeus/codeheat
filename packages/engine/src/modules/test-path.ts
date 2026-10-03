@@ -7,16 +7,28 @@ import {
 } from "../coupling/pair.js";
 import { isContractFile } from "../universe/contract-files.js";
 
+/** Directories of test support: utilities, helpers, mocks, and snapshots that exist for tests and pair with no source file. */
+const SUPPORT_DIRECTORIES: ReadonlySet<string> = new Set([
+  "testing",
+  "test-utils",
+  "test-helpers",
+  "__mocks__",
+  "mocks",
+  "__snapshots__",
+]);
+
 const TEST_DIRECTORY_NAMES = new Set([
   ...MIRRORED_TEST_DIRECTORIES,
   ...FIXTURE_DIRECTORIES,
+  ...SUPPORT_DIRECTORIES,
 ]);
 
 /**
  * Whether a repository-relative path is test code: its file name has a test
  * suffix (`isTestFile`) or one of its directories is named like a test
  * directory (`test`, `tests`, `__tests__`, `spec`, `specs`, `e2e`, `fixtures`,
- * `__fixtures__`). The file's own name is not a directory: `src/test` as a
+ * `__fixtures__`, or test support: `testing`, `test-utils`, `test-helpers`,
+ * `__mocks__`, `mocks`, `__snapshots__`). The file's own name is not a directory: `src/test` as a
  * file is no test.
  *
  * A contract file (`isContractFile`) is never test code: an interface

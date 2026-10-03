@@ -3,13 +3,20 @@
 // Additive fields keep schemaVersion 1; renaming or removing a field bumps it.
 import { Schema } from "effect";
 
+import { Clique } from "./clique.js";
 import { Comparison, FileTrend } from "./comparison.js";
 import { ContractFile, FileKind, UbiquitousFile } from "./contract-file.js";
 import { CopyFamily } from "./copy-family.js";
+import { DependencyDirection } from "./dependency-direction.js";
+import { DistantCoupling } from "./distant-coupling.js";
+import { ImportRelation } from "./import-relation.js";
 import { LogicalChanges } from "./logical-changes.js";
 import { MechanicalCommits } from "./mechanical-commits.js";
+import { ModuleCoupling } from "./module-coupling.js";
 import { Module } from "./module.js";
 import { Count, UnitInterval } from "./scalars.js";
+import { Thresholds } from "./thresholds.js";
+import { UnstableInterface } from "./unstable-interface.js";
 
 const Rank = Schema.Int.check(Schema.isGreaterThanOrEqualTo(1));
 
@@ -36,45 +43,6 @@ export const AnalysisWindow = Schema.Struct({
    * `Thresholds.maxCommitFiles`).
    */
   couplingCommits: Count,
-});
-
-/** The noise limits an analysis applied, reported so consumers see them. */
-const Thresholds = Schema.Struct({
-  maxCommitFiles: Count,
-  /** Fewest distinct co-changed files (`FileStats.breadth`) that make a file a hub. */
-  hubMinBreadth: Count,
-  /** Fewest logical changes (`FileStats.changes`) a file needs to be a hub candidate; test files are never candidates. */
-  hubMinRevisions: Count,
-  /** Share of the hub candidates that may be hubs: widest candidate files first, ties included. */
-  hubTopShare: UnitInterval,
-  /** Fewest shared changes (`Coupling.sharedCommits`) that make a coupling. */
-  minSharedCommits: Count,
-  minDegree: UnitInterval,
-  /**
-   * Fewest counted changes (`Module.commits`) a module needs to be ranked as (in)cohesive:
-   * `max(5, ceil(0.01 × window.couplingCommits))`, so the floor grows with the window.
-   */
-  minModuleCommits: Count,
-  /**
-   * Smallest `Partner.probability` at which a partner that no import links to
-   * the file (hidden coupling) gets a reason line.
-   */
-  minHiddenProbability: UnitInterval,
-  /** Smallest content similarity (`CopyFamily.similarity`) at which two coupled files belong to one copy family. */
-  minCopySimilarity: UnitInterval,
-  /** Smallest `Module.leakage` at which a module's entry points get a reason line. */
-  minLeakage: UnitInterval,
-  /** Fewest `Module.implementationCommits` a module needs before its entry points get that reason line. */
-  minImplementationCommits: Count,
-  /**
-   * A contract file that changed in more than this share of the counted
-   * changes is ubiquitous (see `Report.ubiquitousFiles`).
-   */
-  ubiquitousShare: UnitInterval,
-  /** Fewest counted changes a contract file needs to be ubiquitous. */
-  ubiquitousMinCommits: Count,
-  maxMeanLineLength: Count,
-  maxFileBytes: Count,
 });
 
 /** One universe file: its hotspot score, the metrics behind it, and why. */
@@ -111,7 +79,8 @@ export const FileStats = Schema.Struct({
    * The path is test code: its name has a test suffix (`.test`, `.spec`,
    * `_test`, `_spec`) or a directory above it is named like a test directory
    * (`test`, `tests`, `__tests__`, `spec`, `specs`, `e2e`, `fixtures`,
-   * `__fixtures__`). Tests are left out of the terminal's rankings of
+   * `__fixtures__`) or test support directory (`testing`, `test-utils`,
+   * `test-helpers`, `__mocks__`, `mocks`, `__snapshots__`). Tests are left out of the terminal's rankings of
    * warming files; apply the same rule to `trend`.
    */
   test: Schema.Boolean,
@@ -152,19 +121,8 @@ export const Coupling = Schema.Struct({
   kinds: Schema.Struct({ a: FileKind, b: FileKind }),
   /** The files belong to different modules. Neutral: an app legitimately changes with the library it uses. */
   crossesModule: Schema.Boolean,
-  /**
-   * Whether a static import links the files, directly or through the
-   * re-exports of the module it imports: `a→b` means `a` imports `b`. `none`
-   * is hidden coupling: the files change together without referring to each
-   * other, and every module they and their re-exporting barrels load is
-   * accounted for (a universe file, a Node built-in, a declared dependency, a
-   * workspace package, an asset). Null when the relation is unknown: a file
-   * is not TypeScript or JavaScript, does not parse, no parser was available,
-   * or an import could not be resolved (tsconfig path aliases, `#` subpath
-   * imports, undeclared packages, code outside the universe, modules loaded by
-   * an expression). Unknown is not `none`.
-   */
-  imports: Schema.NullOr(Schema.Literals(["a→b", "b→a", "both", "none"])),
+  /** Whether a static import links the files; `none` is hidden coupling, null is unknown (see `ImportRelation`). */
+  imports: ImportRelation,
 });
 export type Coupling = typeof Coupling.Type;
 
@@ -247,5 +205,44 @@ export const Report = Schema.Struct({
    * members first.
    */
   copyFamilies: Schema.Array(CopyFamily),
+  /**
+   * The coupled pairs that lie far apart in the design (see `DistantCoupling`),
+   * best first, at most 50. Ranked by `score`, so a hidden coupling between
+   * distant modules comes first.
+   */
+  distantCouplings: Schema.Array(DistantCoupling),
+  /**
+   * How often pairs of ranked modules changed in the same counted changes (see
+   * `ModuleCoupling`): the data of a module coupling matrix. The 200 pairs with
+   * the largest `share` first, then more shared changes, then path.
+   */
+  moduleCoupling: Schema.Array(ModuleCoupling),
+  /**
+   * Groups of modules that change together (see `Clique`), at most 50, the ones
+   * whose members changed together in the most changes first. A clique inside
+   * another is left out, and of two variants of one unit only the stronger is
+   * reported.
+   */
+  cliques: Schema.Array(Clique),
+  /**
+   * The search behind `cliques` hit a bound: more than 1000 maximal groups of
+   * modules (only the 1000 with the best evidenced weakest link are searched),
+   * or, in one group, more than 500 intersections or 1000 distinct parts that
+   * different changes touch. A clique may be missing. False otherwise.
+   */
+  cliquesPartial: Schema.Boolean,
+  /**
+   * Files that many others depend on and that change more often than those
+   * dependents, TypeScript and JavaScript only (see `UnstableInterface`); at
+   * most 50, the ones that changed together with the most dependents first.
+   */
+  unstableInterfaces: Schema.Array(UnstableInterface),
+  /**
+   * Import edges from a module that rarely changes to one that changes often
+   * (the Stable Dependencies Principle, see `DependencyDirection`),
+   * TypeScript and JavaScript only; at most 50, ranked by `ratio` and
+   * `changesTogether`.
+   */
+  dependencyDirection: Schema.Array(DependencyDirection),
 });
 export type Report = typeof Report.Type;

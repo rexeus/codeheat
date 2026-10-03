@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 
 import type { Coupling, FileStats, Report } from "../report/report.js";
+import {
+  DEFAULT_THRESHOLDS,
+  NO_DESIGN_FINDINGS,
+} from "../testing/report-defaults.js";
 import { inspect } from "./inspect.js";
 
 const stats = (path: string, rank: number, revisions: number): FileStats => ({
@@ -100,23 +104,7 @@ const reportOf = (
   },
   logicalChanges: { by: "commit", count: 0, largest: 0 },
   comparison: null,
-  thresholds: {
-    maxCommitFiles: 50,
-    hubMinBreadth: 10,
-    hubMinRevisions: 5,
-    hubTopShare: 0.05,
-    minModuleCommits: 5,
-    minHiddenProbability: 0.5,
-    minCopySimilarity: 0.5,
-    minLeakage: 0.5,
-    minImplementationCommits: 5,
-    minSharedCommits: 3,
-    minDegree: 0.3,
-    ubiquitousShare: 0.3,
-    ubiquitousMinCommits: 10,
-    maxMeanLineLength: 300,
-    maxFileBytes: 1_048_576,
-  },
+  thresholds: DEFAULT_THRESHOLDS,
   totals: {
     files: files.length,
     contracts: 0,
@@ -129,6 +117,7 @@ const reportOf = (
   couplings,
   modules,
   copyFamilies: [],
+  ...NO_DESIGN_FINDINGS,
 });
 
 const universe = [
@@ -214,6 +203,7 @@ describe("inspect partners", () => {
       kind: "code",
       testPair: false,
       crossesModule: false,
+      distant: false,
       imports: null,
     });
   });
@@ -248,6 +238,7 @@ describe("inspect partner marks", () => {
         kind: "code",
         testPair: false,
         crossesModule: false,
+        distant: false,
         imports: null,
       },
     ]);
@@ -259,6 +250,7 @@ describe("inspect partner marks", () => {
         kind: "code",
         testPair: false,
         crossesModule: false,
+        distant: false,
         imports: null,
       },
     ]);
@@ -272,17 +264,9 @@ describe("inspect partner marks", () => {
 
     const [entry] = inspect(report, ["src/a.ts"]).matches;
 
-    expect(entry?.partners).toStrictEqual([
-      {
-        path: "src/a.test.ts",
-        sharedCommits: 5,
-        probability: 0.5,
-        kind: "code",
-        testPair: true,
-        crossesModule: false,
-        imports: null,
-      },
-    ]);
+    expect(
+      entry?.partners.map(({ path, testPair }) => [path, testPair]),
+    ).toStrictEqual([["src/a.test.ts", true]]);
   });
 
   it("marks a partner in another module", () => {

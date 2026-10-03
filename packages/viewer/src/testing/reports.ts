@@ -62,6 +62,39 @@ export const moduleStats = (
   ...overrides,
 });
 
+const THRESHOLDS: Report["thresholds"] = {
+  maxCommitFiles: 50,
+  hubMinBreadth: 10,
+  hubMinRevisions: 5,
+  hubTopShare: 0.05,
+  minModuleCommits: 5,
+  minVolatilityRatio: 2,
+  minInterfaceChanges: 5,
+  minFanIn: 5,
+  minCliqueShare: 0.3,
+  minLocalDistance: 3,
+  minHiddenProbability: 0.5,
+  minCopySimilarity: 0.5,
+  minLeakage: 0.5,
+  minImplementationCommits: 5,
+  minSharedCommits: 3,
+  minDegree: 0.3,
+  ubiquitousShare: 0.3,
+  ubiquitousMinCommits: 10,
+  maxMeanLineLength: 300,
+  maxFileBytes: 1048576,
+};
+
+/** The design-fit lists of a report, all empty. */
+const NO_FINDINGS = {
+  cliquesPartial: false,
+  dependencyDirection: [],
+  unstableInterfaces: [],
+  cliques: [],
+  moduleCoupling: [],
+  distantCouplings: [],
+} satisfies Partial<Report>;
+
 /** A minimal valid report around the given files and couplings; `comparison` is null unless given. */
 export const reportOf = (
   files: readonly FileStats[],
@@ -89,23 +122,7 @@ export const reportOf = (
   },
   logicalChanges: { by: "commit", count: 0, largest: 0 },
   comparison,
-  thresholds: {
-    maxCommitFiles: 50,
-    hubMinBreadth: 10,
-    hubMinRevisions: 5,
-    hubTopShare: 0.05,
-    minModuleCommits: 5,
-    minHiddenProbability: 0.5,
-    minCopySimilarity: 0.5,
-    minLeakage: 0.5,
-    minImplementationCommits: 5,
-    minSharedCommits: 3,
-    minDegree: 0.3,
-    ubiquitousShare: 0.3,
-    ubiquitousMinCommits: 10,
-    maxMeanLineLength: 300,
-    maxFileBytes: 1048576,
-  },
+  thresholds: THRESHOLDS,
   totals: {
     files: files.length,
     contracts: 0,
@@ -118,4 +135,5 @@ export const reportOf = (
   couplings,
   modules,
   copyFamilies: [],
+  ...NO_FINDINGS,
 });

@@ -73,6 +73,50 @@ export const makeDepthProject = Effect.map(makeGitRepository, (repo) => {
 });
 
 /**
+ * Three packages whose files change together in five commits and import
+ * nothing from each other: every pair of files is a hidden, distant coupling,
+ * and the packages form a clique.
+ */
+export const makeCliqueProject = Effect.map(makeGitRepository, (repo) => {
+  for (const day of [30, 20, 10, 5, 3]) {
+    repo.commit(day, {
+      "packages/a/package.json": '{ "name": "a" }\n',
+      "packages/a/src/a.ts": `export const a = ${day};\n`,
+      "packages/b/package.json": '{ "name": "b" }\n',
+      "packages/b/src/b.ts": `export const b = ${day};\n`,
+      "packages/c/package.json": '{ "name": "c" }\n',
+      "packages/c/src/c.ts": `export const c = ${day};\n`,
+    });
+  }
+  return repo;
+});
+
+const importsApi = (name: string, day: number): string =>
+  `import { api } from "./api.js";\nexport const ${name} = api + ${day};\n`;
+
+/**
+ * `src/api.ts` is imported by five files. It changes in every commit, `u1.ts`
+ * and `u2.ts` with it, while `u3.ts` to `u5.ts` change only in the first.
+ */
+export const makeInterfaceProject = Effect.map(makeGitRepository, (repo) => {
+  const names = ["u1", "u2", "u3", "u4", "u5"];
+  repo.commit(30, {
+    "src/api.ts": "export const api = 30;\n",
+    ...Object.fromEntries(
+      names.map((name) => [`src/${name}.ts`, importsApi(name, 30)]),
+    ),
+  });
+  for (const day of [20, 10, 5, 3]) {
+    repo.commit(day, {
+      "src/api.ts": `export const api = ${day};\n`,
+      "src/u1.ts": importsApi("u1", day),
+      "src/u2.ts": importsApi("u2", day),
+    });
+  }
+  return repo;
+});
+
+/**
  * `a.ts` and its test change together most often, so they are the strongest
  * coupling; `b.ts` and `c.ts` change together just as often, as a weaker pair.
  */

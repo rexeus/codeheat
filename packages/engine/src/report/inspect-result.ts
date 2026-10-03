@@ -21,6 +21,13 @@ const Partner = Schema.Struct({
   /** The partner belongs to a different module than the inspected file. */
   crossesModule: Schema.Boolean,
   /**
+   * The pair is a distant coupling (see `Report.distantCouplings`): the files
+   * lie in different modules or far apart within one, neither is test code,
+   * and they are not two contract files. A distant partner is a hint that the
+   * change reaches across a design boundary.
+   */
+  distant: Schema.Boolean,
+  /**
    * `Coupling.imports` seen from the inspected file: `file→partner` means the
    * inspected file imports the partner. `none` is hidden coupling; null when
    * the relation is unknown.

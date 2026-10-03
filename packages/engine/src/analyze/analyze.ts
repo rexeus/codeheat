@@ -6,7 +6,6 @@ import type { FileSystem } from "effect";
 import type { ChildProcessSpawner } from "effect/process";
 
 import type { LanguageAdapter } from "../code/language-adapter.js";
-import { findCopyFamilies } from "../copies/find-copy-families.js";
 import type { GitError } from "../git/git-errors.js";
 import { Git } from "../git/git.js";
 import {
@@ -17,12 +16,10 @@ import {
   repositoryScope,
 } from "../git/repository.js";
 import type { HistoryOptions } from "../history/history.js";
-import { linkCouplings } from "../imports/link-couplings.js";
 import { withDepths } from "../modules/depth.js";
 import type { Report } from "../report/report.js";
 import type { InvalidCompare, InvalidSince } from "./analysis-window.js";
-import { coupleHistory, measureWindows } from "./measure.js";
-import type { Universe } from "./measure.js";
+import { measureLinked } from "./measure-linked.js";
 import { readUniverse } from "./read-universe.js";
 import { setAsideUbiquitous } from "./set-aside-ubiquitous.js";
 import {
@@ -31,7 +28,7 @@ import {
   readWindows,
   resolveWindows,
 } from "./windows.js";
-import type { WindowHistories, Windows } from "./windows.js";
+import type { Windows } from "./windows.js";
 
 /** Every expected failure of `analyze`. */
 export type AnalyzeError = GitError | InvalidSince | InvalidCompare;
@@ -71,38 +68,6 @@ export type AnalyzeOptions = {
   /** Written to `Report.tool.version`. */
   readonly toolVersion: string;
 };
-
-/**
- * Measures the windows; the latest window's couplings come with their import
- * relations. Imports are read among the code files: a contract is an asset to
- * the code that loads it, and its own coupling's relation is unknown.
- */
-const measureLinked = (
-  options: AnalyzeOptions,
-  place: { readonly root: string; readonly scope: string },
-  universe: Universe,
-  histories: WindowHistories,
-) =>
-  Effect.gen(function* () {
-    const coupled = coupleHistory(histories.current, universe);
-    const couplings = yield* linkCouplings(
-      {
-        ...place,
-        universe: new Set(universe.files.map((file) => file.path)),
-        adapters: options.adapters,
-      },
-      coupled.couplings,
-    );
-    const copyFamilies = yield* findCopyFamilies(
-      place.root,
-      couplings,
-      histories.current,
-    );
-    return {
-      ...measureWindows(universe, histories, { ...coupled, couplings }),
-      copyFamilies,
-    };
-  });
 
 /** The history of each window and, when comparing, the time of the oldest commit; both are empty for a repository without commits. */
 const readTimeline = (
@@ -154,7 +119,12 @@ const analyzeRepository = (
       new Set(universe.contracts.keys()),
     );
     const { commits, realCommits, couplingCommits, thresholds, ...measured } =
-      yield* measureLinked(options, { root, scope }, universe, histories);
+      yield* measureLinked(
+        options.adapters,
+        { root, scope },
+        universe,
+        histories,
+      );
     return {
       schemaVersion: 1,
       tool: { name: "codeheat", version: options.toolVersion },

@@ -18,6 +18,29 @@ describe("isTestPath", () => {
     );
   });
 
+  it("recognizes files below a test support directory", () => {
+    const support = [
+      "packages/core/testing/index.ts",
+      "src/testing/projects.ts",
+      "src/test-utils/render.tsx",
+      "src/test-helpers/db.ts",
+      "src/__mocks__/fs.ts",
+      "src/mocks/handlers.ts",
+      "src/__snapshots__/a.snap",
+    ];
+
+    expect(support.map((path) => isTestPath(path))).toStrictEqual(
+      support.map(() => true),
+    );
+  });
+
+  it("keeps a contract file below a support directory a contract, and a file that only has the name", () => {
+    expect(isTestPath("src/mocks/api.tsp")).toBe(false);
+    expect(isTestPath("src/testing.ts")).toBe(false);
+    expect(isTestPath("src/mocks")).toBe(false);
+    expect(isTestPath("src/mockery/a.ts")).toBe(false);
+  });
+
   it("takes a test below a spec directory for test code but not a contract file", () => {
     expect(isTestPath("spec/helpers/setup.ts")).toBe(true);
     expect(isTestPath("spec/a.test.ts")).toBe(true);

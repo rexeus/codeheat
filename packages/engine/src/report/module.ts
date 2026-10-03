@@ -65,7 +65,8 @@ export const Module = Schema.Struct({
   /**
    * Every universe file in the module is test code: it has a test suffix or
    * lies below a directory named test, tests, __tests__, spec, specs, e2e,
-   * fixtures, or __fixtures__. Test-only modules are never ranked.
+   * fixtures, __fixtures__, testing, test-utils, test-helpers, __mocks__,
+   * mocks, or __snapshots__. Test-only modules are never ranked.
    */
   testOnly: Schema.Boolean,
   /** Counted changes (logical changes of at most `Thresholds.maxCommitFiles` files, see `Report.logicalChanges`) that touched the module. */

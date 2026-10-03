@@ -2,6 +2,7 @@
 // the caller injects, so the engine itself carries no parser dependency.
 import type { LanguageAdapter, SourceImports } from "./language-adapter.js";
 import { modulesInAst } from "./typescript-ast.js";
+import { scanDependencies } from "./typescript-dependencies.js";
 import { exportedSymbols } from "./typescript-symbols.js";
 import type { StaticExports, StaticImports } from "./typescript-symbols.js";
 
@@ -186,6 +187,7 @@ export const typescriptAdapter = (parse: ParseModule): LanguageAdapter => ({
     readParsed(parse, file, source, (parsed) =>
       sourceImports(parsed, file, source),
     ),
+  dependencies: (_file, source) => scanDependencies(source),
   exports: (file, source) =>
     // `program` is a lazy getter that materializes the whole AST: read it only where needed.
     readParsed(parse, file, source, (parsed) =>

@@ -12,6 +12,10 @@ import type { Cell } from "./table.js";
 
 type Entry = InspectResult["matches"][number];
 
+/**
+ * What to know about a partner at a glance: a contract, a test, or its place
+ * in the design (in another module, a distant coupling, or both).
+ */
 const partnerMarker = (partner: Entry["partners"][number]): string => {
   if (partner.kind === "contract") {
     return " (contract)";
@@ -19,7 +23,11 @@ const partnerMarker = (partner: Entry["partners"][number]): string => {
   if (partner.testPair) {
     return " (test)";
   }
-  return partner.crossesModule ? " (other module)" : "";
+  const places = [
+    ...(partner.crossesModule ? ["other module"] : []),
+    ...(partner.distant ? ["distant"] : []),
+  ];
+  return places.length === 0 ? "" : ` (${places.join(", ")})`;
 };
 
 type PartnerImports = NonNullable<Entry["partners"][number]["imports"]>;

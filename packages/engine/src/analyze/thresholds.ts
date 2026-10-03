@@ -9,6 +9,8 @@ import {
   MIN_DEGREE,
   MIN_SHARED_COMMITS,
 } from "../coupling/coupling.js";
+import { MIN_CLIQUE_SHARE } from "../distant/cliques.js";
+import { MIN_LOCAL_DISTANCE } from "../distant/distant-couplings.js";
 import {
   HUB_MIN_BREADTH,
   HUB_MIN_REVISIONS,
@@ -21,6 +23,11 @@ import {
   MIN_LEAKAGE,
 } from "../modules/interface-churn.js";
 import type { Report } from "../report/report.js";
+import { MIN_VOLATILITY_RATIO } from "../stability/dependency-direction.js";
+import {
+  MIN_FAN_IN,
+  MIN_INTERFACE_CHANGES,
+} from "../stability/unstable-interfaces.js";
 import {
   MAX_FILE_BYTES,
   MAX_MEAN_LINE_LENGTH,
@@ -34,6 +41,11 @@ export const thresholdsFor = (couplingCommits: number) =>
     hubMinRevisions: HUB_MIN_REVISIONS,
     hubTopShare: HUB_TOP_SHARE,
     minModuleCommits: minModuleCommitsFor(couplingCommits),
+    minLocalDistance: MIN_LOCAL_DISTANCE,
+    minCliqueShare: MIN_CLIQUE_SHARE,
+    minFanIn: MIN_FAN_IN,
+    minInterfaceChanges: MIN_INTERFACE_CHANGES,
+    minVolatilityRatio: MIN_VOLATILITY_RATIO,
     minHiddenProbability: MIN_HIDDEN_PROBABILITY,
     minCopySimilarity: MIN_COPY_SIMILARITY,
     minLeakage: MIN_LEAKAGE,
