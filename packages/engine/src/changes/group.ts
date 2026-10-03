@@ -17,6 +17,8 @@ export type Candidate = {
   readonly previousLives: Uint32Array;
   /** How many distinct universe files it touched, earlier lives included. */
   readonly size: number;
+  /** How much the commit counts for its age (see `recencyWeight`). */
+  readonly weight: number;
 };
 
 /** How the commits of a window were grouped. */
@@ -129,6 +131,16 @@ const touchedBy = (
   return { live, size: all.size };
 };
 
+/** The weight of the newest commit of `members`: the greatest, as a weight falls with age. */
+const newestWeight = (
+  members: ReadonlyArray<number>,
+  candidates: ReadonlyArray<Candidate>,
+): number =>
+  members.reduce(
+    (greatest, index) => Math.max(greatest, candidates[index]?.weight ?? 0),
+    0,
+  );
+
 const changeOf = (
   members: ReadonlyArray<number>,
   candidates: ReadonlyArray<Candidate>,
@@ -136,10 +148,14 @@ const changeOf = (
   const single =
     members.length === 1 ? candidates[members[0] ?? -1] : undefined;
   if (single !== undefined) {
-    return { files: single.files, size: single.size };
+    return { files: single.files, size: single.size, weight: single.weight };
   }
   const { live, size } = touchedBy(members, candidates);
-  return { files: Uint32Array.from(live), size };
+  return {
+    files: Uint32Array.from(live),
+    size,
+    weight: newestWeight(members, candidates),
+  };
 };
 
 const byOf = (pullRequestGroups: boolean, ticketGroups: boolean): GroupedBy => {
@@ -200,6 +216,7 @@ const settle = (
  * change of more than `MAX_COMMIT_FILES` files or `MAX_GROUP_COMMITS` commits:
  * its parts stay what they were. A change's files are the union of its
  * commits' files, and its size counts the files of their earlier lives too;
+ * its weight is that of its newest commit (see `LogicalChange.weight`);
  * `candidates` list real commits only.
  */
 export const groupChanges = (

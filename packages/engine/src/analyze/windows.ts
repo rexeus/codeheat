@@ -20,17 +20,26 @@ import type {
   InvalidSince,
   TimeRange,
 } from "./analysis-window.js";
+import { DEFAULT_HALF_LIFE, resolveHalfLife } from "./half-life.js";
+import type { InvalidHalfLife } from "./half-life.js";
 
-/** The latest window and, when comparing, the one right before it. */
+/** Every expected failure of `resolveWindows`. */
+export type WindowsError = InvalidSince | InvalidCompare | InvalidHalfLife;
+
+/** The latest window and, when comparing, the one right before it, and how their commits weigh. */
 export type Windows = {
   readonly current: TimeRange;
   readonly previous: TimeRange | null;
+  /** The half-life of a change's weight in days; 0: every change weighs 1. */
+  readonly halfLifeDays: number;
 };
 
 /** The history of each window; `previous` is null exactly when the windows have none. */
 export type WindowHistories = {
   readonly current: History;
   readonly previous: History | null;
+  /** The half-life in days the commits' weights were computed with. */
+  readonly halfLifeDays: number;
 };
 
 const NO_HISTORY: History = {
@@ -42,39 +51,69 @@ const NO_HISTORY: History = {
   mechanical: countKinds([]),
 };
 
-/** Resolves `compare` to two adjacent windows; without it, `since` to one. */
-export const resolveWindows = (options: {
+const resolveRanges = (options: {
   readonly since: string;
   readonly compare?: string | undefined;
-}): Effect.Effect<Windows, InvalidSince | InvalidCompare> =>
+}) =>
   options.compare === undefined
     ? resolveTimeRange(options.since).pipe(
         Effect.map((current) => ({ current, previous: null })),
       )
     : resolveComparisonRanges(options.compare);
 
+/**
+ * Resolves `compare` to two adjacent windows; without it, `since` to one. The
+ * half-life defaults to `DEFAULT_HALF_LIFE`.
+ */
+export const resolveWindows = (options: {
+  readonly since: string;
+  readonly compare?: string | undefined;
+  readonly halfLife?: string | undefined;
+}): Effect.Effect<Windows, WindowsError> =>
+  Effect.gen(function* () {
+    const ranges = yield* resolveRanges(options);
+    const halfLifeDays = yield* resolveHalfLife(
+      options.halfLife ?? DEFAULT_HALF_LIFE,
+    );
+    return { ...ranges, halfLifeDays };
+  });
+
 /** The histories of a repository without commits. */
-export const noHistories = ({ previous }: Windows): WindowHistories => ({
+export const noHistories = ({
+  previous,
+  halfLifeDays,
+}: Windows): WindowHistories => ({
   current: NO_HISTORY,
   previous: previous === null ? null : NO_HISTORY,
+  halfLifeDays,
 });
 
 /** Reads the history of every window in one pass over the log. */
 export const readWindows = (
-  { current, previous }: Windows,
-  options: Omit<HistoryOptions, "since" | "until">,
+  { current, previous, halfLifeDays }: Windows,
+  options: Omit<HistoryOptions, "since" | "until" | "halfLifeDays">,
 ): Effect.Effect<WindowHistories, GitError, Git> =>
   previous === null
-    ? readHistory({ ...current, ...options }).pipe(
-        Effect.map((history) => ({ current: history, previous: null })),
+    ? readHistory({ ...current, ...options, halfLifeDays }).pipe(
+        Effect.map((history) => ({
+          current: history,
+          previous: null,
+          halfLifeDays,
+        })),
       )
     : readHistoryHalves(
-        { since: previous.since, until: current.until, ...options },
+        {
+          since: previous.since,
+          until: current.until,
+          ...options,
+          halfLifeDays,
+        },
         Math.floor(Date.parse(current.since) / 1000),
       ).pipe(
         Effect.map(({ recent, earlier }) => ({
           current: recent,
           previous: earlier,
+          halfLifeDays,
         })),
       );
 

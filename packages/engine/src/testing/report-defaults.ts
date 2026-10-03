@@ -3,6 +3,7 @@
 import type { Report } from "../report/report.js";
 
 export const DEFAULT_THRESHOLDS: Report["thresholds"] = {
+  halfLifeDays: 0,
   maxCommitFiles: 50,
   hubMinBreadth: 10,
   hubMinRevisions: 5,

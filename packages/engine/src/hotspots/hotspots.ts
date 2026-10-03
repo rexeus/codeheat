@@ -4,7 +4,7 @@ import { Order } from "effect";
 import { groupByPath, partnersOf } from "../coupling/partners.js";
 import type { Complexity } from "../metrics/complexity.js";
 import { isTestPath } from "../modules/test-path.js";
-import { roundReported } from "../report/precision.js";
+import { roundReported, roundWeighted } from "../report/precision.js";
 import type { Coupling, FileStats } from "../report/report.js";
 import { describeFile, isHubCandidate } from "./reasons.js";
 
@@ -14,6 +14,8 @@ export type FileMeasure = {
   /** `path` of the file's module. */
   readonly module: string;
   readonly revisions: number;
+  /** The revisions weighed by age: what the score takes as change frequency. */
+  readonly weightedRevisions: number;
   /** Logical changes that touched the file (see `FileStats.changes`). */
   readonly changes: number;
   readonly linesAdded: number;
@@ -66,22 +68,23 @@ const hubRanking = (measures: ReadonlyArray<FileMeasure>) => {
   };
 };
 
-/** Normalized revisions × normalized weighted lines, each against the largest among `measures`. */
+/** Normalized weighted revisions × normalized weighted lines, each against the largest among `measures`. */
 const scorer = (measures: ReadonlyArray<FileMeasure>) => {
   const normalizeRevisions = logNormalizer(
-    maximum(measures.map((m) => m.revisions)),
+    maximum(measures.map((m) => m.weightedRevisions)),
   );
   const normalizeWeight = logNormalizer(
     maximum(measures.map((m) => weightedLines(m.complexity))),
   );
   return (measure: FileMeasure): number =>
-    normalizeRevisions(measure.revisions) *
+    normalizeRevisions(measure.weightedRevisions) *
     normalizeWeight(weightedLines(measure.complexity));
 };
 
 /**
- * Scores every file as normalized revisions × normalized weighted lines, and
- * returns them best first; equal scores order by path.
+ * Scores every file as normalized weighted revisions × normalized weighted
+ * lines, and returns them best first; equal scores order by path. The reasons
+ * go by the plain revisions, the hub candidates and the partners by changes.
  *
  * `couplings` feeds each file's co-change reason.
  */
@@ -112,6 +115,7 @@ export const rankFiles = (
         rank: index + 1,
         score: roundReported(score),
         revisions,
+        weightedRevisions: roundWeighted(measure.weightedRevisions),
         changes: measure.changes,
         linesAdded: measure.linesAdded,
         linesDeleted: measure.linesDeleted,

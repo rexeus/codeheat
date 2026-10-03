@@ -16,4 +16,11 @@ export type LogicalChange = {
    * shrinks for files that are dead today.
    */
   readonly size: number;
+  /**
+   * How much the change counts for its age: the weight (see `recencyWeight`) of
+   * its newest commit, since a change lands when its last commit does and a
+   * pull request merged yesterday is recent work however long its branch lived.
+   * 1 for every change when weighting is off.
+   */
+  readonly weight: number;
 };

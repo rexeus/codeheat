@@ -130,6 +130,8 @@ layer(NodeServices.layer)(
           assert.deepStrictEqual(result.files.get("b.ts"), {
             revisions: 3,
             changes: 3,
+            weightedRevisions: 3,
+            weightedChanges: 3,
             linesAdded: 12,
             linesDeleted: 0,
           });
@@ -187,6 +189,8 @@ layer(NodeServices.layer)("readHistory mechanical reverts", (it) => {
       assert.deepStrictEqual(result.files.get("a.ts"), {
         revisions: 1,
         changes: 1,
+        weightedRevisions: 1,
+        weightedChanges: 1,
         linesAdded: 0,
         linesDeleted: 1,
       });

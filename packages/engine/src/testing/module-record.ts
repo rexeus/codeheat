@@ -13,6 +13,8 @@ export const moduleRecord = (
   testOnly,
   commits,
   localCommits: 0,
+  weightedCommits: commits,
+  weightedLocalCommits: 0,
   cohesion: 0,
   partners: [],
   entryPoints: [],

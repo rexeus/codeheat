@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { countKinds } from "../mechanical/kinds.js";
 import type { Coupling, FileStats, Report } from "../report/report.js";
 import {
   DEFAULT_THRESHOLDS,
@@ -14,6 +15,7 @@ const stats = (path: string, rank: number, revisions: number): FileStats => ({
   rank,
   score: 1 / rank,
   revisions,
+  weightedRevisions: revisions,
   changes: revisions,
   linesAdded: 0,
   linesDeleted: 0,
@@ -51,6 +53,8 @@ const modules: Report["modules"] = [
     files: 1,
     commits: 4,
     localCommits: 1,
+    weightedCommits: 4,
+    weightedLocalCommits: 1,
     cohesion: 0.25,
     partners: [{ path: "src", sharedCommits: 3, contractsOnly: false }],
     entryPoints: [],
@@ -68,6 +72,8 @@ const modules: Report["modules"] = [
     files: 3,
     commits: 20,
     localCommits: 17,
+    weightedCommits: 20,
+    weightedLocalCommits: 17,
     cohesion: 0.85,
     partners: [{ path: "lib", sharedCommits: 3, contractsOnly: false }],
     entryPoints: ["src/index.ts"],
@@ -95,13 +101,7 @@ const reportOf = (
     realCommits: 40,
     couplingCommits: 38,
   },
-  mechanicalCommits: {
-    ignored: 0,
-    renames: 0,
-    whitespace: 0,
-    reverts: 0,
-    duplicates: 0,
-  },
+  mechanicalCommits: countKinds([]),
   logicalChanges: { by: "commit", count: 0, largest: 0 },
   comparison: null,
   thresholds: DEFAULT_THRESHOLDS,

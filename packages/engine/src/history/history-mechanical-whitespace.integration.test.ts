@@ -41,6 +41,8 @@ layer(NodeServices.layer)("readHistory mechanical whitespace", (it) => {
       assert.deepStrictEqual(result.files.get("a.ts"), {
         revisions: 2,
         changes: 2,
+        weightedRevisions: 2,
+        weightedChanges: 2,
         linesAdded: 11,
         linesDeleted: 0,
       });

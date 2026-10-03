@@ -13,6 +13,8 @@ import { classify } from "../mechanical/classify.js";
 import { readEvidence } from "../mechanical/evidence.js";
 import { countKinds } from "../mechanical/kinds.js";
 import type { MechanicalCounts, MechanicalKind } from "../mechanical/kinds.js";
+import { weightAt } from "./recency.js";
+import type { Recency } from "./recency.js";
 import { scanCommits } from "./scan.js";
 import type { Entry } from "./scan.js";
 
@@ -26,6 +28,10 @@ type FileHistory = {
    * `revisions`.
    */
   readonly changes: number;
+  /** The `revisions`, each weighing its commit's weight (see `recencyWeight`). */
+  readonly weightedRevisions: number;
+  /** The `changes`, each weighing its `LogicalChange.weight`. */
+  readonly weightedChanges: number;
   readonly linesAdded: number;
   readonly linesDeleted: number;
 };
@@ -71,6 +77,14 @@ export type HistoryOptions = {
   readonly skipCommits: ReadonlySet<string>;
   /** Current paths that count; changes to any other path are dropped. */
   readonly universe: ReadonlySet<string>;
+  /** The half-life of a change's weight in days; 0 or absent: every change weighs 1. */
+  readonly halfLifeDays?: number | undefined;
+};
+
+/** What turns a window's commits into logical changes with weights: the pull request merges and where the window ends. */
+type Grouping = {
+  readonly merges: ReadonlyMap<string, string>;
+  readonly recency: Recency;
 };
 
 /** The commits of a window that are not mechanical. */
@@ -81,12 +95,15 @@ export const realCommitCount = ({ commits }: History): number =>
 const addActivity = (
   fileHistories: Map<number, FileHistory>,
   { files, added, deleted }: Entry,
+  weight: number,
 ): void => {
   for (const [index, id] of files.entries()) {
     const before = fileHistories.get(id);
     fileHistories.set(id, {
       revisions: (before?.revisions ?? 0) + 1,
       changes: 0,
+      weightedRevisions: (before?.weightedRevisions ?? 0) + weight,
+      weightedChanges: 0,
       linesAdded: (before?.linesAdded ?? 0) + (added[index] ?? 0),
       linesDeleted: (before?.linesDeleted ?? 0) + (deleted[index] ?? 0),
     });
@@ -98,25 +115,30 @@ const countChanges = (
   fileHistories: Map<number, FileHistory>,
   changes: ReadonlyArray<LogicalChange>,
 ): void => {
-  for (const { files } of changes) {
+  for (const { files, weight } of changes) {
     for (const id of files) {
       const before = fileHistories.get(id);
       if (before !== undefined) {
-        fileHistories.set(id, { ...before, changes: before.changes + 1 });
+        fileHistories.set(id, {
+          ...before,
+          changes: before.changes + 1,
+          weightedChanges: before.weightedChanges + weight,
+        });
       }
     }
   }
 };
 
 /**
- * Builds the history of the commits that fall in one window. A mechanical
- * commit stays a commit of the window but adds no revisions or lines.
+ * Builds the history of the commits that fall in one window, weighing each by
+ * its age at the window's end. A mechanical commit stays a commit of the
+ * window but adds no revisions or lines.
  */
 const buildHistory = (
   paths: ReadonlyArray<string>,
   entries: ReadonlyArray<Entry>,
   kinds: ReadonlyMap<string, MechanicalKind>,
-  merges: ReadonlyMap<string, string>,
+  { merges, recency }: Grouping,
 ): History => {
   const commits: Array<HistoryCommit> = [];
   const real: Array<Entry> = [];
@@ -126,17 +148,18 @@ const buildHistory = (
     commits.push({ mechanical });
     if (mechanical === undefined) {
       real.push(entry);
-      addActivity(fileHistories, entry);
+      addActivity(fileHistories, entry, weightAt(entry.signals.time, recency));
     }
   }
   const { changes, by, largest } = groupChanges(
-    real.map(({ signals, subject, files, previousLives, size }) => ({
-      sha: signals.sha,
-      time: signals.time,
-      subject,
-      files,
-      previousLives,
-      size,
+    real.map((entry) => ({
+      sha: entry.signals.sha,
+      time: entry.signals.time,
+      subject: entry.subject,
+      files: entry.files,
+      previousLives: entry.previousLives,
+      size: entry.size,
+      weight: weightAt(entry.signals.time, recency),
     })),
     merges,
   );
@@ -194,14 +217,21 @@ export const readHistory = (
   Effect.gen(function* () {
     const { paths, fileIds } = indexPaths(options);
     const { entries, merges, kindsOf } = yield* readEntries(options, fileIds);
-    return buildHistory(paths, entries, kindsOf(entries), merges);
+    return buildHistory(paths, entries, kindsOf(entries), {
+      merges,
+      recency: {
+        windowEnd: Date.parse(options.until) / 1000,
+        halfLifeDays: options.halfLifeDays ?? 0,
+      },
+    });
   });
 
 /**
  * Reads the window once and splits its commits at `splitAt`, the time in
  * seconds since the epoch: `recent` holds the commits at or after it,
  * `earlier` those before it. Renames and deletions are followed across the
- * split; reverts and duplicates are paired inside each half.
+ * split; reverts and duplicates are paired inside each half. Each half weighs
+ * its commits from its own end: `until` for `recent`, `splitAt` for `earlier`.
  */
 export const readHistoryHalves = (
   options: HistoryOptions,
@@ -216,8 +246,15 @@ export const readHistoryHalves = (
     const { entries, merges, kindsOf } = yield* readEntries(options, fileIds);
     const recent = entries.filter(({ signals }) => signals.time >= splitAt);
     const earlier = entries.filter(({ signals }) => signals.time < splitAt);
+    const halfLifeDays = options.halfLifeDays ?? 0;
     return {
-      recent: buildHistory(paths, recent, kindsOf(recent), merges),
-      earlier: buildHistory(paths, earlier, kindsOf(earlier), merges),
+      recent: buildHistory(paths, recent, kindsOf(recent), {
+        merges,
+        recency: { windowEnd: Date.parse(options.until) / 1000, halfLifeDays },
+      }),
+      earlier: buildHistory(paths, earlier, kindsOf(earlier), {
+        merges,
+        recency: { windowEnd: splitAt, halfLifeDays },
+      }),
     };
   });

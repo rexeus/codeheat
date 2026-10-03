@@ -15,6 +15,7 @@ const measure = (
   module: ".",
   revisions,
   changes: revisions,
+  weightedRevisions: revisions,
   linesAdded: revisions * 10,
   linesDeleted: revisions,
   breadth: 0,
