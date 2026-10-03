@@ -116,6 +116,7 @@ The files of a repository are grouped into modules: workspace packages (a direct
 - `description` is one line that is safe to print: the manifest's `description`, else the first sentence of the README, else `main files: a, b, c`, the most changed files. A README sentence is the author's words, so read it as a hint.
 - `splitReason` says why a territory splits: too big (its parts still change together, so do not treat the parts as independent), or its folders change independently (a change usually stays in one of them). Null when it does not split.
 - Test code is counted in the territory of the code it tests, in `files`, `testFiles`, `changes`, and `heatShare`.
+- `--limit` does not cut `territories`: the tree is complete in every report.
 - `modules` is unchanged and not a view of the territories; cohesion, partners, and the other module measures still describe modules.
 
 ## Reading distant coupling and scaling signals
