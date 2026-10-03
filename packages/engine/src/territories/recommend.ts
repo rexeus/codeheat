@@ -2,7 +2,7 @@
 // buckets hide no folder hotter than a territory opened beside them.
 import type { Territory } from "../report/territory.js";
 import type { FlatNode } from "./flatten-tree.js";
-import { directoriesOf, heatOf } from "./part.js";
+import { MIN_VISIBLE_HEAT, directoriesOf, heatOf } from "./part.js";
 import type { Evidence, Part } from "./part.js";
 
 /** Territories at the recommended detail number at most this many. */
@@ -84,7 +84,11 @@ export const shownOf = (
     ]),
   );
 
-/** A bucket or node of loose files of the detail holds a folder hotter than the coolest territory opened beside it. */
+/**
+ * A bucket or node of loose files of the detail holds a folder that is hotter
+ * than the coolest territory opened beside it and holds at least
+ * `MIN_VISIBLE_HEAT` of all heat: below that the comparison is noise.
+ */
 const hidesHotterFolder = (visible: ReadonlyArray<Shown>): boolean =>
   visible.some((bucket) => {
     const siblings = visible.filter(
@@ -92,6 +96,7 @@ const hidesHotterFolder = (visible: ReadonlyArray<Shown>): boolean =>
     );
     return (
       siblings.length > 0 &&
+      bucket.hidden >= MIN_VISIBLE_HEAT &&
       bucket.hidden > Math.min(...siblings.map(({ share }) => share))
     );
   });
@@ -100,7 +105,7 @@ const hidesHotterFolder = (visible: ReadonlyArray<Shown>): boolean =>
  * The detail to read first: the finest with at most 25 territories (buckets,
  * loose files, and test-only code do not count) in which no bucket or node of
  * loose files holds a folder hotter than the coolest territory opened beside
- * it, whether the folder has a bucket slot or too few files to be a territory.
+ * it and with at least `MIN_VISIBLE_HEAT` of all heat.
  * When every detail with few enough territories hides such a folder, the
  * finest of them, and its buckets are reported as they are; the first detail
  * when even that has more than 25 territories.

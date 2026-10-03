@@ -13,6 +13,7 @@ import {
   changesTouching,
   directoriesOf,
   heatOf,
+  isHotFolder,
 } from "./part.js";
 import type { Evidence, Part } from "./part.js";
 import { reasonOf } from "./split-reason.js";
@@ -36,14 +37,20 @@ export type Split = {
 };
 
 /** The folders `part` would split into: a group's or bucket's own members, else the child folders of its directory. */
-const cutOf = (part: Part, packages: ReadonlySet<string>): FolderCut =>
+const cutOf = (
+  part: Part,
+  packages: ReadonlySet<string>,
+  evidence: Evidence,
+): FolderCut =>
   part.kind === "group" || part.kind === "more"
     ? {
         base: part.base,
         big: new Map(part.members.map(({ path, files }) => [path, files])),
         rest: part.rest,
       }
-    : cutByFolders(part.path, part.files, packages);
+    : cutByFolders(part.path, part.files, packages, (folder, files) =>
+        isHotFolder(evidence, folder, files),
+      );
 
 type Verdict = {
   readonly touching: ReadonlySet<number>;
@@ -226,7 +233,7 @@ export const planSplit = (
   ) {
     return undefined;
   }
-  const cut = cutOf(part, packages);
+  const cut = cutOf(part, packages, evidence);
   if (cut.big.size < 2 && !isRoot && part.kind !== "more") {
     return undefined;
   }

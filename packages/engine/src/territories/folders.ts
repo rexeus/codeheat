@@ -10,7 +10,7 @@ export const MIN_CHILD = 3;
 export type FolderCut = {
   /** The directory the children sit in. */
   readonly base: string;
-  /** Child folders with at least `MIN_CHILD` files, by directory. */
+  /** Child folders with at least `MIN_CHILD` files, or fewer that are hot (see `MIN_VISIBLE_HEAT`), by directory. */
   readonly big: ReadonlyMap<string, ReadonlyArray<string>>;
   /** Files directly in `base` and the files of smaller folders. */
   readonly rest: ReadonlyArray<string>;
@@ -59,10 +59,14 @@ const descend = (
   return packages.has(next) ? next : descend(next, files, packages);
 };
 
-/** The files below `base` grouped by their first folder: folders with enough files, and the loose files. */
+/** Whether a folder with fewer than `MIN_CHILD` files is a part of its own: `isHot` says it holds enough of the heat. */
+type IsHot = (folder: string, files: ReadonlyArray<string>) => boolean;
+
+/** The files below `base` grouped by their first folder: folders with enough files or enough heat, and the loose files. */
 const groupByFolder = (
   base: string,
   files: ReadonlyArray<string>,
+  isHot: IsHot,
 ): Pick<FolderCut, "big" | "rest"> => {
   const grouped = new Map<string, Array<string>>();
   const rest: Array<string> = [];
@@ -79,7 +83,7 @@ const groupByFolder = (
   }
   const big = new Map<string, ReadonlyArray<string>>();
   for (const [folder, inside] of grouped) {
-    if (inside.length >= MIN_CHILD) {
+    if (inside.length >= MIN_CHILD || isHot(folder, inside)) {
       big.set(folder, inside);
     } else {
       rest.push(...inside);
@@ -93,9 +97,10 @@ export const cutByFolders = (
   directory: string,
   files: ReadonlyArray<string>,
   packages: ReadonlySet<string>,
+  isHot: IsHot,
 ): FolderCut => {
   const base = descend(directory, files, packages);
-  return { base, ...groupByFolder(base, files) };
+  return { base, ...groupByFolder(base, files, isHot) };
 };
 
 /** A folder part for the files below `path`, which is cut down to where the files actually branch unless it is a package. */

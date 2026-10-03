@@ -31,6 +31,14 @@ export type TreeNode = {
   readonly children: ReadonlyArray<TreeNode>;
 };
 
+/**
+ * Policy: a share of all heat below which a folder is noise. A folder with
+ * fewer than `MIN_CHILD` files that holds at least this share is a part of its
+ * own, and a bucket hides a folder only when the folder holds at least this
+ * share.
+ */
+export const MIN_VISIBLE_HEAT = 0.01;
+
 /** A part with more than this share of the universe's files is too big to stay one territory. */
 export const TOO_BIG_SHARE = 0.4;
 
@@ -102,3 +110,12 @@ export const changesTouching = (
   }
   return touching;
 };
+
+/** Whether the folder `directory` with `files` holds at least `MIN_VISIBLE_HEAT` of all heat. */
+export const isHotFolder = (
+  evidence: Evidence,
+  directory: string,
+  files: ReadonlyArray<string>,
+): boolean =>
+  evidence.totalHeat > 0 &&
+  heatOf(evidence, files, [directory]) / evidence.totalHeat >= MIN_VISIBLE_HEAT;
