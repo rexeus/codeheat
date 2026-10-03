@@ -96,7 +96,7 @@ layer(NodeServices.layer)("analyze stability", (it) => {
             from: "packages/stable",
             to: "packages/core",
             importingFiles: 1,
-            changedImporters: 1,
+            changesTogether: 1,
             fromCommits: 1,
             toCommits: 6,
             ratio: 6,

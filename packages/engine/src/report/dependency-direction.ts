@@ -23,7 +23,7 @@ export const DependencyDirection = Schema.Struct({
    * Counted commits in which a file of `from` changed together with a file of
    * `to` that it imports: how often the dependency was actually felt.
    */
-  changedImporters: Count,
+  changesTogether: Count,
   /** `Module.commits` of `from`. */
   fromCommits: Count,
   /** `Module.commits` of `to`; at least `Thresholds.minVolatilityRatio` times `fromCommits`, and at least `Thresholds.minModuleCommits`. */
@@ -31,7 +31,7 @@ export const DependencyDirection = Schema.Struct({
   /**
    * `toCommits / max(1, fromCommits)`, rounded to 4 decimals: how much more
    * often the imported module changes than the importing one. The list ranks
-   * by `log2(ratio) × log2(1 + changedImporters)`.
+   * by `log2(ratio) × log2(1 + changesTogether)`.
    */
   ratio: Schema.Finite.check(Schema.isGreaterThanOrEqualTo(1)),
   /** One sentence for a reader new to the repository. */

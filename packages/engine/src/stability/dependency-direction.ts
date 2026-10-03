@@ -98,7 +98,7 @@ const changedTogether = (
 };
 
 /** Volatility of the imported module over the importer's, times in how many commits an importer changed with what it imports (log scale). */
-const rankOf = ({ ratio, changedImporters: changed }: DependencyDirection) =>
+const rankOf = ({ ratio, changesTogether: changed }: DependencyDirection) =>
   Math.log2(ratio) * Math.log2(1 + changed);
 
 const byRank = (a: DependencyDirection, b: DependencyDirection): number =>
@@ -109,14 +109,14 @@ const byRank = (a: DependencyDirection, b: DependencyDirection): number =>
 
 type Counts = {
   readonly importingFiles: number;
-  readonly changedImporters: number;
+  readonly changesTogether: number;
   readonly fromCommits: number;
   readonly toCommits: number;
 };
 
 const reasonFor = (
   { from, to }: Edge,
-  { importingFiles, changedImporters: changed, fromCommits, toCommits }: Counts,
+  { importingFiles, changesTogether: changed, fromCommits, toCommits }: Counts,
 ): string =>
   `${importingFiles} ${importingFiles === 1 ? "file" : "files"} of ${from}, which changed in ${fromCommits} ${fromCommits === 1 ? "commit" : "commits"}, import ${to}, which changed in ${toCommits}; ${changed} ${changed === 1 ? "commit" : "commits"} changed an importer together with what it imports`;
 
@@ -131,7 +131,7 @@ const reasonFor = (
  * the importing one, which may not have changed at all.
  *
  * `ratio` is the imported module's commits over the importing one's (at least
- * 1). The edges rank by `log2(ratio) × log2(1 + changedImporters)`: how much more
+ * 1). The edges rank by `log2(ratio) × log2(1 + changesTogether)`: how much more
  * volatile the imported side is, and in how many commits an importer really had to
  * move with it, so that every module importing the same framework does not
  * fill the list. Then more importing files and path break ties. The
@@ -167,7 +167,7 @@ export const dependencyDirection = (
       }
       const counts = {
         importingFiles: edge.imports.size,
-        changedImporters: changed.get(key) ?? 0,
+        changesTogether: changed.get(key) ?? 0,
         fromCommits,
         toCommits,
       };

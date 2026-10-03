@@ -82,7 +82,7 @@ describe("dependencyDirection flags", () => {
       from: "stable",
       to: "volatile",
       importingFiles: 1,
-      changedImporters: 1,
+      changesTogether: 1,
       fromCommits: 4,
       toCommits: 20,
       ratio: 5,
