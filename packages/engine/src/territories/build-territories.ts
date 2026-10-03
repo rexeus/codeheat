@@ -75,7 +75,9 @@ const evidenceOf = (
   const byFile = new Map<string, Array<number>>();
   for (const [index, files] of touched.entries()) {
     for (const file of files) {
-      byFile.set(file, [...(byFile.get(file) ?? []), index]);
+      const indices = byFile.get(file) ?? [];
+      indices.push(index);
+      byFile.set(file, indices);
     }
   }
   const total = attachment.units.length;

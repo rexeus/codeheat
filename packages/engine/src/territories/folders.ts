@@ -62,7 +62,9 @@ const groupByFolder = (
     const relative = below(base, file);
     if (relative.includes("/")) {
       const folder = join(base, headOf(relative));
-      grouped.set(folder, [...(grouped.get(folder) ?? []), file]);
+      const inside = grouped.get(folder) ?? [];
+      inside.push(file);
+      grouped.set(folder, inside);
     } else {
       rest.push(file);
     }
