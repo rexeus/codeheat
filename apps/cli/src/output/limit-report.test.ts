@@ -19,6 +19,17 @@ describe("limitReport", () => {
     ).toEqual(["packages/shared", "apps/cli"]);
   });
 
+  it("cuts the copy families to the limit as well", () => {
+    const [family] = sampleReport().copyFamilies;
+    const report = {
+      ...sampleReport(),
+      copyFamilies: family === undefined ? [] : [family, family, family],
+    };
+
+    expect(limitReport(report, 2).copyFamilies).toHaveLength(2);
+    expect(limitReport(report, 0).copyFamilies).toHaveLength(3);
+  });
+
   it("keeps the totals of the untruncated report", () => {
     expect(limitReport(sampleReport(), 3).totals).toEqual({
       files: 36,

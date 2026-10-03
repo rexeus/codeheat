@@ -97,6 +97,7 @@ const reportOf = (
     hubTopShare: 0.05,
     minModuleCommits: 5,
     minHiddenProbability: 0.5,
+    minCopySimilarity: 0.5,
     minLeakage: 0.5,
     minImplementationCommits: 5,
     minSharedCommits: 3,
@@ -117,6 +118,7 @@ const reportOf = (
   ubiquitousFiles: [],
   couplings,
   modules,
+  copyFamilies: [],
 });
 
 const universe = [

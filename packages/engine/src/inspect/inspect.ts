@@ -4,6 +4,7 @@
 import { Order } from "effect";
 
 import { groupByPath, partnersOf } from "../coupling/partners.js";
+import type { CopyFamily } from "../report/copy-family.js";
 import type { InspectResult } from "../report/inspect-result.js";
 import type { Coupling, FileStats, Report } from "../report/report.js";
 import { matchesAny } from "../universe/globs.js";
@@ -16,6 +17,7 @@ const toEntry = (
   file: FileStats,
   universeSize: number,
   couplings: ReadonlyArray<Coupling>,
+  families: ReadonlyArray<CopyFamily>,
 ): Entry => ({
   ...file,
   of: universeSize,
@@ -23,11 +25,13 @@ const toEntry = (
     0,
     MAX_PARTNERS,
   ),
+  copyFamily: families.find(({ files }) => files.includes(file.path)) ?? null,
 });
 
 /**
  * Reports the files matching `patterns`, each with its rank in the whole
- * universe and its strongest co-change partners, and the modules they belong to.
+ * universe, its strongest co-change partners and its copy family, and the
+ * modules they belong to.
  *
  * `report` must be unlimited (as `analyze` returns it); a truncated report
  * would drop matches and partners.
@@ -62,7 +66,12 @@ export const inspect = (
     schemaVersion: 1,
     window: report.window,
     matches: matches.map((file) =>
-      toEntry(file, report.totals.files, coupled.get(file.path) ?? []),
+      toEntry(
+        file,
+        report.totals.files,
+        coupled.get(file.path) ?? [],
+        report.copyFamilies,
+      ),
     ),
     modules: report.modules.filter(({ path }) => focusedModules.has(path)),
     contractFiles: [...contractFiles].toSorted((a, b) => Order.String(a, b)),

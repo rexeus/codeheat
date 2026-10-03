@@ -4,6 +4,7 @@
 import { Schema } from "effect";
 
 import { ContractFile, FileKind, UbiquitousFile } from "./contract-file.js";
+import { CopyFamily } from "./copy-family.js";
 import { Module } from "./module.js";
 import { Count, UnitDelta, UnitInterval } from "./scalars.js";
 
@@ -79,6 +80,8 @@ const Thresholds = Schema.Struct({
    * the file (hidden coupling) gets a reason line.
    */
   minHiddenProbability: UnitInterval,
+  /** Smallest content similarity (`CopyFamily.similarity`) at which two coupled files belong to one copy family. */
+  minCopySimilarity: UnitInterval,
   /** Smallest `Module.leakage` at which a module's entry points get a reason line. */
   minLeakage: UnitInterval,
   /** Fewest `Module.implementationCommits` a module needs before its entry points get that reason line. */
@@ -238,5 +241,13 @@ export const Report = Schema.Struct({
    * commits (`cohesion` null), by `path`.
    */
   modules: Schema.Array(Module),
+  /**
+   * Groups of files with largely the same content that change in the same
+   * commits, found among the coupled pairs (test pairs excluded) of the
+   * analysis window. Families with production code come first, then those of
+   * test code only (`testOnly`); within each, most fixes applied to all
+   * members first.
+   */
+  copyFamilies: Schema.Array(CopyFamily),
 });
 export type Report = typeof Report.Type;

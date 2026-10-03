@@ -4,6 +4,7 @@
 import { Schema } from "effect";
 
 import { FileKind } from "./contract-file.js";
+import { CopyFamily } from "./copy-family.js";
 import { Module } from "./module.js";
 import { AnalysisWindow, FileStats } from "./report.js";
 import { Count, UnitInterval } from "./scalars.js";
@@ -36,6 +37,12 @@ const InspectEntry = Schema.Struct({
   of: Count,
   /** Sorted by probability, descending; at most ten. */
   partners: Schema.Array(Partner),
+  /**
+   * The copy family the file belongs to (see `Report.copyFamilies`): its
+   * copies and how often they changed in lockstep; null for a file that is no
+   * member.
+   */
+  copyFamily: Schema.NullOr(CopyFamily),
 });
 
 /** The result of `inspect`. */

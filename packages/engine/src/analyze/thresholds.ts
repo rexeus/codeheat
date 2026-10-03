@@ -3,6 +3,7 @@ import {
   UBIQUITOUS_SHARE,
 } from "../contracts/ubiquitous.js";
 // Owns the noise limits an analysis applies, reported so consumers see them.
+import { MIN_COPY_SIMILARITY } from "../copies/find-copy-families.js";
 import {
   MAX_COMMIT_FILES,
   MIN_DEGREE,
@@ -34,6 +35,7 @@ export const thresholdsFor = (couplingCommits: number) =>
     hubTopShare: HUB_TOP_SHARE,
     minModuleCommits: minModuleCommitsFor(couplingCommits),
     minHiddenProbability: MIN_HIDDEN_PROBABILITY,
+    minCopySimilarity: MIN_COPY_SIMILARITY,
     minLeakage: MIN_LEAKAGE,
     minImplementationCommits: MIN_IMPLEMENTATION_COMMITS,
     minSharedCommits: MIN_SHARED_COMMITS,
