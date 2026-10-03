@@ -6,8 +6,8 @@ import { escapeForTerminal } from "../escape.js";
 import type { Style } from "./style.js";
 import { plain, renderTable } from "./table.js";
 
-const commits = (count: number): string =>
-  `${count} ${count === 1 ? "commit" : "commits"}`;
+const changes = (count: number): string =>
+  `${count} ${count === 1 ? "change" : "changes"}`;
 
 const TOP_INTERFACES = 5;
 const TOP_DIRECTIONS = 3;
@@ -34,7 +34,7 @@ const interfaceTable = (
     style,
   ),
   style.dim(
-    "fan-in: files that import it; ripple: of those, files that changed in the same commits",
+    "fan-in: files that import it; ripple: of those, files that changed in the same change",
   ),
 ];
 
@@ -79,7 +79,7 @@ const directionSection = (
     ),
     ...shown.map(
       ({ from, to, importingFiles, changesTogether, fromCommits, toCommits }) =>
-        `${escapeForTerminal(from)} (${commits(fromCommits)}) imports ${escapeForTerminal(to)} (${commits(toCommits)}) in ${importingFiles} ${importingFiles === 1 ? "file" : "files"}; changed together in ${commits(changesTogether)}`,
+        `${escapeForTerminal(from)} (${changes(fromCommits)}) imports ${escapeForTerminal(to)} (${changes(toCommits)}) in ${importingFiles} ${importingFiles === 1 ? "file" : "files"}; changed together in ${changes(changesTogether)}`,
     ),
     ...(hidden > 0
       ? [`+${hidden} more; see dependencyDirection in --json`]

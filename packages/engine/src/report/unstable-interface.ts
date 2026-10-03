@@ -24,13 +24,13 @@ export const UnstableInterface = Schema.Struct({
    * path aliases shows a lower fan-in than it has.
    */
   fanIn: Count,
-  /** Logical changes of the window that touched the file (`FileStats.changes`): the churn of an interface is how often it was changed as a whole, not how many commits that took. */
+  /** Logical changes of the window that touched the file (`FileStats.changes`): the churn of an interface is how often it was changed as a whole, not how many changes that took. */
   changes: Count,
   /** The median of `changes` over its dependents: the file changes more often than this. */
   medianDependentChanges: Count,
-  /** Dependents that changed in a counted commit that also changed the file. */
+  /** Dependents that changed in a counted change that also changed the file. */
   changedDependents: Count,
-  /** The dependents that changed with it most often, at most five, with the counted commits they share with the file. */
+  /** The dependents that changed with it most often, at most five, with the counted changes they share with the file. */
   dependents: Schema.Array(
     Schema.Struct({ path: Schema.String, sharedCommits: Count }),
   ),

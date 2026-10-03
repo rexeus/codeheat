@@ -21,7 +21,7 @@ export const MIN_LOCAL_DISTANCE = 3;
 /** How much more a pair ranks when no import explains its coupling. */
 const HIDDEN_BOOST = 1.5;
 
-/** Shared commits at which a pair's evidence counts in full; fewer weigh in proportion. */
+/** Shared changes at which a pair's evidence counts in full; fewer weigh in proportion. */
 const FULL_EVIDENCE_COMMITS = 10;
 
 /**
@@ -55,7 +55,7 @@ const byScore = (a: DistantCoupling, b: DistantCoupling): number =>
 /**
  * The distant couplings among `couplings` (see `isDistantCoupling`), the
  * `MAX_DISTANT_COUPLINGS` best first: by score, then strength, shared
- * commits, and path. `modules` places every path of the couplings, contract
+ * changes, and path. `modules` places every path of the couplings, contract
  * files included; a path it lacks lives in the root module.
  */
 export const distantCouplings = (

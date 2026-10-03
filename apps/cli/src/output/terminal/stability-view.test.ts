@@ -16,10 +16,10 @@ describe("stabilitySections", () => {
       "Unstable interfaces (many files import them, and they keep changing)",
       "fan-in  changes  ripple  file",
       "    14       22       9  packages/shared/src/config.ts",
-      "fan-in: files that import it; ripple: of those, files that changed in the same commits",
+      "fan-in: files that import it; ripple: of those, files that changed in the same change",
       "",
       "Dependency direction (modules that rarely change import ones that change often)",
-      "packages/shared (30 commits) imports packages/billing (74 commits) in 2 files; changed together in 1 commit",
+      "packages/shared (30 changes) imports packages/billing (74 changes) in 2 files; changed together in 1 change",
       "",
     ]);
   });
@@ -51,7 +51,7 @@ describe("stabilitySections", () => {
     expect(lines.at(-2)).toBe("+2 more; see dependencyDirection in --json");
   });
 
-  it("says one commit in the singular", () => {
+  it("says one change in the singular", () => {
     const base = sampleReport();
     const [edge] = base.dependencyDirection;
     const report = {
@@ -61,7 +61,7 @@ describe("stabilitySections", () => {
     };
 
     expect(stabilitySections(report, makeStyle(false)).join("\n")).toContain(
-      "packages/shared (1 commit) imports packages/billing (4 commits) in 2 files; changed together in 1 commit",
+      "packages/shared (1 change) imports packages/billing (4 changes) in 2 files; changed together in 1 change",
     );
   });
 

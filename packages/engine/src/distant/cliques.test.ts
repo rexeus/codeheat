@@ -11,7 +11,7 @@ const commitsOf = (
 ): ReadonlyArray<ReadonlySet<string>> =>
   Array.from({ length: count }, () => new Set(paths));
 
-/** Modules a to e with ten counted commits each, ranked from five up. */
+/** Modules a to e with ten counted changes each, ranked from five up. */
 const MODULES = ["a", "b", "c", "d", "e"].map((path) => moduleRecord(path, 10));
 
 const cliquesOf = (touched: ReadonlyArray<ReadonlySet<string>>) =>
@@ -32,7 +32,7 @@ describe("findCliques membership", () => {
         sharedCommits: 6,
         weakestShare: 0.6,
         reason:
-          "3 modules of which every pair shares at least 60% of the smaller one's commits; 6 commits touched all of them",
+          "3 modules of which every pair shares at least 60% of the smaller one's changes; 6 changes touched all of them",
       },
     ]);
   });
@@ -57,7 +57,7 @@ describe("findCliques membership", () => {
     ).toEqual([[["a", "b", "c"], 0.3]]);
   });
 
-  it("finds no clique when every pair meets but no three commits touched all members", () => {
+  it("finds no clique when every pair meets but no three changes touched all members", () => {
     const touched = [
       ...commitsOf(5, "a", "b"),
       ...commitsOf(5, "b", "c"),
@@ -145,7 +145,7 @@ describe("findCliques exclusions and ranking", () => {
     ).toEqual([]);
   });
 
-  it("ranks the clique whose members changed together in more commits first", () => {
+  it("ranks the clique whose members changed together in more changes first", () => {
     const touched = [
       ...commitsOf(4, "a", "b", "c"),
       ...commitsOf(7, "c", "d", "e"),
@@ -204,7 +204,7 @@ describe("findCliques sub-groups", () => {
     ).toEqual([[["a", "b", "c", "d"], 4]]);
   });
 
-  it("finds the modules that different commits have in common when no single kind of commit repeats enough", () => {
+  it("finds the modules that different changes have in common when no single kind of commit repeats enough", () => {
     const touched = [
       ...commitsOf(2, "a", "b", "c", "d"),
       ...commitsOf(2, "a", "b", "c", "e"),
@@ -223,7 +223,7 @@ describe("findCliques sub-groups", () => {
   });
 });
 
-/** 2k modules in k pairs that never change together, every other pair of modules changing together in three commits. */
+/** 2k modules in k pairs that never change together, every other pair of modules changing together in three changes. */
 const adversarial = (pairs: number) => {
   const names = Array.from(
     { length: 2 * pairs },

@@ -19,7 +19,7 @@ const MODULES = [
 ];
 
 describe("moduleCouplings", () => {
-  it("reports the commits two modules share and their share of the smaller module's commits", () => {
+  it("reports the commits two modules share and their share of the smaller module's changes", () => {
     const touched = [
       ...commitsOf(6, "core", "compiler"),
       ...commitsOf(4, "core"),
@@ -31,7 +31,7 @@ describe("moduleCouplings", () => {
     ]);
   });
 
-  it("leaves out a pair that shares fewer than three commits, however large its share", () => {
+  it("leaves out a pair that shares fewer than three changes, however large its share", () => {
     const touched = [
       ...commitsOf(2, "cli", "core"),
       ...commitsOf(3, "cli"),
@@ -51,7 +51,7 @@ describe("moduleCouplings", () => {
     expect(moduleCouplings(moduleCoChange(touched, MODULES, 5))).toEqual([]);
   });
 
-  it("counts every pair of the modules one commit touched", () => {
+  it("counts every pair of the modules one change touched", () => {
     const touched = commitsOf(4, "cli", "compiler", "core");
 
     expect(

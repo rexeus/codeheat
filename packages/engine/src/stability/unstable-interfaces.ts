@@ -121,7 +121,7 @@ const byRipple = (a: UnstableInterface, b: UnstableInterface): number =>
  * `dependentsByFile`), test code left out by the caller. A file is one when at
  * least `MIN_FAN_IN` files depend on it, it has at least
  * `MIN_INTERFACE_CHANGES` logical changes (`FileStats.changes`: the churn of an
- * interface is how often it was changed as a whole, not how many commits it
+ * interface is how often it was changed as a whole, not how many changes it
  * took), and more changes than the median of its dependents. The
  * `MAX_UNSTABLE_INTERFACES` that changed together with the most dependents come
  * first, then more changes, higher fan-in, and path.

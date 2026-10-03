@@ -12,7 +12,7 @@ import type { Module } from "../report/module.js";
 import { roundReported } from "../report/precision.js";
 
 /**
- * How many times as many counted commits as the importing module the imported
+ * How many times as many counted changes as the importing module the imported
  * one needs to have changed in for the import to count as pointing at
  * something volatile.
  */
@@ -54,7 +54,7 @@ const edgesOf = (
   return edges;
 };
 
-/** The edges on which, in one commit touching `paths`, an importing file changed together with a file it imports. */
+/** The edges on which, in one change touching `paths`, an importing file changed together with a file it imports. */
 const edgesFeltIn = (
   paths: ReadonlySet<string>,
   edges: ReadonlyMap<string, Edge>,
@@ -71,7 +71,7 @@ const edgesFeltIn = (
   );
 
 /**
- * Per edge, in how many counted commits an importing file changed together
+ * Per edge, in how many counted changes an importing file changed together
  * with a file of the imported module that it imports: how often the dependency
  * was actually felt.
  */
@@ -97,7 +97,7 @@ const changedTogether = (
   return changed;
 };
 
-/** Volatility of the imported module over the importer's, times in how many commits an importer changed with what it imports (log scale). */
+/** Volatility of the imported module over the importer's, times in how many changes an importer changed with what it imports (log scale). */
 const rankOf = ({ ratio, changesTogether: changed }: DependencyDirection) =>
   Math.log2(ratio) * Math.log2(1 + changed);
 
@@ -118,21 +118,21 @@ const reasonFor = (
   { from, to }: Edge,
   { importingFiles, changesTogether: changed, fromCommits, toCommits }: Counts,
 ): string =>
-  `${importingFiles} ${importingFiles === 1 ? "file" : "files"} of ${from}, which changed in ${fromCommits} ${fromCommits === 1 ? "commit" : "commits"}, import ${to}, which changed in ${toCommits}; ${changed} ${changed === 1 ? "commit" : "commits"} changed an importer together with what it imports`;
+  `${importingFiles} ${importingFiles === 1 ? "file" : "files"} of ${from}, which changed in ${fromCommits} ${fromCommits === 1 ? "change" : "changes"}, import ${to}, which changed in ${toCommits}; an importer changed together with what it imports in ${changed} ${changed === 1 ? "change" : "changes"}`;
 
 /**
  * The import edges between modules that point from a stable module to a
  * volatile one: `dependencies` says what each non-test file loads, `homes`
  * which module each file lives in, `measured` how often each module changed
- * (`Module.commits`), and `history` which files changed in the same commits.
+ * (`Module.commits`), and `history` which files changed in the same changes.
  * An edge is flagged when neither module is test-only, the imported one
- * changed in at least `minModuleCommits` counted commits (fewer say nothing
+ * changed in at least `minModuleCommits` counted changes (fewer say nothing
  * about volatility), and in at least `MIN_VOLATILITY_RATIO` times as many as
  * the importing one, which may not have changed at all.
  *
- * `ratio` is the imported module's commits over the importing one's (at least
+ * `ratio` is the imported module's changes over the importing one's (at least
  * 1). The edges rank by `log2(ratio) × log2(1 + changesTogether)`: how much more
- * volatile the imported side is, and in how many commits an importer really had to
+ * volatile the imported side is, and in how many changes an importer really had to
  * move with it, so that every module importing the same framework does not
  * fill the list. Then more importing files and path break ties. The
  * `MAX_DEPENDENCY_DIRECTIONS` best come back.

@@ -11,7 +11,7 @@ const clique = (modules: ReadonlyArray<string>, sharedCommits = 6): Clique => ({
   modules,
   sharedCommits,
   weakestShare: 0.4,
-  reason: `${modules.length} modules of which every pair shares at least 40% of the smaller one's commits; ${sharedCommits} commits touched all of them`,
+  reason: `${modules.length} modules of which every pair shares at least 40% of the smaller one's changes; ${sharedCommits} changes touched all of them`,
 });
 
 describe("distantSection", () => {
@@ -68,7 +68,7 @@ describe("cliqueSection", () => {
 
     expect(cliqueSection(report, makeStyle(false))).toEqual([
       "Change together (modules)",
-      "packages/a + packages/b + packages/c: 3 modules of which every pair shares at least 40% of the smaller one's commits; 12 commits touched all of them",
+      "packages/a + packages/b + packages/c: 3 modules of which every pair shares at least 40% of the smaller one's changes; 12 changes touched all of them",
       "",
     ]);
   });

@@ -1,4 +1,4 @@
-// Owns which modules a commit touched: the one reading of "this change reached
+// Owns which modules a change touched: the one reading of "this change reached
 // that module" that cohesion, partners, the module coupling matrix, and
 // cliques all count.
 import { countedChanges } from "../coupling/coupling.js";

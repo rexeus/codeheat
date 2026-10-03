@@ -5,7 +5,7 @@ import { Order } from "effect";
 
 type Group = {
   readonly modules: ReadonlyArray<string>;
-  /** Counted commits that touched every member. */
+  /** Counted changes that touched every member. */
   readonly sharedCommits: number;
 };
 
@@ -20,7 +20,7 @@ const isWithin = (
 const commonMembers = (a: Group, b: Group): number =>
   a.modules.filter((member) => b.modules.includes(member)).length;
 
-/** The group whose members changed together in more commits, then the larger, then by path. */
+/** The group whose members changed together in more changes, then the larger, then by path. */
 const strongestFirst = (a: Group, b: Group): number =>
   b.sharedCommits - a.sharedCommits ||
   b.modules.length - a.modules.length ||
@@ -49,7 +49,7 @@ const areVariants = (a: Group, b: Group, isLinked: IsLinked): boolean =>
  * unit of change when their union is pairwise linked in the module pair graph
  * (`isLinked`) and they share at least `min(n − 1, ceil(0.8 n))` members, `n`
  * being the size of the larger; of variants only the stronger stays (more
- * commits touching all members, then more members, then path), judged against
+ * changes touching all members, then more members, then path), judged against
  * the groups already kept, strongest first. Groups that fail either test are
  * different units and all stay: members that never change together, or little
  * overlap.

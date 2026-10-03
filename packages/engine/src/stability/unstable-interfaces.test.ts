@@ -29,7 +29,7 @@ const commit = (...files: ReadonlyArray<string>) => ({
   size: files.length,
 });
 
-/** A history in which each path has the logical changes given and, unless `revisions` says otherwise, as many commits. */
+/** A history in which each path has the logical changes given and, unless `revisions` says otherwise, as many changes. */
 const historyOf = (
   changes: Readonly<Record<string, number>>,
   touched: ReadonlyArray<ReturnType<typeof commit>> = [],

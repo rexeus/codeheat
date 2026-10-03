@@ -24,7 +24,7 @@ describe("codeheat finds unstable interfaces", () => {
           "Unstable interfaces (many files import them, and they keep changing)",
           "fan-in  changes  ripple  file",
           "     5        5       5  src/api.ts",
-          "fan-in: files that import it; ripple: of those, files that changed in the same commits",
+          "fan-in: files that import it; ripple: of those, files that changed in the same change",
         ]);
       }).pipe(Effect.scoped),
   );

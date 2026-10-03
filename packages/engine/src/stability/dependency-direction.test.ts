@@ -72,7 +72,7 @@ describe("dependencyDirection flags", () => {
     expect(edgesOf(dependencies)).toEqual(["stable -> volatile (2)"]);
   });
 
-  it("explains the edge with the commits of both modules and the importers that changed with what they import", () => {
+  it("explains the edge with the changes of both modules and the importers that changed with what they import", () => {
     const [edge] = flagged(
       loads({ "stable/a.ts": ["volatile/x.ts"] }),
       historyOf(["stable/a.ts", "volatile/x.ts"], ["volatile/x.ts"]),
@@ -87,7 +87,7 @@ describe("dependencyDirection flags", () => {
       toCommits: 20,
       ratio: 5,
       reason:
-        "1 file of stable, which changed in 4 commits, import volatile, which changed in 20; 1 commit changed an importer together with what it imports",
+        "1 file of stable, which changed in 4 changes, import volatile, which changed in 20; an importer changed together with what it imports in 1 change",
     });
   });
 });

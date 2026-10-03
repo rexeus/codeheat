@@ -101,7 +101,7 @@ layer(NodeServices.layer)("analyze stability", (it) => {
             toCommits: 6,
             ratio: 6,
             reason:
-              "1 file of packages/stable, which changed in 1 commit, import packages/core, which changed in 6; 1 commit changed an importer together with what it imports",
+              "1 file of packages/stable, which changed in 1 change, import packages/core, which changed in 6; an importer changed together with what it imports in 1 change",
           },
         ]);
         assert.strictEqual(report.thresholds.minVolatilityRatio, 2);

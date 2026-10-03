@@ -8,8 +8,8 @@ import { Count, UnitInterval } from "./scalars.js";
 /**
  * A maximal group of at least three ranked modules (see `Module`) of which
  * every pair shares at least `Thresholds.minCliqueShare` of the smaller
- * module's counted commits (and at least `Thresholds.minSharedCommits`
- * commits), and at least `Thresholds.minSharedCommits` commits touched all
+ * module's counted changes (and at least `Thresholds.minSharedCommits`
+ * changes), and at least `Thresholds.minSharedCommits` changes touched all
  * members. Such modules are one unit of change cut by boundaries, or share an
  * abstraction that is missing.
  *
@@ -23,7 +23,7 @@ import { Count, UnitInterval } from "./scalars.js";
 export const Clique = Schema.Struct({
   /** `path` of each member, at least three, sorted. */
   modules: Schema.Array(Schema.String),
-  /** Counted commits that touched every member; at least `Thresholds.minSharedCommits`. */
+  /** Counted changes that touched every member; at least `Thresholds.minSharedCommits`. */
   sharedCommits: Count,
   /** The smallest `ModuleCoupling.share` over all pairs of members; at least `Thresholds.minCliqueShare`. Rounded to 4 decimals. */
   weakestShare: UnitInterval,

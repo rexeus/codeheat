@@ -1,10 +1,10 @@
-// Owns finding the parts of a group of modules that commits really touched as
-// a whole: what remains of a clique when no commit touched all of its members.
+// Owns finding the parts of a group of modules that changes really touched as
+// a whole: what remains of a clique when no change touched all of its members.
 
-/** Intersections kept while searching; bounds the work for a group that many different commits touch in different parts. */
+/** Intersections kept while searching; bounds the work for a group that many different changes touch in different parts. */
 const MAX_CANDIDATES = 500;
 
-/** Distinct parts of a group that commits touched, kept while searching; bounds the work of counting their support. */
+/** Distinct parts of a group that changes touched, kept while searching; bounds the work of counting their support. */
 const MAX_PARTS = 1000;
 
 type Part = { members: ReadonlyArray<string>; commits: number };
@@ -22,8 +22,8 @@ const intersect = (
 ): ReadonlyArray<string> => a.filter((member) => b.includes(member));
 
 /**
- * The parts of `group` that each commit touched, with at least `minSize`
- * members, and how many commits touched exactly that part; `partial` when
+ * The parts of `group` that each change touched, with at least `minSize`
+ * members, and how many changes touched exactly that part; `partial` when
  * more than `MAX_PARTS` distinct parts exist and the rest was left out.
  */
 const touchedParts = (
@@ -115,7 +115,7 @@ const withIntersections = (
  * The maximal parts of `group` (module paths, sorted) with at least `minSize`
  * members that at least `minCommits` of the `touched` commits (the modules
  * each touched) touched in full. A part is found as the modules several
- * commits have in common within the group, so a group whose members never met
+ * changes have in common within the group, so a group whose members never met
  * all at once still yields the sub-groups that did.
  *
  * The search is bounded (at most 1000 distinct parts and 500 intersections);

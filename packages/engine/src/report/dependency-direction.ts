@@ -20,7 +20,7 @@ export const DependencyDirection = Schema.Struct({
   /** Files of `from`, test code left out, that import at least one file of `to`. */
   importingFiles: Count,
   /**
-   * Counted commits in which a file of `from` changed together with a file of
+   * Counted changes in which a file of `from` changed together with a file of
    * `to` that it imports: how often the dependency was actually felt.
    */
   changesTogether: Count,

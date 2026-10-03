@@ -9,13 +9,13 @@ import { sharedShare } from "./module-co-change.js";
 import type { ModuleCoChange } from "./module-co-change.js";
 import { supportedSubgroups } from "./supported-groups.js";
 
-/** Smallest share of the smaller module's commits that every pair of a clique shares. */
+/** Smallest share of the smaller module's changes that every pair of a clique shares. */
 export const MIN_CLIQUE_SHARE = 0.3;
 
 /** Fewest modules in a clique: two modules that change together are a pair, not a group. */
 const MIN_CLIQUE_SIZE = 3;
 
-/** The report keeps this many cliques, those whose members changed together in the most commits first. */
+/** The report keeps this many cliques, those whose members changed together in the most changes first. */
 const MAX_CLIQUES = 50;
 
 /** Maximal groups of the module pair graph that are searched for cliques, those with the strongest weakest pair first. */
@@ -26,7 +26,7 @@ const MAX_ENUMERATED_GROUPS = 20000;
 
 type Adjacency = ReadonlyMap<string, ReadonlySet<string>>;
 
-/** Links two modules that share enough commits and a large enough share of the smaller one's. */
+/** Links two modules that share enough changes and a large enough share of the smaller one's. */
 const linkedModules = (coChange: ModuleCoChange): Adjacency => {
   const linked = new Map<string, Set<string>>();
   const link = (from: string, to: string): void => {
@@ -95,7 +95,7 @@ const extend = (
   }
 };
 
-/** The fewest commits any two members of the group shared: how well the group's weakest link is evidenced. */
+/** The fewest changes any two members of the group shared: how well the group's weakest link is evidenced. */
 const weakestLink = (
   members: ReadonlyArray<string>,
   coChange: ModuleCoChange,
@@ -117,7 +117,7 @@ const reasonFor = (
   weakestShare: number,
   sharedCommits: number,
 ): string =>
-  `${size} modules of which every pair shares at least ${percentOf(weakestShare)}% of the smaller one's commits; ${sharedCommits} ${sharedCommits === 1 ? "commit touched" : "commits touched"} all of them`;
+  `${size} modules of which every pair shares at least ${percentOf(weakestShare)}% of the smaller one's changes; ${sharedCommits} ${sharedCommits === 1 ? "change touched" : "changes touched"} all of them`;
 
 const toClique = (
   members: ReadonlyArray<string>,
@@ -157,16 +157,16 @@ export type Cliques = {
 /**
  * The cliques among the ranked modules of `coChange`: maximal groups of at
  * least three of which every pair shares at least `MIN_CLIQUE_SHARE` of the
- * smaller module's counted commits and at least `MIN_SHARED_COMMITS` commits,
- * and of which at least `MIN_SHARED_COMMITS` commits touched every member
- * (pairs that met only in different commits are no unit of change). A group
+ * smaller module's counted changes and at least `MIN_SHARED_COMMITS` changes,
+ * and of which at least `MIN_SHARED_COMMITS` changes touched every member
+ * (pairs that met only in different changes are no unit of change). A group
  * that fails the last rule is searched for its sub-groups that pass it, and
  * only the maximal ones are kept (the 1000 maximal groups with the best evidenced weakest
  * link at most, see `Cliques.partial`). A clique inside another is dropped, and of
  * two variants of one unit (their union pairwise linked, almost all members in
  * common) only the stronger stays (see `distinctGroups`). `touched` lists the
- * modules each counted commit touched. The `MAX_CLIQUES` whose members changed
- * together in the most commits come first, then the higher weakest share, more
+ * modules each counted change touched. The `MAX_CLIQUES` whose members changed
+ * together in the most changes come first, then the higher weakest share, more
  * members, and path.
  */
 export const findCliques = (

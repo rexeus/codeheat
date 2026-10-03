@@ -16,7 +16,7 @@ import { Count, UnitInterval } from "./scalars.js";
 export const DistantCoupling = Schema.Struct({
   a: Schema.String,
   b: Schema.String,
-  /** Counted commits that touched both files. */
+  /** Counted changes that touched both files. */
   sharedCommits: Count,
   /** `Coupling.degree` of the pair: how tightly the two change together. */
   strength: UnitInterval,
@@ -37,7 +37,7 @@ export const DistantCoupling = Schema.Struct({
    * is a design statement, directory steps only order what stays inside one.
    * `hidden` is 1.5 when no import links the files (`imports` is `none`) and 1
    * otherwise, null included. `evidence` is `min(1, sharedCommits / 10)`, so a
-   * pair that met in three commits does not outrank one that met in eleven at
+   * pair that met in three changes does not outrank one that met in eleven at
    * a similar degree.
    */
   score: Schema.Finite.check(Schema.isGreaterThanOrEqualTo(0)),

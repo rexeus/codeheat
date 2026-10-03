@@ -1581,7 +1581,7 @@
       "importingFiles": 2,
       "fromCommits": 30,
       "toCommits": 74,
-      "reason": "2 files of packages/shared, which changed in 30 commits, import packages/billing, which changed in 74; 1 commit changed an importer together with what it imports",
+      "reason": "2 files of packages/shared, which changed in 30 changes, import packages/billing, which changed in 74; an importer changed together with what it imports in 1 change",
       "changesTogether": 1,
       "ratio": 2.4667
     }

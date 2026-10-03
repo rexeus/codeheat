@@ -112,7 +112,7 @@ describe("distantCouplings selection", () => {
 });
 
 describe("distantCouplings evidence", () => {
-  it("does not rank a pair that met in three commits above one that met in eleven at a similar degree", () => {
+  it("does not rank a pair that met in three changes above one that met in eleven at a similar degree", () => {
     const thin = coupling(
       "packages/core/src/a.ts",
       "packages/compiler/src/x.ts",
@@ -196,7 +196,7 @@ describe("distantCouplings hidden coupling, exclusions, and ranking", () => {
     ).toEqual(["packages/core/spec/api.tsp"]);
   });
 
-  it("breaks ties by strength, shared commits, then path and keeps the best fifty", () => {
+  it("breaks ties by strength, shared changes, then path and keeps the best fifty", () => {
     const many = Array.from({ length: 60 }, (_, index) =>
       coupling("packages/core/src/a.ts", `packages/compiler/src/f${index}.ts`, {
         degree: 0.3 + index / 1000,

@@ -1,5 +1,5 @@
-// Owns how often ranked modules change in the same commits: the shared
-// commits of every pair, and the coupling matrix data derived from them.
+// Owns how often ranked modules change together: the shared
+// changes of every pair, and the coupling matrix data derived from them.
 import { Order } from "effect";
 
 import { MIN_SHARED_COMMITS } from "../coupling/coupling.js";
@@ -10,19 +10,19 @@ import { roundReported } from "../report/precision.js";
 /** The report keeps this many module couplings, those with the largest share first. */
 const MAX_MODULE_COUPLINGS = 200;
 
-/** The counted commits of the ranked modules and those they share. */
+/** The counted changes of the ranked modules and those they share. */
 export type ModuleCoChange = {
-  /** Counted commits per ranked module path. */
+  /** Counted changes per ranked module path. */
   readonly commits: ReadonlyMap<string, number>;
   /** Commits that touched both modules, nested as `lower path -> higher path -> count`; pairs that never met are absent. */
   readonly shared: ReadonlyMap<string, ReadonlyMap<string, number>>;
 };
 
 /**
- * Counts, over `touched` (the modules each counted commit touched, see
- * `touchedModules`), the commits every pair of ranked modules shares. A module
- * is ranked when it has at least `minModuleCommits` counted commits and is not
- * test-only; the others stay out, since a handful of commits makes any share
+ * Counts, over `touched` (the modules each counted change touched, see
+ * `touchedModules`), the changes every pair of ranked modules shares. A module
+ * is ranked when it has at least `minModuleCommits` counted changes and is not
+ * test-only; the others stay out, since a handful of changes makes any share
  * meaningless and tests would couple to everything.
  */
 export const moduleCoChange = (
@@ -53,7 +53,7 @@ export const moduleCoChange = (
   return { commits, shared };
 };
 
-/** The share of the smaller module's commits that touched both; 0 for a module that is not ranked. */
+/** The share of the smaller module's changes that touched both; 0 for a module that is not ranked. */
 export const sharedShare = (
   { commits, shared }: ModuleCoChange,
   a: string,
@@ -73,7 +73,7 @@ const byShare = (a: ModuleCoupling, b: ModuleCoupling): number =>
 
 /**
  * The module pairs that share at least `MIN_SHARED_COMMITS` commits, the
- * `MAX_MODULE_COUPLINGS` with the largest share first (then shared commits,
+ * `MAX_MODULE_COUPLINGS` with the largest share first (then shared changes,
  * then path). Every entry has its paths in sorted order.
  */
 export const moduleCouplings = (

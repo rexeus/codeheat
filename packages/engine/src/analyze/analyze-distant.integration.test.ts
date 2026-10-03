@@ -89,7 +89,7 @@ layer(NodeServices.layer)("analyze distant couplings", (it) => {
             sharedCommits: 5,
             weakestShare: 1,
             reason:
-              "3 modules of which every pair shares at least 100% of the smaller one's commits; 5 commits touched all of them",
+              "3 modules of which every pair shares at least 100% of the smaller one's changes; 5 changes touched all of them",
           },
         ]);
         assert.strictEqual(report.thresholds.minCliqueShare, 0.3);

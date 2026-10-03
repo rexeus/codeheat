@@ -16,7 +16,7 @@ const packages = (count: number): ReadonlyArray<string> =>
   );
 
 describe("supportedSubgroups", () => {
-  it("finds the maximal sub-groups that enough commits touched in full, and is not partial", () => {
+  it("finds the maximal sub-groups that enough changes touched in full, and is not partial", () => {
     const touched = [
       ...commitsOf(5, "a", "b", "c"),
       ...commitsOf(3, "d", "a"),
@@ -29,7 +29,7 @@ describe("supportedSubgroups", () => {
     });
   });
 
-  it("stays fast on many packages that different commits touch in different parts, and says it gave up", () => {
+  it("stays fast on many packages that different changes touch in different parts, and says it gave up", () => {
     const group = packages(60);
     let seed = 12345;
     const next = (): number => {
