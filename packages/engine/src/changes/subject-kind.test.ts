@@ -28,6 +28,30 @@ describe("subjectKindOf a single commit", () => {
   ])("reads a revert or a first word that says fix: %j", (subject) => {
     expect(kindOf(subject)).toBe("fix");
   });
+});
+
+describe("subjectKindOf a scope and a fix word", () => {
+  it.each([
+    "compiler: fix crash on empty input",
+    "core/router: fixed a leak",
+    "ngcc: fixes the loop",
+    "zone.js:fix patch of timers",
+  ])(
+    "reads a lowercase scope, a colon, and a fix word as a fix: %j",
+    (subject) => {
+      expect(kindOf(subject)).toBe("fix");
+    },
+  );
+
+  it.each([
+    ["cli: add a flag", "other"],
+    ["cli: fixture update", "other"],
+    ["Compiler: fix crash", "other"],
+    ["feat: fix the layout of the table", "convention"],
+    ["docs(api): fixes in the guide", "convention"],
+  ] as const)("does not read %j as a fix", (subject, kind) => {
+    expect(kindOf(subject)).toBe(kind);
+  });
 
   it.each([
     "Bug 1234 - Add the export button",

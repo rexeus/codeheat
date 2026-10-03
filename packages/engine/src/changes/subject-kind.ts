@@ -22,6 +22,8 @@ const FIX_WORDS: ReadonlySet<string> = new Set([
   "hotfix",
 ]);
 const FIRST_WORD = /^[a-z]+/iu;
+/** `subsystem: fix …`: a lowercase scope, a colon, then a fix word, as the Angular and Linux style writes it. */
+const SCOPED_FIX = /^[a-z][a-z0-9._/-]*:\s*(fix|fixes|fixed)\b/u;
 /** `Bug 1234 - …`, `BUG-12: …`, `bug #7`: the word names a ticket, not a fix. */
 const BUG_TICKET = /^bug[\s#-]*\d/iu;
 
@@ -29,7 +31,8 @@ const isFix = (subject: string): boolean =>
   FIX_TYPE.test(subject) ||
   REVERT.test(subject) ||
   (FIX_WORDS.has((FIRST_WORD.exec(subject)?.[0] ?? "").toLowerCase()) &&
-    !BUG_TICKET.test(subject));
+    !BUG_TICKET.test(subject)) ||
+  (SCOPED_FIX.test(subject) && !CONVENTIONAL_TYPE.test(subject));
 
 const kindOfSubject = (subject: string): SubjectKind => {
   if (isFix(subject)) {

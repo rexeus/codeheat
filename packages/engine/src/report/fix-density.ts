@@ -13,7 +13,9 @@ import { Count, UnitInterval } from "./scalars.js";
  * that starts with `Revert "`, or one whose first word is `fix`, `fixes`,
  * `fixed`, `fixing`, `bug`, `bugfix`, or `hotfix` (`bug` followed by a
  * ticket number, as in `Bug 1234 - …` or `BUG-12`, names a ticket and is no
- * fix). A change of several commits is a fix when more than half of its
+ * fix), or a lowercase scope, a colon, and `fix`, `fixes`, or `fixed`
+ * (`compiler: fix crash`; not under another Conventional Commits type such as
+ * `feat:`). A change of several commits is a fix when more than half of its
  * commits are. When too few subjects say anything, a share of 0 would be a
  * claim: then the fix density is unknown.
  */
