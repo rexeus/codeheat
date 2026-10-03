@@ -18,6 +18,8 @@ describe("subjectKindOf a single commit", () => {
 
   it.each([
     'Revert "feat: add the cache"',
+    "revert: bring back the cache",
+    "Revert(api): bring back the cache",
     "Fix typo in the readme",
     "fixes the login redirect (#12)",
     "Fixed flaky test",
@@ -27,6 +29,32 @@ describe("subjectKindOf a single commit", () => {
     expect(kindOf(subject)).toBe("fix");
   });
 
+  it.each([
+    "Bug 1234 - Add the export button",
+    "Bug 1234: Stop the crash on startup",
+    "BUG-12: handle null",
+    "bug #7 crash on empty input",
+    "Bug1234 - Rework the list",
+  ])(
+    "does not take bug followed by a ticket number, as a tracker names it, for a fix: %j",
+    (subject) => {
+      expect(kindOf(subject)).toBe("other");
+    },
+  );
+
+  it.each([
+    "bug: crash on empty input",
+    "Bug in the export, see the ticket 1234",
+    "bugfix 1234: crash on empty input",
+  ])(
+    "still reads bug as a fix word when no ticket number follows it: %j",
+    (subject) => {
+      expect(kindOf(subject)).toBe("fix");
+    },
+  );
+});
+
+describe("subjectKindOf a single commit that is no fix", () => {
   it.each([
     "feat: add the cache",
     "chore(deps): bump vitest",

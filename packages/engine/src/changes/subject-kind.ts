@@ -4,11 +4,11 @@
 /** `fix`: the change corrects something; `convention`: its subject follows a commit convention but is no fix; `other`: neither. */
 export type SubjectKind = "fix" | "convention" | "other";
 
-/** `fix: …`, `fix(scope): …`, `hotfix!: …`, `bugfix: …` (Conventional Commits). */
-const FIX_TYPE = /^(fix|hotfix|bugfix)(\(.+\))?!?:/iu;
+/** `fix: …`, `fix(scope): …`, `hotfix!: …`, `bugfix: …`, `revert: …` (Conventional Commits). */
+const FIX_TYPE = /^(fix|hotfix|bugfix|revert)(\(.+\))?!?:/iu;
 /** Any other type of Conventional Commits, scope and breaking mark optional. */
 const CONVENTIONAL_TYPE =
-  /^(feat|docs|style|refactor|perf|tests?|build|ci|chore|revert)(\(.+\))?!?:/iu;
+  /^(feat|docs|style|refactor|perf|tests?|build|ci|chore)(\(.+\))?!?:/iu;
 /** What `git revert` writes. */
 const REVERT = /^Revert "/u;
 /** Words that, as the first word of a subject, say that the change fixes something (`Fix typo in …`, `Bug: …`). */
@@ -22,11 +22,14 @@ const FIX_WORDS: ReadonlySet<string> = new Set([
   "hotfix",
 ]);
 const FIRST_WORD = /^[a-z]+/iu;
+/** `Bug 1234 - …`, `BUG-12: …`, `bug #7`: the word names a ticket, not a fix. */
+const BUG_TICKET = /^bug[\s#-]*\d/iu;
 
 const isFix = (subject: string): boolean =>
   FIX_TYPE.test(subject) ||
   REVERT.test(subject) ||
-  FIX_WORDS.has((FIRST_WORD.exec(subject)?.[0] ?? "").toLowerCase());
+  (FIX_WORDS.has((FIRST_WORD.exec(subject)?.[0] ?? "").toLowerCase()) &&
+    !BUG_TICKET.test(subject));
 
 const kindOfSubject = (subject: string): SubjectKind => {
   if (isFix(subject)) {
