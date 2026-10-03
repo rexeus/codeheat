@@ -34,18 +34,20 @@ describe("codeheat reports how far a change spreads", () => {
       }).pipe(Effect.scoped),
   );
 
-  it.live("says it in two sentences under the summary line", () =>
-    Effect.gen(function* () {
-      const repo = yield* makeCliqueProject;
+  it.live(
+    "says it in one sentence under the summary line, without the propagation cost",
+    () =>
+      Effect.gen(function* () {
+        const repo = yield* makeCliqueProject;
 
-      const result = yield* journey({ args: ["analyze"], cwd: repo.root });
+        const result = yield* journey({ args: ["analyze"], cwd: repo.root });
 
-      expect(result.stdout.split("\n").slice(1, 4)).toStrictEqual([
-        "A typical change touches 3 modules; 9 in 10 touch at most 3 modules; 0% stay in one module.",
-        "Propagation cost 100%: a change to one file reaches that share of the other files within 3 couplings.",
-        "",
-      ]);
-    }).pipe(Effect.scoped),
+        expect(result.stdout.split("\n").slice(1, 3)).toStrictEqual([
+          "Across 5 changes, a typical change touches 3 modules; 0% stay in one module.",
+          "",
+        ]);
+        expect(result.stdout).not.toContain("ropagation");
+      }).pipe(Effect.scoped),
   );
 
   it.live("states the radius of an inspected file's module", () =>

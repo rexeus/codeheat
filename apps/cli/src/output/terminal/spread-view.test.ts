@@ -1,49 +1,43 @@
-import type { Report } from "@codeheat/engine";
 import { describe, expect, it } from "vitest";
 
 import { radiusClause, spreadLines } from "./spread-view.js";
 
-const spread = (
-  changeRadius: Report["changeRadius"],
-  cost: number | null,
-): ReadonlyArray<string> =>
-  spreadLines({
-    changeRadius,
-    propagationCost: cost === null ? null : { cost, files: 40 },
-    thresholds: { propagationDepth: 3 },
-  });
-
-const radius = { changes: 50, median: 1, p90: 4, local: 0.6412 };
+const radiusOf = (changes: number) => ({
+  changeRadius: { changes, median: 1, p90: 4, local: 0.6412 },
+});
 
 describe("spreadLines", () => {
   it("states the typical change, the spread of nine in ten, and the share that stays in one module", () => {
-    expect(spread(radius, null)).toStrictEqual([
-      "A typical change touches 1 module; 9 in 10 touch at most 4 modules; 64% stay in one module.",
+    expect(spreadLines(radiusOf(170))).toStrictEqual([
+      "Across 170 changes, a typical change touches 1 module; 9 in 10 touch at most 4 modules; 64% stay in one module.",
     ]);
   });
 
-  it("names the depth the propagation cost followed", () => {
-    expect(spread(null, 0.5)).toStrictEqual([
-      "Propagation cost 50%: a change to one file reaches that share of the other files within 3 couplings.",
-    ]);
-  });
-
-  it("keeps a small cost visible instead of rounding it to nothing", () => {
+  it("leaves out the spread of nine in ten below ten measured changes", () => {
     expect(
-      [0.061, 0.0017, 0.0004, 0, 0.1].map(
-        (cost) => spread(null, cost)[0]?.split(":")[0],
-      ),
+      [9, 10].map((changes) => spreadLines(radiusOf(changes))),
     ).toStrictEqual([
-      "Propagation cost 6.1%",
-      "Propagation cost 0.2%",
-      "Propagation cost <0.1%",
-      "Propagation cost 0%",
-      "Propagation cost 10%",
+      [
+        "Across 9 changes, a typical change touches 1 module; 64% stay in one module.",
+      ],
+      [
+        "Across 10 changes, a typical change touches 1 module; 9 in 10 touch at most 4 modules; 64% stay in one module.",
+      ],
     ]);
   });
 
-  it("says nothing without either number", () => {
-    expect(spread(null, null)).toStrictEqual([]);
+  it("speaks of one change in the singular", () => {
+    expect(
+      spreadLines({
+        changeRadius: { changes: 1, median: 3, p90: 3, local: 0 },
+      }),
+    ).toStrictEqual([
+      "Across 1 change, a typical change touches 3 modules; 0% stay in one module.",
+    ]);
+  });
+
+  it("says nothing without a change radius", () => {
+    expect(spreadLines({ changeRadius: null })).toStrictEqual([]);
   });
 });
 

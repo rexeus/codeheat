@@ -63,7 +63,7 @@ const billing: Module = {
   commits: 74,
   localCommits: 41,
   cohesion: 0.5541,
-  radius: 2,
+  radius: 1,
   partners: [
     { path: "packages/web", sharedCommits: 20, contractsOnly: false },
     { path: "packages/auth", sharedCommits: 9, contractsOnly: false },
@@ -105,7 +105,7 @@ describe("renderInspect", () => {
         "rank #1 of 36, score 0.97",
         "48 revisions, 14 co-changed files, +384 -672 lines, 964 loc",
         "indentation complexity 1900 (mean 1.97, max 9)",
-        "module packages/billing: 55% of 74 changes stay inside; a typical change touching it touches 2 modules, most often with packages/web (20)",
+        "module packages/billing: 55% of 74 changes stay inside; a typical change touching it touches 1 module, most often with packages/web (20)",
         "- changed in 48 commits (#1 of 36)",
         "",
         "Changes together with",
@@ -186,7 +186,7 @@ describe("renderInspect modules", () => {
     const silent: Module = { ...deep, commits: 0, cohesion: null };
 
     expect(renderInspect(result([entry], [deep]), makeStyle(false))).toContain(
-      "touches 2 modules, most often with packages/web (20)\nmodule packages/billing depth: 6 exports over 3105 lines, 517.5 lines per export\n",
+      "touches 1 module, most often with packages/web (20)\nmodule packages/billing depth: 6 exports over 3105 lines, 517.5 lines per export\n",
     );
     expect(
       renderInspect(result([entry], [silent]), makeStyle(false)),
@@ -215,7 +215,7 @@ describe("renderInspect modules", () => {
 
     expect(view).toContain("module packages/billing: 55%");
     expect(view).toContain(
-      "module packages/web: 50% of 10 changes stay inside; a typical change touching it touches 2 modules\n",
+      "module packages/web: 50% of 10 changes stay inside; a typical change touching it touches 1 module\n",
     );
   });
 });

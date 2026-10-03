@@ -1,46 +1,38 @@
-// Owns the terminal view of how far a change spreads: the change radius and the propagation cost.
+// Owns the terminal view of how far a change spreads: the change radius.
 import type { Module, Report } from "@codeheat/engine";
 
 import { percent } from "./format.js";
 
-/** `1 module`, `3 modules`. */
+/** Fewest measured changes at which nine in ten of them say something. */
+const MIN_CHANGES_FOR_P90 = 10;
+
 const moduleCount = (count: number): string =>
   `${count} ${count === 1 ? "module" : "modules"}`;
 
-/** A share of the files as a percentage; one decimal below 10% so that a small cost stays visible, and `<0.1%` rather than 0% for a cost above 0. */
-const costShare = (cost: number): string => {
-  if (cost >= 0.1) {
-    return percent(cost);
-  }
-  const tenths = Math.round(cost * 1000) / 10;
-  return tenths === 0 && cost > 0 ? "<0.1%" : `${tenths}%`;
-};
-
 /**
- * Two sentences on how far a change spreads: the modules a typical change
- * touches, how many nine in ten touch at most, and how many stay in one
- * module; and the share of the other files a change to one file reaches
- * through chains of couplings. A sentence is left out when the report has no
- * such number.
+ * One sentence on how far a change spreads over the measured changes: the
+ * modules a typical change touches, how many nine in ten touch at most (left
+ * out below ten changes, where it is the maximum), and the share that stays in
+ * one module. Nothing when the report has no change radius.
  */
 export const spreadLines = ({
   changeRadius,
-  propagationCost,
-  thresholds,
-}: Pick<Report, "changeRadius" | "propagationCost"> & {
-  readonly thresholds: Pick<Report["thresholds"], "propagationDepth">;
-}): ReadonlyArray<string> => [
-  ...(changeRadius === null
-    ? []
-    : [
-        `A typical change touches ${moduleCount(changeRadius.median)}; 9 in 10 touch at most ${moduleCount(changeRadius.p90)}; ${percent(changeRadius.local)} stay in one module.`,
-      ]),
-  ...(propagationCost === null
-    ? []
-    : [
-        `Propagation cost ${costShare(propagationCost.cost)}: a change to one file reaches that share of the other files within ${thresholds.propagationDepth} couplings.`,
-      ]),
-];
+}: Pick<Report, "changeRadius">): ReadonlyArray<string> => {
+  if (changeRadius === null) {
+    return [];
+  }
+  const { changes, median, p90, local } = changeRadius;
+  const clauses = [
+    `a typical change touches ${moduleCount(median)}`,
+    ...(changes >= MIN_CHANGES_FOR_P90
+      ? [`9 in 10 touch at most ${moduleCount(p90)}`]
+      : []),
+    `${percent(local)} stay in one module`,
+  ];
+  return [
+    `Across ${changes} ${changes === 1 ? "change" : "changes"}, ${clauses.join("; ")}.`,
+  ];
+};
 
 /** What a module's radius says on one line: nothing for a module without one. */
 export const radiusClause = ({ radius }: Pick<Module, "radius">): string =>
