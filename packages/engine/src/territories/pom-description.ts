@@ -115,7 +115,7 @@ export const pomDescription = (text: string): string | undefined => {
     }
     at = step.end;
     if (!step.closing && step.name === "description" && depth === 1) {
-      return bodyFrom(text, at);
+      return step.empty ? undefined : bodyFrom(text, at);
     }
     depth += depthChange(step);
   }

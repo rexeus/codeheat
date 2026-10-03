@@ -57,6 +57,14 @@ describe("manifestDescription of a pom.xml", () => {
     );
   });
 
+  it("reads nothing from an empty top-level description, not a nested one's text", () => {
+    expect(
+      pom(
+        "<description/><build><plugins><plugin><configuration><description>plugin text</description></configuration></plugin></plugins></build>",
+      ),
+    ).toBe(undefined);
+  });
+
   it("unwraps character data", () => {
     expect(pom("<description><![CDATA[Fast & <small>]]></description>")).toBe(
       "Fast & <small>",
@@ -93,5 +101,34 @@ describe("manifestDescription of a TOML manifest", () => {
         '[tool.other]\ndescription = "not the project"\n',
       ),
     ).toBe(undefined);
+  });
+});
+
+describe("manifestDescription on hostile input", () => {
+  it.each([
+    ["blank lines", `[package]\n${"\n".repeat(200_000)}description = "late"\n`],
+    ["whitespace lines", `${"  \n".repeat(100_000)}[package]\n`],
+    ["table openers", "[".repeat(200_000)],
+    ["table headers", "[package]\n".repeat(20_000)],
+    ["description keys", 'description = """\n'.repeat(20_000)],
+  ])("finishes quickly on a TOML manifest of %s", (_name, manifest) => {
+    const start = performance.now();
+
+    manifestDescription("Cargo.toml", manifest);
+    manifestDescription("pyproject.toml", manifest);
+
+    expect(performance.now() - start).toBeLessThan(250);
+  });
+
+  it.each([
+    ["tag openers", "<a ".repeat(100_000)],
+    ["comment openers", "<!--".repeat(50_000)],
+    ["nested elements", "<a>".repeat(100_000)],
+  ])("finishes quickly on a pom.xml of %s", (_name, text) => {
+    const start = performance.now();
+
+    manifestDescription("pom.xml", text);
+
+    expect(performance.now() - start).toBeLessThan(250);
   });
 });

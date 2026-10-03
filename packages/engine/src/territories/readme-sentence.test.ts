@@ -135,6 +135,18 @@ describe("readmeSentence on hostile input", () => {
     expect(sentence).toBe(undefined);
   });
 
+  it("finishes quickly on a README of many paragraphs of openers", () => {
+    const readme = Array.from({ length: 120 }, () => "![".repeat(1024)).join(
+      "\n\n",
+    );
+    const start = performance.now();
+
+    const sentence = readmeSentence(readme);
+
+    expect(performance.now() - start).toBeLessThan(250);
+    expect(sentence).toBe(undefined);
+  });
+
   it("finishes quickly on a README of one endless paragraph", () => {
     const start = performance.now();
 

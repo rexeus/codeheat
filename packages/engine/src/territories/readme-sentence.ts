@@ -3,6 +3,8 @@
 // piece of text: at most `README_LINES` lines, and of the paragraph that
 // holds the sentence at most `MAX_PARAGRAPH` characters.
 
+import { withoutHtml, withoutImages, withoutLinks } from "./markup.js";
+
 /** The lines of a README read for its first sentence. */
 const README_LINES = 120;
 /** The characters of a paragraph read; the regular expressions below see no more. */
@@ -18,30 +20,19 @@ const MIN_WORDS = 3;
 const NOT_PROSE =
   /^(?:#|>|\||\+-|[-*+]\s|\d+[.)]\s|={3,}|-{3,}|\[[^\]]+\]:\s|<|\.\.(?:\s|$)|:[\w-]+:)/u;
 
-/** Images, inline or by reference: what a badge row is made of. */
-const IMAGES = /!\[[^\]]*\]\([^)]*\)|!\[[^\]]*\]\[[^\]]*\]/gu;
-const LINKS = /\[([^\]]*)\]\([^)]*\)|\[([^\]]*)\]\[[^\]]*\]/gu;
-const HTML = /<[^>]*>/gu;
-
 /** The text of a paragraph without images, links (their text stays), markup, and emphasis. */
 const withoutMarkup = (text: string): string =>
-  text
-    .replaceAll(IMAGES, "")
-    .replaceAll(
-      LINKS,
-      (_, inline: string | undefined, reference: string | undefined) =>
-        inline ?? reference ?? "",
-    )
-    .replaceAll(HTML, "")
-    .replaceAll(/`|\*|__/gu, "");
+  withoutHtml(withoutLinks(withoutImages(text), true)).replaceAll(
+    /`|\*|__/gu,
+    "",
+  );
 
 /** The paragraph is nothing but images and links (a row of badges, a list of references). */
 const onlyLinks = (text: string): boolean =>
-  text
-    .replaceAll(IMAGES, "")
-    .replaceAll(LINKS, "")
-    .replaceAll(HTML, "")
-    .replaceAll(/[\s|·•,.\-–—:/]+/gu, "") === "";
+  withoutHtml(withoutLinks(withoutImages(text), false)).replaceAll(
+    /[\s|·•,.\-–—:/]+/gu,
+    "",
+  ) === "";
 
 const SENTENCE_END = /[.!?](?=\s+[A-Z0-9"'([]|$)/gu;
 const ABBREVIATION = /(?:^|\s)(?:e\.g|i\.e|etc|vs|approx|incl)\.$/iu;
