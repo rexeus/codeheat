@@ -111,6 +111,12 @@ describe("entryPointLines subjects", () => {
         files: ["lib/hub.ts"],
         evidence: { fanIn: 1, changes: 1, changedDependents: 1 },
       }),
+      entry({
+        rank: 6,
+        kind: "coupling",
+        files: ["a/x.ts", "b/y.ts"],
+        evidence: { sharedChanges: 9, degree: 0.6 },
+      }),
     ]).filter((line) => /^\d\./u.test(line));
 
     expect(subjects).toStrictEqual([
@@ -119,6 +125,7 @@ describe("entryPointLines subjects", () => {
       "3. unit  billing + web + auth",
       "4. copies  a.ts + b.ts",
       "5. hub  lib/hub.ts",
+      "6. coupling  a/x.ts + b/y.ts",
     ]);
   });
 });

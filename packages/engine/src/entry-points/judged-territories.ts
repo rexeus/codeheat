@@ -2,6 +2,7 @@
 // detail with enough changes to say anything.
 import type { TerritoryFit } from "../report/territory-fit.js";
 import type { Territories, Territory } from "../report/territory.js";
+import { isTerritoryKind } from "../territories/recommend.js";
 
 /** A territory with its design fit. */
 export type Judged = Territory & { readonly fit: TerritoryFit };
@@ -28,9 +29,7 @@ export const judgedTerritories = (
     const node = byId.get(id);
     return node !== undefined &&
       node.fit !== null &&
-      (node.kind === "package" ||
-        node.kind === "folder" ||
-        node.kind === "group") &&
+      isTerritoryKind(node.kind) &&
       node.changes >= minChanges
       ? [{ ...node, fit: node.fit }]
       : [];

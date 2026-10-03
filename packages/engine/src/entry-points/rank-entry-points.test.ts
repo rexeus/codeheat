@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
 
 import type { CopyFamily } from "../report/copy-family.js";
+import type { Coupling } from "../report/report.js";
 import type { Territories } from "../report/territory.js";
+import { fileRecord } from "../testing/file-record.js";
 import { fitRecord, territoryRecord } from "../testing/territory-record.js";
+import type { EntryPointInput } from "./gather-candidates.js";
 import { rankEntryPoints } from "./rank-entry-points.js";
-import type { EntryPointInput } from "./rank-entry-points.js";
 
 const IDS = ["a", "b", "c", "d", "e", "f"];
 
@@ -26,6 +28,42 @@ const territories = (
   ],
 });
 
+/** A coupling of two files that no import links. */
+const hidden = (a: string, b: string): Coupling => ({
+  a,
+  b,
+  sharedCommits: 8,
+  degree: 0.5,
+  distance: 2,
+  testPair: false,
+  kinds: { a: "code", b: "code" },
+  crossesModule: true,
+  imports: "none",
+});
+
+/** Four units that share one territory at most, so none is the same unit as another. */
+const FOUR_UNITS = [
+  ["a", "b", "c"],
+  ["a", "d", "e"],
+  ["b", "d", "f"],
+  ["c", "e", "f"],
+].map((modules, index) => ({
+  modules,
+  sharedCommits: 10,
+  weakestShare: 0.5 - index / 10,
+  reason: "",
+}));
+const FOUR_HUBS = [10, 8, 6, 4].map((changedDependents) => ({
+  path: `lib/hub${changedDependents}.ts`,
+  module: "lib",
+  fanIn: 20,
+  changes: 10,
+  medianDependentChanges: 2,
+  changedDependents,
+  dependents: [],
+  reason: "",
+}));
+
 const copies = (): CopyFamily => ({
   files: ["a/x.ts", "b/x.ts"],
   similarity: { min: 0.8, max: 0.9 },
@@ -39,6 +77,7 @@ const input = (overrides: Partial<EntryPointInput> = {}): EntryPointInput => ({
   files: [],
   cliques: [],
   copyFamilies: [],
+  couplings: [],
   unstableInterfaces: [],
   changes: 1000,
   minChanges: 10,
@@ -96,33 +135,37 @@ describe("rankEntryPoints candidates", () => {
       "f",
     ]);
   });
+});
+
+describe("rankEntryPoints of couplings and the cap", () => {
+  it("finds the hidden couplings between the real territories of the recommended detail", () => {
+    const ranked = rankEntryPoints(
+      input({
+        territories: territories(["package", "other"]),
+        files: [
+          fileRecord("a/x.ts", "a"),
+          fileRecord("c/x.ts", "c"),
+          fileRecord("b/x.ts", "b"),
+        ],
+        couplings: [hidden("a/x.ts", "c/x.ts"), hidden("a/x.ts", "b/x.ts")],
+      }),
+    );
+
+    expect(
+      ranked
+        .filter(({ kind }) => kind === "coupling")
+        .map(({ files, territories: ids }) => [files, ids]),
+    ).toStrictEqual([
+      [
+        ["a/x.ts", "c/x.ts"],
+        ["a", "c"],
+      ],
+    ]);
+  });
 
   it("lists ten entries at most, the best of each kind among them", () => {
-    // four units that share one territory at most, so none is the same unit as another
-    const cliques = [
-      ["a", "b", "c"],
-      ["a", "d", "e"],
-      ["b", "d", "f"],
-      ["c", "e", "f"],
-    ].map((modules, index) => ({
-      modules,
-      sharedCommits: 10,
-      weakestShare: 0.5 - index / 10,
-      reason: "",
-    }));
-    const hubs = [10, 8, 6, 4].map((changedDependents) => ({
-      path: `lib/hub${changedDependents}.ts`,
-      module: "lib",
-      fanIn: 20,
-      changes: 10,
-      medianDependentChanges: 2,
-      changedDependents,
-      dependents: [],
-      reason: "",
-    }));
-
     const ranked = rankEntryPoints(
-      input({ cliques, unstableInterfaces: hubs }),
+      input({ cliques: FOUR_UNITS, unstableInterfaces: FOUR_HUBS }),
     );
 
     expect(ranked).toHaveLength(10);

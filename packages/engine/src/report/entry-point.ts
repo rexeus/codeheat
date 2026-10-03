@@ -9,7 +9,9 @@ import { Schema } from "effect";
  * `hotspot` (chronic hotspot files in a territory: split a hotspot),
  * `clique` (territories that change as one unit: extract a shared
  * abstraction), `copies` (a family of copies that change in lockstep: extract
- * a shared abstraction), and `hub` (an unstable interface: break up a hub).
+ * a shared abstraction), `hub` (an unstable interface: break up a hub), and
+ * `coupling` (files in different territories that change together although no
+ * import links them: centralize a contract).
  */
 const EntryPointKind = Schema.Literals([
   "boundary",
@@ -17,6 +19,7 @@ const EntryPointKind = Schema.Literals([
   "clique",
   "copies",
   "hub",
+  "coupling",
 ]);
 
 /**
@@ -30,7 +33,7 @@ export const EntryPoint = Schema.Struct({
   kind: EntryPointKind,
   /**
    * What put it on the list, in the unit of its kind (see GLOSSARY.md, "Entry
-   * point"): a share of the repository's heat for `boundary`, `hotspot`, and
+   * point (of a report)"): a share of the repository's heat for `boundary`, `hotspot`, and
    * `clique`, a share of the counted changes for `copies` and `hub`. Rounded
    * to 4 decimals; scores of different kinds are only roughly comparable, so
    * the list also keeps the best entry of each kind (see `Report.entryPoints`).
@@ -39,12 +42,12 @@ export const EntryPoint = Schema.Struct({
   /**
    * `id`s of the territories (see `Territories`) it concerns: the territory
    * itself for `boundary` and `hotspot`, the members of a `clique`, and the
-   * territories that hold the files of `copies` and `hub`.
+   * territories that hold the files of `copies`, `hub`, and `coupling`.
    */
   territories: Schema.Array(Schema.String),
   /**
    * The files it concerns, sorted: the chronic hotspots of `hotspot`, the
-   * members of `copies`, the file of `hub`; empty for `boundary` and
+   * members of `copies`, the file of `hub`, the two files of `coupling`; empty for `boundary` and
    * `clique`, which concern whole territories.
    */
   files: Schema.Array(Schema.String),

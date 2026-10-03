@@ -49,3 +49,10 @@ export const HUB_VERDICT =
 /** Break up a hub: `path` is the unstable interface. */
 export const hubMove = (path: string): string =>
   `Break up a hub: split what keeps changing in ${path} from what many files rely on, so that a change no longer ripples into its dependents.`;
+
+export const COUPLING_VERDICT =
+  "These files keep changing together across territories, and no import links them.";
+
+/** Centralize a contract between the two files `a` and `b` that change together without an import. */
+export const couplingMove = (a: string, b: string): string =>
+  `Centralize a contract: ${a} and ${b} agree on something that neither shows to the other; define it once, in a place both use.`;

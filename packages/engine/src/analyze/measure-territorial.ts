@@ -65,6 +65,7 @@ export const measureTerritorial = (options: {
         files: built.files,
         cliques: fitted.cliques,
         copyFamilies: options.copyFamilies,
+        couplings,
         unstableInterfaces: options.unstableInterfaces,
         changes: options.changes,
         minChanges,

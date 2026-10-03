@@ -2162,6 +2162,23 @@
       },
       "verdict": "Many files depend on this file, and it keeps changing.",
       "designMove": "Break up a hub: split what keeps changing in packages/shared/src/config.ts from what many files rely on, so that a change no longer ripples into its dependents."
+    },
+    {
+      "rank": 5,
+      "kind": "coupling",
+      "score": 0.0112,
+      "territories": ["t2", "t3"],
+      "files": [
+        "packages/billing/src/invoice.ts",
+        "packages/web/src/routes/invoices.tsx"
+      ],
+      "evidence": {
+        "sharedChanges": 12,
+        "degree": 0.5,
+        "distance": 5
+      },
+      "verdict": "These files keep changing together across territories, and no import links them.",
+      "designMove": "Centralize a contract: packages/billing/src/invoice.ts and packages/web/src/routes/invoices.tsx agree on something that neither shows to the other; define it once, in a place both use."
     }
   ]
 }

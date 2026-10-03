@@ -14,6 +14,7 @@ const KIND_LABELS: Readonly<Record<EntryPoint["kind"], string>> = {
   clique: "unit",
   copies: "copies",
   hub: "hub",
+  coupling: "coupling",
 };
 
 /** The count with its noun, the noun in the plural unless the count is 1. */
@@ -49,6 +50,8 @@ const EVIDENCE_LINES: Readonly<
     `${percent(at("heatShare"))} of the heat; ${counted(at("sharedChanges"), "change")} touched all ${at("territories")}, every pair shares at least ${percent(at("weakestShare"))}`,
   copies: (at) =>
     `${counted(at("files"), "file")}, at least ${percent(at("similarity"))} alike; ${counted(at("changesToAll"), "change")} touched every copy`,
+  coupling: (at) =>
+    `${counted(at("sharedChanges"), "change")} touched both, ${percent(at("degree"))} of the time either changes; no import links them`,
   hub: (at) =>
     `${counted(at("fanIn"), "file")} depend on it; ${counted(at("changes"), "change")} touched it, ${at("changedDependents")} of them together with a dependent`,
 };

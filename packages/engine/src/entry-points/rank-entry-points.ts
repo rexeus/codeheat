@@ -2,21 +2,11 @@
 // the at most ten places to start.
 import { Order } from "effect";
 
-import type { Clique } from "../report/clique.js";
-import type { CopyFamily } from "../report/copy-family.js";
 import type { EntryPoint } from "../report/entry-point.js";
 import { roundReported } from "../report/precision.js";
-import type { FileStats } from "../report/report.js";
-import type { Territories } from "../report/territory.js";
-import type { UnstableInterface } from "../report/unstable-interface.js";
-import { chainsOf } from "./ancestry.js";
-import { boundaryEntries } from "./boundary.js";
 import type { Candidate } from "./candidate.js";
-import { cliqueEntries } from "./clique.js";
-import { copiesEntries } from "./copies.js";
-import { hotspotEntries } from "./hotspot.js";
-import { hubEntries } from "./hub.js";
-import { judgedTerritories } from "./judged-territories.js";
+import { gatherCandidates } from "./gather-candidates.js";
+import type { EntryPointInput } from "./gather-candidates.js";
 
 /** The list has at most this many entry points. */
 const MAX_ENTRY_POINTS = 10;
@@ -31,21 +21,6 @@ const byScore = (a: Candidate, b: Candidate): number =>
     [...a.territories, ...a.files].join("\n"),
     [...b.territories, ...b.files].join("\n"),
   );
-
-/** What the entry points are read from. */
-export type EntryPointInput = {
-  /** The territories with their fit; the recommended detail is the one judged. */
-  readonly territories: Territories;
-  readonly files: ReadonlyArray<FileStats>;
-  /** The cliques among the territories at the recommended detail. */
-  readonly cliques: ReadonlyArray<Clique>;
-  readonly copyFamilies: ReadonlyArray<CopyFamily>;
-  readonly unstableInterfaces: ReadonlyArray<UnstableInterface>;
-  /** The counted changes of the window (`Report.window.couplingCommits`). */
-  readonly changes: number;
-  /** Fewest counted changes at which a territory is judged (`Thresholds.minModuleCommits`). */
-  readonly minChanges: number;
-};
 
 /**
  * Merges the candidates of every kind into the list: each kind keeps its four
@@ -75,30 +50,15 @@ const pick = (
 };
 
 /**
- * Ranks the places to start (see `EntryPoint`): territories whose boundary
- * does not hold, territories whose heat is chronic, cliques of territories,
- * copy families, and unstable interfaces. Each kind has its own rule and
- * score; see the modules of the kinds. Empty when nothing qualifies.
+ * Ranks the places to start (see `EntryPoint`) among the candidates of every
+ * kind; see `gatherCandidates` and the modules of the kinds for the rules.
+ * Empty when nothing qualifies.
  */
 export const rankEntryPoints = (
   input: EntryPointInput,
 ): ReadonlyArray<EntryPoint> => {
-  const { territories, files } = input;
-  const judged = judgedTerritories(territories, input.minChanges);
-  const byId = new Map(territories.nodes.map((node) => [node.id, node]));
-  const pathOf = new Map(territories.nodes.map(({ id, path }) => [id, path]));
-  const territoryOf = new Map(
-    files.map(({ path, territory }) => [path, territory]),
-  );
-  const picked = pick([
-    ...boundaryEntries(judged, pathOf),
-    ...hotspotEntries(judged, files, chainsOf(territories.nodes)),
-    ...cliqueEntries(input.cliques, byId),
-    ...copiesEntries(input.copyFamilies, territoryOf, input.changes),
-    ...hubEntries(input.unstableInterfaces, territoryOf, input.changes),
-  ]);
   const ranked: Array<EntryPoint> = [];
-  for (const candidate of picked) {
+  for (const candidate of pick(gatherCandidates(input))) {
     const score = roundReported(candidate.score);
     if (score > 0) {
       ranked.push(
