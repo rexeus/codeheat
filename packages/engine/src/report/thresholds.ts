@@ -51,6 +51,8 @@ export const Thresholds = Schema.Struct({
   ubiquitousShare: UnitInterval,
   /** Fewest counted changes a contract file needs to be ubiquitous. */
   ubiquitousMinCommits: Count,
+  /** Fewest counted changes a window of `Report.series` needs to be `active`, which is what the erosion, trend, and heat classifications count. */
+  minWindowChanges: Count,
   maxMeanLineLength: Count,
   maxFileBytes: Count,
 });

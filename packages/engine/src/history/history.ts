@@ -15,6 +15,7 @@ import { countKinds } from "../mechanical/kinds.js";
 import type { MechanicalCounts, MechanicalKind } from "../mechanical/kinds.js";
 import { scanCommits } from "./scan.js";
 import type { Entry } from "./scan.js";
+import { partitionEntries } from "./slices.js";
 
 /** The window's activity on one file, under its current path. */
 type FileHistory = {
@@ -191,23 +192,51 @@ const readEntries = (
 export const readHistory = (
   options: HistoryOptions,
 ): Effect.Effect<History, GitError, Git> =>
+  readHistoryAndSlices(options, []).pipe(Effect.map(({ history }) => history));
+
+/**
+ * Reads the window like `readHistory` and, from the same read, the history of
+ * each slice of it (see `partitionEntries` for `sliceStarts`; no slice without
+ * starts). A slice is grouped from its own commits, but a commit is mechanical
+ * in a slice exactly when it is in the window.
+ */
+export const readHistoryAndSlices = (
+  options: HistoryOptions,
+  sliceStarts: ReadonlyArray<number>,
+): Effect.Effect<
+  { readonly history: History; readonly slices: ReadonlyArray<History> },
+  GitError,
+  Git
+> =>
   Effect.gen(function* () {
     const { paths, fileIds } = indexPaths(options);
     const { entries, merges, kindsOf } = yield* readEntries(options, fileIds);
-    return buildHistory(paths, entries, kindsOf(entries), merges);
+    const kinds = kindsOf(entries);
+    return {
+      history: buildHistory(paths, entries, kinds, merges),
+      slices: partitionEntries(entries, sliceStarts).map((slice) =>
+        buildHistory(paths, slice, kinds, merges),
+      ),
+    };
   });
 
 /**
  * Reads the window once and splits its commits at `splitAt`, the time in
  * seconds since the epoch: `recent` holds the commits at or after it,
  * `earlier` those before it. Renames and deletions are followed across the
- * split; reverts and duplicates are paired inside each half.
+ * split; reverts and duplicates are paired inside each half. `slices` are
+ * those of `recent` (see `readHistoryAndSlices`).
  */
 export const readHistoryHalves = (
   options: HistoryOptions,
   splitAt: number,
+  sliceStarts: ReadonlyArray<number> = [],
 ): Effect.Effect<
-  { readonly recent: History; readonly earlier: History },
+  {
+    readonly recent: History;
+    readonly earlier: History;
+    readonly slices: ReadonlyArray<History>;
+  },
   GitError,
   Git
 > =>
@@ -216,8 +245,12 @@ export const readHistoryHalves = (
     const { entries, merges, kindsOf } = yield* readEntries(options, fileIds);
     const recent = entries.filter(({ signals }) => signals.time >= splitAt);
     const earlier = entries.filter(({ signals }) => signals.time < splitAt);
+    const recentKinds = kindsOf(recent);
     return {
-      recent: buildHistory(paths, recent, kindsOf(recent), merges),
+      recent: buildHistory(paths, recent, recentKinds, merges),
       earlier: buildHistory(paths, earlier, kindsOf(earlier), merges),
+      slices: partitionEntries(recent, sliceStarts).map((slice) =>
+        buildHistory(paths, slice, recentKinds, merges),
+      ),
     };
   });

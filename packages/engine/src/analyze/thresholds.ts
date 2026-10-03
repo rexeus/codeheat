@@ -23,6 +23,7 @@ import {
   MIN_LEAKAGE,
 } from "../modules/interface-churn.js";
 import type { Report } from "../report/report.js";
+import { MIN_WINDOW_CHANGES } from "../series/active-window.js";
 import { PROPAGATION_DEPTH } from "../spread/propagation-cost.js";
 import { MIN_VOLATILITY_RATIO } from "../stability/dependency-direction.js";
 import {
@@ -56,6 +57,7 @@ export const thresholdsFor = (couplingCommits: number) =>
     propagationDepth: PROPAGATION_DEPTH,
     ubiquitousShare: UBIQUITOUS_SHARE,
     ubiquitousMinCommits: UBIQUITOUS_MIN_COMMITS,
+    minWindowChanges: MIN_WINDOW_CHANGES,
     maxMeanLineLength: MAX_MEAN_LINE_LENGTH,
     maxFileBytes: MAX_FILE_BYTES,
   }) satisfies Report["thresholds"];

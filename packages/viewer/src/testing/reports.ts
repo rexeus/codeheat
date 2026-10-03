@@ -83,6 +83,7 @@ const THRESHOLDS: Report["thresholds"] = {
   propagationDepth: 3,
   ubiquitousShare: 0.3,
   ubiquitousMinCommits: 10,
+  minWindowChanges: 10,
   maxMeanLineLength: 300,
   maxFileBytes: 1048576,
 };
@@ -91,6 +92,7 @@ const THRESHOLDS: Report["thresholds"] = {
 const NO_FINDINGS = {
   changeRadius: null,
   propagationCost: null,
+  series: [],
   cliquesPartial: false,
   dependencyDirection: [],
   unstableInterfaces: [],
