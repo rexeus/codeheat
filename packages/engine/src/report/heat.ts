@@ -16,17 +16,21 @@ import { Count } from "./scalars.js";
  */
 export const Heat = Schema.Struct({
   /**
-   * `chronic`: hot in at least half of the windows that count for the file,
-   * which are at least `Thresholds.minTrendWindows`, so a design problem
-   * rather than a feature that was being built. `acute`: hot in one of the
-   * last two windows and in none before, in a series with an earlier active
-   * window to compare with, so current work. A file that is neither has no
-   * `heat`.
+   * `chronic`: at least `Thresholds.minTrendWindows` windows that count for
+   * the file lie before the last two, and it was hot in at least half of
+   * those: a design problem rather than a feature that was being built. The
+   * last two windows do not count towards this, so a series needs at least
+   * five windows (about 15 months) before any file can be chronic. `acute`:
+   * hot in both of the last two windows and in fewer than half of the windows
+   * that count for the file before them, in a series with an active window
+   * before them to compare with: current work. A file hot in all windows of a
+   * series too short to call it chronic is neither. A file that is neither has
+   * no `heat`.
    */
   kind: Schema.Literals(["chronic", "acute"]),
-  /** Windows in which the file was hot. */
+  /** Windows in which the file was hot, the last two included. */
   hotWindows: Count,
-  /** Windows that count for the file: the active ones from its first revision on. */
+  /** Windows that count for the file, the last two included: the active ones from its first revision on. */
   windows: Count,
 });
 export type Heat = typeof Heat.Type;

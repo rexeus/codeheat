@@ -22,13 +22,13 @@ const ACUTE = "src/acute.ts";
 const QUIET = Array.from({ length: 9 }, (_, index) => `src/quiet-${index}.ts`);
 
 /**
- * Four quarters. `src/chronic.ts` is revised five times in each, the quiet
+ * Six quarters. `src/chronic.ts` is revised five times in each, the quiet
  * files once; `src/acute.ts` is revised five times in the last two only.
  */
 const quarters = (
   lateOnly: ReadonlyArray<Change>,
 ): ReadonlyArray<ReadonlyArray<Change>> =>
-  [false, false, true, true].map((late) =>
+  [false, false, false, false, true, true].map((late) =>
     [...repeated(5, CHRONIC), ...QUIET.map((file) => touching(file))].concat(
       late ? lateOnly : [],
     ),
@@ -49,12 +49,14 @@ layer(NodeServices.layer)("analyze heat", (it) => {
         );
         yield* commitQuarters(repo, quarters(repeated(5, ACUTE)));
 
-        const { files } = yield* analyze(analyzeOptionsFor(repo));
+        const { files } = yield* analyze(
+          analyzeOptionsFor(repo, { since: "18m" }),
+        );
 
         assert.deepStrictEqual(
           Object.fromEntries(files.map(({ path, heat }) => [path, heat])),
           {
-            [CHRONIC]: { kind: "chronic", hotWindows: 4, windows: 4 },
+            [CHRONIC]: { kind: "chronic", hotWindows: 6, windows: 6 },
             [ACUTE]: { kind: "acute", hotWindows: 2, windows: 2 },
             ...Object.fromEntries(QUIET.map((file) => [file, null])),
           },
