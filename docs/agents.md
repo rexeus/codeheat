@@ -148,6 +148,7 @@ The files of a repository are grouped into modules: workspace packages (a direct
   ],
   "erosion": {
     "verdict": "eroding",
+    "inactiveSince": null,
     "windows": 4,
     "locality": { "from": 0.704, "to": 0.5896, "slope": -0.0382 },
     "propagationCost": { "from": 0.0499, "to": 0.0733, "slope": 0.0078 }
@@ -162,7 +163,7 @@ The files of a repository are grouped into modules: workspace packages (a direct
 }
 ```
 
-- `erosion.verdict` is `eroding` (the share of changes that stay in one module, `locality`, fell by at least `thresholds.minErosionShift` between the first and the last active window of the fitted line), `improving`, `holding`, `unknown` (fewer than `thresholds.minTrendWindows` active windows), or `no recent activity` (neither of the last two windows has `thresholds.minWindowChanges` changes). Quote the numbers, not only the word. **`no recent activity` is not an improvement**: the repository went quiet, and nothing is said about the present. `erosion` is `null` when the window is shorter than six weeks (`series` is empty). `propagationCost` is context only: it rises when more files change often enough to be coupled.
+- `erosion.verdict` is `eroding` (the share of changes that stay in one module, `locality`, fell by at least `thresholds.minErosionShift` between the first and the last active window of the fitted line), `improving`, `holding`, or `unknown` (fewer than `thresholds.minTrendWindows` active windows). It describes the active period: windows without `thresholds.minWindowChanges` changes are left out wherever they lie, so quiet windows never cause an `improving`. Quote the numbers, not only the word. `erosion.inactiveSince` is the start of the quiet run that ends the series (null when the last window is active): when it is set, the verdict is about how the repository was, and says nothing about the present. `erosion` is `null` when the window is shorter than six weeks (`series` is empty). `propagationCost` is context only: it rises when more files change often enough to be coupled.
 - A window with `active: false` has too few changes to say anything; its numbers are listed but nothing rests on them. A pull request that spans two windows is split between them, so the windows' `changes` can add up to slightly more than `window.couplingCommits`.
 - A module's `erosion` is the same line through its `cohesion` per window (`null` where the module had too few changes, and the module `null` without three such windows). A falling line (`from` above `to`) with `recent: true` marks a module that keeps pulling other modules into its changes: look at its `partners`, `cliques`, and `distantCouplings` before adding to it. `recent: false` means it stopped changing.
 - `fixDensity.known: false` means the team's commit subjects follow no convention (`conventional` is their share), so the share of fixes is **unknown, not 0**: do not read a missing share as a quality signal. When known, `Module.fixDensity.share` is the share of the module's changes that fix something, and `spanning` those fixes that also touched another module: a high `spanning` marks a fragile boundary. The fix rules (Conventional Commits `fix`/`hotfix`/`bugfix`, `Revert "`, `fix` or `bug` as the first word) are fixed in the engine.

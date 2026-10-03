@@ -28,6 +28,7 @@ describe("judgeErosion", () => {
       ]),
     ).toStrictEqual({
       verdict: "eroding",
+      inactiveSince: null,
       windows: 4,
       locality: { from: 0.8, to: 0.5, slope: -0.1 },
       propagationCost: { from: 0.1, to: 0.1, slope: 0 },
@@ -58,21 +59,49 @@ describe("judgeErosion", () => {
 });
 
 describe("judgeErosion of a quiet repository", () => {
-  it("is no recent activity when neither of the last two windows is active, whatever came before", () => {
-    // a share that rose to 0.9 before the repository went quiet is not an improvement
-    expect(verdictOf(0.3, 0.5, 0.7, 0.9, null, null)).toBe(
-      "no recent activity",
+  it("judges the active period, not the quiet end that follows it", () => {
+    const windows = [
+      seriesWindow(0.9),
+      seriesWindow(0.7),
+      seriesWindow(0.5),
+      seriesWindow(0.3),
+      seriesWindow(null),
+      seriesWindow(null),
+    ];
+    const erosion = judgeErosion(
+      windows.map((window, index) =>
+        Object.assign({}, window, {
+          since: `2026-0${index + 1}-01T00:00:00.000Z`,
+        }),
+      ),
     );
-    expect(verdictOf(0.9, 0.7, 0.5, 0.3, null, null)).toBe(
-      "no recent activity",
-    );
+
+    expect(erosion?.verdict).toBe("eroding");
+    expect(erosion?.inactiveSince).toBe("2026-05-01T00:00:00.000Z");
   });
 
-  it("still judges a repository that was quiet in only the very last window", () => {
-    expect(verdictOf(0.9, 0.7, 0.5, 0.3, null)).toBe("eroding");
+  it("never calls a quiet end an improvement: inactive windows are left out", () => {
+    // a falling share followed by quiet is eroding, and a rising one improving, as without the quiet
+    expect(verdictOf(0.9, 0.7, 0.5, 0.3, null, null)).toBe("eroding");
+    expect(verdictOf(0.3, 0.5, 0.7, 0.9, null, null)).toBe("improving");
+    expect(verdictOf(0.7, 0.66, 0.72, 0.68, null)).toBe("holding");
   });
 
-  it("is no recent activity for a repository without an active window", () => {
+  it("starts the quiet at the first of the trailing inactive windows only", () => {
+    const quietInTheMiddle = [
+      seriesWindow(0.9),
+      seriesWindow(null),
+      seriesWindow(0.7),
+      seriesWindow(0.5),
+    ];
+
+    expect(judgeErosion(quietInTheMiddle)?.inactiveSince).toBeNull();
+    expect(
+      judgeErosion([...quietInTheMiddle, seriesWindow(null)])?.inactiveSince,
+    ).toBe("2026-01-01T00:00:00.000Z");
+  });
+
+  it("is unknown, quiet since the first window, for a repository without an active window", () => {
     expect(
       judgeErosion([
         seriesWindow(null),
@@ -80,7 +109,8 @@ describe("judgeErosion of a quiet repository", () => {
         seriesWindow(null),
       ]),
     ).toStrictEqual({
-      verdict: "no recent activity",
+      verdict: "unknown",
+      inactiveSince: "2026-01-01T00:00:00.000Z",
       windows: 0,
       locality: null,
       propagationCost: null,

@@ -1233,6 +1233,7 @@
   ],
   "erosion": {
     "verdict": "eroding",
+    "inactiveSince": null,
     "windows": 4,
     "locality": {
       "from": 0.704,

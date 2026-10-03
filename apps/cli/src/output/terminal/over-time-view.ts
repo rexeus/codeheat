@@ -3,7 +3,7 @@
 import type { FileStats, Module, Report } from "@codeheat/engine";
 
 import { escapeForTerminal } from "../escape.js";
-import { percent } from "./format.js";
+import { month, percent } from "./format.js";
 import type { Style } from "./style.js";
 
 const TOP_ERODING_MODULES = 3;
@@ -48,14 +48,15 @@ const verdictLine = (report: Report): string | undefined => {
   const moved =
     line === null
       ? ""
-      : `changes that stay in one module went from ${percent(line.from)} to ${percent(line.to)} over ${active}`;
-  if (erosion.verdict === "no recent activity") {
-    return `No recent activity: neither of the last two windows has ${thresholds.minWindowChanges} changes, so there is no verdict on the present.`;
-  }
+      : `changes that stay in one module went from ${percent(line.from)} to ${percent(line.to)} over the active period of ${active}`;
+  const quiet =
+    erosion.inactiveSince === null
+      ? ""
+      : ` (quiet since ${month(erosion.inactiveSince)}: fewer than ${thresholds.minWindowChanges} changes a window)`;
   if (erosion.verdict === "unknown") {
-    return `No verdict yet: ${plural(erosion.windows, "window has", "windows have")} at least ${thresholds.minWindowChanges} changes, and a trend needs ${thresholds.minTrendWindows}.`;
+    return `No verdict yet: ${plural(erosion.windows, "window has", "windows have")} at least ${thresholds.minWindowChanges} changes, and a trend needs ${thresholds.minTrendWindows}${quiet}.`;
   }
-  return `${VERDICT_LABELS[erosion.verdict]}: ${moved}.`;
+  return `${VERDICT_LABELS[erosion.verdict]}: ${moved}${quiet}.`;
 };
 
 /** Modules still changing whose cohesion fell by at least the shift that counts, most eroded first. */

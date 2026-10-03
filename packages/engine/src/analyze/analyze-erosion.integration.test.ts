@@ -77,14 +77,14 @@ layer(NodeServices.layer)("analyze erosion", (it) => {
 
 layer(NodeServices.layer)("analyze erosion of a quiet repository", (it) => {
   it.effect(
-    "says no recent activity, never improving, once the repository has been quiet for two quarters",
+    "judges the active period of a repository that has since gone quiet, and says since when",
     () =>
       Effect.gen(function* () {
         yield* setNow;
         const repo = yield* makeTempRepository;
         yield* createTwoPackages(repo);
-        // changes getting more local for three quarters, then nothing for two
-        yield* commitQuarters(repo, [...quartersSpreading([8, 5, 2]), [], []]);
+        // changes reaching more modules for three quarters, then nothing for two
+        yield* commitQuarters(repo, [...quartersSpreading([0, 3, 6]), [], []]);
 
         const report = yield* analyze(
           analyzeOptionsFor(repo, { since: "24m" }),
@@ -94,8 +94,12 @@ layer(NodeServices.layer)("analyze erosion of a quiet repository", (it) => {
           report.series.map(({ active }) => active),
           [false, false, false, true, true, true, false, false],
         );
-        assert.strictEqual(report.erosion?.verdict, "no recent activity");
-        assert.strictEqual(report.erosion?.locality?.to, 0.8);
+        assert.strictEqual(report.erosion?.verdict, "eroding");
+        assert.strictEqual(report.erosion?.locality?.to, 0.4);
+        assert.strictEqual(
+          report.erosion?.inactiveSince,
+          report.series[6]?.since,
+        );
       }),
   );
 

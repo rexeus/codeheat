@@ -12,12 +12,14 @@ const plainSection = (report: Report): ReadonlyArray<string> =>
 const withVerdict = (
   verdict: NonNullable<Report["erosion"]>["verdict"],
   windows = 4,
+  inactiveSince: string | null = null,
 ): Report => {
   const report = sampleReport();
   return {
     ...report,
     erosion: {
       verdict,
+      inactiveSince,
       windows,
       locality: report.erosion?.locality ?? null,
       propagationCost: null,
@@ -29,7 +31,7 @@ describe("overTimeSection", () => {
   it("states the verdict with the numbers behind it, the modules losing cohesion, the hotspots by age, and the fixes", () => {
     expect(plainSection(sampleReport())).toStrictEqual([
       "Over time",
-      "Eroding: changes that stay in one module went from 70% to 59% over 4 quarters.",
+      "Eroding: changes that stay in one module went from 70% to 59% over the active period of 4 quarters.",
       "  packages/billing: cohesion 71% to 41% over 4 quarters",
       "  packages/web: cohesion 60% to 46% over 4 quarters",
       "Hotspots by age: 2 chronic files (hot in most windows, so a design problem) and 1 acute file (hot only lately, so current work).",
@@ -42,18 +44,20 @@ describe("overTimeSection", () => {
 
   it("says improving or holding in the same terms", () => {
     expect(plainSection(withVerdict("improving"))[1]).toBe(
-      "Improving: changes that stay in one module went from 70% to 59% over 4 quarters.",
+      "Improving: changes that stay in one module went from 70% to 59% over the active period of 4 quarters.",
     );
     expect(plainSection(withVerdict("holding"))[1]).toBe(
-      "Holding: changes that stay in one module went from 70% to 59% over 4 quarters.",
+      "Holding: changes that stay in one module went from 70% to 59% over the active period of 4 quarters.",
     );
   });
 
-  it("says no recent activity, and never improving, for a repository that has gone quiet", () => {
-    const [, verdict] = plainSection(withVerdict("no recent activity"));
+  it("judges the active period of a repository that has gone quiet, and says since when", () => {
+    const [, verdict] = plainSection(
+      withVerdict("eroding", 4, "2026-04-02T00:00:00.000Z"),
+    );
 
     expect(verdict).toBe(
-      "No recent activity: neither of the last two windows has 10 changes, so there is no verdict on the present.",
+      "Eroding: changes that stay in one module went from 70% to 59% over the active period of 4 quarters (quiet since 2026-04: fewer than 10 changes a window).",
     );
   });
 
@@ -63,6 +67,11 @@ describe("overTimeSection", () => {
     );
     expect(plainSection(withVerdict("unknown", 1))[1]).toBe(
       "No verdict yet: 1 window has at least 10 changes, and a trend needs 3.",
+    );
+    expect(
+      plainSection(withVerdict("unknown", 0, "2025-09-29T12:00:00.000Z"))[1],
+    ).toBe(
+      "No verdict yet: 0 windows have at least 10 changes, and a trend needs 3 (quiet since 2025-09: fewer than 10 changes a window).",
     );
   });
 });
@@ -81,7 +90,7 @@ describe("overTimeSection parts", () => {
       ),
     };
 
-    expect(plainSection(longer)[1]).toContain("over 4 12-month windows");
+    expect(plainSection(longer)[1]).toContain("of 4 12-month windows");
   });
 
   it("leaves a module out that stopped changing, or whose cohesion fell less than the shift that counts", () => {

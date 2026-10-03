@@ -56,19 +56,22 @@ export const Erosion = Schema.Struct({
    * `eroding`: changes stay in one module less often than they did, by at
    * least `Thresholds.minErosionShift` (the line's `to` against its `from`);
    * `improving`: more often, by as much; `holding`: neither.
-   * `no recent activity`: neither of the last two windows is active (see
-   * `SeriesWindow.active`), including a repository without any active window;
-   * the numbers describe how it was, and it is never `improving`.
    * `unknown`: fewer than `Thresholds.minTrendWindows` active windows with
    * counted changes to fit a line through.
+   * The verdict is judged over the active windows (see `SeriesWindow.active`)
+   * wherever they lie; the windows without activity are left out, so they can
+   * neither cause nor hide it, and never make it `improving`. See
+   * `inactiveSince` for a series that ends quiet.
    */
-  verdict: Schema.Literals([
-    "eroding",
-    "improving",
-    "holding",
-    "no recent activity",
-    "unknown",
-  ]),
+  verdict: Schema.Literals(["eroding", "improving", "holding", "unknown"]),
+  /**
+   * The `since` of the first window of the run of inactive windows that ends
+   * the series: the repository has had fewer than
+   * `Thresholds.minWindowChanges` counted changes a window since then. Null
+   * when the last window is active. It says nothing about the verdict, which
+   * describes the active period.
+   */
+  inactiveSince: Schema.NullOr(Schema.String),
   /** Active windows of the series that have a change radius: the ones the lines are fitted through. */
   windows: Count,
   /** `ChangeRadius.local` over the active windows; null with fewer than `Thresholds.minTrendWindows`. */

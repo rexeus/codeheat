@@ -8,9 +8,6 @@ import type { WindowValue } from "./trend-line.js";
 /** How far (as a share of the changes) the fitted locality must move to be called eroding or improving. */
 export const MIN_EROSION_SHIFT = 0.1;
 
-/** How many of the latest windows must hold the activity a verdict about the present rests on. */
-const RECENT_WINDOWS = 2;
-
 /** The active windows' values of `measure`, with their positions in the series; windows it does not measure are left out. */
 const valuesOf = (
   windows: ReadonlyArray<SeriesWindow>,
@@ -21,15 +18,21 @@ const valuesOf = (
     return value === undefined ? [] : [{ index, value }];
   });
 
+/** The start of the run of inactive windows that ends the series, or null when the last window is active. */
+const inactiveSince = (windows: ReadonlyArray<SeriesWindow>): string | null => {
+  const lastActive = windows.findLastIndex(({ active }) => active);
+  return windows[lastActive + 1]?.since ?? null;
+};
+
 /**
  * Judges the `windows` of a series, oldest first. Null for no window at all.
  *
- * Only active windows count, and a repository with no active window among the
- * last two has no verdict about the present: it is `no recent activity`, however
- * much its older windows moved. Otherwise a line is fitted through the
+ * Only active windows count, wherever they lie: a line is fitted through the
  * locality of the active windows (see `fitLine`), and the verdict follows how
  * far it moved: by at least `MIN_EROSION_SHIFT` down is `eroding`, up is
  * `improving`, anything else `holding`; `unknown` without enough windows.
+ * Inactive windows are left out, so they can neither cause nor hide a verdict;
+ * a quiet end of the series is reported as `inactiveSince` next to it.
  */
 export const judgeErosion = (
   windows: ReadonlyArray<SeriesWindow>,
@@ -46,10 +49,8 @@ export const judgeErosion = (
     windows: locality.length,
     locality: line,
     propagationCost,
+    inactiveSince: inactiveSince(windows),
   };
-  if (!windows.slice(-RECENT_WINDOWS).some(({ active }) => active)) {
-    return { ...base, verdict: "no recent activity" };
-  }
   if (line === null) {
     return { ...base, verdict: "unknown" };
   }
