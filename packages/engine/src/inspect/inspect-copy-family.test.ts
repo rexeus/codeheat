@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { FileStats, Report } from "../report/report.js";
+import { DEFAULT_THRESHOLDS } from "../testing/report-defaults.js";
 import { inspect } from "./inspect.js";
 
 const stats = (path: string, rank: number): FileStats => ({
@@ -49,23 +50,7 @@ const reportOf = (copyFamilies: Report["copyFamilies"]): Report => ({
   },
   logicalChanges: { by: "commit", count: 0, largest: 0 },
   comparison: null,
-  thresholds: {
-    maxCommitFiles: 50,
-    hubMinBreadth: 10,
-    hubMinRevisions: 5,
-    hubTopShare: 0.05,
-    minModuleCommits: 5,
-    minHiddenProbability: 0.5,
-    minCopySimilarity: 0.5,
-    minLeakage: 0.5,
-    minImplementationCommits: 5,
-    minSharedCommits: 3,
-    minDegree: 0.3,
-    ubiquitousShare: 0.3,
-    ubiquitousMinCommits: 10,
-    maxMeanLineLength: 300,
-    maxFileBytes: 1_048_576,
-  },
+  thresholds: DEFAULT_THRESHOLDS,
   totals: { files: 3, contracts: 0, couplings: 0, modules: 0 },
   files: [stats("src/a.ts", 1), stats("src/b.ts", 2), stats("lib/c.ts", 3)],
   contracts: [],
