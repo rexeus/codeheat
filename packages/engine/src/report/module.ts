@@ -6,11 +6,11 @@ import { Schema } from "effect";
 
 import { Count, UnitDelta, UnitInterval } from "./scalars.js";
 
-/** Another module that changes in the same commits. */
+/** Another module that changes in the same logical changes (see `Report.logicalChanges`). */
 const ModulePartner = Schema.Struct({
   /** The partner module's `path`. */
   path: Schema.String,
-  /** Counted commits that touched both modules. */
+  /** Counted changes that touched both modules. */
   sharedCommits: Count,
   /**
    * `path` is no module of the report but a place that holds only contract
@@ -68,13 +68,13 @@ export const Module = Schema.Struct({
    * fixtures, or __fixtures__. Test-only modules are never ranked.
    */
   testOnly: Schema.Boolean,
-  /** Counted commits (at most `Thresholds.maxCommitFiles` files) that touched the module. */
+  /** Counted changes (logical changes of at most `Thresholds.maxCommitFiles` files, see `Report.logicalChanges`) that touched the module. */
   commits: Count,
-  /** Of those, commits that touched no universe file outside the module. */
+  /** Of those, changes that touched no universe file outside the module. */
   localCommits: Count,
-  /** `localCommits / commits`, rounded to 4 decimals; null when no counted commit touched the module. */
+  /** `localCommits / commits`, rounded to 4 decimals; null when no counted change touched the module. */
   cohesion: Schema.NullOr(UnitInterval),
-  /** Modules it changes with, most shared commits first; at most five. */
+  /** Modules it changes with, most shared changes first; at most five. */
   partners: Schema.Array(ModulePartner),
   /**
    * Repository-relative paths of the files that make up the module's public
@@ -82,20 +82,20 @@ export const Module = Schema.Struct({
    * the `--entry` globs. Empty when none was found.
    */
   entryPoints: Schema.Array(Schema.String),
-  /** Counted commits that touched an entry point. */
+  /** Counted changes that touched an entry point. */
   interfaceCommits: Count,
-  /** Counted commits that touched a module file that is neither an entry point nor test code (see `testOnly`). */
+  /** Counted changes that touched a module file that is neither an entry point nor test code (see `testOnly`). */
   implementationCommits: Count,
   /**
    * Share of the `implementationCommits` that also touched an entry point,
    * rounded to 4 decimals. High values mean changes inside the module keep
-   * changing its public API. Null without entry points or implementation commits.
+   * changing its public API. Null without entry points or implementation changes.
    */
   leakage: Schema.NullOr(UnitInterval),
   /**
    * The module's interface is called out as leaky: `leakage` is at least
    * `Thresholds.minLeakage` over at least `Thresholds.minImplementationCommits`
-   * implementation commits, and the module is not `testOnly`. `modules` is in
+   * implementation changes, and the module is not `testOnly`. `modules` is in
    * cohesion order, so look for this flag rather than for the first entries.
    */
   leakyInterface: Schema.Boolean,
@@ -114,8 +114,8 @@ export const Module = Schema.Struct({
   depth: Schema.NullOr(ModuleDepth),
   /**
    * Null without `--compare`, and unless the module has at least
-   * `Thresholds.minModuleCommits` counted commits in both windows (so also
-   * when either window has none): the cohesion of a few commits swings too
+   * `Thresholds.minModuleCommits` counted changes in both windows (so also
+   * when either window has none): the cohesion of a few changes swings too
    * much to call a change.
    */
   trend: Schema.NullOr(ModuleTrend),

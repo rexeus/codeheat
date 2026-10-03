@@ -46,18 +46,56 @@ export const pathsOfChanges = (history: History): Array<Array<string>> =>
     )
     .toSorted((a, b) => a.join().localeCompare(b.join()));
 
-/** Merges `branch` into the current branch with a merge commit at `date`. */
-export const mergeBranch = (
+/**
+ * Merges `refs` (branches or tags) into the current branch with a merge
+ * commit at `date`; `messages` are its paragraphs, subject first.
+ */
+export const mergeRefs = (
   repo: TempRepository,
   date: string,
-  branch: string,
+  refs: ReadonlyArray<string>,
+  messages: ReadonlyArray<string>,
 ) =>
   repo.gitAt(
     date,
     "merge",
     "--no-ff",
     "--quiet",
-    "--message",
-    `Merge branch '${branch}'`,
-    branch,
+    ...messages.flatMap((message) => ["--message", message]),
+    ...refs,
   );
+
+/** Merges `branch` like a hosting service merges pull request `number`. */
+export const mergePullRequest = (
+  repo: TempRepository,
+  date: string,
+  branch: string,
+  number: number,
+) =>
+  mergeRefs(
+    repo,
+    date,
+    [branch],
+    [`Merge pull request #${number} from org/${branch}`],
+  );
+
+/**
+ * Creates branch `name` off `main` with one commit per file of `files` (each
+ * changed on its own day from `firstDay` of March 2026), then returns to `main`.
+ */
+export const branchOff = (
+  repo: TempRepository,
+  name: string,
+  firstDay: number,
+  files: ReadonlyArray<string>,
+) =>
+  Effect.gen(function* () {
+    yield* repo.git("checkout", "--quiet", "-b", name, "main");
+    for (const [index, file] of files.entries()) {
+      const day = String(firstDay + index).padStart(2, "0");
+      yield* repo.commit(`2026-03-${day}T12:00:00Z`, {
+        [file]: lines(4, `${file} ${name}`),
+      });
+    }
+    yield* repo.git("checkout", "--quiet", "main");
+  });

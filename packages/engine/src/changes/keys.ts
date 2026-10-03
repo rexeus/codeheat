@@ -1,34 +1,63 @@
 // Owns what a commit message says about the change it belongs to: the pull
-// request a squash merge names and the ticket a subject mentions.
+// request a squash merge or a merge commit names and the ticket a subject
+// mentions.
 
 /** The `(#123)` that GitHub and GitLab append to a squash-merged subject. */
 const PULL_REQUEST = /\(#(\d+)\)\s*$/u;
 
 /**
- * Upper-case words that look like a ticket key but are not: encodings,
- * hashes, standards, and vulnerability ids (`UTF-8`, `SHA-256`, `CVE-2021`).
+ * What a pull or merge request merge says about itself, anywhere in its
+ * message: GitHub (`Merge pull request #12 from …`, Gitea's `Merge pull
+ * request 'title' (#12) from …`), Bitbucket (`Merged in … (pull request
+ * #12)`), GitLab (the body line `See merge request group/project!12`), and
+ * Azure DevOps (`Merged PR 12: …`).
+ */
+const PULL_REQUEST_MERGES = [
+  /^Merge pull request (?:#\d+ |.* \(#\d+\) )from /mu,
+  /^Merged in .* \(pull request #\d+\)/mu,
+  /^See merge request \S*!\d+/mu,
+  /^Merged PR \d+:/mu,
+] as const;
+
+/**
+ * Upper-case words that look like a ticket key (`UTF-8`, `SHA-256`, `X86-64`,
+ * `CVE-2021-1234`) but name an encoding, a hash, a standard, an architecture,
+ * a licence, or a vulnerability id.
  */
 const NOT_TICKET_PROJECTS: ReadonlySet<string> = new Set([
   "AES",
+  "BSD",
   "CVE",
+  "CWE",
   "ECMA",
   "ES",
   "GHSA",
+  "GPL",
+  "GPT",
   "HTTP",
+  "HTTPS",
   "IE",
+  "IEC",
+  "IEEE",
   "IPV",
   "ISO",
+  "LGPL",
   "MD",
+  "MIT",
   "PEP",
   "RFC",
   "RSA",
   "SHA",
+  "SSH",
   "SSL",
   "TCP",
   "TLS",
+  "UCS",
   "UDP",
   "UTF",
   "WCAG",
+  "X64",
+  "X86",
 ]);
 
 const TICKET = /(?<![A-Za-z0-9])([A-Z][A-Z0-9]+)-\d+(?![A-Za-z0-9])/gu;
@@ -36,6 +65,15 @@ const TICKET = /(?<![A-Za-z0-9])([A-Z][A-Z0-9]+)-\d+(?![A-Za-z0-9])/gu;
 /** The number of the pull request a subject ends with, such as `123` for `fix: x (#123)`. */
 export const pullRequestOf = (subject: string): string | undefined =>
   PULL_REQUEST.exec(subject)?.[1];
+
+/**
+ * Whether a merge commit's message says it merged a pull or merge request. A
+ * merge that does not (`git pull`, `Merge remote-tracking branch`, `Merge
+ * tag`, a plain `Merge branch 'x'`, a merge of the mainline into a branch)
+ * brings in commits that belong to no one change.
+ */
+export const isPullRequestMerge = (message: string): boolean =>
+  PULL_REQUEST_MERGES.some((pattern) => pattern.test(message));
 
 /** The first ticket key a subject mentions, such as `PROJ-42`; none for words like `UTF-8`. */
 export const ticketOf = (subject: string): string | undefined =>

@@ -30,8 +30,8 @@ export type Grouping = {
   readonly largest: number;
 };
 
-/** Commits of one ticket count as one change when they lie within this many seconds of the first. */
-const TICKET_SPAN = 14 * 24 * 60 * 60;
+/** Commits of one squash-merged pull request or ticket count as one change when they lie within this many seconds of the first. */
+const SPAN = 14 * 24 * 60 * 60;
 /**
  * A group of more commits than this is not one change: a branch that lives
  * for months, or a merge that pulled other people's work in. Its commits stay
@@ -55,46 +55,58 @@ const groupBy = (
   return [...groups.values()];
 };
 
-/** The commits that share a pull request, as sets of candidate indexes. */
+const timeOf = (candidates: ReadonlyArray<Candidate>, index: number): number =>
+  candidates[index]?.time ?? 0;
+
+/**
+ * Splits `group` into runs that each lie within `SPAN` of their first
+ * commit, oldest first.
+ */
+const splitBySpan = (
+  group: ReadonlyArray<number>,
+  candidates: ReadonlyArray<Candidate>,
+): ReadonlyArray<ReadonlyArray<number>> => {
+  const spans: Array<Array<number>> = [];
+  let start = 0;
+  for (const index of group.toSorted(
+    (a, b) => timeOf(candidates, a) - timeOf(candidates, b),
+  )) {
+    const current = spans.at(-1);
+    if (current === undefined || timeOf(candidates, index) - start > SPAN) {
+      spans.push([index]);
+      start = timeOf(candidates, index);
+    } else {
+      current.push(index);
+    }
+  }
+  return spans;
+};
+
+/**
+ * The commits that share a pull request, as sets of candidate indexes: those
+ * with the same `(#123)` suffix within `SPAN` of the first, and those that one
+ * pull request merge brought in.
+ */
 const pullRequests = (
   candidates: ReadonlyArray<Candidate>,
   merges: ReadonlyMap<string, string>,
 ): ReadonlyArray<ReadonlyArray<number>> =>
-  groupBy(candidates, ({ sha, subject }) => {
-    const number = pullRequestOf(subject);
-    const merge = merges.get(sha);
-    if (number !== undefined) {
-      return `#${number}`;
-    }
-    return merge === undefined ? undefined : `merge ${merge}`;
-  }).filter((group) => group.length <= MAX_GROUP_COMMITS);
+  [
+    ...groupBy(candidates, ({ subject }) => pullRequestOf(subject)).flatMap(
+      (group) => splitBySpan(group, candidates),
+    ),
+    ...groupBy(candidates, ({ sha, subject }) =>
+      pullRequestOf(subject) === undefined ? merges.get(sha) : undefined,
+    ),
+  ].filter((group) => group.length <= MAX_GROUP_COMMITS);
 
-const timeOf = (candidates: ReadonlyArray<Candidate>, index: number): number =>
-  candidates[index]?.time ?? 0;
-
-/** The commits that mention one ticket within `TICKET_SPAN` of its first, as sets of candidate indexes. */
+/** The commits that mention one ticket within `SPAN` of its first, as sets of candidate indexes. */
 const tickets = (
   candidates: ReadonlyArray<Candidate>,
 ): ReadonlyArray<ReadonlyArray<number>> =>
-  groupBy(candidates, ({ subject }) => ticketOf(subject)).flatMap((group) => {
-    const spans: Array<Array<number>> = [];
-    let start = 0;
-    for (const index of group.toSorted(
-      (a, b) => timeOf(candidates, a) - timeOf(candidates, b),
-    )) {
-      const current = spans.at(-1);
-      if (
-        current === undefined ||
-        timeOf(candidates, index) - start > TICKET_SPAN
-      ) {
-        spans.push([index]);
-        start = timeOf(candidates, index);
-      } else {
-        current.push(index);
-      }
-    }
-    return spans;
-  });
+  groupBy(candidates, ({ subject }) => ticketOf(subject)).flatMap((group) =>
+    splitBySpan(group, candidates),
+  );
 
 /** The distinct universe files a set of commits touched: the live ones, and how many with earlier lives. */
 const touchedBy = (

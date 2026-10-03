@@ -109,6 +109,31 @@ describe("groupChanges limits of a pull request", () => {
     expect(grouping).toMatchObject({ by: "commit", largest: 1 });
   });
 
+  it("splits a suffix group that spans more than 14 days of its first commit", () => {
+    const grouping = groupChanges(
+      [
+        commit("c", "again (#1)", 30, [3]),
+        commit("b", "tidy (#1)", 14, [2]),
+        commit("a", "work (#1)", 0, [1]),
+      ],
+      new Map(),
+    );
+
+    expect(filesOf(grouping.changes)).toStrictEqual([[3], [1, 2]]);
+  });
+
+  it("does not limit the span of the commits one merge brought in", () => {
+    const grouping = groupChanges(
+      [commit("b", "late", 60, [2]), commit("a", "early", 0, [1])],
+      new Map([
+        ["a", "m/1"],
+        ["b", "m/1"],
+      ]),
+    );
+
+    expect(filesOf(grouping.changes)).toStrictEqual([[1, 2]]);
+  });
+
   it("keeps a pull request of exactly the limit together", () => {
     expect(groupChanges(sequence(30, "work (#1)"), new Map())).toMatchObject({
       by: "pr",

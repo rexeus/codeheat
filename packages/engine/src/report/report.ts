@@ -47,10 +47,11 @@ const Thresholds = Schema.Struct({
   hubMinRevisions: Count,
   /** Share of the hub candidates that may be hubs: widest candidate files first, ties included. */
   hubTopShare: UnitInterval,
+  /** Fewest shared changes (`Coupling.sharedCommits`) that make a coupling. */
   minSharedCommits: Count,
   minDegree: UnitInterval,
   /**
-   * Fewest counted commits a module needs to be ranked as (in)cohesive:
+   * Fewest counted changes (`Module.commits`) a module needs to be ranked as (in)cohesive:
    * `max(5, ceil(0.01 × window.couplingCommits))`, so the floor grows with the window.
    */
   minModuleCommits: Count,
@@ -67,10 +68,10 @@ const Thresholds = Schema.Struct({
   minImplementationCommits: Count,
   /**
    * A contract file that changed in more than this share of the counted
-   * commits is ubiquitous (see `Report.ubiquitousFiles`).
+   * changes is ubiquitous (see `Report.ubiquitousFiles`).
    */
   ubiquitousShare: UnitInterval,
-  /** Fewest counted commits a contract file needs to be ubiquitous. */
+  /** Fewest counted changes a contract file needs to be ubiquitous. */
   ubiquitousMinCommits: Count,
   maxMeanLineLength: Count,
   maxFileBytes: Count,
@@ -84,7 +85,11 @@ export const FileStats = Schema.Struct({
   rank: Rank,
   /** Normalized revisions × normalized weighted lines (`loc + complexity.total`); rounded to 4 decimals. */
   score: UnitInterval,
-  /** Real changes to the file in the window, mechanical commits excluded (see `Report.mechanicalCommits`). */
+  /**
+   * Real commits that touched the file in the window, mechanical commits
+   * excluded (see `Report.mechanicalCommits`): the hotspot measure. See
+   * `changes` for the logical changes they make up.
+   */
   revisions: Count,
   /**
    * Logical changes of the window (see `Report.logicalChanges`) that touched
@@ -98,7 +103,7 @@ export const FileStats = Schema.Struct({
   linesDeleted: Count,
   /**
    * Distinct other universe files, contract files included, this file changed
-   * together with in counted commits (at most `Thresholds.maxCommitFiles`
+   * together with in counted changes (at most `Thresholds.maxCommitFiles`
    * files), however rarely.
    */
   breadth: Count,
@@ -127,10 +132,11 @@ export const FileStats = Schema.Struct({
 });
 export type FileStats = typeof FileStats.Type;
 
-/** Two files that keep changing in the same commits. */
+/** Two files that keep changing in the same logical changes. */
 export const Coupling = Schema.Struct({
   a: Schema.String,
   b: Schema.String,
+  /** Counted changes (see `Report.logicalChanges`) that touched both files. */
   sharedCommits: Count,
   /** `sharedCommits / mean(changes(a), changes(b))` (see `FileStats.changes`), rounded to 4 decimals. */
   degree: UnitInterval,
@@ -210,32 +216,32 @@ export const Report = Schema.Struct({
   contracts: Schema.Array(ContractFile),
   /**
    * The contract files that changed in more than `Thresholds.ubiquitousShare`
-   * of the counted commits, and in at least `Thresholds.ubiquitousMinCommits`
-   * of them, most commits first. A central schema or API description that
+   * of the counted changes, and in at least `Thresholds.ubiquitousMinCommits`
+   * of them, most changes first. A central schema or API description that
    * every change touches would couple to everything, so they join no
    * `couplings` pair, no `breadth`, and no module's cohesion or partners; they
    * stay in `contracts`. With `--compare` the previous window is judged on its
-   * own commits and this lists the latest window's.
+   * own changes and this lists the latest window's.
    */
   ubiquitousFiles: Schema.Array(UbiquitousFile),
   /**
    * First the pairs with at least one code side, then the pairs of two contract
    * files (`kinds`), so a limit keeps code pairs: the files of one API
    * definition change together far more often than code does. Each group is
-   * sorted by degree, descending, then shared commits, then path.
+   * sorted by degree, descending, then shared changes, then path.
    */
   couplings: Schema.Array(Coupling),
   /**
    * The ranking order, which terminal and viewer keep. First the ranked
    * modules (`commits` ≥ `Thresholds.minModuleCommits` and not `testOnly`),
-   * then the other modules with commits, each group by `cohesion` ascending,
+   * then the other modules with counted changes, each group by `cohesion` ascending,
    * then more `commits` first, then `path`; last the modules without counted
-   * commits (`cohesion` null), by `path`.
+   * changes (`cohesion` null), by `path`.
    */
   modules: Schema.Array(Module),
   /**
    * Groups of files with largely the same content that change in the same
-   * commits, found among the coupled pairs (test pairs excluded) of the
+   * logical changes, found among the coupled pairs (test pairs excluded) of the
    * analysis window. Families with production code come first, then those of
    * test code only (`testOnly`); within each, most fixes applied to all
    * members first.

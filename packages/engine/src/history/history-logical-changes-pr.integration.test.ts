@@ -5,7 +5,7 @@ import { Effect } from "effect";
 import { Git } from "../git/git.js";
 import {
   lines,
-  mergeBranch,
+  mergePullRequest,
   pathsOfChanges,
   readChanges,
   startOn,
@@ -113,7 +113,7 @@ layer(NodeServices.layer)("readHistory logical changes by merge", (it) => {
       yield* repo.commit("2026-03-03T12:00:00Z", { "c.ts": lines(4, "c1") });
       yield* repo.git("checkout", "--quiet", "main");
       yield* repo.commit("2026-03-04T12:00:00Z", { "d.ts": lines(4, "d1") });
-      yield* mergeBranch(repo, "2026-03-05T12:00:00Z", "feature");
+      yield* mergePullRequest(repo, "2026-03-05T12:00:00Z", "feature", 1);
 
       const result = yield* readChanges(repo, universe);
 
@@ -152,12 +152,12 @@ layer(NodeServices.layer)(
           yield* repo.commit("2026-03-03T12:00:00Z", {
             "c.ts": lines(4, "c1"),
           });
-          yield* mergeBranch(repo, "2026-03-04T12:00:00Z", "feature");
+          yield* mergePullRequest(repo, "2026-03-04T12:00:00Z", "feature", 1);
           yield* repo.git("checkout", "--quiet", "main");
           yield* repo.commit("2026-03-05T12:00:00Z", {
             "d.ts": lines(5, "d2"),
           });
-          yield* mergeBranch(repo, "2026-03-06T12:00:00Z", "develop");
+          yield* mergePullRequest(repo, "2026-03-06T12:00:00Z", "develop", 2);
 
           const result = yield* readChanges(repo, universe);
 
