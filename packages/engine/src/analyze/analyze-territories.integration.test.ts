@@ -62,6 +62,37 @@ layer(NodeServices.layer)("analyze territories", (it) => {
   );
 });
 
+layer(NodeServices.layer)("analyze territory descriptions", (it) => {
+  it.effect(
+    "does not describe a territory with a README line that instructs, but with the next sentence or its most changed files",
+    () =>
+      Effect.gen(function* () {
+        yield* setNow;
+        const repo = yield* makeTempRepository;
+        yield* repo.commit(day(1), {
+          ...filesIn("api", 1),
+          "api/README.md":
+            "# api\n\nSee api/a.ts for an example.\n\nServes the public API of the shop.\n",
+          ...filesIn("jobs", 1),
+          "jobs/README.md":
+            "After installing the tools, the settings file exists.\n",
+        });
+        yield* repo.commit(day(2), { "jobs/c.ts": code(2) });
+
+        const report = yield* analyze(analyzeOptionsFor(repo));
+
+        const described = Object.fromEntries(
+          report.territories.nodes.map((node) => [node.path, node.description]),
+        );
+        assert.strictEqual(
+          described["api"],
+          "Serves the public API of the shop.",
+        );
+        assert.strictEqual(described["jobs"], "main files: c, a, b");
+      }),
+  );
+});
+
 layer(NodeServices.layer)("analyze territories of files", (it) => {
   it.effect(
     "names the territory of every file and lists every file once per detail",
