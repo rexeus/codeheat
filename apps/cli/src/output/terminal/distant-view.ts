@@ -1,8 +1,9 @@
 // Owns the terminal view of where change crosses the design: file pairs that
 // change together far apart, and modules that change together as a group.
-import type { Report } from "@codeheat/engine";
+import type { Coupling, FileStats, Report } from "@codeheat/engine";
 
 import { escapeForTerminal } from "../escape.js";
+import { coupledPath, isContractPair } from "./contract-view.js";
 import { percent } from "./format.js";
 import { importsCell } from "./imports-cell.js";
 import type { Style } from "./style.js";
@@ -10,6 +11,7 @@ import { plain, renderTable } from "./table.js";
 
 const TOP_DISTANT = 5;
 const TOP_CLIQUES = 3;
+const TOP_COUPLINGS = 5;
 
 const distantTable = (report: Report, style: Style): ReadonlyArray<string> =>
   renderTable(
@@ -84,4 +86,51 @@ export const cliqueSection = (
       : []),
     "",
   ];
+};
+
+/** The five strongest couplings that are neither test pairs nor pairs of two contract files, with the co-change probability in both directions. */
+export const couplingLines = (
+  couplings: ReadonlyArray<Coupling>,
+  files: ReadonlyArray<FileStats>,
+  contracts: Report["contracts"],
+  style: Style,
+): ReadonlyArray<string> => {
+  const changes = new Map(
+    [...files, ...contracts].map((file) => [file.path, file.changes]),
+  );
+  const coChange = (coupling: Coupling, from: string): string => {
+    const total = changes.get(from);
+    if (total === undefined) {
+      throw new Error(
+        `Coupled file ${escapeForTerminal(from)} is missing from the report's files and contracts; render an untruncated report.`,
+      );
+    }
+    return percent(coupling.sharedCommits / total);
+  };
+  return renderTable(
+    [
+      { header: "degree", align: "right" },
+      { header: "shared", align: "right" },
+      { header: "distance", align: "right" },
+      { header: "a → b", align: "right" },
+      { header: "b → a", align: "right" },
+      { header: "imports", align: "left" },
+      { header: "files", align: "left" },
+    ],
+    couplings
+      .filter((coupling) => !coupling.testPair && !isContractPair(coupling))
+      .slice(0, TOP_COUPLINGS)
+      .map((coupling) => [
+        plain(percent(coupling.degree)),
+        plain(String(coupling.sharedCommits)),
+        plain(String(coupling.distance)),
+        plain(coChange(coupling, coupling.a)),
+        plain(coChange(coupling, coupling.b)),
+        importsCell(coupling, style),
+        plain(
+          `${coupledPath(coupling.a, coupling.kinds.a)} <-> ${coupledPath(coupling.b, coupling.kinds.b)}`,
+        ),
+      ]),
+    style,
+  );
 };

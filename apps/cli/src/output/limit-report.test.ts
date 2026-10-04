@@ -14,6 +14,20 @@ describe("limitReport", () => {
   });
 });
 
+describe("limitReport entry points", () => {
+  it("keeps the entry points and the territories whole", () => {
+    const report = sampleReport();
+
+    expect(report.entryPoints.length).toBeGreaterThan(1);
+    expect(limitReport(report, 1).entryPoints).toStrictEqual(
+      report.entryPoints,
+    );
+    expect(limitReport(report, 1).territories).toStrictEqual(
+      report.territories,
+    );
+  });
+});
+
 describe("limitReport further lists", () => {
   it("cuts the least cohesive modules to the limit as well", () => {
     expect(

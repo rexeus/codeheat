@@ -4,6 +4,7 @@
 import { Schema } from "effect";
 
 import { Count, UnitInterval } from "./scalars.js";
+import { TerritoryFit } from "./territory-fit.js";
 
 /**
  * What a territory is. `package`: a directory with its own manifest
@@ -70,6 +71,12 @@ export const Territory = Schema.Struct({
    * together); null when it does not split.
    */
   splitReason: Schema.NullOr(Schema.String),
+  /**
+   * How well the territory contains the changes that touch it, where they
+   * leak to, and how that moved (see `TerritoryFit`); null for the root,
+   * which has no boundary, and for a node that is visible at no detail.
+   */
+  fit: Schema.NullOr(TerritoryFit),
 });
 export type Territory = typeof Territory.Type;
 

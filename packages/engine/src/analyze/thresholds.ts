@@ -2,7 +2,6 @@ import {
   UBIQUITOUS_MIN_COMMITS,
   UBIQUITOUS_SHARE,
 } from "../contracts/ubiquitous.js";
-// Owns the noise limits an analysis applies, reported so consumers see them.
 import { MIN_COPY_SIMILARITY } from "../copies/find-copy-families.js";
 import {
   MAX_COMMIT_FILES,
@@ -11,6 +10,8 @@ import {
 } from "../coupling/coupling.js";
 import { MIN_CLIQUE_SHARE } from "../distant/cliques.js";
 import { MIN_LOCAL_DISTANCE } from "../distant/distant-couplings.js";
+// Owns the noise limits an analysis applies, reported so consumers see them.
+import { ENTRY_THRESHOLDS } from "../entry-points/limits.js";
 import { MIN_CONVENTION_SHARE } from "../fixes/fix-density.js";
 import {
   HUB_MIN_BREADTH,
@@ -60,6 +61,7 @@ export const thresholdsFor = (couplingCommits: number) =>
     ubiquitousMinCommits: UBIQUITOUS_MIN_COMMITS,
     ...OVER_TIME_THRESHOLDS,
     minConventionShare: MIN_CONVENTION_SHARE,
+    ...ENTRY_THRESHOLDS,
     maxMeanLineLength: MAX_MEAN_LINE_LENGTH,
     maxFileBytes: MAX_FILE_BYTES,
   }) satisfies Report["thresholds"];

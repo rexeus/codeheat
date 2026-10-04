@@ -6,9 +6,11 @@ import { Schema } from "effect";
 import { AnalysisWindow } from "./analysis-window.js";
 import { FileKind } from "./contract-file.js";
 import { CopyFamily } from "./copy-family.js";
+import { EntryPoint } from "./entry-point.js";
 import { Module } from "./module.js";
 import { FileStats } from "./report.js";
 import { Count, UnitInterval } from "./scalars.js";
+import { Territory } from "./territory.js";
 
 /** A file that changes together with an inspected file. */
 const Partner = Schema.Struct({
@@ -51,6 +53,13 @@ const InspectEntry = Schema.Struct({
    * member.
    */
   copyFamily: Schema.NullOr(CopyFamily),
+  /**
+   * The entry points of the report the file belongs to, best first (see
+   * `Report.entryPoints`): one that names files concerns exactly those, one
+   * that names none (`boundary`, `clique`) every file in its territories.
+   * Empty for a file that is part of none.
+   */
+  entryPoints: Schema.Array(EntryPoint),
 });
 
 /** The result of `inspect`. */
@@ -61,6 +70,17 @@ export const InspectResult = Schema.Struct({
   matches: Schema.Array(InspectEntry),
   /** The modules of the matched files, in report order: where a change would land and what it tends to pull in. */
   modules: Schema.Array(Module),
+  /**
+   * The territories of the matched files (`FileStats.territory`, the finest one
+   * of each), for each of them that is a `tests` territory (test code has no
+   * fit) its ancestors up to the nearest one with a fit, and the partners of
+   * their fit
+   * (`TerritoryFit.partner`), as they
+   * stand in `Report.territories`, in report order: how well the file's area
+   * holds up to the way the code changes, for the files that are in no entry
+   * point too.
+   */
+  territories: Schema.Array(Territory),
   /**
    * Contract files the patterns matched, sorted. A contract has no score and
    * no entry in `matches`: inspect the code that changes with it, which lists

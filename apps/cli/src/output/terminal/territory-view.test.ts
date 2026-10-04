@@ -1,7 +1,7 @@
 import type { Report } from "@codeheat/engine";
 import { describe, expect, it } from "vitest";
 
-import { territoryLines } from "./territory-view.js";
+import { fileTerritoryLine, territoryLines } from "./territory-view.js";
 
 type Territories = Report["territories"];
 
@@ -17,6 +17,7 @@ const node = (id: string, kind: Territories["nodes"][number]["kind"]) => ({
   heatShare: 0,
   description: id,
   splitReason: null,
+  fit: null,
 });
 
 describe("territoryLines", () => {
@@ -51,5 +52,99 @@ describe("territoryLines", () => {
         territories: { recommended: 0, details: [], nodes: [] },
       }),
     ).toStrictEqual([]);
+  });
+});
+
+const fit = {
+  detail: 1,
+  containment: 0.4615,
+  radius: 2,
+  partner: { territory: "b", sharedChanges: 6, share: 0.4615 },
+  distantPairs: 0,
+  hiddenPairs: 0,
+  cliques: 0,
+  erosion: null,
+  chronicFiles: 0,
+  acuteFiles: 0,
+  chronicShare: 0,
+  fixDensity: null,
+};
+const nodes = [
+  { ...node("a", "folder"), path: "billing", changes: 13, fit },
+  { ...node("b", "folder"), path: "web" },
+  {
+    ...node("c", "folder"),
+    path: "quiet\u001B[0m",
+    changes: 0,
+    fit: { ...fit, containment: null, partner: null },
+  },
+];
+
+describe("fileTerritoryLine", () => {
+  it("says how many changes of the territory stay inside and which territory it changes with most", () => {
+    expect(fileTerritoryLine(nodes, "a")).toStrictEqual([
+      "territory billing: 46% of 13 changes stay inside, most often with web (6)",
+    ]);
+  });
+
+  it("says when the territory has no counted changes, with its path made safe to print", () => {
+    expect(fileTerritoryLine(nodes, "c")).toStrictEqual([
+      "territory quiet\\u001b[0m: no counted changes",
+    ]);
+  });
+});
+
+describe("fileTerritoryLine of test code", () => {
+  it("says that the file is test code of the territory it belongs to, with that territory's line, rather than that nothing was counted", () => {
+    const withTests = [
+      ...nodes,
+      {
+        ...node("t", "tests"),
+        path: "billing",
+        parent: "a",
+        changes: 150,
+        fit: null,
+      },
+    ];
+
+    expect(fileTerritoryLine(withTests, "t")).toStrictEqual([
+      "test code of billing: 150 changes",
+      "territory billing: 46% of 13 changes stay inside, most often with web (6)",
+    ]);
+  });
+
+  it("walks up to the nearest territory with a fit when the one holding the test code has none", () => {
+    const withTests = [
+      ...nodes,
+      {
+        ...node("m", "folder"),
+        path: "billing/src",
+        parent: "a",
+        changes: 50,
+        fit: null,
+      },
+      {
+        ...node("t", "tests"),
+        path: "billing/test",
+        parent: "m",
+        changes: 150,
+        fit: null,
+      },
+    ];
+
+    expect(fileTerritoryLine(withTests, "t")).toStrictEqual([
+      "test code of billing/src: 150 changes",
+      "territory billing: 46% of 13 changes stay inside, most often with web (6)",
+    ]);
+  });
+
+  it("says that nothing was counted for a territory no change touched", () => {
+    expect(
+      fileTerritoryLine([{ ...node("t", "tests"), changes: 0 }], "t"),
+    ).toStrictEqual(["territory t: no counted changes"]);
+  });
+
+  it("says nothing for a territory that is not listed", () => {
+    expect(fileTerritoryLine(nodes, "z")).toStrictEqual([]);
   });
 });

@@ -22,6 +22,7 @@ const entry: InspectResult["matches"][number] = {
   trend: null,
   heat: null,
   copyFamily: null,
+  entryPoints: [],
   of: 36,
   partners: [
     {
@@ -84,6 +85,7 @@ const billing: Module = {
 const result = (
   matches: InspectResult["matches"],
   modules: InspectResult["modules"] = [billing],
+  territories: InspectResult["territories"] = [],
 ): InspectResult => ({
   schemaVersion: 1,
   window: {
@@ -95,6 +97,7 @@ const result = (
   },
   matches,
   modules,
+  territories,
   contractFiles: [],
   unmatched: [],
 });

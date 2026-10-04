@@ -38,14 +38,16 @@ const countChange = (
  * distinct modules each touched, in the same order (see `touchedModules`).
  * Nothing is reported per module while the repository's is not `known` (see
  * `FixDensity`); a test-only module or one no change touched has none either.
+ * Any area with a `path` and a `testOnly` flag can stand in for a module, as
+ * long as `touched` names the same paths.
  */
-export const measureFixes = (
+export const measureFixes = <Area extends Pick<Module, "path" | "testOnly">>(
   changes: ReadonlyArray<LogicalChange>,
   touched: ReadonlyArray<ReadonlySet<string>>,
-  modules: ReadonlyArray<Module>,
+  modules: ReadonlyArray<Area>,
 ): {
   readonly fixDensity: FixDensity;
-  readonly modules: ReadonlyArray<Module>;
+  readonly modules: ReadonlyArray<Area & Pick<Module, "fixDensity">>;
 } => {
   const fixes = changes.filter(({ subjectKind }) => subjectKind === "fix");
   const conventional = changes.filter(

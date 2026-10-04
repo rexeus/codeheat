@@ -65,7 +65,15 @@
     "minErosionSigmas": 2,
     "minVerdictWindows": 5,
     "hotTopShare": 0.1,
-    "minConventionShare": 0.05
+    "minConventionShare": 0.05,
+    "minEntryHeatShare": 0.02,
+    "maxEntryContainment": 0.75,
+    "minEntryChronicShare": 0.5,
+    "minEntryChanges": 3,
+    "minEntryCouplingChanges": 5,
+    "maxEntriesPerKind": 6,
+    "maxEntries": 10,
+    "minEntryScore": 0.005
   },
   "totals": {
     "files": 36,
@@ -1730,7 +1738,8 @@
         "changes": 178,
         "heatShare": 1,
         "description": "The shop: billing, web app, auth, and a command line tool.",
-        "splitReason": "the first cut: packages and top-level folders"
+        "splitReason": "the first cut: packages and top-level folders",
+        "fit": null
       },
       {
         "id": "t2",
@@ -1743,7 +1752,37 @@
         "changes": 74,
         "heatShare": 0.6239,
         "description": "Invoices, tax, and discounts for the shop.",
-        "splitReason": null
+        "splitReason": null,
+        "fit": {
+          "detail": 1,
+          "containment": 0.5541,
+          "radius": 1,
+          "partner": {
+            "territory": "t3",
+            "sharedChanges": 20,
+            "share": 0.2703
+          },
+          "distantPairs": 3,
+          "hiddenPairs": 1,
+          "cliques": 0,
+          "erosion": {
+            "from": 0.84,
+            "to": 0.315,
+            "slope": -0.105,
+            "verdict": "eroding",
+            "windows": 6,
+            "cohesion": [0.82, 0.75, 0.7, 0.55, 0.4, 0.3],
+            "recent": true
+          },
+          "chronicFiles": 2,
+          "acuteFiles": 0,
+          "chronicShare": 0.5321,
+          "fixDensity": {
+            "fixes": 23,
+            "share": 0.3108,
+            "spanning": 9
+          }
+        }
       },
       {
         "id": "t3",
@@ -1756,7 +1795,37 @@
         "changes": 58,
         "heatShare": 0.1298,
         "description": "The web app: routes, hooks, and components.",
-        "splitReason": null
+        "splitReason": null,
+        "fit": {
+          "detail": 1,
+          "containment": 0.5345,
+          "radius": 1,
+          "partner": {
+            "territory": "t2",
+            "sharedChanges": 20,
+            "share": 0.3448
+          },
+          "distantPairs": 2,
+          "hiddenPairs": 1,
+          "cliques": 0,
+          "erosion": {
+            "from": 0.625,
+            "to": 0.5,
+            "slope": -0.025,
+            "verdict": "holding",
+            "windows": 6,
+            "cohesion": [0.62, 0.6, 0.58, 0.55, 0.52, 0.5],
+            "recent": true
+          },
+          "chronicFiles": 0,
+          "acuteFiles": 1,
+          "chronicShare": 0,
+          "fixDensity": {
+            "fixes": 13,
+            "share": 0.2241,
+            "spanning": 6
+          }
+        }
       },
       {
         "id": "t4",
@@ -1769,7 +1838,29 @@
         "changes": 44,
         "heatShare": 0.1058,
         "description": "Sessions, tokens, and sign-in with GitHub and Google.",
-        "splitReason": null
+        "splitReason": null,
+        "fit": {
+          "detail": 1,
+          "containment": 0.6136,
+          "radius": 1,
+          "partner": {
+            "territory": "t3",
+            "sharedChanges": 14,
+            "share": 0.3182
+          },
+          "distantPairs": 1,
+          "hiddenPairs": 0,
+          "cliques": 0,
+          "erosion": null,
+          "chronicFiles": 0,
+          "acuteFiles": 0,
+          "chronicShare": 0,
+          "fixDensity": {
+            "fixes": 8,
+            "share": 0.1818,
+            "spanning": 2
+          }
+        }
       },
       {
         "id": "t5",
@@ -1782,7 +1873,29 @@
         "changes": 26,
         "heatShare": 0.1014,
         "description": "main files: analyze, inspect, terminal",
-        "splitReason": null
+        "splitReason": null,
+        "fit": {
+          "detail": 1,
+          "containment": 0.5,
+          "radius": 1,
+          "partner": {
+            "territory": "t6",
+            "sharedChanges": 11,
+            "share": 0.4231
+          },
+          "distantPairs": 0,
+          "hiddenPairs": 0,
+          "cliques": 0,
+          "erosion": null,
+          "chronicFiles": 0,
+          "acuteFiles": 0,
+          "chronicShare": 0,
+          "fixDensity": {
+            "fixes": 4,
+            "share": 0.1538,
+            "spanning": 1
+          }
+        }
       },
       {
         "id": "t6",
@@ -1795,7 +1908,37 @@
         "changes": 30,
         "heatShare": 0.0391,
         "description": "main files: config, logger, index",
-        "splitReason": null
+        "splitReason": null,
+        "fit": {
+          "detail": 1,
+          "containment": 0.4,
+          "radius": 2,
+          "partner": {
+            "territory": "t5",
+            "sharedChanges": 11,
+            "share": 0.3667
+          },
+          "distantPairs": 2,
+          "hiddenPairs": 1,
+          "cliques": 0,
+          "erosion": {
+            "from": 0.3542,
+            "to": 0.4458,
+            "slope": 0.0183,
+            "verdict": "holding",
+            "windows": 4,
+            "cohesion": [0.35, 0.4, null, 0.4, null, 0.45],
+            "recent": true
+          },
+          "chronicFiles": 0,
+          "acuteFiles": 0,
+          "chronicShare": 0,
+          "fixDensity": {
+            "fixes": 9,
+            "share": 0.3,
+            "spanning": 7
+          }
+        }
       }
     ]
   },
@@ -1957,5 +2100,166 @@
       "ratio": 2.4667
     }
   ],
-  "cliquesPartial": false
+  "cliquesPartial": false,
+  "entryPoints": [
+    {
+      "rank": 1,
+      "kind": "boundary",
+      "score": 0.5096,
+      "territories": ["t2"],
+      "files": [],
+      "evidence": {
+        "chronicHeatShare": 0.332,
+        "chronicShare": 0.5321,
+        "chronicFiles": 2,
+        "containment": 0.5541,
+        "fixShare": 0.3108,
+        "heatShare": 0.6239,
+        "changes": 74,
+        "distantPairs": 3,
+        "hiddenPairs": 1,
+        "cliques": 0,
+        "partnerShare": 0.2838,
+        "codeHeatShare": 0.5812
+      },
+      "verdict": "The boundary does not hold, and it holds less than it used to: changes here keep reaching into other territories.",
+      "designMove": "Move a boundary: bring what changes together with packages/billing into one territory, or give the part they share a home of its own; start with packages/web.",
+      "findings": [
+        {
+          "kind": "boundary",
+          "verdict": "The boundary does not hold, and it holds less than it used to: changes here keep reaching into other territories.",
+          "designMove": "Move a boundary: bring what changes together with packages/billing into one territory, or give the part they share a home of its own; start with packages/web.",
+          "evidence": {
+            "heatShare": 0.6239,
+            "containment": 0.5541,
+            "changes": 74,
+            "chronicShare": 0.5321,
+            "fixShare": 0.3108,
+            "distantPairs": 3,
+            "hiddenPairs": 1,
+            "cliques": 0,
+            "partnerShare": 0.2838,
+            "codeHeatShare": 0.5812
+          },
+          "files": []
+        },
+        {
+          "kind": "hotspot",
+          "verdict": "Chronic hotspot: the same files stay among the hottest quarter after quarter.",
+          "designMove": "Split a hotspot: break packages/billing/src/invoice.ts and packages/billing/src/tax.ts into parts that each change for one reason.",
+          "evidence": {
+            "chronicHeatShare": 0.332,
+            "chronicShare": 0.5321,
+            "chronicFiles": 2,
+            "containment": 0.5541,
+            "fixShare": 0.3108
+          },
+          "files": [
+            "packages/billing/src/invoice.ts",
+            "packages/billing/src/tax.ts"
+          ]
+        }
+      ]
+    },
+    {
+      "rank": 2,
+      "kind": "hub",
+      "score": 0.0251,
+      "territories": ["t6"],
+      "files": ["packages/shared/src/config.ts"],
+      "evidence": {
+        "heatShare": 0.0391,
+        "fanIn": 14,
+        "changes": 22,
+        "medianDependentChanges": 9,
+        "changedDependents": 9
+      },
+      "verdict": "Many files depend on this file, and it keeps changing.",
+      "designMove": "Break up a hub: split what keeps changing in packages/shared/src/config.ts from what many files rely on, so that a change no longer ripples into its dependents.",
+      "findings": [
+        {
+          "kind": "hub",
+          "verdict": "Many files depend on this file, and it keeps changing.",
+          "designMove": "Break up a hub: split what keeps changing in packages/shared/src/config.ts from what many files rely on, so that a change no longer ripples into its dependents.",
+          "evidence": {
+            "heatShare": 0.0391,
+            "fanIn": 14,
+            "changes": 22,
+            "medianDependentChanges": 9,
+            "changedDependents": 9
+          },
+          "files": ["packages/shared/src/config.ts"]
+        }
+      ]
+    },
+    {
+      "rank": 3,
+      "kind": "copies",
+      "score": 0.02,
+      "territories": ["t2", "t4"],
+      "files": ["packages/auth/src/index.ts", "packages/billing/src/index.ts"],
+      "evidence": {
+        "heatShare": 0.02,
+        "files": 2,
+        "sharedChanges": 6,
+        "changesToAll": 6,
+        "similarity": 0.58
+      },
+      "verdict": "These files are copies that change in lockstep.",
+      "designMove": "Extract a shared abstraction: replace the copies with one shared implementation, or generate them from one source.",
+      "findings": [
+        {
+          "kind": "copies",
+          "verdict": "These files are copies that change in lockstep.",
+          "designMove": "Extract a shared abstraction: replace the copies with one shared implementation, or generate them from one source.",
+          "evidence": {
+            "heatShare": 0.02,
+            "files": 2,
+            "sharedChanges": 6,
+            "changesToAll": 6,
+            "similarity": 0.58
+          },
+          "files": [
+            "packages/auth/src/index.ts",
+            "packages/billing/src/index.ts"
+          ]
+        }
+      ]
+    },
+    {
+      "rank": 4,
+      "kind": "coupling",
+      "score": 0.0075,
+      "territories": ["t2", "t3"],
+      "files": [
+        "packages/billing/src/invoice.ts",
+        "packages/web/src/routes/invoices.tsx"
+      ],
+      "evidence": {
+        "heatShare": 0.015,
+        "sharedChanges": 12,
+        "degree": 0.5,
+        "distance": 5
+      },
+      "verdict": "These files keep changing together across territories, and no import links them.",
+      "designMove": "Centralize a contract: packages/billing/src/invoice.ts and packages/web/src/routes/invoices.tsx agree on something that neither shows to the other; define it once, in a place both use.",
+      "findings": [
+        {
+          "kind": "coupling",
+          "verdict": "These files keep changing together across territories, and no import links them.",
+          "designMove": "Centralize a contract: packages/billing/src/invoice.ts and packages/web/src/routes/invoices.tsx agree on something that neither shows to the other; define it once, in a place both use.",
+          "evidence": {
+            "heatShare": 0.015,
+            "sharedChanges": 12,
+            "degree": 0.5,
+            "distance": 5
+          },
+          "files": [
+            "packages/billing/src/invoice.ts",
+            "packages/web/src/routes/invoices.tsx"
+          ]
+        }
+      ]
+    }
+  ]
 }

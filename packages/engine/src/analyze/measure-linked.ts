@@ -9,7 +9,7 @@ import { readImportGraph } from "../imports/import-graph.js";
 import { linkCouplings } from "../imports/link-couplings.js";
 import { measureDesignFit } from "./measure-design-fit.js";
 import { measureStability } from "./measure-stability.js";
-import { measureTerritories } from "./measure-territories.js";
+import { measureTerritorial } from "./measure-territorial.js";
 import { coupleHistory, measureWindows } from "./measure.js";
 import type { Universe } from "./measure.js";
 import type { WindowHistories } from "./windows.js";
@@ -55,16 +55,21 @@ export const measureLinked = (
       measured,
       couplings,
     );
+    const territorial = yield* measureTerritorial({
+      ...place,
+      packages: universe.packages,
+      files: designFit.files,
+      couplings,
+      copyFamilies,
+      unstableInterfaces: stability.unstableInterfaces,
+      limits: measured.thresholds,
+      histories,
+      minChanges: measured.thresholds.minModuleCommits,
+    });
     return {
       ...measured,
       ...designFit,
-      ...(yield* measureTerritories({
-        ...place,
-        packages: universe.packages,
-        files: designFit.files,
-        history: histories.current,
-        minChanges: measured.thresholds.minModuleCommits,
-      })),
+      ...territorial,
       copyFamilies,
       distantCouplings: distantCouplings(
         couplings,

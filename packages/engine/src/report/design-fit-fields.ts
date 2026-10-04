@@ -5,6 +5,7 @@
 import { Schema } from "effect";
 
 import { ChangeRadius, PropagationCost } from "./change-radius.js";
+import { EntryPoint } from "./entry-point.js";
 import { Erosion } from "./erosion.js";
 import { FixDensity } from "./fix-density.js";
 import { SeriesWindow } from "./series.js";
@@ -42,4 +43,16 @@ export const DesignFitFields = {
   fixDensity: FixDensity,
   /** The areas of the code at every detail and the one to read first (see `Territories`); `modules` is unchanged. */
   territories: Territories,
+  /**
+   * Where to start: at most `thresholds.maxEntries` places where the design
+   * fails to hold up to the way the code changes, each with the evidence, a
+   * verdict, and a design move (see `EntryPoint`). Territories are judged at
+   * the recommended detail; buckets of smaller folders, loose files, and
+   * test-only code never qualify. At most `thresholds.maxEntriesPerKind`
+   * entries per kind, every one scoring at least `thresholds.minEntryScore`
+   * except the best of each kind, which is always listed (see GLOSSARY.md,
+   * "Entry point (of a report)"), so the list shows every kind of weakness the
+   * repository has. Empty when nothing qualifies. `--limit` does not cut it.
+   */
+  entryPoints: Schema.Array(EntryPoint),
 };

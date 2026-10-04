@@ -101,6 +101,7 @@ const draftsOf = (
       changes: measure.changes,
       heatShare: totalHeat === 0 ? 0 : roundReported(measure.heat / totalHeat),
       splitReason: node.reason ?? null,
+      fit: null,
       members: members[index] ?? [],
       lead: leadOf(entry),
     };

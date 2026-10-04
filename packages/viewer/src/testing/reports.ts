@@ -94,6 +94,14 @@ const THRESHOLDS: Report["thresholds"] = {
   minVerdictWindows: 5,
   hotTopShare: 0.1,
   minConventionShare: 0.05,
+  minEntryHeatShare: 0.02,
+  maxEntryContainment: 0.75,
+  minEntryChronicShare: 0.5,
+  minEntryChanges: 3,
+  minEntryCouplingChanges: 5,
+  minEntryScore: 0.005,
+  maxEntriesPerKind: 6,
+  maxEntries: 10,
   maxMeanLineLength: 300,
   maxFileBytes: 1048576,
 };
@@ -119,6 +127,7 @@ const NO_FINDINGS = {
   moduleCoupling: [],
   distantCouplings: [],
   territories: { recommended: 0, details: [], nodes: [] },
+  entryPoints: [],
 } satisfies Partial<Report>;
 
 /** A minimal valid report around the given files and couplings; `comparison` is null unless given. */

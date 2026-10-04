@@ -1,20 +1,19 @@
 // Owns the human view of `analyze`: top hotspots, couplings, the weakest and shallowest modules, biggest changes, one hint.
-import type { Coupling, FileStats, Module, Report } from "@codeheat/engine";
+import type { FileStats, Module, Report } from "@codeheat/engine";
 
 import { escapeForTerminal } from "../escape.js";
 import { changeLines } from "./changes-view.js";
-import {
-  contractNote,
-  coupledPath,
-  isContractPair,
-  partnerName,
-  ubiquitousLines,
-} from "./contract-view.js";
+import { contractNote, partnerName, ubiquitousLines } from "./contract-view.js";
 import { copyLines } from "./copies-view.js";
 import { shallowestLines } from "./depth-view.js";
-import { cliqueSection, distantSection } from "./distant-view.js";
+import {
+  cliqueSection,
+  couplingLines,
+  distantSection,
+} from "./distant-view.js";
+import { entryPointLines } from "./entry-points-view.js";
 import { day, percent } from "./format.js";
-import { importsCell } from "./imports-cell.js";
+import { leakySection } from "./leakage-view.js";
 import { overTimeSection } from "./over-time-view.js";
 import { spreadLines } from "./spread-view.js";
 import { stabilitySections } from "./stability-view.js";
@@ -23,9 +22,7 @@ import { plain, renderTable } from "./table.js";
 import { territoryLines } from "./territory-view.js";
 
 const TOP_HOTSPOTS = 10;
-const TOP_COUPLINGS = 5;
 const TOP_MODULES = 5;
-const SHOWN_ENTRY_POINTS = 2;
 const BAR_WIDTH = 10;
 
 const scoreBar = (score: number): string => {
@@ -57,52 +54,6 @@ const hotspotLines = (
     ]),
     style,
   );
-
-const couplingLines = (
-  couplings: ReadonlyArray<Coupling>,
-  files: ReadonlyArray<FileStats>,
-  contracts: Report["contracts"],
-  style: Style,
-): ReadonlyArray<string> => {
-  const changes = new Map(
-    [...files, ...contracts].map((file) => [file.path, file.changes]),
-  );
-  const coChange = (coupling: Coupling, from: string): string => {
-    const total = changes.get(from);
-    if (total === undefined) {
-      throw new Error(
-        `Coupled file ${escapeForTerminal(from)} is missing from the report's files and contracts; render an untruncated report.`,
-      );
-    }
-    return percent(coupling.sharedCommits / total);
-  };
-  return renderTable(
-    [
-      { header: "degree", align: "right" },
-      { header: "shared", align: "right" },
-      { header: "distance", align: "right" },
-      { header: "a → b", align: "right" },
-      { header: "b → a", align: "right" },
-      { header: "imports", align: "left" },
-      { header: "files", align: "left" },
-    ],
-    couplings
-      .filter((coupling) => !coupling.testPair && !isContractPair(coupling))
-      .slice(0, TOP_COUPLINGS)
-      .map((coupling) => [
-        plain(percent(coupling.degree)),
-        plain(String(coupling.sharedCommits)),
-        plain(String(coupling.distance)),
-        plain(coChange(coupling, coupling.a)),
-        plain(coChange(coupling, coupling.b)),
-        importsCell(coupling, style),
-        plain(
-          `${coupledPath(coupling.a, coupling.kinds.a)} <-> ${coupledPath(coupling.b, coupling.kinds.b)}`,
-        ),
-      ]),
-    style,
-  );
-};
 
 const moduleLines = (
   modules: ReadonlyArray<Module>,
@@ -141,44 +92,11 @@ const rankedModules = (report: Report): ReadonlyArray<Module> =>
     )
     .slice(0, TOP_MODULES);
 
-const entryPointNote = (entryPoints: ReadonlyArray<string>): string => {
-  const shown = entryPoints
-    .slice(0, SHOWN_ENTRY_POINTS)
-    .map((entry) => escapeForTerminal(entry));
-  const hidden = entryPoints.length - shown.length;
-  return hidden > 0 ? `${shown.join(", ")} +${hidden} more` : shown.join(", ");
-};
-
-const leakageLines = (
-  modules: ReadonlyArray<Module>,
-  style: Style,
-): ReadonlyArray<string> =>
-  renderTable(
-    [
-      { header: "leakage", align: "right" },
-      { header: "changes", align: "right" },
-      { header: "module", align: "left" },
-      { header: "entry points", align: "left" },
-    ],
-    modules.map((module) => [
-      plain(percent(module.leakage ?? 0)),
-      plain(String(module.implementationCommits)),
-      plain(escapeForTerminal(module.path)),
-      plain(entryPointNote(module.entryPoints)),
-    ]),
-    style,
-  );
-
-/** The first modules the report flags as having a leaky interface, in the report's order. */
-const leakyModules = (report: Report): ReadonlyArray<Module> =>
-  report.modules
-    .filter((module) => module.leakyInterface)
-    .slice(0, TOP_MODULES);
-
 /**
  * Renders the terminal view of an `analyze` report: how far a change spreads
  * (change radius and propagation cost, each left out when the report has
- * none), how many territories the recommended detail has, the ten hottest files, how the design moved over time (the verdict,
+ * none), how many territories the recommended detail has, where to start (the
+ * ranked entry points, left out when there are none), the ten hottest files, how the design moved over time (the verdict,
  * the modules losing cohesion, hotspots by age, and the share of fixes; each
  * part is left out when the report has no data for it),
  * the five best ranked distant couplings and a line per clique of modules
@@ -213,13 +131,13 @@ export const renderAnalysis = (report: Report, style: Style): string => {
   );
   const copies = copyLines(report, style);
   const modules = rankedModules(report);
-  const leaky = leakyModules(report);
   const shallow = shallowestLines(report, style);
   return [
     style.bold(summary),
     ...spreadLines(report),
     ...territoryLines(report),
     "",
+    ...entryPointLines(report, style),
     style.bold("Hotspots"),
     ...hotspots,
     "",
@@ -246,11 +164,7 @@ export const renderAnalysis = (report: Report, style: Style): string => {
           `No module has ${report.thresholds.minModuleCommits} or more counted changes.`,
         ]),
     "",
-    style.bold("Leaky interfaces"),
-    ...(leaky.length > 0
-      ? leakageLines(leaky, style)
-      : ["No module has a leaky interface."]),
-    "",
+    ...leakySection(report, style),
     ...(shallow.length === 0
       ? []
       : [style.bold("Shallowest modules"), ...shallow, ""]),

@@ -83,6 +83,46 @@ layer(NodeServices.layer)("analyze ranking", (it) => {
   );
 });
 
+/** The limits of an analysis, as the report states them. */
+const DEFAULT_LIMITS = {
+  maxCommitFiles: 50,
+  hubMinBreadth: 10,
+  hubMinRevisions: 5,
+  hubTopShare: 0.05,
+  minModuleCommits: 5,
+  minLocalDistance: 3,
+  minCliqueShare: 0.3,
+  minFanIn: 5,
+  minInterfaceChanges: 5,
+  minVolatilityRatio: 2,
+  minHiddenProbability: 0.5,
+  minCopySimilarity: 0.5,
+  minLeakage: 0.5,
+  minImplementationCommits: 5,
+  minSharedCommits: 3,
+  minDegree: 0.3,
+  propagationDepth: 3,
+  ubiquitousShare: 0.3,
+  ubiquitousMinCommits: 10,
+  minWindowChanges: 10,
+  minTrendWindows: 3,
+  minErosionShift: 0.1,
+  minErosionSigmas: 2,
+  minVerdictWindows: 5,
+  hotTopShare: 0.1,
+  minConventionShare: 0.05,
+  minEntryHeatShare: 0.02,
+  maxEntryContainment: 0.75,
+  minEntryChronicShare: 0.5,
+  minEntryChanges: 3,
+  minEntryCouplingChanges: 5,
+  minEntryScore: 0.005,
+  maxEntriesPerKind: 6,
+  maxEntries: 10,
+  maxMeanLineLength: 300,
+  maxFileBytes: 1_048_576,
+};
+
 layer(NodeServices.layer)("analyze report", (it) => {
   it.effect(
     "describes the repository and tool and satisfies the Report schema",
@@ -111,36 +151,7 @@ layer(NodeServices.layer)("analyze report", (it) => {
           ],
           [head, ".", 1],
         );
-        assert.deepStrictEqual(report.thresholds, {
-          maxCommitFiles: 50,
-          hubMinBreadth: 10,
-          hubMinRevisions: 5,
-          hubTopShare: 0.05,
-          minModuleCommits: 5,
-          minLocalDistance: 3,
-          minCliqueShare: 0.3,
-          minFanIn: 5,
-          minInterfaceChanges: 5,
-          minVolatilityRatio: 2,
-          minHiddenProbability: 0.5,
-          minCopySimilarity: 0.5,
-          minLeakage: 0.5,
-          minImplementationCommits: 5,
-          minSharedCommits: 3,
-          minDegree: 0.3,
-          propagationDepth: 3,
-          ubiquitousShare: 0.3,
-          ubiquitousMinCommits: 10,
-          minWindowChanges: 10,
-          minTrendWindows: 3,
-          minErosionShift: 0.1,
-          minErosionSigmas: 2,
-          minVerdictWindows: 5,
-          hotTopShare: 0.1,
-          minConventionShare: 0.05,
-          maxMeanLineLength: 300,
-          maxFileBytes: 1_048_576,
-        });
+        assert.deepStrictEqual(report.thresholds, DEFAULT_LIMITS);
       }),
   );
 });

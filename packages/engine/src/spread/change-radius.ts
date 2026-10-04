@@ -39,14 +39,16 @@ const radiusOf = (counts: ReadonlyArray<number>): ChangeRadius | null => {
  * included, touched by the measured changes that touched it, null without
  * any. Medians are lower medians (see `ChangeRadius.median`).
  *
- * Every module comes back with its `radius` set.
+ * Every module comes back with its `radius` set. Any area with a `path` and
+ * a `testOnly` flag can stand in for a module (territories do), as long as
+ * `touched` names the same paths.
  */
-export const measureRadius = (
+export const measureRadius = <Area extends Pick<Module, "path" | "testOnly">>(
   touched: ReadonlyArray<ReadonlySet<string>>,
-  modules: ReadonlyArray<Module>,
+  modules: ReadonlyArray<Area>,
 ): {
   readonly changeRadius: ChangeRadius | null;
-  readonly modules: ReadonlyArray<Module>;
+  readonly modules: ReadonlyArray<Area & Pick<Module, "radius">>;
 } => {
   const testOnly = new Set(
     modules.filter((module) => module.testOnly).map((module) => module.path),
