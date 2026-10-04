@@ -1,7 +1,17 @@
 import { describe, expect, it } from "vitest";
 
 import type { Entry } from "./candidate.js";
-import { foldBoundariesAndCliques } from "./fold-boundaries-and-cliques.js";
+import { foldsOf } from "./fold-boundaries-and-cliques.js";
+
+/** The entries with each fold of `foldsOf` made: the absorbed left out, the others as merged. */
+const foldBoundariesAndCliques = (
+  entries: ReadonlyArray<Entry>,
+): ReadonlyArray<Entry> => {
+  const { absorbed, merged } = foldsOf(entries);
+  return entries
+    .filter((each) => !absorbed.has(each))
+    .map((each) => merged.get(each) ?? each);
+};
 
 const entry = (
   kind: Entry["kind"],

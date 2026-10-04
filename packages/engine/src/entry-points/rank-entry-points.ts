@@ -6,7 +6,7 @@ import type { EntryPoint } from "../report/entry-point.js";
 import { roundReported } from "../report/precision.js";
 import type { Entry } from "./candidate.js";
 import { entriesOf } from "./entries-of.js";
-import { foldBoundariesAndCliques } from "./fold-boundaries-and-cliques.js";
+import { foldsOf } from "./fold-boundaries-and-cliques.js";
 import { gatherCandidates } from "./gather-candidates.js";
 import type { EntryPointInput } from "./gather-candidates.js";
 import type { EntryLimits } from "./limits.js";
@@ -96,19 +96,42 @@ const scored = (entries: ReadonlyArray<Entry>): ReadonlyArray<Entry> =>
     .filter(({ score }) => score > 0);
 
 /**
+ * The list of `entries` once the entries that explain one another are folded
+ * (see `foldsOf`). The list is picked first, so that an entry that is cut
+ * folds nothing in: a boundary that only a cut clique explains stays. What is
+ * folded away frees its place, which the next best entry takes; that entry may
+ * fold or be folded in turn, so the list is picked again until nothing in it
+ * folds any more. The entries that took some in carry their findings.
+ */
+const settled = (
+  entries: ReadonlyArray<Entry>,
+  limits: EntryLimits,
+): ReadonlyArray<Entry> => {
+  const picked = pickWithoutRepeats(entries, limits);
+  const { absorbed, merged } = foldsOf(picked);
+  return absorbed.size === 0
+    ? picked
+    : settled(
+        entries
+          .filter((entry) => !absorbed.has(entry))
+          .map((entry) => merged.get(entry) ?? entry),
+        limits,
+      );
+};
+
+/**
  * Ranks the places to start (see `EntryPoint`) among the candidates of every
  * kind, a territory that is both a boundary and a hotspot counting once (see
  * `entriesOf`), and a boundary and a clique that explain one another being
- * one entry, led by the higher ranked (see `foldBoundariesAndCliques`); see `gatherCandidates` and
- * the modules of the kinds for the rules. Every entry scores at least `limits.minEntryScore`, except the best
- * entry of each kind, which the list always holds. An entry about files that
- * a higher ranked entry names all of is left out. Empty when nothing
- * qualifies.
+ * one entry, led by the higher ranked (see `settled`); see `gatherCandidates`
+ * and the modules of the kinds for the rules. Every entry scores at least
+ * `limits.minEntryScore`, except the best entry of each kind, which the list
+ * always holds. An entry about files that a higher ranked entry names all of
+ * is left out. Empty when nothing qualifies.
  */
 export const rankEntryPoints = (
   input: EntryPointInput,
 ): ReadonlyArray<EntryPoint> =>
-  pickWithoutRepeats(
-    foldBoundariesAndCliques(scored(entriesOf(gatherCandidates(input)))),
-    input.limits,
-  ).map((entry, index) => Object.assign({ rank: index + 1 }, entry));
+  settled(scored(entriesOf(gatherCandidates(input))), input.limits).map(
+    (entry, index) => Object.assign({ rank: index + 1 }, entry),
+  );

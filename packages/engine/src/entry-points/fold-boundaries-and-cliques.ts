@@ -41,23 +41,28 @@ const explainedBy = (
         : isWithin(other, entry)),
   );
 
+/** Which entries fold into which: the entries that are folded away, and each entry that took some in, with all of its findings. */
+type Folds = {
+  readonly absorbed: ReadonlySet<Entry>;
+  readonly merged: ReadonlyMap<Entry, Entry>;
+};
+
 /**
- * The entries with each `boundary` entry and each `clique` entry that explain
- * one another folded into the higher ranked of the two: the boundary has all
- * of its territories among the members of the clique. A clique takes in any
- * boundary it ranks above; a boundary takes in a clique it ranks above only
- * when it is a pair entry and the clique has at most three members. The lower ranked is no
- * entry of its own, and its findings (its own, then the findings it is made
- * of and those of the hotspots it took in) follow those of the higher ranked.
- * The higher ranked keeps its `kind`, `territories`, and everything else. An
- * entry that is itself folded takes in nothing (the highest ranked goes
- * first), a boundary entry whose primary finding is a hotspot is no boundary
- * entry, and every other kind stays. The order of the entries stays.
+ * Finds the `boundary` entries and `clique` entries among `entries` that
+ * explain one another and folds each into the higher ranked of the two: the
+ * boundary has all of its territories among the members of the clique. A
+ * clique takes in any boundary it ranks above; a boundary takes in a clique it
+ * ranks above only when it is a pair entry and the clique has at most three
+ * members. The lower ranked is `absorbed`, no entry of its own, and its
+ * findings (its own, then the findings it is made of and those of the
+ * hotspots it took in) follow those of the higher ranked, which is `merged`:
+ * it keeps its `kind`, `territories`, and everything else. An entry that is
+ * itself folded takes in nothing (the highest ranked goes first), a boundary
+ * entry whose primary finding is a hotspot is no boundary entry, and every
+ * other kind stays.
  */
-export const foldBoundariesAndCliques = (
-  entries: ReadonlyArray<Entry>,
-): ReadonlyArray<Entry> => {
-  const folded = new Map<Entry, ReadonlyArray<Entry>>();
+export const foldsOf = (entries: ReadonlyArray<Entry>): Folds => {
+  const taking = new Map<Entry, ReadonlyArray<Entry>>();
   const absorbed = new Set<Entry>();
   const explainers = entries
     .filter(({ kind }) => kind === "boundary" || kind === "clique")
@@ -70,19 +75,23 @@ export const foldBoundariesAndCliques = (
       entry,
       explainers.filter((other) => !absorbed.has(other)),
     );
-    folded.set(entry, taken);
+    if (taken.length > 0) {
+      taking.set(entry, taken);
+    }
     for (const other of taken) {
       absorbed.add(other);
     }
   }
-  return entries
-    .filter((entry) => !absorbed.has(entry))
-    .map((entry) =>
+  const merged = new Map(
+    [...taking].map(([entry, taken]) => [
+      entry,
       Object.assign({}, entry, {
         findings: [
           ...entry.findings,
-          ...(folded.get(entry) ?? []).flatMap(({ findings }) => findings),
+          ...taken.flatMap(({ findings }) => findings),
         ],
       }),
-    );
+    ]),
+  );
+  return { absorbed, merged };
 };
