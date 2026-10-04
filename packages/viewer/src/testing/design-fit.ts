@@ -1,0 +1,83 @@
+import type { Report } from "@codeheat/engine";
+
+import {
+  entryPointOf,
+  fileStats,
+  reportOf,
+  territoryFit,
+  territoryNode,
+} from "./reports.js";
+
+type Territory = Report["territories"]["nodes"][number];
+
+/** A territory at the recommended detail, as `{ id, path, heat, containment }`, with the kind `folder` unless overridden. */
+export type PartSpec = {
+  readonly id: string;
+  readonly path: string;
+  readonly heat: number;
+  readonly containment: number | null;
+  readonly kind?: Territory["kind"];
+  readonly description?: string;
+  /** The territory it changes with most, as `{ territory, sharedChanges, share }`. */
+  readonly partner?: NonNullable<Territory["fit"]>["partner"];
+};
+
+/**
+ * A report whose territory tree is a root with the given parts as its
+ * children, all visible at the one detail, which is the recommended one.
+ */
+export const reportWithParts = (
+  parts: readonly PartSpec[],
+  overrides: Partial<Report> = {},
+): Report => {
+  const nodes = [
+    territoryNode("root", ".", {
+      children: parts.map(({ id }) => id),
+      fit: null,
+    }),
+    ...parts.map(
+      ({ id, path, heat, containment, kind, description, partner }) =>
+        territoryNode(id, path, {
+          parent: "root",
+          heatShare: heat,
+          kind: kind ?? "folder",
+          description: description ?? `What ${path} is`,
+          fit: territoryFit({ containment, partner: partner ?? null }),
+        }),
+    ),
+  ];
+  return reportOf(
+    parts.map(({ id, path }) =>
+      fileStats(`${path}/index.ts`, { territory: id }),
+    ),
+    [],
+    [],
+    {
+      territories: {
+        recommended: 1,
+        details: [{ level: 1, ids: parts.map(({ id }) => id) }],
+        nodes,
+      },
+      ...overrides,
+    },
+  );
+};
+
+/** A boundary entry point of the given rank on the given territory ids. */
+export const boundaryOn = (
+  rank: number,
+  territories: readonly string[],
+): Report["entryPoints"][number] =>
+  entryPointOf(rank, {
+    territories,
+    evidence: { containment: 0.35, distantPairs: 79, heatShare: 0.1 },
+    findings: [
+      {
+        kind: "boundary",
+        verdict: "The boundary does not hold.",
+        designMove: "Move a boundary: bring what changes together into one.",
+        evidence: { containment: 0.35, distantPairs: 79, heatShare: 0.1 },
+        files: [],
+      },
+    ],
+  });

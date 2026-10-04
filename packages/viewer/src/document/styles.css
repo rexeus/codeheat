@@ -25,6 +25,9 @@
   --hidden-coupling: #b4237a;
   --focus: #2a78d6;
   --shadow: 0 6px 20px rgb(11 11 11 / 0.14);
+  --eyebrow: #1d5fb0;
+  --marker: #c54e1c;
+  --marker-ink: #ffffff;
 
   --heat-0: #e4e3dd;
   --heat-1: #f2c4b4;
@@ -90,6 +93,9 @@
     --hidden-coupling: #ff7ab8;
     --focus: #5aa0f0;
     --shadow: 0 6px 20px rgb(0 0 0 / 0.5);
+    --eyebrow: #7fb4f5;
+    --marker: #da7550;
+    --marker-ink: #0b0b0b;
 
     --heat-0: #2c2c2a;
     --heat-1: #752601;
@@ -257,7 +263,7 @@
 }
 html,
 body {
-  height: 100%;
+  min-height: 100%;
   margin: 0;
 }
 body {
@@ -280,32 +286,6 @@ strong {
   color: var(--muted);
 }
 
-.app {
-  display: grid;
-  grid-template-rows: auto auto minmax(0, 1fr);
-  gap: 12px;
-  height: 100vh;
-  padding: 18px 22px 22px;
-}
-
-.header {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 12px 32px;
-}
-h1 {
-  margin: 0;
-  font-size: 22px;
-  font-weight: 650;
-  letter-spacing: -0.015em;
-}
-#summary {
-  margin: 2px 0 0;
-  color: var(--text-2);
-  font-variant-numeric: tabular-nums;
-}
 .legend {
   display: flex;
   flex-wrap: wrap;
@@ -469,6 +449,7 @@ button:focus-visible {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 340px;
   gap: 12px;
+  height: max(560px, calc(100vh - 230px));
   min-height: 0;
 }
 .stage,
@@ -883,17 +864,4 @@ button:focus-visible {
   color: var(--text);
   border-style: solid;
   border-color: var(--hidden-coupling);
-}
-
-@media (max-width: 900px) {
-  .app {
-    height: auto;
-    min-height: 100vh;
-  }
-  .content {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  .stage {
-    height: 60vh;
-  }
 }

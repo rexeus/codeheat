@@ -1,6 +1,8 @@
 import type { Report } from "@codeheat/engine";
 
 import { makeHeatScale } from "../color/heat-scale.js";
+import { heroDataOf } from "../hero/hero-data.js";
+import type { HeroData } from "../hero/hero-data.js";
 import { buildTree } from "../layout/hierarchy.js";
 import type { LeafNode } from "../layout/hierarchy.js";
 import { layoutTreemap } from "../layout/treemap.js";
@@ -11,6 +13,8 @@ import type { PathMatcher } from "../selection/filter.js";
 import { highlightOf, selectionOf } from "../selection/highlight.js";
 import type { Selection } from "../selection/highlight.js";
 import { indexPartners } from "../selection/partners.js";
+import type { PartnerIndex } from "../selection/partners.js";
+import { mountDesignFit } from "./design-fit.js";
 import { findPage, matchSummary, mountChrome } from "./page.js";
 import type { Page } from "./page.js";
 import { OVERVIEW_HOTSPOTS, createPanel } from "./panel.js";
@@ -66,6 +70,18 @@ const createParts = (
   return { panel, view };
 };
 
+/** Coupled files, the panel's hotspots, and the files places to start name stay selectable tiles when small files merge. */
+const selectableFiles = (
+  { files }: Report,
+  partnerIndex: PartnerIndex,
+  { entries }: HeroData,
+): Set<string> =>
+  new Set([
+    ...partnerIndex.keys(),
+    ...files.slice(0, OVERVIEW_HOTSPOTS).map(({ path }) => path),
+    ...entries.flatMap((entry) => entry.files),
+  ]);
+
 /**
  * Renders `report` into the skeleton the page template provides and wires
  * hover, selection, the filter and resizing. Every path reaches the DOM as text.
@@ -73,13 +89,10 @@ const createParts = (
 export const mountViewer = (report: Report): void => {
   const page = findPage();
   const partnerIndex = indexPartners(report.couplings);
-  // Coupled files and the panel's hotspots stay selectable tiles when small files merge.
+  const design = heroDataOf(report);
   const tree = buildTree(
     report.files,
-    new Set([
-      ...partnerIndex.keys(),
-      ...report.files.slice(0, OVERVIEW_HOTSPOTS).map(({ path }) => path),
-    ]),
+    selectableFiles(report, partnerIndex, design),
   );
   let selection: Selection | null = null;
   let matcher: PathMatcher | null = null;
@@ -120,6 +133,7 @@ export const mountViewer = (report: Report): void => {
   };
 
   mountChrome(report, page);
+  mountDesignFit(design, report.files, select);
   panel.showOverview();
   draw();
 

@@ -29,12 +29,20 @@ const bundleScript = async (): Promise<string> => {
   }
 };
 
+/** The stylesheets in cascade order: tokens and the map first, then each section of the page. */
+const STYLESHEETS = [
+  "src/document/styles.css",
+  "src/document/page.css",
+  "src/hero/hero.css",
+  "src/where-to-start/where-to-start.css",
+] as const;
+
 const minifyStyles = async (): Promise<string> => {
-  const source = await readFile(
-    path.join(packageRoot, "src/document/styles.css"),
-    "utf8",
+  const sources = await Promise.all(
+    STYLESHEETS.map((file) => readFile(path.join(packageRoot, file), "utf8")),
   );
-  return source
+  return sources
+    .join("\n")
     .replaceAll(/\/\*[\s\S]*?\*\//gu, "")
     .replaceAll(/\s+/gu, " ")
     .trim();

@@ -14,6 +14,26 @@ describe("embedded report", () => {
     expect(serializeReport(report)).not.toContain("<");
   });
 
+  it("gives a report from before territories and entry points empty design-fit fields", () => {
+    const {
+      territories: _territories,
+      entryPoints: _entryPoints,
+      changeRadius: _changeRadius,
+      propagationCost: _propagationCost,
+      erosion: _erosion,
+      ...older
+    } = report;
+
+    expect(parseReport(JSON.stringify(older))).toEqual({
+      ...older,
+      territories: { recommended: 0, details: [], nodes: [] },
+      entryPoints: [],
+      changeRadius: null,
+      propagationCost: null,
+      erosion: null,
+    });
+  });
+
   it("rejects a document of another schema version", () => {
     const future = JSON.stringify({ ...report, schemaVersion: 2 });
 

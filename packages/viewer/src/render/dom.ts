@@ -17,6 +17,19 @@ export const h = <K extends keyof HTMLElementTagNameMap>(
   return element;
 };
 
+/**
+ * Text that may wrap after each `/` and nowhere inside a word: a path in a
+ * narrow box breaks between its folders instead of through a name.
+ */
+export const breakable = (text: string): Child[] =>
+  text
+    .split("/")
+    .flatMap((part, index, parts) =>
+      index === parts.length - 1
+        ? [part]
+        : [`${part}/`, document.createElement("wbr")],
+    );
+
 /** Finds a skeleton element of the page, failing loudly when the page and script disagree. */
 export const byId = <T extends Element>(
   id: string,

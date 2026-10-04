@@ -17,6 +17,10 @@ export const formatScore = (score: number): string => score.toFixed(2);
 export const formatPercent = (share: number): string =>
   `${Math.round(share * 100)}%`;
 
+/** A share as a whole percentage; a share above zero never reads as `0%`. */
+export const formatShare = (share: number): string =>
+  share > 0 && share < 0.005 ? "<1%" : formatPercent(share);
+
 /** Splits a POSIX path into its directory (with trailing slash) and file name. */
 export const splitPath = (path: string): { dir: string; name: string } => {
   const cut = path.lastIndexOf("/") + 1;
