@@ -21,6 +21,8 @@ import type { DetailSlider } from "./detail-slider.js";
 import { expansionOf } from "./expansion.js";
 import { indexLevel } from "./level-index.js";
 import type { LevelIndex } from "./level-index.js";
+import { listUnjudgedLabel, unjudgedNote } from "./unjudged-note.js";
+import type { UnjudgedLimits } from "./unjudged-note.js";
 
 /** What the section says when the report has no territories. */
 const NO_TERRITORIES =
@@ -35,6 +37,7 @@ type SectionInput = {
   readonly files: MapLinks;
   readonly choices: readonly LevelChoice[];
   readonly recommended: number;
+  readonly limits: UnjudgedLimits;
 };
 
 type Level = {
@@ -96,7 +99,27 @@ class CardsSection {
     });
   }
 
+  /** Fills `body`: the cards, or when none of them can be judged, one sentence and a button that lists them anyway. */
   mount(body: HTMLElement): void {
+    const { cards } = this.levelAt(this.input.recommended);
+    const note = unjudgedNote(cards, this.input.limits);
+    if (note === null) {
+      this.mountCards(body);
+      return;
+    }
+    const list = h("button", "heat-more", listUnjudgedLabel(cards));
+    list.type = "button";
+    list.addEventListener("click", () => {
+      this.mountCards(body);
+      this.slider.element.querySelector("input")?.focus();
+    });
+    body.replaceChildren(
+      h("p", "section-empty", note),
+      h("div", "heat-collapsed-row", list),
+    );
+  }
+
+  private mountCards(body: HTMLElement): void {
     body.replaceChildren(
       h(
         "div",
@@ -216,5 +239,9 @@ export const mountCards = (
     files,
     choices,
     recommended: recommended.level,
+    limits: {
+      changes: source.totals.changes,
+      minChanges: source.thresholds.minModuleCommits,
+    },
   }).mount(body);
 };

@@ -76,6 +76,26 @@ describe("cardsOf at the recommended detail", () => {
   });
 });
 
+describe("cardsOf for territories that are not judged", () => {
+  it("names no hottest file when even the hottest has no heat", () => {
+    const quiet = reportWithParts([
+      { id: "t1", path: "build", heat: 0, containment: null },
+    ]);
+    const cold: Report = {
+      ...quiet,
+      files: quiet.files.map((file) => ({ ...file, score: 0 })),
+    };
+
+    expect(cardAt(cold, 1, "t1").hottest).toBeNull();
+    expect(cardAt(quiet, 1, "t1").hottest?.path).toBe("build/index.ts");
+  });
+
+  it("keeps the face of a territory that is not judged compact", () => {
+    expect(card(report, 2, "t3").compact).toBe(false);
+    expect(card(report, 2, "t6").compact).toBe(true);
+  });
+});
+
 describe("cardsOf at another detail", () => {
   it("shows the coarser territories with the files of everything inside", () => {
     expect(cardsAt(report, 1).map(({ territory }) => territory.id)).toEqual([

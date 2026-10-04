@@ -70,8 +70,10 @@ export type TerritoryCard = {
   readonly noData: string | null;
   /** The color step of its containment (see `cohesionStep`). */
   readonly step: number;
-  /** Its hottest file, when the report lists one. */
+  /** Its hottest file; `null` when the report lists none, or when even that one has no heat (a score of 0), which would only present a quiet file as the hottest. */
   readonly hottest: FileStats | null;
+  /** The territory is not judged, so its face has no containment to show and is kept to a few lines. */
+  readonly compact: boolean;
   readonly partner: CardPartner | null;
   /** All findings, most telling first; the face shows the first few. */
   readonly findings: readonly CardFinding[];
@@ -110,6 +112,11 @@ const fitLinkOf = (
       };
 };
 
+const hottestOf = (files: readonly FileStats[]): FileStats | null => {
+  const [first] = codeFirst(files);
+  return first !== undefined && first.score > 0 ? first : null;
+};
+
 /** The cards of the territories at `level`, in the report's order: the hottest real territory first, test code and buckets last. */
 export const cardsOf = (
   source: CardSource,
@@ -131,7 +138,8 @@ export const cardsOf = (
       containment,
       noData: reason,
       step: cohesionStep(containment),
-      hottest: codeFirst(level.filesOf(territory.id))[0] ?? null,
+      hottest: hottestOf(level.filesOf(territory.id)),
+      compact: containment === null,
       partner: partnerOf(territory, source.territories),
       findings: findingsOf(
         territory,
