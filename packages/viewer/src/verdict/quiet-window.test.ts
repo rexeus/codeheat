@@ -73,6 +73,34 @@ describe("quietWindowOf", () => {
   });
 });
 
+/** A quiet report whose window holds `commits` commits and whose newest commit was made at `lastCommitAt`. */
+const known = (lastCommitAt: string, commits: number) => {
+  const report = quietReport(
+    [quarter("2025-04-04T17:20:00.000Z", "2025-07-04T23:20:00.000Z", 4)],
+    "2025-04-04T17:20:00.000Z",
+  );
+  return {
+    ...report,
+    window: { ...report.window, commits, lastCommitAt },
+  };
+};
+
+describe("quietWindowOf with the day of the newest commit", () => {
+  it("says on which day the last commit was made, in place of the span of the series", () => {
+    expect(quietWindowOf(known("2025-03-14T09:15:30.000Z", 0))?.note).toBe(
+      "The last commit was on 2025-03-14. A longer window, set with --since, would include it.",
+    );
+  });
+
+  it("says the commits of the window do not count when the last one lies inside it", () => {
+    const report = known("2026-09-01T08:00:00.000Z", 3);
+
+    expect(quietWindowOf(report)?.note).toBe(
+      "The last commit was on 2026-09-01, but the commits of this window are mechanical and do not count.",
+    );
+  });
+});
+
 describe("the verdict of a window without counted changes", () => {
   it("replaces the evidence sentence and carries the note", () => {
     const report = quietReport([], null);
