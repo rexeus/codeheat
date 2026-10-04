@@ -322,8 +322,8 @@
 .tcard-where + .tcard-finding-stats {
   flex-basis: 100%;
 }
-.tcard-pair + .tcard-pair::before {
-  margin: 0 4px;
+.tcard-pair:not(:last-child)::after {
+  margin: 0 2px 0 4px;
   color: var(--muted);
   content: "·";
 }

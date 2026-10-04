@@ -179,7 +179,7 @@
 .top-stats {
   display: flex;
   flex-wrap: wrap;
-  gap: 0 6px;
+  gap: 0 14px;
   color: var(--text-2);
   font-size: 12px;
   font-variant-numeric: tabular-nums;
@@ -189,11 +189,6 @@
 }
 .top-leak {
   flex-basis: 100%;
-}
-.top-stat + .top-stat:not(.top-leak)::before {
-  margin-right: 6px;
-  color: var(--muted);
-  content: "·";
 }
 .top-go {
   color: var(--muted);
@@ -222,7 +217,7 @@
 }
 .fit-map {
   position: relative;
-  height: clamp(420px, calc(100vh - 210px), 640px);
+  height: clamp(420px, calc(100vh - 290px), 640px);
 }
 .fit-empty {
   display: grid;
