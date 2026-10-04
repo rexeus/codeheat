@@ -10,16 +10,26 @@ Humans get a treemap and a ranked list of where to start. Agents get ranked, exp
 
 ```bash
 npx codeheat analyze             # top hotspots and couplings in the terminal
-npx codeheat analyze --html      # interactive treemap in the browser
+npx codeheat analyze --html      # interactive report in the browser: verdict, where to start, treemap
 npx codeheat analyze --json      # ranked, bounded report for agents and scripts
 npx codeheat inspect src/billing/invoice.ts   # what to know before editing a file
 ```
 
 Requires Node.js 22.12 or newer and `git` on your PATH. Works for any language; hidden coupling and module depth (below) are reported for TypeScript and JavaScript.
 
-## The treemap
+## The HTML report
 
-`codeheat analyze --html` writes `codeheat-report.html` — one self-contained file, no network access — and opens it.
+`codeheat analyze --html` writes `codeheat-report.html` — one self-contained file, no network access — and opens it. It follows light and dark mode and reads on a phone. It opens on the answer to one question, _does your design hold up to the way your code actually changes?_, and shows three things at once, without scrolling at 1440 × 900:
+
+- **The verdict**, one sentence for the whole repository: how much of the change effort happens in territories whose changes keep reaching into their neighbors, and whether that is getting better or worse. A line under the question says what a territory and its boundary are. Behind the verdict are the numbers it rests on: how many territories leak, how much of the effort sits in the top three places to start, the trend of the share of changes that stay in one module, and the propagation cost.
+- **The fit map**: every territory at the recommended detail as one picture, with its name and what it is. Area is the share of the change effort (how often a file changed, weighted by its size and complexity; square-root scaled, so small territories stay readable), color is the share of its changes that stay inside it (dark violet in light mode, bright in dark mode: few), and hatching means no counted changes in the window or test code. A territory that is a place to start carries one numbered marker, its best rank in Where to start (`+2` when two more concern it); the top three are outlined. A territory the map is too small to label is in the list under it.
+- **The top three places to start** as one-liners that link down.
+
+Below that, **Where to start** is the ranked list of entry points: for each its rank, kind, territory or files, what is wrong, where a boundary leaks to, the design move, and the numbers behind it, with links to its territory on the fit map and to its files in the treemap. A report from an older codeheat without territories or entry points says so and still shows the treemap.
+
+### The treemap
+
+The **Map** section is the treemap of every file.
 
 - **Area** is lines of code, **color** is hotspot rank: the darkest tiles are the hottest 2 % of the repository. Tiles are grouped by directory, like a stock-market heatmap grouped by sector.
 - **Color by** switches between _Heat_ (hotspot rank), _Cohesion_ (the module's cohesion), and _Change_ (`#mode=change`): how a file's score moved against the window before, from cooler (blue) to warmer (orange). _Change_ needs a report made with `--compare`.
@@ -203,7 +213,7 @@ The example shows an illustrative shop repository (the one in `fixtures/report.s
 | `--limit <n>`                         | `25`             | Files, contract files, couplings, modules, copy families, distant couplings, module couplings, cliques, unstable interfaces, and dependency directions in `--json`, each; `0` for all. `totals` always tells the full size. |
 | `--entry <glob>`                      | detected         | Files that form a module's public interface, instead of detecting them (see interface leakage below). Repeatable.                                                                                                           |
 | `--json`                              | off              | One JSON document on stdout; everything else goes to stderr.                                                                                                                                                                |
-| `--html`, `--out <file>`, `--no-open` | off              | The treemap, see above.                                                                                                                                                                                                     |
+| `--html`, `--out <file>`, `--no-open` | off              | The HTML report, see above.                                                                                                                                                                                                 |
 
 ### `codeheat inspect <file-or-glob...>`
 
