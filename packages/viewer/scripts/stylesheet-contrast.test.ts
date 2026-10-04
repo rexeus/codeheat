@@ -121,3 +121,52 @@ describe.each(["light", "dark"] as const)(
     );
   },
 );
+
+/** The declarations of the first rule whose selector is exactly `selector`. */
+const declarationsOf = (selector: string): string => {
+  const rule = new RegExp(
+    `(?:^|\\})\\s*${selector.replaceAll(".", "\\.")}\\s*\\{([^}]*)\\}`,
+    "u",
+  ).exec(css);
+  if (rule?.[1] === undefined) {
+    throw new Error(`no rule for ${selector}`);
+  }
+  return rule[1];
+};
+
+/** The value a rule declares for a property, with a `var(--token)` followed to the color it names in `scheme`. */
+const resolvedDeclaration = (
+  scheme: Scheme,
+  selector: string,
+  property: string,
+): string | undefined => {
+  const value = new RegExp(`(?:^|[;\\s])${property}:\\s*([^;]+);`, "u")
+    .exec(declarationsOf(selector))?.[1]
+    ?.trim();
+  const reference = /^var\(--([\w-]+)\)$/u.exec(value ?? "")?.[1];
+  return reference === undefined ? value : tokenOf(scheme, reference);
+};
+
+describe("the sticky bar", () => {
+  it.each(["light", "dark"] as const)(
+    "is painted with the opaque page color in %s mode, so scrolled content never shows through",
+    (scheme) => {
+      const background = resolvedDeclaration(scheme, ".topbar", "background");
+
+      expect(background).toBe(tokenOf(scheme, "page"));
+      expect(background).toMatch(/^#[\da-f]{6}$/u);
+      expect(declarationsOf(".topbar")).not.toContain("backdrop-filter");
+    },
+  );
+
+  it.each(["light", "dark"] as const)(
+    "keeps its link text readable on the page color in %s mode",
+    (scheme) => {
+      for (const ink of ["text", "text-2"]) {
+        expect(
+          contrast(tokenOf(scheme, ink), tokenOf(scheme, "page")),
+        ).toBeGreaterThanOrEqual(AA);
+      }
+    },
+  );
+});
