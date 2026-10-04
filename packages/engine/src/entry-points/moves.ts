@@ -21,8 +21,8 @@ export const boundaryVerdict = (eroding: boolean): string =>
     : "The boundary does not hold: changes here keep reaching into other territories.";
 
 /** Move a boundary; `partner` is the path of the territory its changes most often reach into. */
-export const boundaryMove = (path: string, partner: string | null): string =>
-  `Move a boundary: bring what changes together with ${path} into one territory, or give the part they share a home of its own${partner === null ? "" : `; start with ${partner}`}.`;
+export const boundaryMove = (path: string, partner: string): string =>
+  `Move a boundary: bring what changes together with ${path} into one territory, or give the part they share a home of its own; start with ${partner}.`;
 
 export const HOTSPOT_VERDICT =
   "Chronic hotspot: the same files stay among the hottest quarter after quarter.";

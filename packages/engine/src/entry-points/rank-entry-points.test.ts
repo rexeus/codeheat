@@ -196,7 +196,11 @@ describe("rankEntryPoints of one territory", () => {
           nodes: both.nodes.map((node) =>
             node.id === "a"
               ? Object.assign({}, node, {
-                  fit: fitRecord({ containment: 0.1, chronicShare: 0.6 }),
+                  fit: fitRecord({
+                    containment: 0.1,
+                    chronicShare: 0.6,
+                    partner: { territory: "b", sharedChanges: 8, share: 0.2 },
+                  }),
                 })
               : node,
           ),

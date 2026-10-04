@@ -10,8 +10,15 @@ import { boundaryMove, boundaryVerdict } from "./moves.js";
 /** How much more a territory ranks when most of its heat is chronic. */
 const CHRONIC_BOOST = 1.5;
 
-/** Whether the territory has changes to judge, keeps at most `maxEntryContainment` of them inside, and holds at least `minEntryHeatShare` of the heat. */
+/**
+ * Whether the territory has changes to judge, keeps at most
+ * `maxEntryContainment` of them inside, holds at least `minEntryHeatShare` of
+ * the heat, and has a leak target: a `fit.partner` that shares at least
+ * `minSharedCommits` changes with it (the partner is null below that, and for
+ * a territory under `minModuleCommits` changes, which is never judged).
+ */
 const leaks = ({ fit, codeHeatShare }: Judged, limits: EntryLimits): boolean =>
+  fit.partner !== null &&
   fit.containment !== null &&
   fit.containment <= limits.maxEntryContainment &&
   codeHeatShare >= limits.minEntryHeatShare;
@@ -19,7 +26,9 @@ const leaks = ({ fit, codeHeatShare }: Judged, limits: EntryLimits): boolean =>
 /**
  * The territories whose boundary does not hold: at most
  * `limits.maxEntryContainment` of their changes stay inside and they hold at
- * least `limits.minEntryHeatShare` of the production code's heat. The score is
+ * least `limits.minEntryHeatShare` of the production code's heat, and some
+ * other territory shares changes with them (see `leaks`): a verdict on a
+ * boundary needs evidence of where it leaks to. The score is
  * `codeHeatShare × (1 − containment) × (chronic ? 1.5 : 1) × (1 + fix share)`:
  * the design's heat that leaks, more when it is the long-lived kind and when it
  * is spent on fixes. The base is the production code's heat (`Judged.codeHeatShare`):
@@ -35,7 +44,7 @@ export const boundaryEntries = (
 ): ReadonlyArray<Candidate> =>
   judged.flatMap((territory): Array<Candidate> => {
     const { fit, heatShare, codeHeatShare } = territory;
-    if (!leaks(territory, limits)) {
+    if (!leaks(territory, limits) || fit.partner === null) {
       return [];
     }
     const containment = fit.containment ?? 1;
@@ -59,12 +68,12 @@ export const boundaryEntries = (
           distantPairs: fit.distantPairs,
           hiddenPairs: fit.hiddenPairs,
           cliques: fit.cliques,
-          partnerShare: fit.partner?.share,
+          partnerShare: fit.partner.share,
         }),
         verdict: boundaryVerdict(fit.erosion?.verdict === "eroding"),
         designMove: boundaryMove(
           territory.path,
-          pathOf.get(fit.partner?.territory ?? "") ?? null,
+          pathOf.get(fit.partner.territory) ?? fit.partner.territory,
         ),
       },
     ];
