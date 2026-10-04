@@ -5,11 +5,11 @@ import type { FileStats, Report } from "@codeheat/engine";
 import { cohesionStep } from "../color/cohesion-scale.js";
 import type { EntryView } from "../entry-points/entry-views.js";
 import { descriptionOf } from "../fit-map/fit-tiles.js";
+import { distinctNameParts } from "../territories/distinct-names.js";
 import { judgeTerritory } from "../territories/judgement.js";
 import {
   isRealTerritory,
   territoryName,
-  territoryNameParts,
 } from "../territories/territory-index.js";
 import type {
   NameParts,
@@ -114,8 +114,9 @@ const fitLinkOf = (
 export const cardsOf = (
   source: CardSource,
   level: LevelIndex,
-): TerritoryCard[] =>
-  level.territories.map((territory) => {
+): TerritoryCard[] => {
+  const partsOf = distinctNameParts(level.territories);
+  return level.territories.map((territory) => {
     const { containment, reason } = judgeTerritory(
       territory,
       source.thresholds,
@@ -123,7 +124,7 @@ export const cardsOf = (
     return {
       territory,
       name: territoryName(territory),
-      nameParts: territoryNameParts(territory),
+      nameParts: partsOf(territory),
       description: descriptionOf(territory),
       quiet: !isRealTerritory(territory),
       heatShare: territory.heatShare,
@@ -143,6 +144,7 @@ export const cardsOf = (
       fitLink: fitLinkOf(territory, source.territories),
     };
   });
+};
 
 /** What the cards need from `report`, with the places to start already read. */
 export const cardSourceOf = (

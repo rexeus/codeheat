@@ -1,12 +1,27 @@
 import type { Report } from "@codeheat/engine";
 import { describe, expect, it } from "vitest";
 
+import { reportWithParts } from "../testing/design-fit.js";
 import { cardAt, cardsAt } from "../testing/territory-cards.js";
 import { territoryTreeReport } from "../testing/territory-tree.js";
 
 const card = cardAt;
 
 const report = territoryTreeReport();
+
+describe("cardsOf with two territories of one name", () => {
+  it("names the folder that tells their cards apart", () => {
+    const twins = reportWithParts([
+      { id: "t1", path: "scripts", heat: 0.2, containment: 0.5 },
+      { id: "t2", path: "adev/scripts", heat: 0.1, containment: 0.5 },
+    ]);
+
+    expect(cardsAt(twins, 1).map(({ nameParts }) => nameParts)).toEqual([
+      { dir: "", base: "scripts" },
+      { dir: "", base: "adev/scripts" },
+    ]);
+  });
+});
 
 describe("cardsOf at the recommended detail", () => {
   it("makes one card per territory in the report's order", () => {

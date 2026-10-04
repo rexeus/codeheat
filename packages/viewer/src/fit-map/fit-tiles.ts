@@ -4,12 +4,10 @@
 import { cohesionStep } from "../color/cohesion-scale.js";
 import type { EntryView } from "../entry-points/entry-views.js";
 import { formatShare } from "../render/format.js";
+import { distinctNameParts } from "../territories/distinct-names.js";
 import { judgeTerritory } from "../territories/judgement.js";
 import type { JudgementLimits } from "../territories/judgement.js";
-import {
-  territoryName,
-  territoryNameParts,
-} from "../territories/territory-index.js";
+import { territoryName } from "../territories/territory-index.js";
 import type {
   NameParts,
   Territory,
@@ -98,6 +96,7 @@ export const fitTilesOf = (
   limits: JudgementLimits,
 ): FitTile[] => {
   const ranks = ranksByTerritory(entries);
+  const partsOf = distinctNameParts(index.recommended);
   return index.recommended.map((territory) => {
     const name = territoryName(territory);
     const { containment, reason: noData } = judgeTerritory(territory, limits);
@@ -105,7 +104,7 @@ export const fitTilesOf = (
     return {
       id: territory.id,
       name,
-      nameParts: territoryNameParts(territory),
+      nameParts: partsOf(territory),
       description: descriptionOf(territory),
       kind: territory.kind,
       weight: weightOf(territory.heatShare),
