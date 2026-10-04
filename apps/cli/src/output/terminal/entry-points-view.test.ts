@@ -74,7 +74,7 @@ describe("entryPointLines", () => {
       lines([
         entry({
           evidence: {
-            heatShare: 0.31,
+            codeHeatShare: 0.31,
             containment: 0.36,
             changes: 278,
             partnerShare: 0.49,
@@ -85,7 +85,7 @@ describe("entryPointLines", () => {
       "Where to start",
       "1. boundary  billing",
       "   Verdict.",
-      "   31% of the heat; 36% of its 278 changes stay inside, 49% also touch its closest partner",
+      "   31% of the code's heat; 36% of its 278 changes stay inside, 49% also touch its closest partner",
       "   Move.",
       "",
     ]);
@@ -107,7 +107,7 @@ describe("entryPointLines subjects", () => {
         kind: "clique",
         territories: ["t2", "t3", "t4"],
         evidence: {
-          heatShare: 0.5,
+          codeHeatShare: 0.5,
           sharedChanges: 1,
           territories: 3,
           weakestShare: 0.3,
@@ -152,7 +152,7 @@ describe("entryPointLines words", () => {
           kind: "clique",
           territories: ["t2", "t3", "t4"],
           evidence: {
-            heatShare: 0.5,
+            codeHeatShare: 0.5,
             sharedChanges: 1,
             territories: 3,
             weakestShare: 0.3,
@@ -160,7 +160,7 @@ describe("entryPointLines words", () => {
         }),
       ])[3],
     ).toBe(
-      "   50% of the heat; 1 change touched all 3, every pair shares at least 30%",
+      "   50% of the code's heat; 1 change touched all 3, every pair shares at least 30%",
     );
   });
 
@@ -222,7 +222,7 @@ describe("entryPointLines layout", () => {
 describe("entries with two findings", () => {
   const both = entry({
     evidence: {
-      heatShare: 0.4,
+      codeHeatShare: 0.4,
       containment: 0.5,
       changes: 30,
       chronicShare: 0.6,
@@ -233,7 +233,7 @@ describe("entries with two findings", () => {
         kind: "boundary",
         verdict: "Leaks.",
         designMove: "Move it.",
-        evidence: { heatShare: 0.4, containment: 0.5, changes: 30 },
+        evidence: { codeHeatShare: 0.4, containment: 0.5, changes: 30 },
         files: [],
       },
       {
@@ -250,7 +250,7 @@ describe("entries with two findings", () => {
     expect(lines([both]).slice(1, 8)).toStrictEqual([
       "1. boundary  billing",
       "   Verdict.",
-      "   40% of the heat; 50% of its 30 changes stay inside",
+      "   40% of the code's heat; 50% of its 30 changes stay inside",
       "   Move.",
       "   Also hotspot: Chronic.",
       "   30% of all heat sits in 2 chronic hotspots",

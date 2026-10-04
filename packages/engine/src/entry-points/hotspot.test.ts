@@ -24,6 +24,7 @@ const judged = (
 ): Judged => ({
   ...territoryRecord(id, "package", "r"),
   heatShare,
+  codeHeatShare: heatShare,
   fit: fitRecord(fit),
 });
 

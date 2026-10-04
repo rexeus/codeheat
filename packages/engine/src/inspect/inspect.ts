@@ -39,19 +39,25 @@ const toEntry = (
   entryPoints,
 });
 
-/** The ids of the territories `ids` and the partners of their fit. */
+/**
+ * The ids of the territories `ids`, the territory that holds each `tests`
+ * territory among them (test code has no fit of its own), and the partners of
+ * their fit.
+ */
 const focusedTerritoriesOf = (
   nodes: Report["territories"]["nodes"],
   ids: ReadonlyArray<string>,
 ): ReadonlySet<string> => {
   const focused = new Set(ids);
   for (const node of nodes) {
-    if (
-      focused.has(node.id) &&
-      node.fit?.partner !== undefined &&
-      node.fit.partner !== null
-    ) {
-      focused.add(node.fit.partner.territory);
+    if (focused.has(node.id) && node.kind === "tests" && node.parent !== null) {
+      focused.add(node.parent);
+    }
+  }
+  for (const node of nodes) {
+    const partner = focused.has(node.id) ? node.fit?.partner : undefined;
+    if (partner !== undefined && partner !== null) {
+      focused.add(partner.territory);
     }
   }
   return focused;

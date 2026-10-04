@@ -47,11 +47,11 @@ const EVIDENCE_LINES: Readonly<
   >
 > = {
   boundary: (at, evidence) =>
-    `${percent(at("heatShare"))} of the heat; ${percent(at("containment"))} of its ${counted(at("changes"), "change")} stay inside${evidence["partnerShare"] === undefined ? "" : `, ${percent(at("partnerShare"))} also touch its closest partner`}`,
+    `${percent(at("codeHeatShare"))} of the code's heat; ${percent(at("containment"))} of its ${counted(at("changes"), "change")} stay inside${evidence["partnerShare"] === undefined ? "" : `, ${percent(at("partnerShare"))} also touch its closest partner`}`,
   hotspot: (at) =>
     `${percent(at("chronicHeatShare"))} of all heat sits in ${counted(at("chronicFiles"), "chronic hotspot")}`,
   clique: (at) =>
-    `${percent(at("heatShare"))} of the heat; ${counted(at("sharedChanges"), "change")} touched all ${at("territories")}, every pair shares at least ${percent(at("weakestShare"))}`,
+    `${percent(at("codeHeatShare"))} of the code's heat; ${counted(at("sharedChanges"), "change")} touched all ${at("territories")}, every pair shares at least ${percent(at("weakestShare"))}`,
   copies: (at) =>
     `${counted(at("files"), "file")}, at least ${percent(at("similarity"))} alike; ${counted(at("changesToAll"), "change")} touched every copy`,
   coupling: (at) =>

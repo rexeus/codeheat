@@ -22,9 +22,8 @@ const byScore = (a: Entry, b: Entry): number =>
  * Merges the entries of every kind into the list: each kind keeps its
  * `limits.maxEntriesPerKind` best, the best of every kind is listed whatever
  * its score, and the other places are filled by score, up to
- * `limits.maxEntries`. Ranked by score, then kind, then what the entry
- * concerns. Every entry has passed `limits.minEntryScore` already, so the best
- * of a kind that scores less is not listed at all.
+ * `limits.maxEntries`, those that score `limits.minEntryScore` or more.
+ * Ranked by score, then kind, then what the entry concerns.
  */
 const pick = (
   entries: ReadonlyArray<Entry>,
@@ -39,7 +38,9 @@ const pick = (
     }
   }
   const best = [...perKind.values()].flatMap((own) => own.slice(0, 1));
-  const rest = [...perKind.values()].flatMap((own) => own.slice(1));
+  const rest = [...perKind.values()]
+    .flatMap((own) => own.slice(1))
+    .filter(({ score }) => score >= limits.minEntryScore);
   return [
     ...best,
     ...rest.toSorted(byScore).slice(0, limits.maxEntries - best.length),
@@ -48,28 +49,61 @@ const pick = (
     .toSorted(byScore);
 };
 
-/** The entries with their score rounded as the report rounds it, those below `limits.minEntryScore` left out. */
-const scored = (
+/** The files an entry names, in any of its findings. */
+const namedBy = (entry: Entry): ReadonlyArray<string> =>
+  entry.findings.flatMap(({ files }) => files);
+
+/** The kinds about files, which another entry may already name. */
+const isAboutFiles = ({ kind }: Entry): boolean =>
+  kind === "hub" || kind === "coupling" || kind === "copies";
+
+/**
+ * Picks the list (see `pick`) without an entry about files that a higher
+ * ranked entry already names all of: such an entry says nothing new, and its
+ * place goes to the next one.
+ */
+const pickWithoutRepeats = (
   entries: ReadonlyArray<Entry>,
   limits: EntryLimits,
-): ReadonlyArray<Entry> =>
+): ReadonlyArray<Entry> => {
+  const picked = pick(entries, limits);
+  const repeat = picked.find(
+    (entry, index) =>
+      isAboutFiles(entry) &&
+      entry.files.length > 0 &&
+      entry.files.every((file) =>
+        picked.slice(0, index).some((higher) => namedBy(higher).includes(file)),
+      ),
+  );
+  return repeat === undefined
+    ? picked
+    : pickWithoutRepeats(
+        entries.filter((entry) => entry !== repeat),
+        limits,
+      );
+};
+
+/** The entries with their score rounded as the report rounds it, those with nothing at stake left out. */
+const scored = (entries: ReadonlyArray<Entry>): ReadonlyArray<Entry> =>
   entries
     .map((entry) =>
       Object.assign({}, entry, { score: roundReported(entry.score) }),
     )
-    .filter(({ score }) => score > 0 && score >= limits.minEntryScore);
+    .filter(({ score }) => score > 0);
 
 /**
  * Ranks the places to start (see `EntryPoint`) among the candidates of every
  * kind, a territory that is both a boundary and a hotspot counting once (see
- * `entriesOf`), those scoring less than `limits.minEntryScore` left out; see
- * `gatherCandidates` and the modules of the kinds for the rules. Empty when
- * nothing qualifies.
+ * `entriesOf`); see `gatherCandidates` and the modules of the kinds for the
+ * rules. Every entry scores at least `limits.minEntryScore`, except the best
+ * entry of each kind, which the list always holds. An entry about files that
+ * a higher ranked entry names all of is left out. Empty when nothing
+ * qualifies.
  */
 export const rankEntryPoints = (
   input: EntryPointInput,
 ): ReadonlyArray<EntryPoint> =>
-  pick(
-    scored(entriesOf(gatherCandidates(input)), input.limits),
+  pickWithoutRepeats(
+    scored(entriesOf(gatherCandidates(input))),
     input.limits,
   ).map((entry, index) => Object.assign({ rank: index + 1 }, entry));

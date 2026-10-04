@@ -10,10 +10,12 @@ const judged = (
   id: string,
   heatShare: number,
   fit: Partial<TerritoryFit>,
+  codeHeatShare = heatShare,
 ): Judged => ({
   ...territoryRecord(id, "package", "r"),
   path: `packages/${id}`,
   heatShare,
+  codeHeatShare,
   changes: 40,
   fit: fitRecord(fit),
 });
@@ -93,6 +95,25 @@ describe("boundaryEntries gates", () => {
   });
 });
 
+describe("boundaryEntries on production code", () => {
+  it("ranks and gates on the production code's heat, not on the heat that tests add", () => {
+    const territories = [
+      judged("a", 0.5, { containment: 0.5 }, 0.01),
+      judged("b", 0.5, { containment: 0.5 }, 0.2),
+    ];
+
+    const entries = boundaryEntries(territories, PATHS);
+
+    // a holds half of the heat but a hundredth of the code's: below the gate
+    expect(entries.map(({ territories: ids }) => ids)).toStrictEqual([["b"]]);
+    expect(entries[0]?.score).toBeCloseTo(0.1, 10);
+    expect(entries[0]?.evidence).toMatchObject({
+      codeHeatShare: 0.2,
+      heatShare: 0.5,
+    });
+  });
+});
+
 describe("boundaryEntries limits", () => {
   it("reads the gates from the limits", () => {
     const territories = [
@@ -126,6 +147,7 @@ describe("boundaryEntries words and evidence", () => {
     );
 
     expect(entry?.evidence).toStrictEqual({
+      codeHeatShare: 0.3,
       heatShare: 0.3,
       containment: 0.4,
       changes: 40,

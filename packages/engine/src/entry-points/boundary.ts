@@ -11,19 +11,22 @@ import { boundaryMove, boundaryVerdict } from "./moves.js";
 const CHRONIC_BOOST = 1.5;
 
 /** Whether the territory has changes to judge, keeps at most `maxEntryContainment` of them inside, and holds at least `minEntryHeatShare` of the heat. */
-const leaks = ({ fit, heatShare }: Judged, limits: EntryLimits): boolean =>
+const leaks = ({ fit, codeHeatShare }: Judged, limits: EntryLimits): boolean =>
   fit.containment !== null &&
   fit.containment <= limits.maxEntryContainment &&
-  heatShare >= limits.minEntryHeatShare;
+  codeHeatShare >= limits.minEntryHeatShare;
 
 /**
  * The territories whose boundary does not hold: at most
  * `limits.maxEntryContainment` of their changes stay inside and they hold at
- * least `limits.minEntryHeatShare` of the heat. The score is `heatShare × (1 − containment) × (chronic ? 1.5 : 1) ×
- * (1 + fix share)`: the heat that leaks, more when it is the long-lived kind
- * and when it is spent on fixes. A territory is chronic when most of its heat
- * is in chronic hotspots (see `isChronic`); the fix share is 0 where subjects
- * do not tell.
+ * least `limits.minEntryHeatShare` of the production code's heat. The score is
+ * `codeHeatShare × (1 − containment) × (chronic ? 1.5 : 1) × (1 + fix share)`:
+ * the design's heat that leaks, more when it is the long-lived kind and when it
+ * is spent on fixes. The base is the production code's heat (`Judged.codeHeatShare`):
+ * tests are change effort but not design, so a territory made of test code
+ * does not rank; `Territory.heatShare`, which counts them, stays in the
+ * evidence. A territory is chronic when most of its code's heat is in chronic
+ * hotspots (see `isChronic`); the fix share is 0 where subjects do not tell.
  */
 export const boundaryEntries = (
   judged: ReadonlyArray<Judged>,
@@ -31,7 +34,7 @@ export const boundaryEntries = (
   limits: EntryLimits,
 ): ReadonlyArray<Candidate> =>
   judged.flatMap((territory): Array<Candidate> => {
-    const { fit, heatShare } = territory;
+    const { fit, heatShare, codeHeatShare } = territory;
     if (!leaks(territory, limits)) {
       return [];
     }
@@ -40,13 +43,14 @@ export const boundaryEntries = (
       {
         kind: "boundary",
         score:
-          heatShare *
+          codeHeatShare *
           (1 - containment) *
           (isChronic(fit, limits.minEntryChronicShare) ? CHRONIC_BOOST : 1) *
           (1 + (fit.fixDensity?.share ?? 0)),
         territories: [territory.id],
         files: [],
         evidence: evidenceOf({
+          codeHeatShare,
           heatShare,
           containment,
           changes: territory.changes,

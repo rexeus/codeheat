@@ -23,7 +23,7 @@ describe("codeheat says where to start", () => {
           "1. boundary  billing",
           "   The boundary does not hold: changes here keep reaching into other territories.",
           expect.stringMatching(
-            /^ {3}\d+% of the heat; 46% of its 13 changes stay inside, \d+% also touch its closest partner$/u,
+            /^ {3}\d+% of the code's heat; 46% of its 13 changes stay inside, \d+% also touch its closest partner$/u,
           ),
           "   Move a boundary: bring what changes together with billing into one territory, or give the part they share a home of its own; start with web.",
         ]);

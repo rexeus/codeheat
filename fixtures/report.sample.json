@@ -2105,7 +2105,7 @@
     {
       "rank": 1,
       "kind": "boundary",
-      "score": 0.547,
+      "score": 0.5096,
       "territories": ["t2"],
       "files": [],
       "evidence": {
@@ -2119,7 +2119,8 @@
         "distantPairs": 3,
         "hiddenPairs": 1,
         "cliques": 0,
-        "partnerShare": 0.2838
+        "partnerShare": 0.2838,
+        "codeHeatShare": 0.5812
       },
       "verdict": "The boundary does not hold, and it holds less than it used to: changes here keep reaching into other territories.",
       "designMove": "Move a boundary: bring what changes together with packages/billing into one territory, or give the part they share a home of its own; start with packages/web.",
@@ -2137,7 +2138,8 @@
             "distantPairs": 3,
             "hiddenPairs": 1,
             "cliques": 0,
-            "partnerShare": 0.2838
+            "partnerShare": 0.2838,
+            "codeHeatShare": 0.5812
           },
           "files": []
         },

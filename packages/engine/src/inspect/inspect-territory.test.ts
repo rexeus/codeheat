@@ -103,4 +103,27 @@ describe("inspect territories", () => {
       ["c/z.ts", []],
     ]);
   });
+
+  it("lists the territory that holds the tests territory of a matched file, which has no fit of its own", () => {
+    const report = reportOf();
+    const withTests: Report = {
+      ...report,
+      files: [...report.files, fileRecord("a/x.test.ts", "t5", { rank: 4 })],
+      territories: {
+        ...report.territories,
+        nodes: [
+          ...NODES,
+          Object.assign(territoryRecord("t5", "tests", "t2"), { changes: 9 }),
+        ],
+      },
+    };
+
+    const result = inspect(withTests, ["a/x.test.ts"]);
+
+    expect(result.territories.map(({ id }) => id)).toStrictEqual([
+      "t2",
+      "t3",
+      "t5",
+    ]);
+  });
 });

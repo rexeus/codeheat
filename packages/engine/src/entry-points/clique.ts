@@ -23,25 +23,34 @@ const overlap = (
 const scored = (
   cliques: ReadonlyArray<Clique>,
   byId: ReadonlyMap<string, Territory>,
+  codeHeat: ReadonlyMap<string, number>,
   minHeatShare: number,
 ): ReadonlyArray<Candidate> =>
   cliques.flatMap((clique): Array<Candidate> => {
     const members = clique.modules.flatMap((id) => byId.get(id) ?? []);
     const heatShare = members.reduce((sum, { heatShare: own }) => sum + own, 0);
-    if (members.length !== clique.modules.length || heatShare < minHeatShare) {
+    const codeHeatShare = clique.modules.reduce(
+      (sum, id) => sum + (codeHeat.get(id) ?? 0),
+      0,
+    );
+    if (
+      members.length !== clique.modules.length ||
+      codeHeatShare < minHeatShare
+    ) {
       return [];
     }
     return [
       {
         kind: "clique",
         score:
-          heatShare *
+          codeHeatShare *
           clique.weakestShare *
           Math.min(1, clique.sharedCommits / FULL_EVIDENCE_CHANGES),
         territories: clique.modules,
         files: [],
         evidence: evidenceOf({
           territories: members.length,
+          codeHeatShare,
           heatShare,
           weakestShare: clique.weakestShare,
           sharedChanges: clique.sharedCommits,
@@ -55,8 +64,8 @@ const scored = (
 /**
  * The cliques among the territories at the recommended detail (see
  * `Clique`; the members are territory ids) whose members hold at least
- * `limits.minEntryHeatShare` of the heat together. The score is `heat of the members ×
- * weakest share × evidence`: the heat that moves as one unit, as tightly as
+ * `limits.minEntryHeatShare` of the production code's heat together. The score is `code heat of the members ×
+ * weakest share × evidence` (`codeHeat` gives each territory's share; tests are not design): the heat that moves as one unit, as tightly as
  * the weakest pair does, with `evidence` `min(1, shared changes / 10)` so that
  * a unit seen three times does not outrank one seen eleven times. A clique
  * with a member that is not a real territory is left out, and so is one that
@@ -65,12 +74,14 @@ const scored = (
 export const cliqueEntries = (
   cliques: ReadonlyArray<Clique>,
   byId: ReadonlyMap<string, Territory>,
+  codeHeat: ReadonlyMap<string, number>,
   limits: EntryLimits,
 ): ReadonlyArray<Candidate> => {
   const kept: Array<Candidate> = [];
   for (const candidate of scored(
     cliques,
     byId,
+    codeHeat,
     limits.minEntryHeatShare,
   ).toSorted((a, b) => b.score - a.score)) {
     if (

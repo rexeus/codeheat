@@ -32,9 +32,11 @@ export const territoryLines = ({
 };
 
 /**
- * One line for `inspect` on the territory of a file (`territoryId`, one of
+ * The lines for `inspect` on the territory of a file (`territoryId`, one of
  * `territories`): how many of its changes stay inside and the territory it
- * most often changes with. Nothing when the territory is not among them.
+ * most often changes with. For a file in a `tests` territory, which has no fit,
+ * the number of changes of the test code and the line of the territory it
+ * belongs to. Nothing when the territory is not among `territories`.
  */
 export const fileTerritoryLine = (
   territories: InspectResult["territories"],
@@ -44,8 +46,20 @@ export const fileTerritoryLine = (
   if (node === undefined) {
     return [];
   }
-  const name = `territory ${escapeForTerminal(node.path)}`;
+  if (node.changes === 0) {
+    return [`territory ${escapeForTerminal(node.path)}: no counted changes`];
+  }
+  if (node.kind === "tests") {
+    const parent = territories.find(({ id }) => id === node.parent);
+    return [
+      `test code of ${escapeForTerminal(parent?.path ?? node.path)}: ${node.changes} changes`,
+      ...(parent === undefined
+        ? []
+        : fileTerritoryLine(territories, parent.id)),
+    ];
+  }
   const { fit } = node;
+  const name = `territory ${escapeForTerminal(node.path)}`;
   if (fit === null || fit.containment === null) {
     return [`${name}: no counted changes`];
   }

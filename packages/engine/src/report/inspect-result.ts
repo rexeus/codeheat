@@ -72,7 +72,9 @@ export const InspectResult = Schema.Struct({
   modules: Schema.Array(Module),
   /**
    * The territories of the matched files (`FileStats.territory`, the finest one
-   * of each) and the partners of their fit (`TerritoryFit.partner`), as they
+   * of each), the territory that holds each of them that is a `tests`
+   * territory (test code has no fit), and the partners of their fit
+   * (`TerritoryFit.partner`), as they
    * stand in `Report.territories`, in report order: how well the file's area
    * holds up to the way the code changes, for the files that are in no entry
    * point too.

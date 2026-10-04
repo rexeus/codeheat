@@ -25,7 +25,7 @@ const MAX_FILES = 5;
 /**
  * The territories that are chronic (at least `limits.minEntryChronicShare` of
  * their code's heat is in chronic hotspots, see `isChronic`) and hold at least
- * `limits.minEntryHeatShare` of the heat. The score is the share of all the
+ * `limits.minEntryHeatShare` of the production code's heat. The score is the share of all the
  * heat that sits in the territory's chronic hotspots (`heat.share` of their
  * paths), more when it is spent on fixes (`× (1 + fix share)`); it does not
  * use `Territory.heatShare`, which counts test code too. The entry names up to
@@ -38,10 +38,10 @@ export const hotspotEntries = (
 ): ReadonlyArray<Candidate> => {
   const chainOf = chainsOf(nodes);
   return judged.flatMap((territory): Array<Candidate> => {
-    const { fit, heatShare } = territory;
+    const { fit, codeHeatShare } = territory;
     if (
       !isChronic(fit, limits.minEntryChronicShare) ||
-      heatShare < limits.minEntryHeatShare
+      codeHeatShare < limits.minEntryHeatShare
     ) {
       return [];
     }

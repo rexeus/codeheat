@@ -1,5 +1,7 @@
 // Owns the heat share of a set of files: how much of all the heat they hold.
 import type { FileStats } from "../report/report.js";
+import type { Territory } from "../report/territory.js";
+import { chainsOf } from "./ancestry.js";
 
 /** The heat of a file: `changes × (loc + complexity.total)`, as `Territory.heatShare` counts it. */
 const heatOf = ({
@@ -48,4 +50,35 @@ export const fileHeatOf = (
     weighted,
     changesOf: (path) => changes.get(path) ?? 0,
   };
+};
+
+/**
+ * For every territory, the share of all the production code's heat (test code
+ * left out of the territory and of the total) that its files hold, below it
+ * included; `nodes` is the territory tree and each file names its finest
+ * territory. Tests are change effort but not design, so this is the base the
+ * entry points that judge a territory rank on.
+ */
+export const codeHeatShares = (
+  files: ReadonlyArray<
+    Pick<FileStats, "territory" | "test" | "changes" | "loc" | "complexity">
+  >,
+  nodes: ReadonlyArray<Pick<Territory, "id" | "parent">>,
+): ReadonlyMap<string, number> => {
+  const chainOf = chainsOf(nodes);
+  const heat = new Map<string, number>();
+  let total = 0;
+  for (const file of files) {
+    if (file.test) {
+      continue;
+    }
+    const own = heatOf(file);
+    total += own;
+    for (const id of chainOf(file.territory)) {
+      heat.set(id, (heat.get(id) ?? 0) + own);
+    }
+  }
+  return new Map(
+    [...heat].map(([id, own]) => [id, total === 0 ? 0 : own / total]),
+  );
 };

@@ -93,6 +93,30 @@ describe("fileTerritoryLine", () => {
     ]);
   });
 
+  it("says that the file is test code of the territory it belongs to, with that territory's line, rather than that nothing was counted", () => {
+    const withTests = [
+      ...nodes,
+      {
+        ...node("t", "tests"),
+        path: "billing",
+        parent: "a",
+        changes: 150,
+        fit: null,
+      },
+    ];
+
+    expect(fileTerritoryLine(withTests, "t")).toStrictEqual([
+      "test code of billing: 150 changes",
+      "territory billing: 46% of 13 changes stay inside, most often with web (6)",
+    ]);
+  });
+
+  it("says that nothing was counted for a territory no change touched", () => {
+    expect(
+      fileTerritoryLine([{ ...node("t", "tests"), changes: 0 }], "t"),
+    ).toStrictEqual(["territory t: no counted changes"]);
+  });
+
   it("says nothing for a territory that is not listed", () => {
     expect(fileTerritoryLine(nodes, "z")).toStrictEqual([]);
   });

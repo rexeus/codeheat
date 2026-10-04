@@ -12,10 +12,21 @@ const territory = (id: string, heatShare: number) => ({
   heatShare,
 });
 
+/** The production code's share of the heat: a lower one than `heatShare` for `a`, whose tests add heat. */
+const CODE_HEAT = new Map([
+  ["a", 0.2],
+  ["b", 0.1],
+  ["c", 0.05],
+  ["d", 0.05],
+  ["e", 0.05],
+  ["f", 0.05],
+]);
+
 const cliqueEntries = (
   cliques: ReadonlyArray<Clique>,
   byId: ReadonlyMap<string, Territory>,
-) => cliqueEntriesWith(cliques, byId, DEFAULT_THRESHOLDS);
+  codeHeat: ReadonlyMap<string, number> = CODE_HEAT,
+) => cliqueEntriesWith(cliques, byId, codeHeat, DEFAULT_THRESHOLDS);
 
 const BY_ID = new Map(
   [
@@ -35,15 +46,17 @@ const clique = (
 ): Clique => ({ modules, sharedCommits, weakestShare, reason: "" });
 
 describe("cliqueEntries", () => {
-  it("scores the heat of the members, as tight as the weakest pair, with the evidence of at least ten shared changes in full", () => {
+  it("scores the production code's heat of the members, as tight as the weakest pair, with the evidence of at least ten shared changes in full", () => {
     const [entry] = cliqueEntries([clique(["a", "b", "c"], 12, 0.5)], BY_ID);
 
-    expect(entry?.score).toBeCloseTo(0.225, 10);
+    // (0.2 + 0.1 + 0.05) × 0.5
+    expect(entry?.score).toBeCloseTo(0.175, 10);
     expect(entry?.kind).toBe("clique");
     expect(entry?.territories).toStrictEqual(["a", "b", "c"]);
     expect(entry?.files).toStrictEqual([]);
     expect(entry?.evidence).toStrictEqual({
       territories: 3,
+      codeHeatShare: 0.35,
       heatShare: 0.45,
       weakestShare: 0.5,
       sharedChanges: 12,
@@ -53,7 +66,7 @@ describe("cliqueEntries", () => {
   it("weighs a unit seen fewer than ten times in proportion", () => {
     const [entry] = cliqueEntries([clique(["a", "b", "c"], 4, 0.5)], BY_ID);
 
-    expect(entry?.score).toBeCloseTo(0.09, 10);
+    expect(entry?.score).toBeCloseTo(0.07, 10);
   });
 
   it("says what to do with the names of the members", () => {
@@ -67,18 +80,23 @@ describe("cliqueEntries", () => {
     );
   });
 
-  it("leaves out a clique with a member that is no territory, or whose members hold under two percent of the heat", () => {
+  it("leaves out a clique with a member that is no territory, or whose members hold under two percent of the production code's heat, whatever heat their tests add", () => {
     const small = new Map([
-      ["b", territory("b", 0.01)],
-      ["c", territory("c", 0.009)],
-      ["d", territory("d", 0)],
+      ["b", territory("b", 0.5)],
+      ["c", territory("c", 0.5)],
+      ["d", territory("d", 0.5)],
+    ]);
+    const smallCode = new Map([
+      ["b", 0.01],
+      ["c", 0.009],
+      ["d", 0],
     ]);
 
     expect(
       cliqueEntries([clique(["a", "b", "x"], 12, 0.5)], BY_ID),
     ).toStrictEqual([]);
     expect(
-      cliqueEntries([clique(["b", "c", "d"], 12, 0.5)], small),
+      cliqueEntries([clique(["b", "c", "d"], 12, 0.5)], small, smallCode),
     ).toStrictEqual([]);
   });
 });
