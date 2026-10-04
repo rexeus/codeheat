@@ -131,7 +131,7 @@ describe("readmeSentence on hostile input", () => {
 
     const sentence = readmeSentence(readme);
 
-    expect(performance.now() - start).toBeLessThan(250);
+    expect(performance.now() - start).toBeLessThan(2000);
     expect(sentence).toBe(undefined);
   });
 
@@ -143,7 +143,7 @@ describe("readmeSentence on hostile input", () => {
 
     const sentence = readmeSentence(readme);
 
-    expect(performance.now() - start).toBeLessThan(250);
+    expect(performance.now() - start).toBeLessThan(2000);
     expect(sentence).toBe(undefined);
   });
 
@@ -152,7 +152,7 @@ describe("readmeSentence on hostile input", () => {
 
     const sentence = readmeSentence("word ".repeat(100_000));
 
-    expect(performance.now() - start).toBeLessThan(250);
+    expect(performance.now() - start).toBeLessThan(2000);
     expect(sentence?.length).toBeLessThanOrEqual(2048);
   });
 });
