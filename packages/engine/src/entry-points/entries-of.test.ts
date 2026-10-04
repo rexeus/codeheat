@@ -164,6 +164,59 @@ describe("entriesOf of a boundary between two territories and hotspots", () => {
   });
 });
 
+const hotspot = (
+  score: number,
+  territory: string,
+  files: number,
+  share: number,
+) =>
+  candidate("hotspot", score, territory, {
+    files: [`${territory}/hot.ts`],
+    evidence: {
+      chronicHeatShare: share,
+      chronicFiles: files,
+      containment: 0.9,
+      chronicShare: 0.8,
+    },
+  });
+
+describe("entriesOf evidence of a boundary between two territories", () => {
+  it("sums the hotspot numbers over the hotspots of both territories", () => {
+    const [entry] = entriesOf([
+      between,
+      hotspot(0.1, "t2", 18, 0.1278),
+      hotspot(0.05, "t3", 7, 0.0941),
+    ]);
+
+    expect(entry?.evidence).toStrictEqual({
+      chronicHeatShare: 0.2219,
+      chronicFiles: 25,
+      containment: 0.3,
+    });
+  });
+
+  it("keeps the numbers of both territories together when a hotspot leads", () => {
+    const [entry] = entriesOf([
+      between,
+      hotspot(0.5, "t2", 18, 0.1278),
+      hotspot(0.05, "t3", 7, 0.0941),
+    ]);
+
+    expect(entry?.kind).toBe("hotspot");
+    expect(entry?.evidence).toStrictEqual({
+      chronicHeatShare: 0.2219,
+      chronicFiles: 25,
+      containment: 0.3,
+    });
+  });
+
+  it("leaves a boundary without hotspots with the numbers of its own", () => {
+    const [entry] = entriesOf([between]);
+
+    expect(entry?.evidence).toStrictEqual({ containment: 0.3 });
+  });
+});
+
 describe("entriesOf evidence", () => {
   it("lets the stronger finding's numbers win where a name repeats", () => {
     const [entry] = entriesOf([

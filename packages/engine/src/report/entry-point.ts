@@ -90,7 +90,13 @@ export const EntryPoint = Schema.Struct({
    * in the finding).
    */
   files: Schema.Array(Schema.String),
-  /** The numbers behind the primary finding, completed by those of the other finding of the territory. */
+  /**
+   * The numbers behind the primary finding, completed by those of the other
+   * finding of the territory (the primary's where a name repeats). For a
+   * boundary between two territories they are those of both together, whichever
+   * finding is primary, with the hotspot numbers (`chronicHeatShare`,
+   * `chronicFiles`) summed over the hotspots of both.
+   */
   evidence: Schema.Record(Schema.String, Schema.Finite),
   /** The verdict of the primary finding. */
   verdict: Schema.String,

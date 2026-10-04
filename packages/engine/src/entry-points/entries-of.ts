@@ -1,5 +1,6 @@
 // Owns making one entry point of a territory's findings: a territory that is
 // both a boundary and a hotspot is one place to start, not two.
+import { roundReported } from "../report/precision.js";
 import { findingOf } from "./candidate.js";
 import type { Candidate, Entry } from "./candidate.js";
 
@@ -19,6 +20,29 @@ const single = (candidate: Candidate): Entry => ({
   designMove: candidate.designMove,
   findings: findingsOf(candidate),
 });
+
+/** The hotspot numbers that add over territories: the heat in chronic hotspots and their number (the files of two territories are different files). */
+const HOTSPOT_SUMS = ["chronicHeatShare", "chronicFiles"] as const;
+
+/**
+ * The evidence of a boundary between two territories with the hotspots of
+ * both: the numbers of the boundary, which are those of both territories
+ * together and so win over a hotspot's, and the hotspot numbers summed over
+ * the hotspots of both territories (`HOTSPOT_SUMS`), not those of the one that
+ * scores higher.
+ */
+const betweenEvidence = (
+  boundary: Candidate,
+  hotspots: ReadonlyArray<Candidate>,
+): Entry["evidence"] => {
+  const sums = HOTSPOT_SUMS.flatMap((key): Array<[string, number]> => {
+    const values = hotspots.flatMap(({ evidence }) => evidence[key] ?? []);
+    return values.length === 0
+      ? []
+      : [[key, roundReported(values.reduce((sum, value) => sum + value, 0))]];
+  });
+  return { ...Object.fromEntries(sums), ...boundary.evidence };
+};
 
 /**
  * The entry of a boundary and the hotspots of its territories: the stronger
@@ -40,11 +64,14 @@ const together = (
       ),
     ],
     files: [],
-    evidence: Object.fromEntries(
-      [...others.toReversed(), primary].flatMap(({ evidence }) =>
-        Object.entries(evidence),
-      ),
-    ),
+    evidence:
+      boundary.territories.length > 1
+        ? betweenEvidence(boundary, hotspots)
+        : Object.fromEntries(
+            [...others.toReversed(), primary].flatMap(({ evidence }) =>
+              Object.entries(evidence),
+            ),
+          ),
     verdict: primary.verdict,
     designMove: primary.designMove,
     findings: [primary, ...others].flatMap((each) => findingsOf(each)),
