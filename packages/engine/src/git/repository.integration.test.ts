@@ -1,6 +1,6 @@
 import { NodeServices } from "@effect/platform-node";
 import { assert, layer } from "@effect/vitest";
-import { Effect, FileSystem, Path } from "effect";
+import { Effect, FileSystem, Layer, Path } from "effect";
 
 import { setScopedEnv } from "../testing/scoped-env.js";
 import { makeTempRepository } from "../testing/temp-repository.js";
@@ -196,7 +196,65 @@ layer(NodeServices.layer)("readHead", (it) => {
         Effect.provide(Git.layer(repo.directory)),
       );
 
-      assert.strictEqual(head, expected);
+      assert.deepStrictEqual(head, {
+        commit: expected,
+        committedAt: Date.parse("2026-03-01T12:00:00Z") / 1000,
+      });
+    }),
+  );
+});
+
+layer(NodeServices.layer)("readHead of a history", (it) => {
+  it.effect("reads the time of the newest commit, not of the oldest", () =>
+    Effect.gen(function* () {
+      const repo = yield* makeTempRepository;
+      yield* repo.commit("2026-03-01T12:00:00Z", { "a.txt": "a\n" });
+      yield* repo.commit("2026-04-02T08:30:00Z", { "a.txt": "b\n" });
+
+      const head = yield* readHead.pipe(
+        Effect.provide(Git.layer(repo.directory)),
+      );
+
+      assert.strictEqual(
+        head?.committedAt,
+        Date.parse("2026-04-02T08:30:00Z") / 1000,
+      );
+    }),
+  );
+
+  it.effect("reads the commit and its time with one call", () =>
+    Effect.gen(function* () {
+      const repo = yield* makeTempRepository;
+      yield* repo.commit("2026-03-01T12:00:00Z", { "a.txt": "a\n" });
+      const real = yield* Git.make(repo.directory);
+      const calls: Array<ReadonlyArray<string>> = [];
+      const counting = Layer.succeed(
+        Git,
+        Git.of({
+          stream: (args, stdin) => real.stream(args, stdin),
+          text: (args, stdin) => {
+            calls.push(args);
+            return real.text(args, stdin);
+          },
+        }),
+      );
+
+      yield* readHead.pipe(Effect.provide(counting));
+
+      assert.strictEqual(calls.length, 1);
+    }),
+  );
+
+  it.effect("fails, and does not read null, outside a work tree", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const directory = yield* fs.makeTempDirectoryScoped();
+
+      const failure = yield* Effect.flip(
+        readHead.pipe(Effect.provide(Git.layer(directory))),
+      );
+
+      assert.strictEqual(failure._tag, "GitCommandFailed");
     }),
   );
 });

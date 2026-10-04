@@ -87,8 +87,15 @@ export const repositoryScope = (
     return relative === "" ? "." : segments.join("/");
   });
 
-/** The commit `HEAD` points to, or null for a repository without commits. */
-export const readHead: Effect.Effect<string | null, GitError, Git> = Effect.gen(
+/** The commit `HEAD` points to and when it was made. */
+export type Head = {
+  readonly commit: string;
+  /** The committer time in seconds since the epoch. */
+  readonly committedAt: number;
+};
+
+/** Whether `HEAD` resolves to no commit: a repository without commits. Any other failure of `rev-parse` fails. */
+const hasNoCommits: Effect.Effect<boolean, GitError, Git> = Effect.gen(
   function* () {
     const git = yield* Git;
     const output = yield* git
@@ -102,7 +109,51 @@ export const readHead: Effect.Effect<string | null, GitError, Git> = Effect.gen(
               : Effect.fail(failure),
         ),
       );
-    return output.trim() === "" ? null : output.trim();
+    return output.trim() === "";
+  },
+);
+
+/** `--no-show-signature` keeps a `log.showSignature` setting from printing the verification of a signed commit ahead of the format. */
+const HEAD_ARGS = [
+  "log",
+  "-1",
+  "--no-show-signature",
+  "--format=%H %ct",
+  "HEAD",
+];
+
+/**
+ * The commit `HEAD` points to with its committer time, or null for a
+ * repository without commits. One `log -1` reads both; only when it fails does
+ * a second call tell a repository without commits from a real failure. Output
+ * that is not a commit and a time fails with `GitCommandFailed`: it is never
+ * read as a repository without commits.
+ */
+export const readHead: Effect.Effect<Head | null, GitError, Git> = Effect.gen(
+  function* () {
+    const git = yield* Git;
+    const output = yield* git.text(HEAD_ARGS).pipe(
+      Effect.map((text): string | null => text),
+      Effect.catchTag("GitCommandFailed", (failure) =>
+        hasNoCommits.pipe(
+          Effect.flatMap((empty): Effect.Effect<null, GitCommandFailed> =>
+            empty ? Effect.succeed(null) : Effect.fail(failure),
+          ),
+        ),
+      ),
+    );
+    if (output === null) {
+      return null;
+    }
+    const [commit = "", seconds = ""] = output.trim().split(" ");
+    if (commit === "" || seconds === "" || !Number.isFinite(Number(seconds))) {
+      return yield* new GitCommandFailed({
+        args: HEAD_ARGS,
+        exitCode: 0,
+        stderr: `unexpected output: ${output.slice(0, 200)}`,
+      });
+    }
+    return { commit, committedAt: Number(seconds) };
   },
 );
 
@@ -117,11 +168,24 @@ export const readHead: Effect.Effect<string | null, GitError, Git> = Effect.gen(
 export const readOldestCommitTime: Effect.Effect<number | null, GitError, Git> =
   Effect.gen(function* () {
     const git = yield* Git;
-    const output = yield* git.text(["log", "--max-parents=0", "--format=%ct"]);
+    const args = [
+      "log",
+      "--max-parents=0",
+      "--no-show-signature",
+      "--format=%ct",
+    ];
+    const output = yield* git.text(args);
     const times = output
       .split("\n")
       .filter((line) => line !== "")
       .map(Number);
+    if (times.some((time) => !Number.isFinite(time))) {
+      return yield* new GitCommandFailed({
+        args,
+        exitCode: 0,
+        stderr: `unexpected output: ${output.slice(0, 200)}`,
+      });
+    }
     return times.length === 0 ? null : Math.min(...times);
   });
 

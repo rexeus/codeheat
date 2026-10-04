@@ -45,6 +45,7 @@ const reportOf = (copyFamilies: Report["copyFamilies"]): Report => ({
     commits: 40,
     realCommits: 40,
     couplingCommits: 38,
+    lastCommitAt: null,
   },
   mechanicalCommits: {
     ignored: 0,

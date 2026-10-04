@@ -3,6 +3,7 @@ import { DateTime, Effect } from "effect";
 
 import type { GitError } from "../git/git-errors.js";
 import type { Git } from "../git/git.js";
+import type { Head } from "../git/repository.js";
 import { readHistories, realCommitCount } from "../history/history.js";
 import type {
   History,
@@ -142,3 +143,20 @@ export const comparisonOf = (
           oldestCommit !== null &&
           Date.parse(previous.since) < oldestCommit * 1000,
       };
+
+/**
+ * The report's `window`: the range of the latest window with the counts of
+ * its history, and when the newest commit of the repository was made
+ * (`head`, the commit `HEAD` points to; null without commits), whatever the
+ * range.
+ */
+export const reportWindow = (
+  current: TimeRange,
+  counts: Pick<Report["window"], "commits" | "realCommits" | "couplingCommits">,
+  head: Pick<Head, "committedAt"> | null,
+): Report["window"] => ({
+  ...current,
+  ...counts,
+  lastCommitAt:
+    head === null ? null : new Date(head.committedAt * 1000).toISOString(),
+});

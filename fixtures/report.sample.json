@@ -16,7 +16,8 @@
     "until": "2026-09-29T12:00:00.000Z",
     "commits": 212,
     "realCommits": 197,
-    "couplingCommits": 178
+    "couplingCommits": 178,
+    "lastCommitAt": "2026-09-27T16:42:10.000Z"
   },
   "mechanicalCommits": {
     "ignored": 2,

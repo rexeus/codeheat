@@ -26,6 +26,7 @@ import {
   comparisonOf,
   noHistories,
   readWindows,
+  reportWindow,
   resolveWindows,
 } from "./windows.js";
 import type { Windows } from "./windows.js";
@@ -88,6 +89,19 @@ const readTimeline = (
     return { histories, oldestCommit };
   });
 
+/** The report's `totals`: how many of each list the report holds before any limit. */
+const totalsOf = ({
+  files,
+  contracts,
+  couplings,
+  modules,
+}: Pick<Report, "files" | "contracts" | "couplings" | "modules">) => ({
+  files: files.length,
+  contracts: contracts.length,
+  couplings: couplings.length,
+  modules: modules.length,
+});
+
 const analyzeRepository = (
   options: AnalyzeOptions,
   root: string,
@@ -104,7 +118,7 @@ const analyzeRepository = (
       scope,
     });
     const timeline = yield* readTimeline(windows, {
-      head,
+      head: head?.commit ?? null,
       skipCommits: shallowBoundary ?? new Set(),
       universe: new Set([
         ...universe.files.map((file) => file.path),
@@ -128,19 +142,18 @@ const analyzeRepository = (
       generatedAt: windows.current.until,
       repository: {
         name: path.basename(root),
-        head,
+        head: head?.commit ?? null,
         scope,
         shallow: shallowBoundary !== undefined,
       },
-      window: { ...windows.current, commits, realCommits, couplingCommits },
+      window: reportWindow(
+        windows.current,
+        { commits, realCommits, couplingCommits },
+        head,
+      ),
       comparison: comparisonOf(windows, histories, timeline.oldestCommit),
       thresholds,
-      totals: {
-        files: measured.files.length,
-        contracts: measured.contracts.length,
-        couplings: measured.couplings.length,
-        modules: measured.modules.length,
-      },
+      totals: totalsOf(measured),
       ...measured,
       ubiquitousFiles,
       modules: withDepths(measured.modules, depths),
