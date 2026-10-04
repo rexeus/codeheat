@@ -1,4 +1,4 @@
-import type { FileStats, Report } from "@codeheat/engine";
+import type { Report } from "@codeheat/engine";
 
 import { makeHeatScale } from "../color/heat-scale.js";
 import { heroDataOf } from "../hero/hero-data.js";
@@ -11,6 +11,7 @@ import type { ModuleIndex } from "../modules/module-index.js";
 import type { PathMatcher } from "../selection/filter.js";
 import { highlightOf, selectionOf } from "../selection/highlight.js";
 import type { Selection } from "../selection/highlight.js";
+import type { FilterScope } from "../selection/match-summary.js";
 import { indexPartners } from "../selection/partners.js";
 import type { PartnerIndex } from "../selection/partners.js";
 import { mapLinksOf, mountSections } from "./design-fit.js";
@@ -96,23 +97,24 @@ const stageSize = (stage: HTMLElement) => ({
   height: stage.clientHeight,
 });
 
-/** Wires the filter box, the Escape key (which clears the selection), and resizing of the stage. */
+/** Wires the filter box, the Escape key (which clears the selection), and resizing of the stage; returns the function that shows the filter's count again. */
 const wirePage = (
   page: Page,
-  files: readonly FileStats[],
+  scope: () => FilterScope,
   on: {
     readonly filter: (matcher: PathMatcher | null) => void;
     readonly clear: () => void;
     readonly resize: () => void;
   },
-): void => {
-  mountFilter(page, files, on.filter);
+): (() => void) => {
+  const showCount = mountFilter(page, scope, on.filter);
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape") {
       on.clear();
     }
   });
   new ResizeObserver(on.resize).observe(page.stage);
+  return showCount;
 };
 
 /**
@@ -128,6 +130,7 @@ export const mountViewer = (report: Report): void => {
     selectableFiles(report, partnerIndex, design),
     () => {
       draw();
+      showCount();
     },
   );
   let selection: Selection | null = null;
@@ -173,7 +176,7 @@ export const mountViewer = (report: Report): void => {
   panel.showOverview();
   draw();
 
-  wirePage(page, report.files, {
+  const showCount = wirePage(page, grouping.scope, {
     filter: (next) => {
       matcher = next;
       paint();

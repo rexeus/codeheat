@@ -1,10 +1,11 @@
-import type { FileStats, Report } from "@codeheat/engine";
+import type { Report } from "@codeheat/engine";
 
 import { createPathMatcher } from "../selection/filter.js";
 import type { PathMatcher } from "../selection/filter.js";
+import { matchSummary } from "../selection/match-summary.js";
+import type { FilterScope } from "../selection/match-summary.js";
 import { byId } from "./dom.js";
 import { showEmptyNotice } from "./empty-report.js";
-import { formatCount } from "./format.js";
 import { renderHeader, renderLegend } from "./header.js";
 import { mountModeSwitch } from "./mode-switch.js";
 
@@ -22,15 +23,6 @@ export const findPage = () => ({
 
 export type Page = ReturnType<typeof findPage>;
 
-/** How many files the filter matches, or an empty string without a filter. */
-const matchSummary = (
-  matcher: PathMatcher | null,
-  files: readonly FileStats[],
-): string =>
-  matcher === null
-    ? ""
-    : `${formatCount(files.filter(({ path }) => matcher(path)).length)} of ${formatCount(files.length)} files match`;
-
 /** The heading, the legend and the color-mode switch. */
 export const mountChrome = (report: Report, page: Page): void => {
   renderHeader(
@@ -43,15 +35,24 @@ export const mountChrome = (report: Report, page: Page): void => {
   showEmptyNotice(report, page.stage);
 };
 
-/** Reads the filter box on every keystroke: shows how many files match and hands the matcher (or `null` for an empty filter) to `onChange`. */
+/**
+ * Reads the filter box on every keystroke: shows how many files of `scope()`
+ * match and hands the matcher (or `null` for an empty filter) to `onChange`.
+ * Returns a function that shows the count again, for when the scope changes.
+ */
 export const mountFilter = (
   page: Page,
-  files: readonly FileStats[],
+  scope: () => FilterScope,
   onChange: (matcher: PathMatcher | null) => void,
-): void => {
+): (() => void) => {
+  let matcher: PathMatcher | null = null;
+  const showCount = (): void => {
+    page.filterCount.textContent = matchSummary(matcher, scope());
+  };
   page.filterInput.addEventListener("input", () => {
-    const matcher = createPathMatcher(page.filterInput.value);
-    page.filterCount.textContent = matchSummary(matcher, files);
+    matcher = createPathMatcher(page.filterInput.value);
+    showCount();
     onChange(matcher);
   });
+  return showCount;
 };

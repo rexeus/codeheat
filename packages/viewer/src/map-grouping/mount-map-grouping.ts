@@ -1,4 +1,4 @@
-import type { Report } from "@codeheat/engine";
+import type { FileStats, Report } from "@codeheat/engine";
 
 import type { DirectoryNode } from "../layout/hierarchy.js";
 import { byId, h } from "../render/dom.js";
@@ -12,14 +12,20 @@ import {
   zoomedTo,
 } from "./map-view.js";
 import type { Grouping, MapTree, MapView } from "./map-view.js";
-import { detailChoices } from "./territory-groups.js";
+import { detailChoices, groupName } from "./territory-groups.js";
+import { returnFocusTo, zoomOrigin } from "./zoom-focus.js";
 
 /** What the rest of the page asks of the map's grouping. */
 export type MapGrouping = {
   /** The tree the treemap draws now. */
   readonly tree: () => DirectoryNode;
-  /** Groups by territory and fills the map with the territory `id`. */
+  /** Groups by territory and fills the map with the territory `id`; focus moves to the bar above the map. */
   readonly showTerritory: (id: string) => void;
+  /** The files the filter counts against: those of the zoomed territory, else all, with the territory's name when zoomed. */
+  readonly scope: () => {
+    readonly files: readonly FileStats[];
+    readonly territory: string | null;
+  };
   /**
    * Zooms out when `path` is not in the zoomed territory, so that its tile is
    * there to select; returns whether the tree changed.
@@ -58,6 +64,15 @@ const zoomBar = ({ zoomed }: MapTree, zoomOut: () => void): HTMLElement[] => {
     h("span", "zoom-desc", zoomed.territory.description),
     back,
   ];
+};
+
+/** The control that has focus now, unless focus is on the page itself. */
+const focusedControl = (): HTMLElement | null => {
+  const active = document.activeElement;
+  return zoomOrigin(
+    active instanceof HTMLElement ? active : null,
+    document.body,
+  );
 };
 
 /** The elements of the grouping controls the page template provides. */
@@ -114,13 +129,21 @@ export const mountMapGrouping = (
   const choices = detailChoices(territories);
   let view: MapView = initialView(territories);
   let current = treeOf(view, territories, files, keep);
+  let origin: HTMLElement | null = null;
 
+  /** Zooms out by the bar's button, and returns focus to the control that zoomed in. */
+  const leaveZoom = (): void => {
+    apply(zoomedOut(view));
+    const fallback =
+      controls.switcher.querySelector<HTMLElement>("input:checked") ??
+      controls.switcher;
+    returnFocusTo(origin, fallback).focus();
+    origin = null;
+  };
   const apply = (next: MapView): void => {
     view = next;
     current = treeOf(view, territories, files, keep);
-    showView(controls, view, current, () => {
-      apply(zoomedOut(view));
-    });
+    showView(controls, view, current, leaveZoom);
     onChange();
   };
 
@@ -136,14 +159,18 @@ export const mountMapGrouping = (
   controls.select.addEventListener("change", () => {
     apply(withDetail(view, Number(controls.select.value), territories));
   });
-  showView(controls, view, current, () => {
-    apply(zoomedOut(view));
-  });
+  showView(controls, view, current, leaveZoom);
 
   return {
     tree: () => current.root,
+    scope: () => ({
+      files: current.zoomed?.files ?? files,
+      territory: current.zoomed === null ? null : groupName(current.zoomed),
+    }),
     showTerritory: (id) => {
+      origin = focusedControl();
       apply(zoomedTo(view, id, territories));
+      controls.bar.querySelector("button")?.focus({ preventScroll: true });
     },
     reveal: (path) => {
       if (current.contains(path) || view.zoom === null) {
