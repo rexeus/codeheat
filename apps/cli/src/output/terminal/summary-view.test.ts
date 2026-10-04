@@ -23,7 +23,7 @@ describe("summaryLines", () => {
       "acme-shop  2025-09-29 to 2026-09-29  0 commits, 36 files, 2 contract files",
     );
     expect(lines[1]).toBe(
-      "No counted changes in this window; the last commit was on 2025-03-14.",
+      "No counted changes in this window; the newest commit of the repository was on 2025-03-14.",
     );
   });
 

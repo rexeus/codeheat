@@ -16,11 +16,13 @@ export type QuietWindow = {
 const SENTENCE =
   "No counted changes in this window, so there is nothing to judge.";
 
-/** The line for a window whose newest commit is known: its day, and that a longer window reaches it or that the commits of this window do not count. */
-const lastCommitNote = (lastCommitAt: string, since: string): string =>
-  lastCommitAt < since
-    ? `The last commit was on ${formatDay(lastCommitAt)}. A longer window, set with --since, would include it.`
-    : `The last commit was on ${formatDay(lastCommitAt)}, but the commits of this window are mechanical and do not count.`;
+/** The line for a window whose newest commit lies before it: its day, and that a longer window reaches back to it. It is the newest commit of the repository, which need not touch the analysed files. */
+const olderCommitNote = (lastCommitAt: string): string =>
+  `The newest commit of the repository was on ${formatDay(lastCommitAt)}, before this window starts. A longer window, set with --since, reaches back to it.`;
+
+/** The line for a window of commits that are all mechanical: they do not count, and the day of the newest commit. */
+const mechanicalNote = (lastCommitAt: string): string =>
+  `The commits of this window are mechanical and do not count; the newest commit of the repository was on ${formatDay(lastCommitAt)}.`;
 
 /** Where the history last changed, as far as the series says, and the flag that reaches it. */
 const seriesNote = ({ series, seriesSince }: Report): string => {
@@ -33,12 +35,23 @@ const seriesNote = ({ series, seriesSince }: Report): string => {
     : `The history from ${formatDay(seriesSince)} on has no counted changes either; try a longer window with --since.`;
 };
 
-/** When the history last changed: the day of the newest commit when the report has it, else where the series last shows counted changes. */
+/**
+ * When the history last changed. The day of the newest commit says it only
+ * when it explains the empty window: a commit before the window starts, or a
+ * window of mechanical commits. A newest commit inside a window that holds no
+ * commit at all touched no analysed file (a documentation-only commit, a
+ * scoped analysis), so the series says where the analysed code last changed.
+ * A report without the date falls back to the series too.
+ */
 const noteOf = (report: Report): string => {
-  const { lastCommitAt, since } = report.window;
-  return lastCommitAt === null
-    ? seriesNote(report)
-    : lastCommitNote(lastCommitAt, since);
+  const { lastCommitAt, since, commits } = report.window;
+  if (lastCommitAt === null) {
+    return seriesNote(report);
+  }
+  if (lastCommitAt < since) {
+    return olderCommitNote(lastCommitAt);
+  }
+  return commits > 0 ? mechanicalNote(lastCommitAt) : seriesNote(report);
 };
 
 /** What to say about a window without a real change; `null` when the window has one. */

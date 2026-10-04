@@ -21,7 +21,7 @@ describe("lastChangeLines", () => {
         }),
       ),
     ).toStrictEqual([
-      "No counted changes in this window; the last commit was on 2025-03-14.",
+      "No counted changes in this window; the newest commit of the repository was on 2025-03-14.",
     ]);
   });
 
@@ -35,7 +35,7 @@ describe("lastChangeLines", () => {
         }),
       ),
     ).toStrictEqual([
-      "No counted changes in this window; the last commit was on 2026-09-01.",
+      "No counted changes in this window; the newest commit of the repository was on 2026-09-01.",
     ]);
   });
 
