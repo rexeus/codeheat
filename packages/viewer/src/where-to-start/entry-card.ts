@@ -5,15 +5,11 @@ import type {
 } from "../entry-points/entry-views.js";
 import type { EntryStat } from "../entry-points/evidence.js";
 import { breakable, h, pathLabel } from "../render/dom.js";
-import { formatCount, formatShare, splitPath } from "../render/format.js";
+import { fileLink } from "../render/file-link.js";
+import type { FileLinkContext } from "../render/file-link.js";
+import { formatCount, formatShare } from "../render/format.js";
 import { rankBadge } from "../render/rank-badge.js";
 import { territoryName } from "../territories/territory-index.js";
-
-/** What a card needs from the page: which files the map knows, and how to show one there. */
-export type CardContext = {
-  readonly knownFiles: ReadonlySet<string>;
-  readonly showFile: (path: string) => void;
-};
 
 /** Files a card offers to show in the map; the rest are counted. */
 const MAX_FILE_LINKS = 3;
@@ -58,23 +54,9 @@ const headingView = (entry: EntryView): HTMLElement =>
     ),
   );
 
-const fileLink = (path: string, { knownFiles, showFile }: CardContext) => {
-  const { name } = splitPath(path);
-  if (!knownFiles.has(path)) {
-    return h("span", "file-link unknown", name);
-  }
-  const button = h("button", "file-link", name);
-  button.type = "button";
-  button.title = `Show ${path} in the map`;
-  button.addEventListener("click", () => {
-    showFile(path);
-  });
-  return button;
-};
-
 const linksView = (
   entry: EntryView,
-  context: CardContext,
+  context: FileLinkContext,
 ): HTMLElement | null => {
   const onMap = entry.territories.map((territory) => {
     const { id } = territory;
@@ -112,7 +94,7 @@ const linksView = (
 /** One place to start: what is wrong, what to do, the numbers behind it, and where to look. */
 export const entryCard = (
   entry: EntryView,
-  context: CardContext,
+  context: FileLinkContext,
 ): HTMLElement => {
   const card = h(
     "article",

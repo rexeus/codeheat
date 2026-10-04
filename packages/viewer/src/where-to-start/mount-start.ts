@@ -1,7 +1,7 @@
 import type { EntryView } from "../entry-points/entry-views.js";
 import { byId, h } from "../render/dom.js";
+import type { FileLinkContext } from "../render/file-link.js";
 import { entryCard } from "./entry-card.js";
-import type { CardContext } from "./entry-card.js";
 
 /**
  * Fills the "Where to start" section: the ranked entry points as cards, or a
@@ -10,7 +10,7 @@ import type { CardContext } from "./entry-card.js";
 export const mountStart = (
   entries: readonly EntryView[],
   noEntries: string,
-  context: CardContext,
+  context: FileLinkContext,
 ): void => {
   const body = byId("start-body", HTMLElement);
   if (entries.length === 0) {
