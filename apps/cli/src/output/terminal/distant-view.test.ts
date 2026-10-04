@@ -15,9 +15,22 @@ const clique = (modules: ReadonlyArray<string>, sharedCommits = 6): Clique => ({
 });
 
 describe("distantSection", () => {
+  it("says what distant means with the distance of the report", () => {
+    const report = sampleReport();
+
+    const [heading] = distantSection(
+      { ...report, thresholds: { ...report.thresholds, minLocalDistance: 5 } },
+      makeStyle(false),
+    );
+
+    expect(heading).toBe(
+      "Distant coupling (in different modules, or at least 5 directories apart within one module; tests excluded)",
+    );
+  });
+
   it("tabulates the best ranked distant couplings, hidden ones marked", () => {
     expect(distantSection(sampleReport(), makeStyle(false))).toEqual([
-      "Distant coupling (across modules or far apart, tests excluded)",
+      "Distant coupling (in different modules, or at least 3 directories apart within one module; tests excluded)",
       "score  degree  shared  imports  files",
       " 1.74     75%       6  hidden   packages/billing/src/index.ts <-> packages/auth/src/index.ts",
       " 1.62     42%      14  hidden   packages/billing/src/invoice.ts <-> packages/web/src/routes/invoices.tsx",
