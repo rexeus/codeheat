@@ -9,8 +9,8 @@ import type { Territory } from "../report/territory.js";
 import { isTerritoryKind } from "../territories/recommend.js";
 import type { AreaCrossings } from "../territory-fit/crossing-pairs.js";
 
-/** The matrix covers this many territories, the hottest. */
-const MAX_COUPLED_TERRITORIES = 24;
+/** The matrix covers this many territories, the hottest (`Thresholds.maxCoupledTerritories`). */
+export const MAX_COUPLED_TERRITORIES = 24;
 
 /** The ids of the hottest real territories of `areas`, most heat first, ties by id. */
 const hottestIds = (areas: ReadonlyArray<Territory>): ReadonlySet<string> =>

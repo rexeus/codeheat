@@ -7,13 +7,16 @@ import { Schema } from "effect";
 import { Count, UnitInterval } from "./scalars.js";
 
 /**
- * Two of the 24 hottest real territories (package, folder, or group; never
- * `other` or `tests`) at `Territories.recommended` that change in the same
- * counted changes: the data of a territory matrix. A change touches a
- * territory when it touched any of its files (the rule of `TerritoryFit`,
- * counted by the same code as `TerritoryFit.partner`, so a `partner` is always
- * among the pairs of a territory that has one). Only pairs of territories with
- * at least `Thresholds.minModuleCommits` changes each that share at least
+ * Two of the `Thresholds.maxCoupledTerritories` (24) hottest real territories
+ * (package, folder, or group; never `other` or `tests`) at
+ * `Territories.recommended` that change in the same counted changes: the data of
+ * a territory matrix. A change touches a territory when it touched any of its
+ * files (the rule of `TerritoryFit`, counted by the same code as
+ * `TerritoryFit.partner`, so the `partner` of a territory among those hottest
+ * is among its pairs with the same `sharedChanges`, unless the partner lies
+ * beyond them: a territory further down the ranking, which the recommended
+ * detail allows, is not covered). Only pairs of territories with at least
+ * `Thresholds.minModuleCommits` changes each that share at least
  * `Thresholds.minSharedCommits` changes are listed; coupled file pairs between
  * two other territories are not.
  */

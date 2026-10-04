@@ -81,6 +81,8 @@ export const Thresholds = Schema.Struct({
   maxEntriesPerKind: Count,
   /** Most entry points in the report. */
   maxEntries: Count,
+  /** Most territories the territory matrix covers (`Report.territoryCoupling`): the hottest real ones at the recommended detail. */
+  maxCoupledTerritories: Count,
   maxMeanLineLength: Count,
   maxFileBytes: Count,
 });

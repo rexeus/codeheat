@@ -164,6 +164,7 @@ const THRESHOLDS: Report["thresholds"] = {
   minEntryScore: 0.005,
   maxEntriesPerKind: 6,
   maxEntries: 10,
+  maxCoupledTerritories: 24,
   maxMeanLineLength: 300,
   maxFileBytes: 1048576,
 };

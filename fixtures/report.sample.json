@@ -73,6 +73,7 @@
     "minEntryCouplingChanges": 5,
     "maxEntriesPerKind": 6,
     "maxEntries": 10,
+    "maxCoupledTerritories": 24,
     "minEntryScore": 0.005
   },
   "totals": {
