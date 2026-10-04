@@ -83,8 +83,12 @@ export type EntryView = {
 /** How many of the hottest files of the territories a card offers when the entry names none. */
 const HOTTEST_FILES = 3;
 
+/** A file name or path: a word with a slash, or a name with an extension. */
+const PATH_START = /^(?:\S*\/\S*|[\w@-]+(?:\.[\w-]+)+)(?=\s|$)/u;
+
+/** The text with its first letter in upper case, unless it starts with a path, which is case sensitive. */
 const capitalized = (text: string): string =>
-  text.slice(0, 1).toUpperCase() + text.slice(1);
+  PATH_START.test(text) ? text : text.slice(0, 1).toUpperCase() + text.slice(1);
 
 /** Splits `Move a boundary: bring what …` into its verb phrase and the rest. */
 const splitMove = (designMove: string): { label: string; rest: string } => {
