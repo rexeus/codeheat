@@ -1,5 +1,0 @@
----
-"codeheat": minor
----
-
-Show what changes together in the HTML report. A new section between "Where to start" and "Map" draws the territory matrix, a grid of how often every pair of the hottest territories (up to 24, `thresholds.maxCoupledTerritories`) with enough changes changed in the same changes, with the others named in one note, symmetric, with each territory's containment on the diagonal and pairs with coupled files across their boundary marked by a corner notch (and by a dashed line when no import links some of them), not by color alone. The cell under the pointer or the keyboard focus (one tab stop, arrow keys inside) is read out in a sentence, for example "A and B changed together 12 times; no import between them". Below it are the territories that change as one unit, the file pairs that change together across boundaries (hidden coupling first), and the copy families, each with its numbers and with links to the fit map and the treemap. A report from an older codeheat without territories says so in place of the matrix.

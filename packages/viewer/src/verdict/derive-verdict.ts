@@ -1,30 +1,25 @@
 // Owns the repository-level answer to "does the design hold up to the way the
-// code changes?". It is derived here from the report's territories, entry
-// points, propagation cost, and erosion; it reads an engine-provided verdict
-// instead once the report carries one.
+// code changes?". It is derived here from the report's territories and
+// erosion; it reads an engine-provided verdict instead once the report
+// carries one.
 import type { Report } from "@codeheat/engine";
 
-import { formatShare } from "../render/format.js";
 import type { TerritoryIndex } from "../territories/territory-index.js";
-import { factsOf } from "./facts.js";
-import type { VerdictFact } from "./facts.js";
 import { leaksOf } from "./leaks.js";
 import type { Leaks } from "./leaks.js";
 import { quietWindowOf } from "./quiet-window.js";
-import type { QuietWindow } from "./quiet-window.js";
 
 /** `holds`: territories that contain their changes hold most of the work. `unknown`: nothing to judge. */
 export type VerdictLevel = "holds" | "mixed" | "strained" | "unknown";
 
 export type Verdict = {
   readonly level: VerdictLevel;
-  /** Two or three words naming the level, for a badge next to the sentence. */
+  /** Two or three words naming the level, for a badge beside the question. */
   readonly label: string;
-  /** One sentence for a reader who has never seen the repository. */
-  readonly sentence: string;
-  /** A line under the sentence: where the history last changed and what to try, for a window without counted changes; empty otherwise. */
+  /** Why there is no verdict, in one sentence; empty for a known level, whose numbers the answer cards show. */
+  readonly reason: string;
+  /** A line under the reason: where the history last changed and what to try, for a window without counted changes; empty otherwise. */
   readonly note: string;
-  readonly facts: readonly VerdictFact[];
 };
 
 /** The share of all the change effort the judged territories must hold for the verdict to rest on evidence. */
@@ -59,90 +54,43 @@ const WORSE: Record<VerdictLevel, VerdictLevel> = {
 const withTrend = (level: VerdictLevel, report: Report): VerdictLevel =>
   report.erosion?.verdict === "eroding" ? WORSE[level] : level;
 
-const TREND_CLAUSES = {
-  eroding: ", and it is getting worse",
-  improving: ", and it is getting better",
-  holding: "",
-  unknown: "",
-} as const;
-
-const trendClause = ({ erosion }: Report): string =>
-  TREND_CLAUSES[erosion?.verdict ?? "unknown"];
-
-const leakClause = (share: number): string =>
-  `territories holding ${share >= 0.995 ? "all" : formatShare(share)} of the change effort keep reaching into their neighbors`;
-
 const NO_TERRITORIES =
   "This report has no territories, so it cannot say whether the design holds; analyze again with a current codeheat.";
 
 const TOO_LITTLE_EVIDENCE =
   "Too little of the change effort sits in territories with enough changes to judge the design.";
 
-type Wording = {
-  /** The share of all the change effort in leaking territories. */
-  readonly share: number;
-  /** The share of all the change effort in judged territories that do not leak. */
-  readonly contained: number;
-  readonly trend: string;
-  readonly hasTerritories: boolean;
-  /** What to say about a window without counted changes, in place of the evidence sentence; `null` for a window with changes. */
-  readonly quiet: string | null;
-};
-
-const SENTENCES: Record<VerdictLevel, (wording: Wording) => string> = {
-  holds: ({ contained, trend }) =>
-    `Changes stay where they start: territories holding ${formatShare(contained)} of the change effort contain them${trend}.`,
-  mixed: ({ share, trend }) =>
-    `In some places it does not: ${leakClause(share)}${trend}.`,
-  strained: ({ share, trend }) =>
-    `Not where it matters: ${leakClause(share)}${trend}.`,
-  unknown: ({ hasTerritories, quiet }) => {
-    if (!hasTerritories) {
-      return NO_TERRITORIES;
-    }
-    return quiet ?? TOO_LITTLE_EVIDENCE;
-  },
-};
-
 const levelOf = (report: Report, leaks: Leaks | null): VerdictLevel =>
   leaks !== null && leaks.coverage >= MIN_COVERAGE
     ? withTrend(baseLevel(leaks.heatShare), report)
     : "unknown";
 
-const wordingOf = (
-  report: Report,
-  leaks: Leaks | null,
-  quiet: QuietWindow | null,
-): Wording => ({
-  share: leaks?.heatShare ?? 0,
-  contained: (leaks?.coverage ?? 0) - (leaks?.heatShare ?? 0),
-  trend: trendClause(report),
-  hasTerritories: report.territories.nodes.length > 0,
-  quiet: quiet?.sentence ?? null,
-});
+/** Why there is no verdict: no territories, a window without counted changes (with a note on when the history last changed), or too little evidence. */
+const unknownOf = (report: Report): Pick<Verdict, "reason" | "note"> => {
+  if (report.territories.nodes.length === 0) {
+    return { reason: NO_TERRITORIES, note: "" };
+  }
+  const quiet = quietWindowOf(report);
+  return quiet === null
+    ? { reason: TOO_LITTLE_EVIDENCE, note: "" }
+    : { reason: quiet.sentence, note: quiet.note };
+};
 
 /**
  * Whether the design holds up to the way the code changes, for the whole
  * repository: the share of all the change effort in territories that keep
  * leaking into their neighbors decides the level, an eroding trend lowers it,
  * and with less than half of the effort in territories that can be judged
- * there is no verdict; a window without counted changes says so, and when the
- * history last changed. The number of leaking territories, the weight of the
- * top places to start, the trend, and the propagation cost are the facts
- * behind it.
+ * there is no verdict, and the reason says why.
  */
 export const deriveVerdict = (
   report: Report,
   territories: TerritoryIndex,
 ): Verdict => {
-  const leaks = leaksOf(report, territories);
-  const level = levelOf(report, leaks);
-  const quiet = level === "unknown" ? quietWindowOf(report) : null;
+  const level = levelOf(report, leaksOf(report, territories));
   return {
     level,
     label: LABELS[level],
-    note: quiet?.note ?? "",
-    sentence: SENTENCES[level](wordingOf(report, leaks, quiet)),
-    facts: factsOf(report, territories, leaks),
+    ...(level === "unknown" ? unknownOf(report) : { reason: "", note: "" }),
   };
 };

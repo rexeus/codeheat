@@ -1,6 +1,6 @@
 import type { Report } from "@codeheat/engine";
 
-import { heroDataOf } from "../hero/hero-data.js";
+import { mountAnswers } from "../answers/mount-answers.js";
 import { layoutTreemap } from "../layout/treemap.js";
 import { mountMapGrouping } from "../map-grouping/mount-map-grouping.js";
 import { indexModules } from "../modules/module-index.js";
@@ -9,12 +9,20 @@ import { highlightOf, selectionOf } from "../selection/highlight.js";
 import type { Selection } from "../selection/highlight.js";
 import type { FilterScope } from "../selection/match-summary.js";
 import { indexPartners } from "../selection/partners.js";
-import { mapLinksOf, mountSections } from "./design-fit.js";
+import { byId } from "./dom.js";
 import { findPage, mountChrome, mountFilter } from "./page.js";
 import type { Page } from "./page.js";
 import type { Panel } from "./panel.js";
 import { createParts } from "./parts.js";
 import { selectableFiles } from "./selectable-files.js";
+
+/** Fills the map with one territory and scrolls it into view. */
+const territoryInMap =
+  (zoom: (territory: string) => void) =>
+  (id: string): void => {
+    zoom(id);
+    byId("map", HTMLElement).scrollIntoView({ block: "start" });
+  };
 
 /** The panel's view of a selection: the file with its partners, or the overview without one. */
 const showSelection = (panel: Panel, selection: Selection | null): void => {
@@ -57,10 +65,9 @@ const wirePage = (
 export const mountViewer = (report: Report): void => {
   const page = findPage();
   const partnerIndex = indexPartners(report.couplings);
-  const design = heroDataOf(report);
   const grouping = mountMapGrouping(
     report,
-    selectableFiles(report, partnerIndex, design),
+    selectableFiles(report, partnerIndex),
     () => {
       draw();
       showCount();
@@ -101,11 +108,7 @@ export const mountViewer = (report: Report): void => {
   };
 
   mountChrome(report, page);
-  mountSections(
-    report,
-    design,
-    mapLinksOf(report, select, grouping.showTerritory),
-  );
+  mountAnswers(report, territoryInMap(grouping.showTerritory));
   panel.showOverview();
   draw();
 

@@ -7,8 +7,6 @@ import { HEAT_STEP_COUNT } from "../color/heat-scale.js";
 import { h } from "./dom.js";
 import { formatCount, formatDay } from "./format.js";
 
-const SHORT_SHA_LENGTH = 7;
-
 /** A caveat on the previous window: no real change means there is nothing to compare, cut off means less history. */
 const comparisonCaveat = ({
   previousCommits,
@@ -23,18 +21,10 @@ const comparisonCaveat = ({
   return previousTruncated ? " (cut off at the start of the history)" : "";
 };
 
-const summaryParts = ({
-  repository,
-  window,
-  files,
-  comparison,
-}: Report): string[] => [
+const SHORT_SHA_LENGTH = 7;
+
+const summaryParts = ({ repository, window, files }: Report): string[] => [
   `${formatDay(window.since)} → ${formatDay(window.until)}`,
-  ...(comparison === null
-    ? []
-    : [
-        `compared with ${formatDay(comparison.previousSince)} → ${formatDay(comparison.previousUntil)}${comparisonCaveat(comparison)}`,
-      ]),
   `${formatCount(window.commits)} commits`,
   `${formatCount(files.length)} files`,
   ...(repository.head === null
@@ -42,15 +32,36 @@ const summaryParts = ({
     : [repository.head.slice(0, SHORT_SHA_LENGTH)]),
 ];
 
-/** Fills the repository name and the window, commit and file summary. */
+/** The window a `--compare` report measures its trends against; empty without one. */
+const comparisonNote = ({ comparison }: Report): string =>
+  comparison === null
+    ? ""
+    : `Compared with ${formatDay(comparison.previousSince)} → ${formatDay(comparison.previousUntil)}${comparisonCaveat(comparison)}.`;
+
+/**
+ * Fills the repository name and the window, commit, file, and commit id
+ * summary of the bar, and the line under the question that names the window
+ * a `--compare` report compares with (hidden without one).
+ */
 export const renderHeader = (
   report: Report,
-  title: HTMLElement,
-  summary: HTMLElement,
+  {
+    title,
+    summary,
+    comparison,
+  }: {
+    readonly title: HTMLElement;
+    readonly summary: HTMLElement;
+    readonly comparison: HTMLElement;
+  },
 ): void => {
   const { name, scope } = report.repository;
   title.textContent = scope === "." ? name : `${name} / ${scope}`;
-  summary.textContent = summaryParts(report).join(" · ");
+  summary.replaceChildren(
+    ...summaryParts(report).map((part) => h("span", "summary-item", part)),
+  );
+  comparison.textContent = comparisonNote(report);
+  comparison.hidden = comparison.textContent === "";
 };
 
 const swatchOf = (attribute: "step" | "cohesion" | "change", step: number) => {

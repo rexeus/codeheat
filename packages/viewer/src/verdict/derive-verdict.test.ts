@@ -68,17 +68,14 @@ describe("deriveVerdict leak target", () => {
     expect(verdict.label).toBe("Not enough evidence");
   });
 
-  it("leaves such a territory out of the judged ones, and counts the rest", () => {
+  it("leaves such a territory out of the judged ones, and judges the rest", () => {
     const report = reportWithParts([
       { id: "t1", path: "a", heat: 0.4, containment: 0.3, partner: null },
       { id: "t2", path: "b", heat: 0.3, containment: 0.3 },
       { id: "t3", path: "c", heat: 0.3, containment: 0.9, partner: null },
     ]);
 
-    const [leakFact] = verdictOf(report).facts;
-
-    // a is not judged (no leak target), b leaks, c holds: 1 of 2
-    expect(leakFact?.value).toBe("1 of 2");
+    // a is not judged (no leak target), b leaks, c holds: 30 % leaks
     expect(verdictOf(report).level).toBe("mixed");
   });
 });
@@ -93,21 +90,17 @@ describe("deriveVerdict leak line", () => {
     const verdict = verdictOf(report);
 
     expect(verdict.level).toBe("strained");
-    expect(verdict.sentence).toBe(
-      "Not where it matters: territories holding 60% of the change effort keep reaching into their neighbors.",
-    );
   });
 
   it("uses the containment the report names as the limit", () => {
-    const report = reportWithParts(parts(0.5, 0.5));
+    const report = reportWithParts(parts(0.1, 0.9));
     const strict = {
       ...report,
       thresholds: { ...report.thresholds, maxEntryContainment: 0.95 },
     };
 
-    expect(verdictOf(strict).sentence).toContain(
-      "holding all of the change effort",
-    );
+    expect(verdictOf(report).level).toBe("holds");
+    expect(verdictOf(strict).level).toBe("strained");
   });
 });
 
@@ -127,18 +120,21 @@ describe("deriveVerdict coverage", () => {
 
     const verdict = verdictOf(report);
 
-    expect(verdict.level).toBe("mixed");
-    expect(verdict.sentence).toBe(
-      "In some places it does not: territories holding 30% of the change effort keep reaching into their neighbors.",
-    );
+    expect(verdict).toEqual({
+      level: "mixed",
+      label: "Holds in parts",
+      reason: "",
+      note: "",
+    });
   });
 
-  it("gives no verdict when the judged territories hold less than half of all the heat", () => {
-    expect(verdictOf(unjudged(0.49, 0.51))).toMatchObject({
+  it("gives no verdict when the judged territories hold less than half of all the heat, and says why", () => {
+    expect(verdictOf(unjudged(0.49, 0.51))).toEqual({
       level: "unknown",
       label: "Not enough evidence",
-      sentence:
+      reason:
         "Too little of the change effort sits in territories with enough changes to judge the design.",
+      note: "",
     });
   });
 
@@ -161,25 +157,19 @@ describe("deriveVerdict coverage", () => {
     const verdict = verdictOf(reportOf([]));
 
     expect(verdict.level).toBe("unknown");
-    expect(verdict.sentence).toBe(
+    expect(verdict.reason).toBe(
       "This report has no territories, so it cannot say whether the design holds; analyze again with a current codeheat.",
     );
-    expect(verdict.facts.map(({ value }) => value)).toEqual(["No trend yet"]);
   });
 });
 
 describe("deriveVerdict trend", () => {
-  it("judges an eroding design one level worse and says so", () => {
+  it("judges an eroding design one level worse", () => {
     const report = reportWithParts(parts(0.1, 0.9), {
       erosion: erosionOf("eroding"),
     });
 
-    const verdict = verdictOf(report);
-
-    expect(verdict.level).toBe("mixed");
-    expect(verdict.sentence).toBe(
-      "In some places it does not: territories holding 10% of the change effort keep reaching into their neighbors, and it is getting worse.",
-    );
+    expect(verdictOf(report).level).toBe("mixed");
   });
 
   it("does not go below strained for an eroding design", () => {
@@ -190,39 +180,11 @@ describe("deriveVerdict trend", () => {
     expect(verdictOf(report).level).toBe("strained");
   });
 
-  it("mentions an improving design without judging it better", () => {
+  it("does not judge an improving design better", () => {
     const report = reportWithParts(parts(0.3, 0.7), {
       erosion: erosionOf("improving"),
     });
 
-    const verdict = verdictOf(report);
-
-    expect(verdict.level).toBe("mixed");
-    expect(verdict.sentence).toMatch(/, and it is getting better\.$/u);
-  });
-});
-
-describe("deriveVerdict sentence", () => {
-  it("names the share that holds when the design holds", () => {
-    expect(verdictOf(reportWithParts(parts(0.1, 0.9))).sentence).toBe(
-      "Changes stay where they start: territories holding 90% of the change effort contain them.",
-    );
-  });
-
-  it("names the share that leaks when it is under strain", () => {
-    expect(verdictOf(reportWithParts(parts(0.6, 0.4))).sentence).toBe(
-      "Not where it matters: territories holding 60% of the change effort keep reaching into their neighbors.",
-    );
-  });
-
-  it("says all when every real territory leaks", () => {
-    const report = reportWithParts([
-      { id: "t1", path: "a", heat: 0.7, containment: 0.1 },
-      { id: "t2", path: "b", heat: 0.3, containment: 0.2 },
-    ]);
-
-    expect(verdictOf(report).sentence).toBe(
-      "Not where it matters: territories holding all of the change effort keep reaching into their neighbors.",
-    );
+    expect(verdictOf(report).level).toBe("mixed");
   });
 });

@@ -78,16 +78,40 @@
   --change-ink-6: var(--ink-dark);
   --change-ink-7: var(--ink-light);
 
-  --matrix-1: #e3edfb;
-  --matrix-2: #b7d3f6;
-  --matrix-3: #6da7ec;
-  --matrix-4: #1f64bb;
-  --matrix-5: #144a91;
-  --matrix-ink-1: var(--ink-dark);
-  --matrix-ink-2: var(--ink-dark);
-  --matrix-ink-3: var(--ink-dark);
-  --matrix-ink-4: var(--ink-light);
-  --matrix-ink-5: var(--ink-light);
+  --effort: #2569bd;
+  --track: #e8e7e1;
+  --unjudged: #d9d8d2;
+  --leak-1: #e0531f;
+  --leak-2: #ea8558;
+  --leak-3: #f4b896;
+  --hold-1: #a9dccb;
+  --hold-2: #72c1a8;
+  --hold-3: #3aa684;
+  --leak-zone: #fde6da;
+  --leak-ink: #a8401a;
+  --hold-ink: #13704f;
+
+  --verdict-strained: #fde6da;
+  --verdict-strained-ink: #a3401a;
+  --verdict-mixed: #fbedc9;
+  --verdict-mixed-ink: #7f5300;
+  --verdict-holds: #d8f1e7;
+  --verdict-holds-ink: #0d7350;
+  --verdict-unknown: #efeee9;
+  --verdict-unknown-ink: #52514e;
+
+  --kind-boundary: #fde6da;
+  --kind-boundary-ink: #a3401a;
+  --kind-hotspot: #fbe1e1;
+  --kind-hotspot-ink: #a42c2c;
+  --kind-coupling: #f8e1ee;
+  --kind-coupling-ink: #9c1f69;
+  --kind-hub: #dde9fa;
+  --kind-hub-ink: #1c5cab;
+  --kind-copies: #d8f1e7;
+  --kind-copies-ink: #0d7350;
+  --kind-clique: #fbedc9;
+  --kind-clique-ink: #7f5300;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -155,16 +179,40 @@
     --change-ink-6: var(--ink-dark);
     --change-ink-7: var(--ink-dark);
 
-    --matrix-1: #1f3a5f;
-    --matrix-2: #26508a;
-    --matrix-3: #2f68b3;
-    --matrix-4: #7fb0ee;
-    --matrix-5: #b5d3f8;
-    --matrix-ink-1: var(--ink-light);
-    --matrix-ink-2: var(--ink-light);
-    --matrix-ink-3: var(--ink-light);
-    --matrix-ink-4: var(--ink-dark);
-    --matrix-ink-5: var(--ink-dark);
+    --effort: #4b93ea;
+    --track: #2e2e2b;
+    --unjudged: #3a3a37;
+    --leak-1: #e8602c;
+    --leak-2: #c15d35;
+    --leak-3: #9a5a3e;
+    --hold-1: #3c6f62;
+    --hold-2: #36876f;
+    --hold-3: #2f9e7c;
+    --leak-zone: #3d2318;
+    --leak-ink: #f59a72;
+    --hold-ink: #6fd0ab;
+
+    --verdict-strained: #3d2318;
+    --verdict-strained-ink: #f6a07a;
+    --verdict-mixed: #3a2e12;
+    --verdict-mixed-ink: #f0c766;
+    --verdict-holds: #15342a;
+    --verdict-holds-ink: #7fd8b5;
+    --verdict-unknown: #2c2c2a;
+    --verdict-unknown-ink: #c3c2b7;
+
+    --kind-boundary: #3d2318;
+    --kind-boundary-ink: #f6a07a;
+    --kind-hotspot: #3c1f1f;
+    --kind-hotspot-ink: #f19a9a;
+    --kind-coupling: #3d1a2f;
+    --kind-coupling-ink: #ff9ccb;
+    --kind-hub: #1b2d47;
+    --kind-hub-ink: #8dbaf2;
+    --kind-copies: #15342a;
+    --kind-copies-ink: #7fd8b5;
+    --kind-clique: #3a2e12;
+    --kind-clique-ink: #f0c766;
   }
 }
 

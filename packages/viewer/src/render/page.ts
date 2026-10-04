@@ -25,11 +25,11 @@ export type Page = ReturnType<typeof findPage>;
 
 /** The heading, the legend and the color-mode switch. */
 export const mountChrome = (report: Report, page: Page): void => {
-  renderHeader(
-    report,
-    byId("repository", HTMLElement),
-    byId("summary", HTMLElement),
-  );
+  renderHeader(report, {
+    title: byId("repository", HTMLElement),
+    summary: byId("summary", HTMLElement),
+    comparison: byId("comparison", HTMLElement),
+  });
   renderLegend(byId("legend", HTMLElement));
   mountModeSwitch(page.app, page.modeSwitch, report.comparison !== null);
   showEmptyNotice(report, page.stage);
