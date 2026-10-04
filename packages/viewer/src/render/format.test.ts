@@ -5,6 +5,7 @@ import {
   formatPointChange,
   formatRatio,
   formatScoreChange,
+  plural,
 } from "./format.js";
 
 describe("formatScoreChange", () => {
@@ -61,5 +62,13 @@ describe("describeScoreTrend", () => {
         newlyActive: true,
       }),
     ).toEqual({ value: "new", note: "no revisions in the previous window" });
+  });
+});
+
+describe("plural", () => {
+  it("uses the singular for exactly one and the plural otherwise", () => {
+    expect(plural(1, "territory", "territories")).toBe("1 territory");
+    expect(plural(0, "territory", "territories")).toBe("0 territories");
+    expect(plural(1200, "territory", "territories")).toBe("1,200 territories");
   });
 });

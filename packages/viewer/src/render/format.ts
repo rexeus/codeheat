@@ -4,6 +4,10 @@ const counts = new Intl.NumberFormat("en");
 
 export const formatCount = (value: number): string => counts.format(value);
 
+/** A count with the noun in the number it needs: `1 territory`, `2 territories`. */
+export const plural = (count: number, one: string, many: string): string =>
+  `${formatCount(count)} ${count === 1 ? one : many}`;
+
 /** The calendar day of an ISO timestamp, as `YYYY-MM-DD`. */
 export const formatDay = (timestamp: string): string => timestamp.slice(0, 10);
 
