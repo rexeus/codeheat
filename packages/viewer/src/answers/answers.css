@@ -96,7 +96,7 @@
   color: var(--muted);
 }
 
-/* The cards: four across, two on a tablet, stacked on a phone. A chart spans the row below the cards; stacked, it follows its card. */
+/* The cards: four across, two on a tablet, stacked on a phone. The open chart follows all four. */
 .answer-cards {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -520,11 +520,10 @@
 
 /* The chart a card opens. */
 .answer-chart {
-  grid-column: 1 / -1;
-  order: 1;
   min-width: 0;
   padding: 16px 20px 14px;
-  margin-top: 4px;
+  margin-top: 18px;
+  scroll-margin-top: 72px;
   background: var(--surface);
   border: 1px solid var(--hairline);
   border-radius: 14px;
@@ -538,6 +537,7 @@
 }
 .chart-title {
   margin: 0;
+  outline: none;
   font-size: 16px;
   font-weight: 700;
 }
@@ -744,8 +744,10 @@ button.chart-name:focus-visible {
     grid-template-columns: minmax(0, 1fr);
   }
   .answer-chart {
-    order: 0;
     padding: 14px 14px 12px;
+  }
+  .answer-card[aria-expanded="true"]::after {
+    content: none;
   }
   .answer-value {
     font-size: 36px;

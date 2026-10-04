@@ -50,6 +50,7 @@ const ANSWERS = `    <section id="answers" class="answers" aria-labelledby="answ
         <p id="verdict-reason" class="verdict-reason" hidden></p>
       </header>
       <div id="answer-cards" class="answer-cards"></div>
+      <section id="answer-chart" class="answer-chart" aria-labelledby="answer-chart-title" hidden></section>
     </section>`;
 
 const MAP = `    <section id="map" class="section map-section" aria-labelledby="map-title">

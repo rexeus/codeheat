@@ -16,7 +16,11 @@ import { deriveVerdict } from "../verdict/derive-verdict.js";
 import { trendOf } from "../verdict/trend.js";
 import { weakStructureAnswer } from "../weak-structure/weak-structure-card.js";
 import { weakStructureOf } from "../weak-structure/weak-structure.js";
-import { renderAnswer } from "./answer-card.js";
+import {
+  CHART_REGION_ID,
+  CHART_TITLE_ID,
+  renderAnswer,
+} from "./answer-card.js";
 import type { Answer, RenderedAnswer } from "./answer-card.js";
 import { renderHeadline } from "./headline.js";
 
@@ -41,27 +45,42 @@ const answersOf = (
   ];
 };
 
-/** Opens the chart of `open` and closes every other one; `null` closes all. */
+/** Where the cards stack: below this width a chart below all four cards is out of sight of the card that opened it (the stylesheet's breakpoint). */
+const STACKED = "(max-width: 640px)";
+
+/**
+ * Shows the chart of `open` in the region below the cards and marks its card
+ * expanded, every other one collapsed; `null` hides the region. Where the
+ * cards stack, a chart opened by a press scrolls into view and its heading
+ * takes focus, since it lies below all four cards.
+ */
 const showChart = (
   rendered: readonly RenderedAnswer[],
   open: RenderedAnswer | null,
+  pressed: boolean,
 ): void => {
+  const region = byId(CHART_REGION_ID, HTMLElement);
   for (const answer of rendered) {
     if (answer.chart !== null) {
-      const expanded = answer === open;
-      answer.card.setAttribute("aria-expanded", String(expanded));
-      answer.chart.hidden = !expanded;
+      answer.card.setAttribute("aria-expanded", String(answer === open));
     }
+  }
+  const chart = open?.chart ?? null;
+  region.replaceChildren(...(chart ?? []));
+  region.hidden = chart === null;
+  if (pressed && !region.hidden && window.matchMedia(STACKED).matches) {
+    region.scrollIntoView({ block: "start" });
+    byId(CHART_TITLE_ID, HTMLElement).focus({ preventScroll: true });
   }
 };
 
 /**
  * Renders the first view the page template provides: the verdict and the
  * trend beside the question, and the four answer cards. A card with an
- * answer opens its chart below the cards and closes the one open before; a
- * second press closes it. The first card with a chart starts open. A
- * territory in the chart of the first card shows its files in the map
- * through `showTerritory`.
+ * answer opens its chart in the one region after the cards and closes the
+ * one open before; a second press closes it. The first card with a chart
+ * starts open. A territory in the chart of the first card shows its files in
+ * the map through `showTerritory`.
  */
 export const mountAnswers = (
   report: Report,
@@ -80,15 +99,17 @@ export const mountAnswers = (
     renderAnswer(index + 1, answer),
   );
   byId("answer-cards", HTMLElement).replaceChildren(
-    ...rendered.flatMap(({ card, chart }) =>
-      chart === null ? [card] : [card, chart],
-    ),
+    ...rendered.map(({ card }) => card),
   );
   for (const answer of rendered.filter(({ chart }) => chart !== null)) {
     answer.card.addEventListener("click", () => {
       const isOpen = answer.card.getAttribute("aria-expanded") === "true";
-      showChart(rendered, isOpen ? null : answer);
+      showChart(rendered, isOpen ? null : answer, true);
     });
   }
-  showChart(rendered, rendered.find(({ chart }) => chart !== null) ?? null);
+  showChart(
+    rendered,
+    rendered.find(({ chart }) => chart !== null) ?? null,
+    false,
+  );
 };

@@ -62,6 +62,7 @@ describe("renderReportHtml page structure", () => {
       "comparison",
       "verdict-reason",
       "answer-cards",
+      "answer-chart",
       "legend",
       "stage",
       "treemap",
