@@ -21,8 +21,9 @@ const statsOf = ({ stats: all, leaksTo }: EntryView): HTMLElement[] => {
           h(
             "span",
             "top-stat top-leak",
-            "leaks into ",
-            h("strong", "", leaksTo.name),
+            ...(leaksTo.mutual
+              ? [h("strong", "", "leak into each other")]
+              : ["leaks into ", h("strong", "", leaksTo.name)]),
           ),
         ]),
     ...(next === undefined ? [] : [statView(next)]),

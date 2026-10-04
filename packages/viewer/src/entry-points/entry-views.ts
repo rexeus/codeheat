@@ -14,6 +14,8 @@ import type {
 } from "../territories/territory-index.js";
 import { statsOf } from "./evidence.js";
 import type { EntryKind, EntryStat } from "./evidence.js";
+import { leakTargetOf } from "./leak-target.js";
+import type { LeakTarget } from "./leak-target.js";
 import { subjectOf } from "./subject.js";
 
 type EntryPoint = Report["entryPoints"][number];
@@ -35,19 +37,12 @@ export type FindingView = {
   readonly subject: string;
   readonly verdict: string;
   readonly stats: readonly EntryStat[];
+  /** The territories (at the recommended detail) it is about when they are not the entry's own, such as the boundary of one territory of a boundary between two; empty when it is about the same ones. */
+  readonly about: readonly Territory[];
 };
 
 /** How many entry points the hero shows and the verdict sums up. */
 export const TOP_ENTRY_POINTS = 3;
-
-/** The territory a boundary's changes reach into most, from the fit of the territory. */
-export type LeakTarget = {
-  readonly name: string;
-  /** Counted changes that touched both territories. */
-  readonly sharedChanges: number;
-  /** Share of the territory's changes that also touched the other, 0..1. */
-  readonly share: number;
-};
 
 /** What the page shows for one entry point. */
 export type EntryView = {
@@ -124,7 +119,10 @@ const inPlaces = ({ territories }: Place): string =>
     : `in ${territories.map(({ path }) => path).join(", ")}`;
 
 const CONTEXTS: Record<EntryKind, (place: Place) => string> = {
-  boundary: ({ territories }) => territories[0]?.description ?? "",
+  boundary: ({ territories }) =>
+    territories.length > 1
+      ? `${territories.length} territories that leak into each other`
+      : (territories[0]?.description ?? ""),
   hotspot: ({ territories }) => territories[0]?.description ?? "",
   clique: ({ territories }) =>
     `${territories.length} territories that change as one unit`,
@@ -142,7 +140,7 @@ const shortHeadingOf = (kind: EntryKind, heading: readonly string[]): string =>
     : heading.join(" + ");
 
 const territoriesOf = (
-  { territories: ids }: EntryPoint,
+  { territories: ids }: Pick<EntryPoint, "territories">,
   index: TerritoryIndex,
 ): Territory[] => {
   const seen = new Set<string>();
@@ -154,6 +152,19 @@ const territoriesOf = (
     seen.add(visible.id);
     return [visible];
   });
+};
+
+/** The territories of a finding at the recommended detail when they differ from `own`, the entry's; none when they are the same. */
+const aboutOf = (
+  ids: readonly string[],
+  own: readonly Territory[],
+  index: TerritoryIndex,
+): Territory[] => {
+  const about = territoriesOf({ territories: ids }, index);
+  const same =
+    about.length === own.length &&
+    about.every(({ id }) => own.some((each) => each.id === id));
+  return same ? [] : about;
 };
 
 /** The files an entry names itself or in its findings, each once; empty for a pure boundary or clique. */
@@ -176,30 +187,6 @@ const hottestFiles = (
     .filter(({ territory }) => wanted.has(index.visibleOf(territory)?.id ?? ""))
     .slice(0, HOTTEST_FILES)
     .map(({ path }) => path);
-};
-
-/** Where the boundary of the entry's one territory leaks to: the territory it changes with most. */
-const leakTargetOf = (
-  entry: EntryPoint,
-  territories: readonly Territory[],
-  index: TerritoryIndex,
-): LeakTarget | null => {
-  const isBoundary =
-    entry.kind === "boundary" ||
-    entry.findings.some(({ kind }) => kind === "boundary");
-  const partner = territories[0]?.fit?.partner ?? null;
-  if (!isBoundary || territories.length !== 1 || partner === null) {
-    return null;
-  }
-  const other =
-    index.visibleOf(partner.territory) ?? index.byId.get(partner.territory);
-  return other === undefined
-    ? null
-    : {
-        name: territoryName(other),
-        sharedChanges: partner.sharedChanges,
-        share: partner.share,
-      };
 };
 
 const viewOf = (
@@ -233,6 +220,7 @@ const viewOf = (
       subject: subjectOf(finding.kind, finding.files),
       verdict: finding.verdict,
       stats: statsOf(finding.kind, finding.evidence, 3),
+      about: aboutOf(finding.territories, territories, index),
     })),
     territories,
     files: named.length > 0 ? named : hottestFiles(territories, report, index),

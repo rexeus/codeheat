@@ -30,6 +30,11 @@ const SPECS: Record<EntryKind, readonly StatSpec[]> = {
   boundary: [
     { key: "containment", unit: "share", label: "of its changes stay inside" },
     {
+      key: "sharedChanges",
+      unit: "count",
+      label: "changes touched both territories",
+    },
+    {
       key: "distantPairs",
       unit: "count",
       label: "file pairs across its edge change together",

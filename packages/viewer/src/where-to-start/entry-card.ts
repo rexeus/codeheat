@@ -1,9 +1,6 @@
-import type {
-  EntryView,
-  FindingView,
-  LeakTarget,
-} from "../entry-points/entry-views.js";
+import type { EntryView, FindingView } from "../entry-points/entry-views.js";
 import type { EntryStat } from "../entry-points/evidence.js";
+import type { LeakTarget } from "../entry-points/leak-target.js";
 import { breakable, h, pathLabel } from "../render/dom.js";
 import { fileLink } from "../render/file-link.js";
 import type { MapLinks } from "../render/file-link.js";
@@ -17,11 +14,25 @@ const MAX_FILE_LINKS = 3;
 const statView = ({ value, label }: EntryStat): HTMLElement =>
   h("li", "entry-stat", h("strong", "", value), h("span", "", label));
 
-const alsoView = ({ kindLabel, verdict, stats }: FindingView): HTMLElement =>
+const alsoView = ({
+  kindLabel,
+  verdict,
+  stats,
+  about,
+}: FindingView): HTMLElement =>
   h(
     "p",
     "entry-also",
     h("span", "chip", kindLabel),
+    ...(about.length === 0
+      ? []
+      : [
+          h(
+            "strong",
+            "",
+            ` ${about.map((each) => territoryName(each)).join(", ")}:`,
+          ),
+        ]),
     ` ${verdict}`,
     ...(stats.length === 0
       ? []
@@ -34,14 +45,26 @@ const alsoView = ({ kindLabel, verdict, stats }: FindingView): HTMLElement =>
         ]),
   );
 
-const leakView = ({ name, share, sharedChanges }: LeakTarget): HTMLElement =>
-  h(
-    "p",
-    "entry-leak",
-    "Leaks into ",
-    h("strong", "", name),
-    `: ${formatShare(share)} of its changes (${formatCount(sharedChanges)}) touch both.`,
-  );
+const leakView = ({
+  name,
+  share,
+  sharedChanges,
+  mutual,
+}: LeakTarget): HTMLElement =>
+  mutual
+    ? h(
+        "p",
+        "entry-leak",
+        h("strong", "", name),
+        ` leak into each other: ${formatCount(sharedChanges)} changes touched both, ${formatShare(share)} of those touching either.`,
+      )
+    : h(
+        "p",
+        "entry-leak",
+        "Leaks into ",
+        h("strong", "", name),
+        `: ${formatShare(share)} of its changes (${formatCount(sharedChanges)}) touch both.`,
+      );
 
 const headingView = (entry: EntryView): HTMLElement =>
   h(

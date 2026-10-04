@@ -47,19 +47,36 @@ export type Concerning = {
   readonly itself: boolean;
 };
 
-const fromEntry = ({
-  entry: { rank, kindLabel, subject, verdict, stats, also },
-  where,
-}: Concerning): CardFinding[] => [
-  { label: kindLabel, subject, rank, where, verdict, stats },
-  ...also.map((finding) => ({
-    label: finding.kindLabel,
-    subject: finding.subject,
-    rank,
+/**
+ * What a place to start says about the card's territory: its primary finding
+ * and the others. A finding about particular territories (the boundary of one
+ * of the two of a boundary between them) belongs on the card of those only,
+ * when the entry names the card's territory itself.
+ */
+const fromEntry = (
+  {
+    entry: { rank, kindLabel, subject, verdict, stats, also },
     where,
-    verdict: finding.verdict,
-    stats: finding.stats,
-  })),
+    itself,
+  }: Concerning,
+  territory: Territory,
+): CardFinding[] => [
+  { label: kindLabel, subject, rank, where, verdict, stats },
+  ...also
+    .filter(
+      ({ about }) =>
+        !itself ||
+        about.length === 0 ||
+        about.some(({ id }) => id === territory.id),
+    )
+    .map((finding) => ({
+      label: finding.kindLabel,
+      subject: finding.subject,
+      rank,
+      where,
+      verdict: finding.verdict,
+      stats: finding.stats,
+    })),
 ];
 
 /** A finding drawn from the territory's `fit`; `says` is the kind of entry point that already says it. */
@@ -187,7 +204,7 @@ export const findingsOf = (
           fixesReading(fit, context),
         ];
   return [
-    ...concerning.flatMap((entry) => fromEntry(entry)),
+    ...concerning.flatMap((entry) => fromEntry(entry, territory)),
     ...readings.flatMap(({ says, finding }) =>
       finding === null || says.some((kind) => said.has(kind)) ? [] : [finding],
     ),

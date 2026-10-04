@@ -129,6 +129,7 @@ describe("entryViewsOf where a boundary leaks to", () => {
       name: "packages/forms",
       sharedChanges: 136,
       share: 0.544,
+      mutual: false,
     });
   });
 
@@ -269,6 +270,7 @@ describe("entryViewsOf findings", () => {
           { value: "12%", label: "of the change effort is here" },
           { value: "5", label: "files hot quarter after quarter" },
         ],
+        about: [],
       },
     ]);
   });
