@@ -42,8 +42,9 @@ describe("codeheat reports how far a change spreads", () => {
 
         const result = yield* journey({ args: ["analyze"], cwd: repo.root });
 
-        expect(result.stdout.split("\n").slice(1, 3)).toStrictEqual([
+        expect(result.stdout.split("\n").slice(1, 4)).toStrictEqual([
           "Across 5 changes, a typical change touches 3 modules; 0% stay in one module.",
+          "Territories: 1 at the recommended detail (1 of 1); --json has every detail.",
           "",
         ]);
         expect(result.stdout).not.toContain("ropagation");

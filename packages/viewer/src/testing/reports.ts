@@ -15,6 +15,7 @@ export const fileStats = (
   linesDeleted: 20,
   breadth: 3,
   module: ".",
+  territory: "t1",
   loc: 100,
   complexity: { total: 200, mean: 2, max: 5 },
   reasons: [],
@@ -117,6 +118,7 @@ const NO_FINDINGS = {
   cliques: [],
   moduleCoupling: [],
   distantCouplings: [],
+  territories: { recommended: 0, details: [], nodes: [] },
 } satisfies Partial<Report>;
 
 /** A minimal valid report around the given files and couplings; `comparison` is null unless given. */

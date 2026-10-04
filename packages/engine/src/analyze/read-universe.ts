@@ -68,6 +68,7 @@ export const readUniverse = (options: {
       modules,
       contracts: contractHomes(contracts, modules),
       entryPoints,
+      packages: packageDirectories,
       depths,
     };
   });

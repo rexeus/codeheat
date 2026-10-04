@@ -73,34 +73,47 @@ const isSideBySide = (a: string, b: string): boolean => {
 };
 
 /**
- * `test` has a test suffix and lies below a mirrored test directory (and
- * below no fixtures directory), and
- * `source` is where that directory's mirror puts the same stem: the directory
- * removed, or replaced by `src` or `lib`.
+ * The stems the source of a test at `test` may have when a mirrored test
+ * directory stands in for it: the directory removed, or replaced by `src` or
+ * `lib`. None unless the test has a suffix and lies below such a directory and
+ * below no fixtures directory.
  */
-const mirrors = (test: string, source: string): boolean => {
+const mirroredStems = (test: string): ReadonlyArray<string> => {
   const name = withoutTestSuffix(stemOf(test));
   if (name === undefined) {
-    return false;
+    return [];
   }
   const parts = name.split("/");
   if (parts.slice(0, -1).some((part) => FIXTURE_DIRECTORIES.has(part))) {
-    return false;
+    return [];
   }
-  const sourceStem = stemOf(source);
-  return parts.some(
-    (part, index) =>
-      index < parts.length - 1 &&
-      MIRRORED_TEST_DIRECTORIES.has(part) &&
-      SOURCE_ROOTS.some(
-        (root) =>
+  return parts.flatMap((part, index) =>
+    index < parts.length - 1 && MIRRORED_TEST_DIRECTORIES.has(part)
+      ? SOURCE_ROOTS.map((root) =>
           [
             ...parts.slice(0, index),
             ...(root === undefined ? [] : [root]),
             ...parts.slice(index + 1),
-          ].join("/") === sourceStem,
-      ),
+          ].join("/"),
+        )
+      : [],
   );
+};
+
+/** `test` has a test suffix and lies below a mirrored test directory, and `source` is where that directory's mirror puts the same stem. */
+const mirrors = (test: string, source: string): boolean =>
+  mirroredStems(test).includes(stemOf(source));
+
+/**
+ * The stems (path without extension) of the files a test may test, by the
+ * rules of `isTestPair`: the test's own stem without its suffix, and where a
+ * mirrored test directory puts it. Empty when the path has no test suffix or
+ * lies below a fixtures directory. Whether a source with such a stem exists is
+ * for the caller to look up.
+ */
+export const testedStems = (test: string): ReadonlyArray<string> => {
+  const name = withoutTestSuffix(stemOf(test));
+  return name === undefined ? [] : [name, ...mirroredStems(test)];
 };
 
 /**

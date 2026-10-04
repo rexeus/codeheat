@@ -62,6 +62,13 @@ export const FileStats = Schema.Struct({
   test: Schema.Boolean,
   /** `path` of the file's module (see `Module`). */
   module: Schema.String,
+  /**
+   * `id` of the finest territory the file belongs to (see `Territories`); test
+   * code belongs to the territory of the code it tests. Walk `parent` up to the
+   * territory listed at the detail you want. Empty only when the report has no
+   * territories.
+   */
+  territory: Schema.String,
   /** Non-blank lines. */
   loc: Count,
   complexity: Schema.Struct({

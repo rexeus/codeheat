@@ -56,6 +56,8 @@ export type Universe = {
   /** The module every contract file lives in. */
   readonly contracts: ReadonlyMap<string, ModuleRef>;
   readonly entryPoints: ReadonlyMap<string, ReadonlyArray<string>>;
+  /** The directories, other than the repository root, that hold a manifest. */
+  readonly packages: ReadonlySet<string>;
 };
 
 /** The coupled pairs of a window's history, without import relations. */

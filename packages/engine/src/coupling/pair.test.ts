@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { directoryDistance, isTestFile, isTestPair } from "./pair.js";
+import {
+  directoryDistance,
+  isTestFile,
+  isTestPair,
+  testedStems,
+} from "./pair.js";
 
 describe("directoryDistance", () => {
   it("is 0 for files in the same directory", () => {
@@ -100,6 +105,8 @@ describe("isTestPair for a mirrored test directory", () => {
     ["fixtures/a.ts", "test/fixtures/a.spec.ts"],
     ["src/a.ts", "__fixtures__/a.test.ts"],
     ["src/a/b.ts", "tests/__fixtures__/a/b.test.ts"],
+    ["main/a/b.ts", "test/a/b.test.ts"],
+    ["app/src/main/a.kt", "app/src/test/a.test.kt"],
   ])(
     "leaves %s and %s, a helper, test input, or another test, unpaired",
     (a, b) => {
@@ -125,4 +132,23 @@ describe("isTestFile", () => {
       expect(isTestFile(path)).toBe(false);
     },
   );
+});
+
+describe("testedStems", () => {
+  it("names the sources a test may test: beside it, and where a mirrored test directory puts it", () => {
+    expect(testedStems("test/a/b.test.ts")).toStrictEqual([
+      "test/a/b",
+      "src/a/b",
+      "lib/a/b",
+      "a/b",
+    ]);
+    expect(testedStems("src/c_spec.rb")).toStrictEqual(["src/c"]);
+  });
+
+  it("names nothing for a file without a test suffix, and nothing mirrored below a fixtures directory", () => {
+    expect(testedStems("test/helpers/setup.ts")).toStrictEqual([]);
+    expect(testedStems("test/fixtures/a.test.ts")).toStrictEqual([
+      "test/fixtures/a",
+    ]);
+  });
 });

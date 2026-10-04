@@ -33,7 +33,7 @@ export const DEFAULT_THRESHOLDS: Report["thresholds"] = {
   maxFileBytes: 1_048_576,
 };
 
-/** The design-fit lists of a report, all empty. */
+/** The design-fit lists of a report, all empty, and no territories. */
 export const NO_DESIGN_FINDINGS = {
   changeRadius: null,
   propagationCost: null,
@@ -53,4 +53,5 @@ export const NO_DESIGN_FINDINGS = {
   cliques: [],
   moduleCoupling: [],
   distantCouplings: [],
+  territories: { recommended: 0, details: [], nodes: [] },
 } satisfies Partial<Report>;
