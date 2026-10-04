@@ -3,6 +3,7 @@
 import { countedChanges } from "../coupling/coupling.js";
 import { findCliques } from "../distant/cliques.js";
 import { moduleCoChange } from "../distant/module-co-change.js";
+import type { ModuleCoChange } from "../distant/module-co-change.js";
 import { withModuleErosion } from "../erosion/module-erosion.js";
 import { measureFixes } from "../fixes/fix-density.js";
 import type { History } from "../history/history.js";
@@ -12,6 +13,7 @@ import type { Coupling } from "../report/report.js";
 import type { TerritoryFit } from "../report/territory-fit.js";
 import { measureRadius } from "../spread/change-radius.js";
 import { crossingPairs } from "./crossing-pairs.js";
+import type { AreaCrossings } from "./crossing-pairs.js";
 import type { Level } from "./levels.js";
 import { strongestPartners } from "./partners.js";
 import { touchedAreas } from "./touched-areas.js";
@@ -62,10 +64,16 @@ const tally = (
   return tallies;
 };
 
-/** The cliques among the territories at one detail, and what the detail says about each territory. */
+/**
+ * What one detail says about its territories: the fit of each, the cliques
+ * among them, and the counts those were read from (the changes every pair of
+ * ranked territories shares and the file pairs crossing between them).
+ */
 export type MeasuredLevel = {
   readonly fits: ReadonlyMap<string, LevelFit>;
   readonly cliques: ReadonlyArray<Clique>;
+  readonly coChange: ModuleCoChange;
+  readonly crossings: AreaCrossings;
 };
 
 type Area = {
@@ -151,8 +159,8 @@ export const measureLevel = (
               : roundReported(own.local / own.commits),
           radius: radii.get(path)?.radius ?? null,
           partner: partners.get(path) ?? null,
-          distantPairs: crossings.get(path)?.pairs ?? 0,
-          hiddenPairs: crossings.get(path)?.hidden ?? 0,
+          distantPairs: crossings.ofArea.get(path)?.pairs ?? 0,
+          hiddenPairs: crossings.ofArea.get(path)?.hidden ?? 0,
           cliques: cliques.filter(({ modules }) => modules.includes(path))
             .length,
           erosion: erosions.get(path) ?? null,
@@ -161,5 +169,5 @@ export const measureLevel = (
       ];
     }),
   );
-  return { fits, cliques };
+  return { fits, cliques, coChange, crossings };
 };

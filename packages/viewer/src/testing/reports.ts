@@ -189,6 +189,8 @@ const NO_FINDINGS = {
   moduleCoupling: [],
   distantCouplings: [],
   territories: { recommended: 0, details: [], nodes: [] },
+  territoryCoupling: [],
+  territoryCliques: [],
   entryPoints: [],
 } satisfies Partial<Report>;
 

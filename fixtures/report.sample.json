@@ -2101,6 +2101,37 @@
     }
   ],
   "cliquesPartial": false,
+  "territoryCoupling": [
+    {
+      "a": "t2",
+      "b": "t3",
+      "sharedChanges": 20,
+      "distantPairs": 1,
+      "hiddenPairs": 1
+    },
+    {
+      "a": "t3",
+      "b": "t4",
+      "sharedChanges": 14,
+      "distantPairs": 1,
+      "hiddenPairs": 0
+    },
+    {
+      "a": "t5",
+      "b": "t6",
+      "sharedChanges": 11,
+      "distantPairs": 1,
+      "hiddenPairs": 0
+    },
+    {
+      "a": "t2",
+      "b": "t4",
+      "sharedChanges": 8,
+      "distantPairs": 1,
+      "hiddenPairs": 1
+    }
+  ],
+  "territoryCliques": [],
   "entryPoints": [
     {
       "rank": 1,

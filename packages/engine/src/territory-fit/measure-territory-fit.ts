@@ -6,18 +6,27 @@ import type { FileStats } from "../report/report.js";
 import type { Territories } from "../report/territory.js";
 import { chronicHeat } from "./chronic-heat.js";
 import { homeDetails, levelAt } from "./levels.js";
+import type { Level } from "./levels.js";
 import { measureLevel } from "./measure-level.js";
-import type { LevelFit, LevelInput } from "./measure-level.js";
+import type { LevelFit, LevelInput, MeasuredLevel } from "./measure-level.js";
 
 export type TerritoryFitInput = LevelInput & {
   /** The files with their finest `territory` and `heat`. */
   readonly files: ReadonlyArray<FileStats>;
 };
 
-/** The territories with their `fit`, and the cliques among the territories at the recommended detail. */
+/**
+ * The territories with their `fit`, and the cliques among the territories at
+ * the recommended detail, with the detail's partition and counts for what is
+ * read between territories (`null` when the report has no territories).
+ */
 export type FittedTerritories = {
   readonly territories: Territories;
   readonly cliques: ReadonlyArray<Clique>;
+  readonly recommended: {
+    readonly level: Level;
+    readonly measured: MeasuredLevel;
+  } | null;
 };
 
 /**
@@ -33,14 +42,16 @@ export const measureTerritoryFit = (
   const fileTerritories = new Map(
     input.files.map(({ path, territory }) => [path, territory]),
   );
-  const measured = new Map(
+  const levels = new Map(
     [...new Set([...homes.values(), territories.recommended])]
       .filter((detail) => detail > 0)
-      .map((detail) => [
-        detail,
-        measureLevel(levelAt(territories, detail, fileTerritories), input),
-      ]),
+      .map((detail) => [detail, levelAt(territories, detail, fileTerritories)]),
   );
+  const measured = new Map(
+    [...levels].map(([detail, level]) => [detail, measureLevel(level, input)]),
+  );
+  const recommendedLevel = levels.get(territories.recommended);
+  const recommendedMeasured = measured.get(territories.recommended);
   const chronic = chronicHeat(territories.nodes, input.files);
   return {
     territories: {
@@ -66,6 +77,10 @@ export const measureTerritoryFit = (
         };
       }),
     },
-    cliques: measured.get(territories.recommended)?.cliques ?? [],
+    cliques: recommendedMeasured?.cliques ?? [],
+    recommended:
+      recommendedLevel === undefined || recommendedMeasured === undefined
+        ? null
+        : { level: recommendedLevel, measured: recommendedMeasured },
   };
 };

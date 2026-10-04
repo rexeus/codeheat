@@ -4,6 +4,7 @@
 import { Effect } from "effect";
 import type { FileSystem, Path } from "effect";
 
+import { codeHeatShares } from "../entry-points/file-heat.js";
 import type { EntryLimits } from "../entry-points/limits.js";
 import { rankEntryPoints } from "../entry-points/rank-entry-points.js";
 import type { GitError } from "../git/git-errors.js";
@@ -11,15 +12,23 @@ import type { Git } from "../git/git.js";
 import type { CopyFamily } from "../report/copy-family.js";
 import type { EntryPoint } from "../report/entry-point.js";
 import type { Coupling, FileStats } from "../report/report.js";
+import type {
+  TerritoryClique,
+  TerritoryCoupling,
+} from "../report/territory-coupling.js";
 import type { UnstableInterface } from "../report/unstable-interface.js";
+import { territoryCliques } from "../territory-coupling/territory-cliques.js";
+import { territoryPairs } from "../territory-coupling/territory-pairs.js";
 import { measureTerritoryFit } from "../territory-fit/measure-territory-fit.js";
 import { measureTerritories } from "./measure-territories.js";
 import type { MeasuredTerritories } from "./measure-territories.js";
 import type { WindowHistories } from "./windows.js";
 
-/** The territories, the files with their territory, and the places to start. */
+/** The territories, the files with their territory, how they change together, and the places to start. */
 export type MeasuredTerritorial = MeasuredTerritories & {
   readonly entryPoints: ReadonlyArray<EntryPoint>;
+  readonly territoryCoupling: ReadonlyArray<TerritoryCoupling>;
+  readonly territoryCliques: ReadonlyArray<TerritoryClique>;
 };
 
 /**
@@ -59,9 +68,23 @@ export const measureTerritorial = (options: {
       series: histories.series,
       minChanges,
     });
+    const { recommended } = fitted;
     return {
       territories: fitted.territories,
       files: built.files,
+      territoryCoupling:
+        recommended === null
+          ? []
+          : territoryPairs(
+              recommended.level.areas,
+              recommended.measured.coChange,
+              recommended.measured.crossings,
+            ),
+      territoryCliques: territoryCliques(
+        fitted.cliques,
+        new Map(fitted.territories.nodes.map((node) => [node.id, node])),
+        codeHeatShares(built.files, fitted.territories.nodes),
+      ),
       entryPoints: rankEntryPoints({
         territories: fitted.territories,
         files: built.files,

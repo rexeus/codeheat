@@ -62,5 +62,7 @@ export const NO_DESIGN_FINDINGS = {
   moduleCoupling: [],
   distantCouplings: [],
   territories: { recommended: 0, details: [], nodes: [] },
+  territoryCoupling: [],
+  territoryCliques: [],
   entryPoints: [],
 } satisfies Partial<Report>;
