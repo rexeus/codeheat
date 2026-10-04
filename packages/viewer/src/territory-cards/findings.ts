@@ -1,7 +1,7 @@
 // Owns what a territory card says is wrong: the places to start that concern
 // it, then what its own numbers add, and which few of them the card face shows.
 
-import type { EntryView } from "../entry-points/entry-views.js";
+import type { EntryView, FindingView } from "../entry-points/entry-views.js";
 import type { EntryKind, EntryStat } from "../entry-points/evidence.js";
 import { formatCount, formatShare } from "../render/format.js";
 import { isRealTerritory } from "../territories/territory-index.js";
@@ -45,38 +45,34 @@ export type Concerning = {
   readonly where: string;
   /** The entry names the territory itself. */
   readonly itself: boolean;
+  /** The entry's primary finding is about the territory; false when only a further finding is (see `concerningOf`). */
+  readonly primary: boolean;
+  /** The further findings of the entry that concern the territory, in the entry's order: not those about other territories, such as the boundary of the other of two. */
+  readonly also: readonly FindingView[];
 };
 
 /**
- * What a place to start says about the card's territory: its primary finding
- * and the others. A finding about particular territories (the boundary of one
- * of the two of a boundary between them) belongs on the card of those only,
- * when the entry names the card's territory itself.
+ * What a place to start says about the card's territory: its primary finding,
+ * unless only a further finding concerns the territory, and the further
+ * findings that concern it (see `Concerning.also`).
  */
-const fromEntry = (
-  {
-    entry: { rank, kindLabel, subject, verdict, stats, also },
+const fromEntry = ({
+  entry: { rank, kindLabel, subject, verdict, stats },
+  where,
+  primary,
+  also,
+}: Concerning): CardFinding[] => [
+  ...(primary
+    ? [{ label: kindLabel, subject, rank, where, verdict, stats }]
+    : []),
+  ...also.map((finding) => ({
+    label: finding.kindLabel,
+    subject: finding.subject,
+    rank,
     where,
-    itself,
-  }: Concerning,
-  territory: Territory,
-): CardFinding[] => [
-  { label: kindLabel, subject, rank, where, verdict, stats },
-  ...also
-    .filter(
-      ({ about }) =>
-        !itself ||
-        about.length === 0 ||
-        about.some(({ id }) => id === territory.id),
-    )
-    .map((finding) => ({
-      label: finding.kindLabel,
-      subject: finding.subject,
-      rank,
-      where,
-      verdict: finding.verdict,
-      stats: finding.stats,
-    })),
+    verdict: finding.verdict,
+    stats: finding.stats,
+  })),
 ];
 
 /** A finding drawn from the territory's `fit`; `says` is the kind of entry point that already says it. */
@@ -185,10 +181,12 @@ export const findingsOf = (
   context: FindingContext,
 ): CardFinding[] => {
   const said = new Set<EntryKind>();
-  for (const { entry, itself } of concerning) {
+  for (const { entry, itself, primary, also } of concerning) {
     if (itself) {
-      said.add(entry.kind);
-      for (const { kind } of entry.also) {
+      if (primary) {
+        said.add(entry.kind);
+      }
+      for (const { kind } of also) {
         said.add(kind);
       }
     }
@@ -204,7 +202,7 @@ export const findingsOf = (
           fixesReading(fit, context),
         ];
   return [
-    ...concerning.flatMap((entry) => fromEntry(entry, territory)),
+    ...concerning.flatMap((entry) => fromEntry(entry)),
     ...readings.flatMap(({ says, finding }) =>
       finding === null || says.some((kind) => said.has(kind)) ? [] : [finding],
     ),

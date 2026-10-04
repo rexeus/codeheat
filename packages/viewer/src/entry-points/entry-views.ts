@@ -71,6 +71,8 @@ export type EntryView = {
   readonly also: readonly FindingView[];
   /** The territories (at the recommended detail) it concerns, for linking to the fit map. */
   readonly territories: readonly Territory[];
+  /** Every territory it or its further findings concern, which is more than `territories` for a boundary between two that took in a clique of a third; for marking the fit map. */
+  readonly touched: readonly Territory[];
   /** Files the entry names, for linking into the map. */
   readonly files: readonly string[];
 };
@@ -189,6 +191,19 @@ const hottestFiles = (
     .map(({ path }) => path);
 };
 
+/** The territories of `own` and of the findings' `about`, each once. */
+const touchedBy = (
+  own: readonly Territory[],
+  also: readonly FindingView[],
+): Territory[] => [
+  ...new Map(
+    [...own, ...also.flatMap(({ about }) => about)].map((each) => [
+      each.id,
+      each,
+    ]),
+  ).values(),
+];
+
 const viewOf = (
   entry: EntryPoint,
   report: Report,
@@ -200,6 +215,14 @@ const viewOf = (
   const named = namedFiles(entry);
   const place = { files: entry.files, territories };
   const heading = HEADINGS[entry.kind](place);
+  const also = others.map((finding) => ({
+    kind: finding.kind,
+    kindLabel: KIND_LABELS[finding.kind],
+    subject: subjectOf(finding.kind, finding.files),
+    verdict: finding.verdict,
+    stats: statsOf(finding.kind, finding.evidence, 3),
+    about: aboutOf(finding.territories, territories, index),
+  }));
   return {
     rank: entry.rank,
     anchor: `entry-${entry.rank}`,
@@ -214,15 +237,9 @@ const viewOf = (
     move: move.rest,
     stats: statsOf(entry.kind, primary?.evidence ?? entry.evidence),
     leaksTo: leakTargetOf(entry, territories, index),
-    also: others.map((finding) => ({
-      kind: finding.kind,
-      kindLabel: KIND_LABELS[finding.kind],
-      subject: subjectOf(finding.kind, finding.files),
-      verdict: finding.verdict,
-      stats: statsOf(finding.kind, finding.evidence, 3),
-      about: aboutOf(finding.territories, territories, index),
-    })),
+    also,
     territories,
+    touched: touchedBy(territories, also),
     files: named.length > 0 ? named : hottestFiles(territories, report, index),
   };
 };

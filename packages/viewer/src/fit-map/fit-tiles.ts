@@ -48,13 +48,13 @@ const MIN_WEIGHT = 0.07;
 const weightOf = (heatShare: number): number =>
   Math.max(Math.sqrt(heatShare), MIN_WEIGHT);
 
-/** The ranks of the entries that concern each territory at the recommended detail. */
+/** The ranks of the entries that concern each territory at the recommended detail, those that only a further finding of an entry concerns included. */
 const ranksByTerritory = (
   entries: readonly EntryView[],
 ): Map<string, number[]> => {
   const ranks = new Map<string, number[]>();
-  for (const { rank, territories } of entries) {
-    for (const { id } of territories) {
+  for (const { rank, touched } of entries) {
+    for (const { id } of touched) {
       ranks.set(id, [...(ranks.get(id) ?? []), rank]);
     }
   }

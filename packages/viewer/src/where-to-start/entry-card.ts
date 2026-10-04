@@ -78,7 +78,7 @@ const headingView = (entry: EntryView): HTMLElement =>
   );
 
 const linksView = (entry: EntryView, context: MapLinks): HTMLElement | null => {
-  const onMap = entry.territories.map((territory) => {
+  const onMap = entry.touched.map((territory) => {
     const { id } = territory;
     const name = territoryName(territory);
     const link = h("a", "map-link", `${name} on the fit map`);

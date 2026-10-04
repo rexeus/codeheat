@@ -56,7 +56,8 @@ const InspectEntry = Schema.Struct({
   /**
    * The entry points of the report the file belongs to, best first (see
    * `Report.entryPoints`): one that names files concerns exactly those, one
-   * that names none (`boundary`, `clique`) every file in its territories.
+   * that names none (`boundary`, `clique`) every file in its territories or in
+   * those of its findings.
    * Empty for a file that is part of none.
    */
   entryPoints: Schema.Array(EntryPoint),
