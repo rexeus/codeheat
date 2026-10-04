@@ -1,4 +1,4 @@
-import { h } from "../render/dom.js";
+import { h, withFlags } from "../render/dom.js";
 import type { Verdict, VerdictLevel } from "../verdict/derive-verdict.js";
 
 /** A glyph beside the level's name, so the level never rests on color alone. */
@@ -29,6 +29,9 @@ export const renderVerdict = (target: HTMLElement, verdict: Verdict): void => {
       verdict.label,
     ),
     h("p", "verdict-sentence", verdict.sentence),
+    ...(verdict.note === ""
+      ? []
+      : [h("p", "verdict-note", ...withFlags(verdict.note))]),
     h("ul", "facts", ...verdict.facts.map(factView)),
   );
 };

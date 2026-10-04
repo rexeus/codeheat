@@ -30,6 +30,12 @@ export const breakable = (text: string): Child[] =>
         : [`${part}/`, document.createElement("wbr")],
     );
 
+/** Keeps a flag such as `--since` on one line: the text splits before each flag, which becomes a `.flag` span. */
+export const withFlags = (text: string): (Node | string)[] =>
+  text
+    .split(/(--[a-z]+)/u)
+    .map((part, index) => (index % 2 === 1 ? h("span", "flag", part) : part));
+
 /** Finds a skeleton element of the page, failing loudly when the page and script disagree. */
 export const byId = <T extends Element>(
   id: string,

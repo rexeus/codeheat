@@ -80,6 +80,12 @@
   letter-spacing: -0.005em;
   line-height: 1.4;
 }
+.verdict-note {
+  margin: 8px 0 0;
+  color: var(--text-2);
+  font-size: 13.5px;
+  line-height: 1.4;
+}
 .facts {
   display: grid;
   grid-template-columns: 1fr 1fr;

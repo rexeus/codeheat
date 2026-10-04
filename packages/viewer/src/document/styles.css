@@ -512,7 +512,7 @@ button:focus-visible {
   color: var(--text-2);
 }
 
-.empty .flag {
+.flag {
   white-space: nowrap;
 }
 
