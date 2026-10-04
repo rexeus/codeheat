@@ -43,29 +43,24 @@ describe("renderReportHtml", () => {
 describe("renderReportHtml page structure", () => {
   const report = reportOf([fileStats("src/a.ts")]);
 
-  it("has the sections in a fixed order, each reachable from the bar", () => {
+  it("opens on the answers, with the map below them reachable from the bar", () => {
     const html = renderReportHtml(report);
 
-    expect(html).toMatch(/id="hero".*id="start".*id="heat".*id="map"/su);
-    expect(html).toContain('<a href="#start">Where to start</a>');
-    expect(html).toContain('<a href="#heat">Where the heat is</a>');
-    expect(html).toContain('<a href="#map">Map</a>');
+    expect(html).toMatch(/id="answers".*id="map"/su);
+    expect(html).toContain('<a class="topbar-link" href="#map">Map</a>');
   });
 
   it("provides every element the viewer script fills", () => {
     const html = renderReportHtml(report);
 
     for (const id of [
+      "icons",
       "repository",
-      "verdict",
-      "fit-figure",
-      "fit-map",
-      "fit-legend",
-      "fit-list",
-      "top-three",
       "summary",
-      "start-body",
-      "heat-body",
+      "verdict",
+      "trend",
+      "verdict-reason",
+      "answer-cards",
       "legend",
       "stage",
       "treemap",

@@ -10,10 +10,7 @@ import { describe, expect, it } from "vitest";
 const STYLESHEETS = [
   "src/document/styles.css",
   "src/document/page.css",
-  "src/hero/hero.css",
-  "src/where-to-start/where-to-start.css",
-  "src/territory-cards/territory-cards.css",
-  "src/together/together.css",
+  "src/answers/answers.css",
   "src/map-grouping/map-grouping.css",
 ] as const;
 
@@ -69,7 +66,7 @@ describe.each(["light", "dark"] as const)(
   "text on a tile in %s mode",
   (scheme) => {
     it.each([1, 2, 3, 4, 5, 6])(
-      "meets AA on cohesion step %i, which colors the fit map",
+      "meets AA on cohesion step %i, which colors a tile in the map's cohesion mode",
       (step) => {
         const fill = tokenOf(scheme, `cohesion-${step}`);
         const ink = tokenOf(scheme, `cohesion-ink-${step}`);
@@ -78,24 +75,40 @@ describe.each(["light", "dark"] as const)(
       },
     );
 
-    it.each([1, 2, 3, 4, 5])(
-      "meets AA on matrix level %i, which colors a cell of the territory matrix",
+    it.each(["strained", "mixed", "holds", "unknown"])(
+      "meets AA on the %s verdict badge",
       (level) => {
-        const fill = tokenOf(scheme, `matrix-${level}`);
-        const ink = tokenOf(scheme, `matrix-ink-${level}`);
+        const fill = tokenOf(scheme, `verdict-${level}`);
+        const ink = tokenOf(scheme, `verdict-${level}-ink`);
 
         expect(contrast(fill, ink)).toBeGreaterThanOrEqual(AA);
       },
     );
 
-    it.each(["text", "text-2", "muted", "eyebrow", "hidden-coupling"])(
-      "meets AA for %s text on the surface of a card",
-      (name) => {
+    it.each(["boundary", "hotspot", "coupling", "hub", "copies", "clique"])(
+      "meets AA on the chip of a %s place to start",
+      (kind) => {
+        const fill = tokenOf(scheme, `kind-${kind}`);
+        const ink = tokenOf(scheme, `kind-${kind}-ink`);
+
+        expect(contrast(fill, ink)).toBeGreaterThanOrEqual(AA);
+      },
+    );
+
+    it.each(["leak-ink", "hold-ink", "effort"])(
+      "meets AA for %s numbers and words on the surface of a card",
+      (ink) => {
         expect(
-          contrast(tokenOf(scheme, name), tokenOf(scheme, "surface")),
+          contrast(tokenOf(scheme, ink), tokenOf(scheme, "surface")),
         ).toBeGreaterThanOrEqual(AA);
       },
     );
+
+    it("meets AA for the leaks label on the zone it names", () => {
+      expect(
+        contrast(tokenOf(scheme, "leak-ink"), tokenOf(scheme, "leak-zone")),
+      ).toBeGreaterThanOrEqual(AA);
+    });
 
     it("meets AA on the no-data tile", () => {
       expect(
@@ -110,7 +123,7 @@ describe.each(["light", "dark"] as const)(
     });
 
     it.each(["text", "text-2", "muted", "eyebrow", "hidden-coupling"])(
-      "meets AA for %s text on the surface of a territory card and on the page behind a quiet one",
+      "meets AA for %s text on the surface of a card and on the page",
       (ink) => {
         for (const ground of ["surface", "page"]) {
           expect(

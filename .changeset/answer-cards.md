@@ -1,0 +1,7 @@
+---
+"codeheat": minor
+---
+
+Open the HTML report on four answer cards. Under the question "does your design hold up to the way your code actually changes?", with the verdict and its trend beside it, four cards each answer one part of it with a number: where change concentrates (the share of the change effort in the three hottest territories), what changes together (the shared changes of the strongest pair of territories and the file pairs between territories with no import), where the structure is weak (how many of the territories with enough changes leak, by the rule of the verdict, and the effort they hold), and where to start (the effort in the territories of the top three places to start). A card opens one compact chart below the cards: heat by territory (a territory there shows its files in the map), the pairs of territories that change together, how much of each territory's change stays inside, or the places to start with their verdict, design move, and key numbers. A card with nothing to show says why.
+
+The page used to pile up the fit map, "Where to start", "Where the heat is" with its territory cards and detail slider, and "What changes together" with its territory matrix and lists, so a reader had to wade through all of it to get the answer. These sections are removed; the cards keep only the essentials, and more detail will come back where readers miss it. The map, with its side panel, filter, color modes, grouping, and zoom, stays below the cards. The JSON report and the flags are unchanged.

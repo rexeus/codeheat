@@ -1,21 +1,16 @@
 // Owns what a place to start says on the page: the engine's entry points
-// (rank, kind, verdict, design move, evidence) turned into plain words,
-// the numbers to show, and the places on the page and in the map to link to.
+// (rank, kind, verdict, design move, evidence) turned into a short name, the
+// change effort at stake, and the numbers to show in plain words.
 import type { Report } from "@codeheat/engine";
 
-import { splitPath } from "../render/format.js";
-import {
-  isRealTerritory,
-  territoryName,
-} from "../territories/territory-index.js";
+import { distinctNameParts } from "../territories/distinct-names.js";
+import { territoryName } from "../territories/territory-index.js";
 import type {
   Territory,
   TerritoryIndex,
 } from "../territories/territory-index.js";
 import { statsOf } from "./evidence.js";
 import type { EntryKind, EntryStat } from "./evidence.js";
-import { leakTargetOf } from "./leak-target.js";
-import type { LeakTarget } from "./leak-target.js";
 import { subjectOf } from "./subject.js";
 
 type EntryPoint = Report["entryPoints"][number];
@@ -29,56 +24,27 @@ const KIND_LABELS: Record<EntryKind, string> = {
   coupling: "Hidden coupling",
 };
 
-/** A finding of an entry point beside its primary one. */
-export type FindingView = {
-  readonly kind: EntryKind;
-  readonly kindLabel: string;
-  /** The files it is about in one phrase (the hub, the copies); empty for a finding about territories. */
-  readonly subject: string;
-  readonly verdict: string;
-  readonly stats: readonly EntryStat[];
-  /** The territories (at the recommended detail) it is about when they are not the entry's own, such as the boundary of one territory of a boundary between two; empty when it is about the same ones. */
-  readonly about: readonly Territory[];
-};
-
-/** How many entry points the hero shows and the verdict sums up. */
+/** How many places to start the answer sums up as the top ones. */
 export const TOP_ENTRY_POINTS = 3;
 
 /** What the page shows for one entry point. */
 export type EntryView = {
   readonly rank: number;
-  /** The `id` of its card, which the fit map and the hero link to. */
-  readonly anchor: string;
   readonly kind: EntryKind;
   readonly kindLabel: string;
-  /** The files its primary finding is about in one phrase (the hub, the copies); empty for a finding about territories. */
-  readonly subject: string;
-  /** The names it concerns, one per line: territories, or files; the second file of a coupling. */
-  readonly heading: readonly string[];
-  /** The heading on one short line, for a one-liner: file names without their folders. */
-  readonly shortHeading: string;
-  /** What the heading is: one line of context, e.g. what a territory is or where a file lives. */
-  readonly context: string;
+  /** A short name: the territories that tell themselves apart (`a + b` for a boundary between two), or the files a file-level entry names. */
+  readonly name: string;
+  /** The full paths behind `name`, for a tooltip. */
+  readonly title: string;
+  /** The share of the heat at stake: the files' for a file-level entry, else the territories', 0..1. */
+  readonly heatShare: number;
   readonly verdict: string;
-  /** The verb phrase of the design move (`Move a boundary`), or an empty string when the move has none. */
+  /** The verb phrase of the design move (`Move a boundary`); the kind's label when the move has none. */
   readonly moveLabel: string;
   /** The design move without its verb phrase. */
   readonly move: string;
   readonly stats: readonly EntryStat[];
-  /** Where a boundary leaks to; `null` for other kinds and where no territory takes a noticeable share. */
-  readonly leaksTo: LeakTarget | null;
-  /** The other findings about the same place, weaker first to last. */
-  readonly also: readonly FindingView[];
-  /** The territories (at the recommended detail) it concerns, for linking to the fit map. */
-  readonly territories: readonly Territory[];
-  /** Every territory it or its further findings concern, which is more than `territories` for a boundary between two that took in a clique of a third; for marking the fit map. */
-  readonly touched: readonly Territory[];
-  /** Files the entry names, for linking into the map. */
-  readonly files: readonly string[];
 };
-
-/** How many of the hottest files of the territories a card offers when the entry names none. */
-const HOTTEST_FILES = 3;
 
 /** A file name or path: a word with a slash, or a name with an extension. */
 const PATH_START = /^(?:\S*\/\S*|[\w@-]+(?:\.[\w-]+)+)(?=\s|$)/u;
@@ -98,149 +64,48 @@ const splitMove = (designMove: string): { label: string; rest: string } => {
       };
 };
 
-type Place = {
-  readonly files: readonly string[];
-  readonly territories: readonly Territory[];
-};
-
-const territoryPaths = ({ territories }: Place): string[] =>
-  territories.map((territory) => territoryName(territory));
-
-const HEADINGS: Record<EntryKind, (place: Place) => string[]> = {
-  boundary: territoryPaths,
-  hotspot: territoryPaths,
-  clique: territoryPaths,
-  hub: ({ files }) => files.slice(0, 1),
-  copies: ({ files }) => files.slice(0, 2),
-  coupling: ({ files }) => [...files],
-};
-
-const inPlaces = ({ territories }: Place): string =>
-  territories.length === 0
-    ? ""
-    : `in ${territories.map(({ path }) => path).join(", ")}`;
-
-const CONTEXTS: Record<EntryKind, (place: Place) => string> = {
-  boundary: ({ territories }) =>
-    territories.length > 1
-      ? `${territories.length} territories that leak into each other`
-      : (territories[0]?.description ?? ""),
-  hotspot: ({ territories }) => territories[0]?.description ?? "",
-  clique: ({ territories }) =>
-    `${territories.length} territories that change as one unit`,
-  copies: (place) =>
-    `${place.files.length} near-identical files, ${inPlaces(place)}`,
-  hub: inPlaces,
-  coupling: inPlaces,
-};
-
-const FILE_KINDS = new Set<EntryKind>(["copies", "hub", "coupling"]);
-
-const shortHeadingOf = (kind: EntryKind, heading: readonly string[]): string =>
-  FILE_KINDS.has(kind)
-    ? heading.map((path) => splitPath(path).name).join(" ↔ ")
-    : heading.join(" + ");
-
+/** The territories of an entry at the recommended detail, each once. */
 const territoriesOf = (
-  { territories: ids }: Pick<EntryPoint, "territories">,
-  index: TerritoryIndex,
-): Territory[] => {
-  const seen = new Set<string>();
-  return ids.flatMap((id) => {
-    const visible = index.visibleOf(id);
-    if (visible === undefined || seen.has(visible.id)) {
-      return [];
-    }
-    seen.add(visible.id);
-    return [visible];
-  });
-};
-
-/** The territories of a finding at the recommended detail when they differ from `own`, the entry's; none when they are the same. */
-const aboutOf = (
   ids: readonly string[],
-  own: readonly Territory[],
   index: TerritoryIndex,
-): Territory[] => {
-  const about = territoriesOf({ territories: ids }, index);
-  const same =
-    about.length === own.length &&
-    about.every(({ id }) => own.some((each) => each.id === id));
-  return same ? [] : about;
-};
-
-/** The files an entry names itself or in its findings, each once; empty for a pure boundary or clique. */
-const namedFiles = ({ files, findings }: EntryPoint): string[] => [
-  ...new Set([...files, ...findings.flatMap((finding) => finding.files)]),
-];
-
-/** The hottest files of the territories, for an entry that names none; `files` is hottest first. */
-const hottestFiles = (
-  territories: readonly Territory[],
-  report: Report,
-  index: TerritoryIndex,
-): string[] => {
-  const wanted = new Set(
-    territories
-      .filter((territory) => isRealTerritory(territory))
-      .map(({ id }) => id),
-  );
-  return report.files
-    .filter(({ territory }) => wanted.has(index.visibleOf(territory)?.id ?? ""))
-    .slice(0, HOTTEST_FILES)
-    .map(({ path }) => path);
-};
-
-/** The territories of `own` and of the findings' `about`, each once. */
-const touchedBy = (
-  own: readonly Territory[],
-  also: readonly FindingView[],
 ): Territory[] => [
   ...new Map(
-    [...own, ...also.flatMap(({ about }) => about)].map((each) => [
-      each.id,
-      each,
-    ]),
+    ids.flatMap((id) => {
+      const visible = index.visibleOf(id);
+      return visible === undefined ? [] : [[visible.id, visible] as const];
+    }),
   ).values(),
 ];
 
+const heatOf = (territories: readonly Territory[]): number =>
+  territories.reduce((sum, { heatShare }) => sum + heatShare, 0);
+
 const viewOf = (
   entry: EntryPoint,
-  report: Report,
   index: TerritoryIndex,
+  shortName: (territory: Territory) => string,
 ): EntryView => {
-  const territories = territoriesOf(entry, index);
-  const [primary, ...others] = entry.findings;
+  const territories = territoriesOf(entry.territories, index);
+  const [primary] = entry.findings;
   const move = splitMove(entry.designMove);
-  const named = namedFiles(entry);
-  const place = { files: entry.files, territories };
-  const heading = HEADINGS[entry.kind](place);
-  const also = others.map((finding) => ({
-    kind: finding.kind,
-    kindLabel: KIND_LABELS[finding.kind],
-    subject: subjectOf(finding.kind, finding.files),
-    verdict: finding.verdict,
-    stats: statsOf(finding.kind, finding.evidence, 3),
-    about: aboutOf(finding.territories, territories, index),
-  }));
+  const subject = subjectOf(entry.kind, entry.files);
   return {
     rank: entry.rank,
-    anchor: `entry-${entry.rank}`,
     kind: entry.kind,
     kindLabel: KIND_LABELS[entry.kind],
-    subject: subjectOf(entry.kind, entry.files),
-    heading,
-    shortHeading: shortHeadingOf(entry.kind, heading),
-    context: CONTEXTS[entry.kind](place),
+    name:
+      subject === ""
+        ? territories.map((each) => shortName(each)).join(" + ")
+        : subject,
+    title:
+      subject === ""
+        ? territories.map((each) => territoryName(each)).join(" + ")
+        : entry.files.join(", "),
+    heatShare: entry.evidence["heatShare"] ?? heatOf(territories),
     verdict: entry.verdict,
-    moveLabel: move.label,
+    moveLabel: move.label === "" ? KIND_LABELS[entry.kind] : move.label,
     move: move.rest,
     stats: statsOf(entry.kind, primary?.evidence ?? entry.evidence),
-    leaksTo: leakTargetOf(entry, territories, index),
-    also,
-    territories,
-    touched: touchedBy(territories, also),
-    files: named.length > 0 ? named : hottestFiles(territories, report, index),
   };
 };
 
@@ -248,8 +113,35 @@ const viewOf = (
 export const entryViewsOf = (
   report: Report,
   index: TerritoryIndex,
-): EntryView[] =>
-  report.entryPoints.map((entry) => viewOf(entry, report, index));
+): EntryView[] => {
+  const parts = distinctNameParts(index.recommended);
+  return report.entryPoints.map((entry) =>
+    viewOf(entry, index, (territory) => parts(territory).base),
+  );
+};
+
+/**
+ * The share of all the heat in the territories of the top entry points, each
+ * territory counted whole and once (an entry about files counts the
+ * territories that hold them); `null` without entry points.
+ */
+export const topEntriesHeat = (
+  report: Report,
+  index: TerritoryIndex,
+): number | null => {
+  const top = report.entryPoints.slice(0, TOP_ENTRY_POINTS);
+  return top.length === 0
+    ? null
+    : Math.min(
+        1,
+        heatOf(
+          territoriesOf(
+            top.flatMap(({ territories }) => territories),
+            index,
+          ),
+        ),
+      );
+};
 
 /**
  * What to say in place of the places to start when the report has none: a

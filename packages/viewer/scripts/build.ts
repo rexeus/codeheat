@@ -33,10 +33,7 @@ const bundleScript = async (): Promise<string> => {
 const STYLESHEETS = [
   "src/document/styles.css",
   "src/document/page.css",
-  "src/hero/hero.css",
-  "src/where-to-start/where-to-start.css",
-  "src/territory-cards/territory-cards.css",
-  "src/together/together.css",
+  "src/answers/answers.css",
   "src/map-grouping/map-grouping.css",
 ] as const;
 

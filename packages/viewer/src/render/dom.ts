@@ -17,19 +17,6 @@ export const h = <K extends keyof HTMLElementTagNameMap>(
   return element;
 };
 
-/**
- * Text that may wrap after each `/` and nowhere inside a word: a path in a
- * narrow box breaks between its folders instead of through a name.
- */
-export const breakable = (text: string): Child[] =>
-  text
-    .split("/")
-    .flatMap((part, index, parts) =>
-      index === parts.length - 1
-        ? [part]
-        : [`${part}/`, document.createElement("wbr")],
-    );
-
 /** Keeps a flag such as `--since` on one line: the text splits before each flag, which becomes a `.flag` span. */
 export const withFlags = (text: string): (Node | string)[] =>
   text

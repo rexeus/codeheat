@@ -111,14 +111,14 @@ describe("quietWindowOf with the day of the newest commit", () => {
 });
 
 describe("the verdict of a window without counted changes", () => {
-  it("replaces the evidence sentence and carries the note", () => {
+  it("gives the window as the reason, and carries the note", () => {
     const report = quietReport([], null);
 
     const verdict = deriveVerdict(report, indexTerritories(report.territories));
 
     expect(verdict).toMatchObject({
       level: "unknown",
-      sentence:
+      reason:
         "No counted changes in this window, so there is nothing to judge.",
       note: "Try a longer window with --since.",
     });

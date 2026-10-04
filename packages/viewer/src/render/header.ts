@@ -7,8 +7,6 @@ import { HEAT_STEP_COUNT } from "../color/heat-scale.js";
 import { h } from "./dom.js";
 import { formatCount, formatDay } from "./format.js";
 
-const SHORT_SHA_LENGTH = 7;
-
 /** A caveat on the previous window: no real change means there is nothing to compare, cut off means less history. */
 const comparisonCaveat = ({
   previousCommits,
@@ -23,12 +21,7 @@ const comparisonCaveat = ({
   return previousTruncated ? " (cut off at the start of the history)" : "";
 };
 
-const summaryParts = ({
-  repository,
-  window,
-  files,
-  comparison,
-}: Report): string[] => [
+const summaryParts = ({ window, files, comparison }: Report): string[] => [
   `${formatDay(window.since)} → ${formatDay(window.until)}`,
   ...(comparison === null
     ? []
@@ -37,12 +30,9 @@ const summaryParts = ({
       ]),
   `${formatCount(window.commits)} commits`,
   `${formatCount(files.length)} files`,
-  ...(repository.head === null
-    ? []
-    : [repository.head.slice(0, SHORT_SHA_LENGTH)]),
 ];
 
-/** Fills the repository name and the window, commit and file summary. */
+/** Fills the repository name and the window, commit and file summary of the bar. */
 export const renderHeader = (
   report: Report,
   title: HTMLElement,
@@ -50,7 +40,9 @@ export const renderHeader = (
 ): void => {
   const { name, scope } = report.repository;
   title.textContent = scope === "." ? name : `${name} / ${scope}`;
-  summary.textContent = summaryParts(report).join(" · ");
+  summary.replaceChildren(
+    ...summaryParts(report).map((part) => h("span", "summary-item", part)),
+  );
 };
 
 const swatchOf = (attribute: "step" | "cohesion" | "change", step: number) => {
