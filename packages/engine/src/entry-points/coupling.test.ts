@@ -74,7 +74,7 @@ describe("couplingEntries", () => {
       "These files keep changing together across territories, and no import links them.",
     );
     expect(entry?.designMove).toBe(
-      "Centralize a contract: a/x.ts and b/x.ts agree on something that neither shows to the other; define it once, in a place both use.",
+      "Centralize a contract: the files a/x.ts and b/x.ts agree on something that neither shows to the other; define it once, in a place both use.",
     );
   });
 

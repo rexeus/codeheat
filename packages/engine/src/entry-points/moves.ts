@@ -65,6 +65,6 @@ export const hubMove = (path: string): string =>
 export const COUPLING_VERDICT =
   "These files keep changing together across territories, and no import links them.";
 
-/** Centralize a contract between the two files `a` and `b` that change together without an import. */
+/** Centralize a contract between the two files `a` and `b` that change together without an import; the sentence after the label never opens with a path, so that a reader may capitalize it. */
 export const couplingMove = (a: string, b: string): string =>
-  `Centralize a contract: ${a} and ${b} agree on something that neither shows to the other; define it once, in a place both use.`;
+  `Centralize a contract: the files ${a} and ${b} agree on something that neither shows to the other; define it once, in a place both use.`;
