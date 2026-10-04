@@ -1,4 +1,4 @@
-import type { FileStats, Report } from "@codeheat/engine";
+import type { Report } from "@codeheat/engine";
 
 import { makeHeatScale } from "../color/heat-scale.js";
 import { buildTree } from "../layout/hierarchy.js";
@@ -11,28 +11,11 @@ import type { PathMatcher } from "../selection/filter.js";
 import { highlightOf, selectionOf } from "../selection/highlight.js";
 import type { Selection } from "../selection/highlight.js";
 import { indexPartners } from "../selection/partners.js";
-import { byId } from "./dom.js";
-import { showEmptyNotice } from "./empty-report.js";
-import { formatCount } from "./format.js";
-import { renderHeader, renderLegend } from "./header.js";
-import { mountModeSwitch } from "./mode-switch.js";
+import { findPage, matchSummary, mountChrome } from "./page.js";
+import type { Page } from "./page.js";
 import { OVERVIEW_HOTSPOTS, createPanel } from "./panel.js";
 import { createTooltip } from "./tooltip.js";
 import { createTreemapView } from "./treemap-view.js";
-
-/** The skeleton elements the page template provides. */
-const findPage = () => ({
-  app: byId("app", HTMLElement),
-  modeSwitch: byId("mode-switch", HTMLFieldSetElement),
-  stage: byId("stage", HTMLElement),
-  filterInput: byId("filter", HTMLInputElement),
-  filterCount: byId("filter-count", HTMLElement),
-  treemap: byId("treemap", SVGSVGElement),
-  tooltip: byId("tooltip", HTMLElement),
-  panel: byId("panel", HTMLElement),
-});
-
-type Page = ReturnType<typeof findPage>;
 
 /** Builds the tooltip, panel and treemap; every selection change goes to `select`. */
 const createParts = (
@@ -81,26 +64,6 @@ const createParts = (
     select,
   });
   return { panel, view };
-};
-
-const matchSummary = (
-  matcher: PathMatcher | null,
-  files: readonly FileStats[],
-): string =>
-  matcher === null
-    ? ""
-    : `${formatCount(files.filter(({ path }) => matcher(path)).length)} of ${formatCount(files.length)} files match`;
-
-/** The heading, the legend and the color-mode switch. */
-const mountChrome = (report: Report, page: Page): void => {
-  renderHeader(
-    report,
-    byId("repository", HTMLElement),
-    byId("summary", HTMLElement),
-  );
-  renderLegend(byId("legend", HTMLElement));
-  mountModeSwitch(page.app, page.modeSwitch, report.comparison !== null);
-  showEmptyNotice(report, page.stage);
 };
 
 /**
