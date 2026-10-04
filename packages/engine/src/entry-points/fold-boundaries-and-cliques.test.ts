@@ -169,6 +169,47 @@ describe("foldBoundariesAndCliques of a clique that a boundary outranks", () => 
   });
 });
 
+describe("foldBoundariesAndCliques never hides a larger story behind a boundary", () => {
+  const between = entry("boundary", 0.4, ["a", "b"]);
+
+  it("takes in a clique of three members, the two and one more", () => {
+    expect(
+      foldBoundariesAndCliques([
+        between,
+        entry("clique", 0.3, ["a", "b", "c"]),
+      ]),
+    ).toHaveLength(1);
+  });
+
+  it("keeps a clique of four members, which has more than one territory beyond the pair", () => {
+    const entries = [between, entry("clique", 0.3, ["a", "b", "c", "d"])];
+
+    expect(foldBoundariesAndCliques(entries)).toStrictEqual(entries);
+  });
+
+  it("keeps a clique that a boundary of one territory outranks, however small", () => {
+    const entries = [
+      entry("boundary", 0.4, ["a"]),
+      entry("clique", 0.3, ["a", "b", "c"]),
+    ];
+
+    expect(foldBoundariesAndCliques(entries)).toStrictEqual(entries);
+  });
+
+  it("still lets a higher ranked clique of any size take in a single boundary or a pair", () => {
+    const big = entry("clique", 0.9, ["a", "b", "c", "d", "e"]);
+
+    const folded = foldBoundariesAndCliques([
+      big,
+      entry("boundary", 0.4, ["a"]),
+      between,
+    ]);
+
+    expect(folded).toHaveLength(1);
+    expect(folded[0]?.findings).toHaveLength(3);
+  });
+});
+
 describe("foldBoundariesAndCliques of several cliques and kinds", () => {
   it("takes in the boundary into the best clique that explains it, and one boundary only once", () => {
     const better = entry("clique", 0.5, ["b", "e", "f"]);

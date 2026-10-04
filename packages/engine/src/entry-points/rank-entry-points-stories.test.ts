@@ -86,4 +86,19 @@ describe("rankEntryPoints tells one story once", () => {
       ["boundary", ["d"], ["d"]],
     ]);
   });
+  it("keeps a larger clique as its own entry beside the boundary that outranks it", () => {
+    const ranked = rankEntryPoints(
+      input({
+        territories: mirrored(),
+        cliques: [{ ...unit(0.3), modules: ["a", "b", "c", "d"] }],
+      }),
+    );
+
+    // the clique scores ⅔ × 0.3 = 0.2, below the pair (0.2833), but has four members; it takes in c and d, which it outranks
+    expect(summary(ranked).slice(0, 3)).toStrictEqual([
+      ["boundary", ["a", "b"], ["a+b", "a", "b"]],
+      ["clique", ["a", "b", "c", "d"], ["a+b+c+d", "c", "d"]],
+      ["boundary", ["e"], ["e"]],
+    ]);
+  });
 });
