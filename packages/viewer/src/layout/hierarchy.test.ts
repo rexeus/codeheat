@@ -109,6 +109,20 @@ describe("buildTree above 8,000 files", () => {
     ).toEqual(["big.ts", "small-3.ts", "7999 small files"]);
   });
 
+  it("judges whether to merge small files against the population a part is drawn with", () => {
+    const part = manySmall().slice(1, 4);
+
+    const alone = childNamed(buildTree(part, noKeep), "src");
+    const among = childNamed(buildTree(part, noKeep, manySmall()), "src");
+
+    expect(
+      alone.kind === "directory" && alone.children.map((node) => node.name),
+    ).toEqual(["small-0.ts", "small-1.ts", "small-2.ts"]);
+    expect(
+      among.kind === "directory" && among.children.map((node) => node.name),
+    ).toEqual(["3 small files"]);
+  });
+
   it("merges a directory of more small files than a call can take as arguments", () => {
     const files = [
       fileStats("src/big.ts", { loc: 1_000_000_000 }),

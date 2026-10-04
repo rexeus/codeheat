@@ -11,7 +11,6 @@ import {
 import { MIN_CLIQUE_SHARE } from "../distant/cliques.js";
 import { MIN_LOCAL_DISTANCE } from "../distant/distant-couplings.js";
 // Owns the noise limits an analysis applies, reported so consumers see them.
-import { ENTRY_THRESHOLDS } from "../entry-points/limits.js";
 import { MIN_CONVENTION_SHARE } from "../fixes/fix-density.js";
 import {
   HUB_MIN_BREADTH,
@@ -36,6 +35,7 @@ import {
   MAX_MEAN_LINE_LENGTH,
 } from "../universe/source-file.js";
 import { OVER_TIME_THRESHOLDS } from "./over-time-thresholds.js";
+import { TERRITORY_THRESHOLDS } from "./territory-thresholds.js";
 
 /** The limits an analysis applied; `couplingCommits` sets the floor of ranked modules. */
 export const thresholdsFor = (couplingCommits: number) =>
@@ -61,7 +61,7 @@ export const thresholdsFor = (couplingCommits: number) =>
     ubiquitousMinCommits: UBIQUITOUS_MIN_COMMITS,
     ...OVER_TIME_THRESHOLDS,
     minConventionShare: MIN_CONVENTION_SHARE,
-    ...ENTRY_THRESHOLDS,
+    ...TERRITORY_THRESHOLDS,
     maxMeanLineLength: MAX_MEAN_LINE_LENGTH,
     maxFileBytes: MAX_FILE_BYTES,
   }) satisfies Report["thresholds"];

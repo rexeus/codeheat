@@ -20,6 +20,23 @@ const overlap = (
 ): number =>
   candidate.filter((id) => kept.includes(id)).length / candidate.length;
 
+/** The heat a clique's territories hold together: the sum of their `heatShare`, and their share of the production code's heat. Members `byId` does not know are left out of `members`. */
+export const cliqueHeat = (
+  clique: Clique,
+  byId: ReadonlyMap<string, Territory>,
+  codeHeat: ReadonlyMap<string, number>,
+) => ({
+  members: clique.modules.flatMap((id) => byId.get(id) ?? []),
+  heatShare: clique.modules.reduce(
+    (sum, id) => sum + (byId.get(id)?.heatShare ?? 0),
+    0,
+  ),
+  codeHeatShare: clique.modules.reduce(
+    (sum, id) => sum + (codeHeat.get(id) ?? 0),
+    0,
+  ),
+});
+
 const scored = (
   cliques: ReadonlyArray<Clique>,
   byId: ReadonlyMap<string, Territory>,
@@ -27,11 +44,10 @@ const scored = (
   minHeatShare: number,
 ): ReadonlyArray<Candidate> =>
   cliques.flatMap((clique): Array<Candidate> => {
-    const members = clique.modules.flatMap((id) => byId.get(id) ?? []);
-    const heatShare = members.reduce((sum, { heatShare: own }) => sum + own, 0);
-    const codeHeatShare = clique.modules.reduce(
-      (sum, id) => sum + (codeHeat.get(id) ?? 0),
-      0,
+    const { members, heatShare, codeHeatShare } = cliqueHeat(
+      clique,
+      byId,
+      codeHeat,
     );
     if (
       members.length !== clique.modules.length ||

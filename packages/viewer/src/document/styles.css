@@ -77,6 +77,17 @@
   --change-ink-5: var(--ink-dark);
   --change-ink-6: var(--ink-dark);
   --change-ink-7: var(--ink-light);
+
+  --matrix-1: #e3edfb;
+  --matrix-2: #b7d3f6;
+  --matrix-3: #6da7ec;
+  --matrix-4: #1f64bb;
+  --matrix-5: #144a91;
+  --matrix-ink-1: var(--ink-dark);
+  --matrix-ink-2: var(--ink-dark);
+  --matrix-ink-3: var(--ink-dark);
+  --matrix-ink-4: var(--ink-light);
+  --matrix-ink-5: var(--ink-light);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -143,6 +154,17 @@
     --change-ink-5: var(--ink-light);
     --change-ink-6: var(--ink-dark);
     --change-ink-7: var(--ink-dark);
+
+    --matrix-1: #1f3a5f;
+    --matrix-2: #26508a;
+    --matrix-3: #2f68b3;
+    --matrix-4: #7fb0ee;
+    --matrix-5: #b5d3f8;
+    --matrix-ink-1: var(--ink-light);
+    --matrix-ink-2: var(--ink-light);
+    --matrix-ink-3: var(--ink-light);
+    --matrix-ink-4: var(--ink-dark);
+    --matrix-ink-5: var(--ink-dark);
   }
 }
 

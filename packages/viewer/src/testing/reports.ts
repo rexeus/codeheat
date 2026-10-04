@@ -164,6 +164,7 @@ const THRESHOLDS: Report["thresholds"] = {
   minEntryScore: 0.005,
   maxEntriesPerKind: 6,
   maxEntries: 10,
+  maxCoupledTerritories: 24,
   maxMeanLineLength: 300,
   maxFileBytes: 1048576,
 };
@@ -189,6 +190,8 @@ const NO_FINDINGS = {
   moduleCoupling: [],
   distantCouplings: [],
   territories: { recommended: 0, details: [], nodes: [] },
+  territoryCoupling: [],
+  territoryCliques: [],
   entryPoints: [],
 } satisfies Partial<Report>;
 

@@ -119,3 +119,38 @@ layer(NodeServices.layer)("analyze territory fit", (it) => {
       }),
   );
 });
+
+layer(NodeServices.layer)("analyze territory coupling", (it) => {
+  it.effect(
+    "lists the territories that changed together once, by id, with the changes they shared",
+    () =>
+      Effect.gen(function* () {
+        yield* setNow;
+        const repo = yield* makeTempRepository;
+        yield* buildHistory(repo);
+
+        const report = yield* analyze(analyzeOptionsFor(repo));
+
+        const pathOf = new Map(
+          report.territories.nodes.map(({ id, path }) => [id, path]),
+        );
+        assert.deepStrictEqual(
+          report.territoryCoupling.map(({ a, b, ...counts }) => ({
+            pair: [pathOf.get(a), pathOf.get(b)],
+            ordered: a < b,
+            ...counts,
+          })),
+          [
+            {
+              pair: ["billing", "web"],
+              ordered: true,
+              sharedChanges: 6,
+              distantPairs: 1,
+              hiddenPairs: 0,
+            },
+          ],
+        );
+        assert.deepStrictEqual(report.territoryCliques, []);
+      }),
+  );
+});

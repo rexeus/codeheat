@@ -148,18 +148,22 @@ const finish = (
  *
  * Above 8,000 files, small files merge into one aggregate tile per directory,
  * except files listed in `keep` (the files a user can select through a coupling).
+ * `population` is the set of files the tile count is judged against (the
+ * files drawn together on one screen), `files` itself unless a part of it is
+ * built apart.
  */
 export const buildTree = (
   files: readonly FileStats[],
   keep: ReadonlySet<string>,
+  population: readonly FileStats[] = files,
 ): DirectoryNode => {
   const root = draftDirectory("", "");
   for (const file of files) {
     insertFile(root, file);
   }
-  const totalLoc = files.reduce((sum, file) => sum + file.loc, 0);
+  const totalLoc = population.reduce((sum, file) => sum + file.loc, 0);
   const smallerThan =
-    files.length > AGGREGATION_FILE_THRESHOLD
+    population.length > AGGREGATION_FILE_THRESHOLD
       ? totalLoc * SMALL_FILE_LOC_SHARE
       : 0;
   return finish(root, { smallerThan, keep });

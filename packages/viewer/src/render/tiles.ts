@@ -47,11 +47,12 @@ const unchangedText = ({ node }: PlacedLeaf): string =>
 /** A group's background and, when it reserved a header strip and the name fits, its label. */
 export const drawGroup = (
   create: SvgFactory,
-  { name, rect, labelled }: PlacedGroup,
+  { name, depth, rect, labelled }: PlacedGroup,
 ): SVGElement[] => {
   const width = rect.x1 - rect.x0;
   const box = create("rect", {
     class: "group",
+    "data-depth": depth,
     x: rect.x0,
     y: rect.y0,
     width,
@@ -63,6 +64,7 @@ export const drawGroup = (
   }
   const text = create("text", {
     class: "group-label",
+    "data-depth": depth,
     x: rect.x0 + LABEL_INDENT,
     y: rect.y0 + GROUP_HEADER_HEIGHT - 5,
   });

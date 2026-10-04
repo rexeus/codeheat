@@ -36,6 +36,8 @@ const STYLESHEETS = [
   "src/hero/hero.css",
   "src/where-to-start/where-to-start.css",
   "src/territory-cards/territory-cards.css",
+  "src/together/together.css",
+  "src/map-grouping/map-grouping.css",
 ] as const;
 
 const minifyStyles = async (): Promise<string> => {

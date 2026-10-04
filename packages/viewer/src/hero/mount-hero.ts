@@ -12,14 +12,13 @@ const NO_TERRITORIES =
 /**
  * Fills the hero the page template provides: the verdict, the fit map with
  * its legend and territory list, and the top places to start. Without
- * territories the map area says so and the rest of the hero still works.
+ * territories the map area says so and the rest of the hero still works. A
+ * tile is a button that shows its territory in the treemap through `showTerritory`.
  */
-export const mountHero = ({
-  verdict,
-  tiles,
-  entries,
-  noEntries,
-}: HeroData): void => {
+export const mountHero = (
+  { verdict, tiles, entries, noEntries }: HeroData,
+  showTerritory: (id: string) => void,
+): void => {
   renderVerdict(byId("verdict", HTMLElement), verdict);
   renderTopThree(byId("top-three", HTMLElement), entries, noEntries);
   const map = byId("fit-map", HTMLElement);
@@ -29,7 +28,7 @@ export const mountHero = ({
     map.replaceChildren(h("p", "fit-empty", NO_TERRITORIES));
     return;
   }
-  renderFitMap(map, tiles);
+  renderFitMap(map, tiles, showTerritory);
   renderFitLegend(byId("fit-legend", HTMLElement));
   renderFitList(byId("fit-list", HTMLDetailsElement), tiles);
 };

@@ -18,16 +18,25 @@ describe("embedded report", () => {
     const {
       territories: _territories,
       entryPoints: _entryPoints,
+      territoryCoupling: _territoryCoupling,
+      territoryCliques: _territoryCliques,
       changeRadius: _changeRadius,
       propagationCost: _propagationCost,
       erosion: _erosion,
       ...older
     } = report;
 
-    expect(parseReport(JSON.stringify(older))).toEqual({
+    const { maxCoupledTerritories: _cap, ...limits } = report.thresholds;
+
+    expect(
+      parseReport(JSON.stringify({ ...older, thresholds: limits })),
+    ).toEqual({
       ...older,
+      thresholds: report.thresholds,
       territories: { recommended: 0, details: [], nodes: [] },
       entryPoints: [],
+      territoryCoupling: [],
+      territoryCliques: [],
       changeRadius: null,
       propagationCost: null,
       erosion: null,

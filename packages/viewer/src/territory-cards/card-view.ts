@@ -1,7 +1,7 @@
 import type { EntryStat } from "../entry-points/evidence.js";
 import { breakable, h } from "../render/dom.js";
 import { fileLink } from "../render/file-link.js";
-import type { FileLinkContext } from "../render/file-link.js";
+import type { FileLinkContext, MapLinks } from "../render/file-link.js";
 import { formatCount, formatScore, formatShare } from "../render/format.js";
 import { rankBadge } from "../render/rank-badge.js";
 import type { CardPartner, TerritoryCard } from "./card-model.js";
@@ -13,7 +13,7 @@ import { meterView } from "./meter-view.js";
 
 /** How a card talks back to the section. */
 export type CardHandlers = {
-  readonly files: FileLinkContext;
+  readonly files: MapLinks;
   /** Expands the card, or collapses it when it is expanded. */
   readonly toggle: (id: string) => void;
 };
@@ -166,6 +166,20 @@ const mapLink = ({ fitLink }: TerritoryCard): HTMLElement[] => {
   return [link];
 };
 
+/** A button that fills the treemap with the territory, at whichever detail shows it. */
+const showOnMapButton = (
+  { territory, name }: TerritoryCard,
+  { showTerritory }: MapLinks,
+): HTMLElement => {
+  const button = h("button", "map-link show-on-map", "Show in the map");
+  button.type = "button";
+  button.setAttribute("aria-label", `Show ${name} in the map`);
+  button.addEventListener("click", () => {
+    showTerritory(territory.id);
+  });
+  return button;
+};
+
 const expandButton = (
   id: string,
   expanded: boolean,
@@ -210,6 +224,7 @@ export const cardView = (
       "footer",
       "tcard-foot",
       ...mapLink(card),
+      showOnMapButton(card, files),
       expandButton(id, expansion !== null, toggle),
     ),
   );

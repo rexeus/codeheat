@@ -26,6 +26,15 @@ describe("limitReport entry points", () => {
       report.territories,
     );
   });
+
+  it("keeps the territory coupling whole", () => {
+    const report = sampleReport();
+
+    expect(report.territoryCoupling.length).toBeGreaterThan(1);
+    expect(limitReport(report, 1).territoryCoupling).toStrictEqual(
+      report.territoryCoupling,
+    );
+  });
 });
 
 describe("limitReport further lists", () => {

@@ -7,19 +7,27 @@ export type FileLinkContext = {
   readonly showFile: (path: string) => void;
 };
 
+/** What a link into the map needs from the page: the file links, and how to show a territory there. */
+export type MapLinks = FileLinkContext & {
+  readonly showTerritory: (id: string) => void;
+};
+
 /**
- * A file's name as a button that shows the file in the map. A file the
- * report does not list is a plain, dashed label instead.
+ * A file as a button that shows the file in the map, labelled with its name
+ * unless `label` says otherwise. A file the report does not list is a plain,
+ * dashed label instead.
  */
 export const fileLink = (
   path: string,
   { knownFiles, showFile }: FileLinkContext,
+  label: string = splitPath(path).name,
 ): HTMLElement => {
-  const { name } = splitPath(path);
   if (!knownFiles.has(path)) {
-    return h("span", "file-link unknown", name);
+    const unknown = h("span", "file-link unknown", label);
+    unknown.title = path;
+    return unknown;
   }
-  const button = h("button", "file-link", name);
+  const button = h("button", "file-link", label);
   button.type = "button";
   button.title = `Show ${path} in the map`;
   button.addEventListener("click", () => {

@@ -157,6 +157,21 @@ a.rank-badge:hover {
   margin-top: 16px;
 }
 
+@media (max-width: 600px) {
+  .topbar-repository {
+    display: none;
+  }
+  .topbar-links {
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .topbar-links a {
+    padding: 5px 7px;
+    font-size: 12.5px;
+    white-space: nowrap;
+  }
+}
+
 @media (max-width: 900px) {
   .topbar,
   main {

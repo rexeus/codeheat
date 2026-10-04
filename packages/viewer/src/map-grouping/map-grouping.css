@@ -1,0 +1,111 @@
+/* Linking the page to the map: grouping controls, the zoom bar, and the buttons that show a territory there. */
+.detail-pick {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  color: var(--text-2);
+}
+.detail-pick select {
+  height: 34px;
+  max-width: 100%;
+  padding: 0 10px;
+  color: var(--text);
+  font: inherit;
+  background: var(--surface);
+  border: 1px solid var(--hairline-strong);
+  border-radius: 8px;
+}
+.detail-pick select:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 1px;
+}
+
+.zoom-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  align-items: center;
+  padding: 9px 14px;
+  margin: 0 0 12px;
+  background: var(--surface);
+  border: 1px solid var(--focus);
+  border-radius: 10px;
+}
+.zoom-what {
+  overflow-wrap: anywhere;
+}
+.zoom-desc {
+  flex: 1 1 260px;
+  min-width: 0;
+  color: var(--text-2);
+}
+.zoom-out {
+  padding: 5px 12px;
+  color: var(--text);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  background: none;
+  border: 1px solid var(--hairline-strong);
+  border-radius: 8px;
+}
+.zoom-out:hover {
+  background: var(--group);
+}
+
+/* A territory drawn as a group of the map: a stronger frame and name than the folders inside it. */
+.app[data-grouping="territories"] .group[data-depth="1"] {
+  stroke: var(--hairline-strong);
+  stroke-width: 1.5;
+}
+.app[data-grouping="territories"] .group-label[data-depth="1"] {
+  fill: var(--text);
+  font-weight: 700;
+}
+
+/* A fit-map tile is a button over its whole tile; the rank markers stay above it. */
+.fit-tile {
+  cursor: pointer;
+}
+.fit-show {
+  position: absolute;
+  inset: 0;
+  padding: 0;
+  cursor: pointer;
+  background: none;
+  border: 0;
+  border-radius: inherit;
+}
+.fit-show:hover {
+  background: color-mix(in srgb, var(--ink) 10%, transparent);
+}
+.fit-show:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: -3px;
+}
+.fit-badges {
+  position: relative;
+  z-index: 1;
+}
+
+.entry-territory {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  align-items: baseline;
+}
+button.map-link {
+  padding: 0;
+  font: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+  background: none;
+  border: 0;
+}
+
+@media (max-width: 900px) {
+  .detail-pick {
+    flex: 1 1 100%;
+  }
+}

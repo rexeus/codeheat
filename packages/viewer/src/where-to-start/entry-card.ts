@@ -6,7 +6,7 @@ import type {
 import type { EntryStat } from "../entry-points/evidence.js";
 import { breakable, h, pathLabel } from "../render/dom.js";
 import { fileLink } from "../render/file-link.js";
-import type { FileLinkContext } from "../render/file-link.js";
+import type { MapLinks } from "../render/file-link.js";
 import { formatCount, formatShare } from "../render/format.js";
 import { rankBadge } from "../render/rank-badge.js";
 import { territoryName } from "../territories/territory-index.js";
@@ -54,19 +54,19 @@ const headingView = (entry: EntryView): HTMLElement =>
     ),
   );
 
-const linksView = (
-  entry: EntryView,
-  context: FileLinkContext,
-): HTMLElement | null => {
+const linksView = (entry: EntryView, context: MapLinks): HTMLElement | null => {
   const onMap = entry.territories.map((territory) => {
     const { id } = territory;
-    const link = h(
-      "a",
-      "map-link",
-      `${territoryName(territory)} on the fit map`,
-    );
+    const name = territoryName(territory);
+    const link = h("a", "map-link", `${name} on the fit map`);
     link.href = `#territory-${id}`;
-    return link;
+    const show = h("button", "map-link show-on-map", "Show in the map");
+    show.type = "button";
+    show.setAttribute("aria-label", `Show ${name} in the map`);
+    show.addEventListener("click", () => {
+      context.showTerritory(id);
+    });
+    return h("span", "entry-territory", link, show);
   });
   const files = entry.files.slice(0, MAX_FILE_LINKS);
   const rest = entry.files.length - files.length;
@@ -92,10 +92,7 @@ const linksView = (
 };
 
 /** One place to start: what is wrong, what to do, the numbers behind it, and where to look. */
-export const entryCard = (
-  entry: EntryView,
-  context: FileLinkContext,
-): HTMLElement => {
+export const entryCard = (entry: EntryView, context: MapLinks): HTMLElement => {
   const card = h(
     "article",
     "entry",

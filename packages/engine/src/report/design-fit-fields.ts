@@ -9,6 +9,7 @@ import { EntryPoint } from "./entry-point.js";
 import { Erosion } from "./erosion.js";
 import { FixDensity } from "./fix-density.js";
 import { SeriesWindow } from "./series.js";
+import { TerritoryClique, TerritoryCoupling } from "./territory-coupling.js";
 import { Territories } from "./territory.js";
 
 /** Fields of `Report`; each is documented here, where it is defined. */
@@ -43,6 +44,18 @@ export const DesignFitFields = {
   fixDensity: FixDensity,
   /** The areas of the code at every detail and the one to read first (see `Territories`); `modules` is unchanged. */
   territories: Territories,
+  /**
+   * How often the hottest territories at the recommended detail change in the
+   * same changes (see `TerritoryCoupling`): the data of a territory matrix.
+   * Not cut by `--limit`. v2 moves it under `coupling`.
+   */
+  territoryCoupling: Schema.Array(TerritoryCoupling),
+  /**
+   * The groups of three or more territories at the recommended detail that
+   * change as one unit (see `TerritoryClique`), at most 50. Not cut by
+   * `--limit`. v2 moves it under `coupling`.
+   */
+  territoryCliques: Schema.Array(TerritoryClique),
   /**
    * Where to start: at most `thresholds.maxEntries` places where the design
    * fails to hold up to the way the code changes, each with the evidence, a

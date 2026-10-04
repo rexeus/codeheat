@@ -5,7 +5,8 @@ import type { Report } from "@codeheat/engine";
  * `modules`, `copyFamilies`, and `distantCouplings`, `moduleCoupling`, `cliques`, `unstableInterfaces`, and `dependencyDirection` are each cut to their first `limit` entries,
  * `0` keeps everything, and `totals` still
  * describe the untruncated sizes. `entryPoints` is never cut (it has ten at most) and neither is `territories`: a tree without
- * some of its nodes would not hold together.
+ * some of its nodes would not hold together. `territoryCoupling` (at most 276 pairs) and `territoryCliques` stay whole as well: they are the
+ * data of one picture and name territories the tree holds.
  */
 export const limitReport = (report: Report, limit: number): Report =>
   limit === 0
