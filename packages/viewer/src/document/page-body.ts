@@ -64,10 +64,16 @@ const MAP = `    <section id="map" class="section map-section" aria-labelledby="
       <header class="section-head">
         <p class="eyebrow">Map</p>
         <h2 id="map-title">Every file, by size and heat</h2>
-        <p class="section-intro">Select a tile to see why it is hot and which files change together with it.</p>
+        <p class="section-intro">Files grouped by the territory that holds them, or by folder; select a tile to see why it is hot and which files change together with it.</p>
       </header>
       <div id="legend" class="legend"></div>
       <div class="toolbar">
+        <fieldset id="grouping-switch" class="mode-switch">
+          <legend>Group by</legend>
+          <label><input type="radio" name="grouping" value="territories" checked><span>Territories</span></label>
+          <label><input type="radio" name="grouping" value="folders"><span>Folders</span></label>
+        </fieldset>
+        <label id="detail-pick" class="detail-pick"><span>Detail</span><select id="detail-select"></select></label>
         <fieldset id="mode-switch" class="mode-switch">
           <legend>Color by</legend>
           <label><input type="radio" name="color-mode" value="heat" checked><span>Heat</span></label>
@@ -77,6 +83,7 @@ const MAP = `    <section id="map" class="section map-section" aria-labelledby="
         <input id="filter" type="search" autocomplete="off" spellcheck="false" aria-label="Filter files" placeholder="Filter by path or glob, e.g. billing or src/**/*.ts">
         <span id="filter-count" class="filter-count"></span>
       </div>
+      <div id="zoom-bar" class="zoom-bar" hidden></div>
       <div class="content">
         <div id="stage" class="stage">
           <svg id="treemap" role="img" aria-label="Treemap of files: area is lines of code, color is hotspot score, module cohesion, or change since the previous window"></svg>

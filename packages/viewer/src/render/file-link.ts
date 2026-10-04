@@ -7,6 +7,11 @@ export type FileLinkContext = {
   readonly showFile: (path: string) => void;
 };
 
+/** What a link into the map needs from the page: the file links, and how to show a territory there. */
+export type MapLinks = FileLinkContext & {
+  readonly showTerritory: (id: string) => void;
+};
+
 /**
  * A file as a button that shows the file in the map, labelled with its name
  * unless `label` says otherwise. A file the report does not list is a plain,

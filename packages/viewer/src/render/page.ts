@@ -1,5 +1,6 @@
 import type { FileStats, Report } from "@codeheat/engine";
 
+import { createPathMatcher } from "../selection/filter.js";
 import type { PathMatcher } from "../selection/filter.js";
 import { byId } from "./dom.js";
 import { showEmptyNotice } from "./empty-report.js";
@@ -22,7 +23,7 @@ export const findPage = () => ({
 export type Page = ReturnType<typeof findPage>;
 
 /** How many files the filter matches, or an empty string without a filter. */
-export const matchSummary = (
+const matchSummary = (
   matcher: PathMatcher | null,
   files: readonly FileStats[],
 ): string =>
@@ -40,4 +41,17 @@ export const mountChrome = (report: Report, page: Page): void => {
   renderLegend(byId("legend", HTMLElement));
   mountModeSwitch(page.app, page.modeSwitch, report.comparison !== null);
   showEmptyNotice(report, page.stage);
+};
+
+/** Reads the filter box on every keystroke: shows how many files match and hands the matcher (or `null` for an empty filter) to `onChange`. */
+export const mountFilter = (
+  page: Page,
+  files: readonly FileStats[],
+  onChange: (matcher: PathMatcher | null) => void,
+): void => {
+  page.filterInput.addEventListener("input", () => {
+    const matcher = createPathMatcher(page.filterInput.value);
+    page.filterCount.textContent = matchSummary(matcher, files);
+    onChange(matcher);
+  });
 };

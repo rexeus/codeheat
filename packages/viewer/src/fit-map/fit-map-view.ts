@@ -27,7 +27,10 @@ const figure = (value: string, words: string): (Node | string)[] => [
  * (name, share, description) appear as the tile's size allows, the full
  * summary is always there for assistive technology and the tooltip.
  */
-const tileView = (tile: FitTile): HTMLElement => {
+const tileView = (
+  tile: FitTile,
+  showTerritory: (id: string) => void,
+): HTMLElement => {
   const element = h(
     "div",
     "fit-tile",
@@ -59,6 +62,13 @@ const tileView = (tile: FitTile): HTMLElement => {
     ),
     h("span", "fit-desc", tile.description),
   );
+  const show = h("button", "fit-show", "");
+  show.type = "button";
+  show.setAttribute("aria-label", `Show ${tile.name} in the map`);
+  show.addEventListener("click", () => {
+    showTerritory(tile.id);
+  });
+  element.append(show);
   element.id = `territory-${tile.id}`;
   element.setAttribute("role", "listitem");
   element.title = `${tile.summary}\n${tile.description}`;
@@ -97,13 +107,17 @@ const trimLabels = (element: HTMLElement): void => {
 
 /**
  * Draws the fit map into `container`: one tile per territory, laid out to the
- * container's size and again whenever it changes.
+ * container's size and again whenever it changes. Selecting a tile calls
+ * `showTerritory` with its territory.
  */
 export const renderFitMap = (
   container: HTMLElement,
   tiles: readonly FitTile[],
+  showTerritory: (id: string) => void,
 ): void => {
-  const elements = new Map(tiles.map((tile) => [tile.id, tileView(tile)]));
+  const elements = new Map(
+    tiles.map((tile) => [tile.id, tileView(tile, showTerritory)]),
+  );
   container.replaceChildren(...elements.values());
   const place = (): void => {
     const rects = layoutFitMap(tiles, {

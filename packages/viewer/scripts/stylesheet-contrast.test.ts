@@ -14,6 +14,7 @@ const STYLESHEETS = [
   "src/where-to-start/where-to-start.css",
   "src/territory-cards/territory-cards.css",
   "src/together/together.css",
+  "src/map-grouping/map-grouping.css",
 ] as const;
 
 const packageRoot = path.resolve(import.meta.dirname, "..");

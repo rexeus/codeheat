@@ -35,7 +35,8 @@ Below that, **Where to start** is the ranked list of entry points: for each its 
 
 The **Map** section is the treemap of every file.
 
-- **Area** is lines of code, **color** is hotspot rank: the darkest tiles are the hottest 2 % of the repository. Tiles are grouped by directory, like a stock-market heatmap grouped by sector.
+- **Area** is lines of code, **color** is hotspot rank: the darkest tiles are the hottest 2 % of the repository. Tiles are grouped by the territory that holds them, like a stock-market heatmap grouped by sector, with the folders of each territory inside it.
+- **Group by** switches between _Territories_ (the default, the parts of the fit map) and _Folders_ (every file by directory). _Detail_ picks the level of the territories, from the coarsest to the finest, with the recommended one marked and the number of territories at each. **Show in the map** on a place to start, or a tile of the fit map, groups by territory and fills the map with that territory alone; a bar above the map names it and says how many files it holds, and **Show all territories** zooms back out. Selecting a file elsewhere (from a card or the list of hotspots) zooms out to show it. A report from an older codeheat without territories groups by folder and shows no grouping controls.
 - **Color by** switches between _Heat_ (hotspot rank), _Cohesion_ (the module's cohesion), and _Change_ (`#mode=change`): how a file's score moved against the window before, from cooler (blue) to warmer (orange). _Change_ needs a report made with `--compare`.
 - **Click a file** to see why it is hot and which files change with it. Its partners light up wherever they live in the tree; partners in distant folders are the modularization smell to look for. A partner with no import to or from the file is outlined in magenta and badged _no import_: hidden coupling.
 - **Filter** by substring (`billing`) or glob (`packages/*/src/index.ts`).
