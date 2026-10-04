@@ -35,7 +35,7 @@ export type CoChange =
       readonly kind: "some";
       /** Strongest first: most shared changes, then most hidden pairs. */
       readonly pairs: readonly [TerritoryPair, ...TerritoryPair[]];
-      /** File pairs with no import between them, over all the pairs. */
+      /** File pairs with no import between them, summed across all the pairs. */
       readonly hiddenPairs: number;
     };
 

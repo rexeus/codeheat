@@ -117,8 +117,8 @@ const bodyOf = (model: CoChange, limit: number): AnswerBody => {
     figure: formatCount(first.sharedChanges),
     unit: first.sharedChanges === 1 ? "shared change" : "shared changes",
     sub: [
-      h("strong", "", formatCount(model.hiddenPairs)),
-      ` ${model.hiddenPairs === 1 ? "file pair" : "file pairs"} with no import`,
+      h("strong", "", formatCount(first.hiddenPairs)),
+      ` ${first.hiddenPairs === 1 ? "file pair" : "file pairs"} between them with no import`,
     ],
     visual: [
       strongest(first, limit),
@@ -140,9 +140,14 @@ const bodyOf = (model: CoChange, limit: number): AnswerBody => {
           "pair-rows",
         ),
         ...chartNote(
-          hidden > 0
-            ? `${plural(hidden, "weaker pair is", "weaker pairs are")} not listed.`
-            : "",
+          [
+            `${plural(model.hiddenPairs, "file pair", "file pairs")} with no import across all pairs.`,
+            ...(hidden > 0
+              ? [
+                  `${plural(hidden, "weaker pair is", "weaker pairs are")} not listed.`,
+                ]
+              : []),
+          ].join(" "),
         ),
       ],
     },
