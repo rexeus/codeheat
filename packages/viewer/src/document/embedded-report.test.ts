@@ -18,6 +18,8 @@ describe("embedded report", () => {
     const {
       territories: _territories,
       entryPoints: _entryPoints,
+      territoryCoupling: _territoryCoupling,
+      territoryCliques: _territoryCliques,
       changeRadius: _changeRadius,
       propagationCost: _propagationCost,
       erosion: _erosion,
@@ -28,6 +30,8 @@ describe("embedded report", () => {
       ...older,
       territories: { recommended: 0, details: [], nodes: [] },
       entryPoints: [],
+      territoryCoupling: [],
+      territoryCliques: [],
       changeRadius: null,
       propagationCost: null,
       erosion: null,

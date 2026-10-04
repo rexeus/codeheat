@@ -29,6 +29,8 @@ const isReport = (value: unknown): value is Report =>
  */
 const DESIGN_FIT_DEFAULTS = {
   territories: { recommended: 0, details: [], nodes: [] },
+  territoryCoupling: [],
+  territoryCliques: [],
   entryPoints: [],
   changeRadius: null,
   propagationCost: null,

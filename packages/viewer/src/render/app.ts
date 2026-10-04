@@ -14,7 +14,8 @@ import { highlightOf, selectionOf } from "../selection/highlight.js";
 import type { Selection } from "../selection/highlight.js";
 import { indexPartners } from "../selection/partners.js";
 import type { PartnerIndex } from "../selection/partners.js";
-import { mountDesignFit } from "./design-fit.js";
+import { mountTogether } from "../together/mount-together.js";
+import { fileLinksOf, mountDesignFit } from "./design-fit.js";
 import { findPage, matchSummary, mountChrome } from "./page.js";
 import type { Page } from "./page.js";
 import { OVERVIEW_HOTSPOTS, createPanel } from "./panel.js";
@@ -133,7 +134,9 @@ export const mountViewer = (report: Report): void => {
   };
 
   mountChrome(report, page);
-  mountDesignFit(design, report, select);
+  const links = fileLinksOf(report, select);
+  mountDesignFit(design, report, links);
+  mountTogether(report, links);
   panel.showOverview();
   draw();
 

@@ -13,6 +13,7 @@ const STYLESHEETS = [
   "src/hero/hero.css",
   "src/where-to-start/where-to-start.css",
   "src/territory-cards/territory-cards.css",
+  "src/together/together.css",
 ] as const;
 
 const packageRoot = path.resolve(import.meta.dirname, "..");
@@ -73,6 +74,25 @@ describe.each(["light", "dark"] as const)(
         const ink = tokenOf(scheme, `cohesion-ink-${step}`);
 
         expect(contrast(fill, ink)).toBeGreaterThanOrEqual(AA);
+      },
+    );
+
+    it.each([1, 2, 3, 4, 5])(
+      "meets AA on matrix level %i, which colors a cell of the territory matrix",
+      (level) => {
+        const fill = tokenOf(scheme, `matrix-${level}`);
+        const ink = tokenOf(scheme, `matrix-ink-${level}`);
+
+        expect(contrast(fill, ink)).toBeGreaterThanOrEqual(AA);
+      },
+    );
+
+    it.each(["text", "text-2", "muted", "eyebrow", "hidden-coupling"])(
+      "meets AA for %s text on the surface of a card",
+      (name) => {
+        expect(
+          contrast(tokenOf(scheme, name), tokenOf(scheme, "surface")),
+        ).toBeGreaterThanOrEqual(AA);
       },
     );
 

@@ -10,11 +10,10 @@ import { byId } from "./dom.js";
 import type { FileLinkContext } from "./file-link.js";
 
 /**
- * Links to files from cards: a file the card names is selected in the map,
- * which scrolls into view; a file the report does not list is not offered as
- * a link.
+ * Links to files: a file the page names is selected in the map, which scrolls
+ * into view; a file the report does not list is not offered as a link.
  */
-const fileLinksOf = (
+export const fileLinksOf = (
   report: Report,
   select: (path: string) => void,
 ): FileLinkContext => ({
@@ -25,13 +24,12 @@ const fileLinksOf = (
   },
 });
 
-/** Renders the hero, "Where to start" and "Where the heat is" from `design`. */
+/** Renders the hero, "Where to start" and "Where the heat is" from `design`, linking into the map through `files`. */
 export const mountDesignFit = (
   design: HeroData,
   report: Report,
-  select: (path: string) => void,
+  files: FileLinkContext,
 ): void => {
-  const files = fileLinksOf(report, select);
   mountHero(design);
   mountStart(design.entries, design.noEntries, files);
   mountCards(

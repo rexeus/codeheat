@@ -8,6 +8,7 @@ const SECTIONS_BAR = `<div id="app" class="app" data-mode="heat">
     <span class="topbar-links">
       <a href="#start">Where to start</a>
       <a href="#heat">Where the heat is</a>
+      <a href="#together">What changes together</a>
       <a href="#map">Map</a>
     </span>
   </nav>
@@ -50,6 +51,15 @@ const WHERE_THE_HEAT_IS = `    <section id="heat" class="section" aria-labelledb
       <div id="heat-body"></div>
     </section>`;
 
+const TOGETHER = `    <section id="together" class="section" aria-labelledby="together-title">
+      <header class="section-head">
+        <p class="eyebrow">What changes together</p>
+        <h2 id="together-title">Parts of the code that move in step</h2>
+        <p class="section-intro">Each cell counts the changes that touched two territories, so a bright cell is a boundary that changes keep crossing; below it are the groups, files, and copies that move in step.</p>
+      </header>
+      <div id="together-body"></div>
+    </section>`;
+
 const MAP = `    <section id="map" class="section map-section" aria-labelledby="map-title">
       <header class="section-head">
         <p class="eyebrow">Map</p>
@@ -81,6 +91,7 @@ export const PAGE_BODY = `${SECTIONS_BAR}
 ${HERO}
 ${WHERE_TO_START}
 ${WHERE_THE_HEAT_IS}
+${TOGETHER}
 ${MAP}
   </main>
 </div>
