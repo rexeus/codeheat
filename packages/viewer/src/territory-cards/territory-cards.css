@@ -312,6 +312,9 @@
 .tcard-finding-stats strong {
   color: var(--text);
 }
+.tcard-subject {
+  overflow-wrap: anywhere;
+}
 .tcard-where {
   color: var(--text);
   font-weight: 600;

@@ -142,6 +142,7 @@ describe("entryViewsOf other kinds", () => {
       shortHeading: "types.ts",
       context: "in packages/forms",
       kindLabel: "Hub",
+      subject: "types.ts",
     });
     expect(hubView?.stats.map(({ value }) => value)).toEqual([
       "48",
@@ -154,6 +155,7 @@ describe("entryViewsOf other kinds", () => {
       shortHeading: "a.ts ↔ b.ts",
       context: "in packages/core, packages/forms",
       kindLabel: "Hidden coupling",
+      subject: "a.ts ↔ b.ts",
     });
     expect(couplingView?.stats).toEqual([
       { value: "6", label: "changes touched both" },
@@ -235,6 +237,7 @@ describe("entryViewsOf findings", () => {
       {
         kind: "hotspot",
         kindLabel: "Hotspot",
+        subject: "",
         verdict: "Chronic hotspot.",
         stats: [
           { value: "12%", label: "of the change effort is here" },

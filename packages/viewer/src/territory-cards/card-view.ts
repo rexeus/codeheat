@@ -88,11 +88,17 @@ const partnerRow = (partner: CardPartner | null): HTMLElement[] =>
 const statView = ({ value, label }: EntryStat): HTMLElement =>
   h("span", "tcard-pair", h("strong", "", value), ` ${label}`);
 
-const findingView = ({ label, where, stats }: CardFinding): HTMLElement =>
+const findingView = ({
+  label,
+  subject,
+  where,
+  stats,
+}: CardFinding): HTMLElement =>
   h(
     "li",
     "tcard-finding",
     h("span", "chip", label),
+    ...(subject === "" ? [] : [h("strong", "tcard-subject", subject)]),
     ...(where === "" ? [] : [h("span", "tcard-where", where)]),
     h(
       "span",

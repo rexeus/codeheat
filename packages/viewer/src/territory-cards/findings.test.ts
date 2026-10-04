@@ -49,6 +49,20 @@ const labelsOf = (report: Report, id = "t3"): string[] => {
   );
 };
 
+const findingsOn = (report: Report, id = "t3") => {
+  const territories = indexTerritories(report.territories);
+  const source = cardSourceOf(
+    report,
+    territories,
+    entryViewsOf(report, territories),
+  );
+  const cards = cardsOf(
+    source,
+    indexLevel(report.territories, report.files, 2),
+  );
+  return cards.find(({ territory }) => territory.id === id)?.findings ?? [];
+};
+
 const hotspotOn = (rank: number, territories: readonly string[]) =>
   entryPointOf(rank, {
     kind: "hotspot",
@@ -152,5 +166,63 @@ describe("the findings from the places to start", () => {
     );
 
     expect(labelsOf(report).length).toBeGreaterThan(FACE_FINDINGS);
+  });
+});
+
+describe("the files a finding names", () => {
+  it("name the hub, so the line says more than a folder", () => {
+    const report = withFit(
+      {},
+      {
+        entryPoints: [
+          entryPointOf(1, {
+            kind: "hub",
+            territories: ["t3"],
+            files: ["core/src/types/ScoreDto.ts"],
+          }),
+        ],
+      },
+    );
+
+    expect(findingsOn(report)[0]).toMatchObject({
+      label: "Hub",
+      subject: "ScoreDto.ts",
+    });
+  });
+
+  it("name both files of a hidden coupling and the first copies of a family", () => {
+    const report = withFit(
+      {},
+      {
+        entryPoints: [
+          entryPointOf(1, {
+            kind: "coupling",
+            territories: ["t3"],
+            files: ["core/src/a.ts", "core/rest/b.ts"],
+          }),
+          entryPointOf(2, {
+            kind: "copies",
+            territories: ["t3"],
+            files: [
+              "core/src/x/app.ts",
+              "core/src/y/app.ts",
+              "core/src/z/app.ts",
+            ],
+          }),
+        ],
+      },
+    );
+
+    expect(
+      findingsOn(report)
+        .map(({ subject }) => subject)
+        .slice(0, 2),
+    ).toEqual(["a.ts ↔ b.ts", "x/app.ts, y/app.ts +1 more"]);
+  });
+
+  it("are left out for a finding about a territory", () => {
+    const report = withFit({}, { entryPoints: [boundaryOn(1, ["t3"])] });
+
+    expect(findingsOn(report)[0]?.subject).toBe("");
   });
 });

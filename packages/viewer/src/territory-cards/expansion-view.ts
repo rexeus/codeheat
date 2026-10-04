@@ -106,6 +106,7 @@ const innerRow = ({
 
 const findingRow = ({
   label,
+  subject,
   rank,
   where,
   verdict,
@@ -115,6 +116,7 @@ const findingRow = ({
     "li",
     "tcard-all-finding",
     h("span", "chip", label),
+    ...(subject === "" ? [] : [h("strong", "", subject)]),
     ...(where === "" ? [] : [h("strong", "", where)]),
     ...(rank === null ? [] : [h("span", "muted", `place to start #${rank}`)]),
     ...(verdict === "" ? [] : [h("p", "", verdict)]),
