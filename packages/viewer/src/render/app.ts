@@ -133,7 +133,7 @@ export const mountViewer = (report: Report): void => {
   };
 
   mountChrome(report, page);
-  mountDesignFit(design, report.files, select);
+  mountDesignFit(design, report, select);
   panel.showOverview();
   draw();
 

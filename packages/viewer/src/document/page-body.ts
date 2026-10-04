@@ -7,6 +7,7 @@ const SECTIONS_BAR = `<div id="app" class="app" data-mode="heat">
     <span id="repository" class="topbar-repository"></span>
     <span class="topbar-links">
       <a href="#start">Where to start</a>
+      <a href="#heat">Where the heat is</a>
       <a href="#map">Map</a>
     </span>
   </nav>
@@ -40,6 +41,15 @@ const WHERE_TO_START = `    <section id="start" class="section" aria-labelledby=
       <div id="start-body"></div>
     </section>`;
 
+const WHERE_THE_HEAT_IS = `    <section id="heat" class="section" aria-labelledby="heat-title">
+      <header class="section-head">
+        <p class="eyebrow">Where the heat is</p>
+        <h2 id="heat-title">The areas of the code, hottest first</h2>
+        <p class="section-intro">Each card is one territory at the detail you choose: how much of the change effort it holds, how many of its changes stay inside, and what stands out about it.</p>
+      </header>
+      <div id="heat-body"></div>
+    </section>`;
+
 const MAP = `    <section id="map" class="section map-section" aria-labelledby="map-title">
       <header class="section-head">
         <p class="eyebrow">Map</p>
@@ -70,6 +80,7 @@ const MAP = `    <section id="map" class="section map-section" aria-labelledby="
 export const PAGE_BODY = `${SECTIONS_BAR}
 ${HERO}
 ${WHERE_TO_START}
+${WHERE_THE_HEAT_IS}
 ${MAP}
   </main>
 </div>

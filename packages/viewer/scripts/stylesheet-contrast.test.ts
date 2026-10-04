@@ -12,6 +12,7 @@ const STYLESHEETS = [
   "src/document/page.css",
   "src/hero/hero.css",
   "src/where-to-start/where-to-start.css",
+  "src/territory-cards/territory-cards.css",
 ] as const;
 
 const packageRoot = path.resolve(import.meta.dirname, "..");
@@ -86,5 +87,16 @@ describe.each(["light", "dark"] as const)(
         contrast(tokenOf(scheme, "marker"), tokenOf(scheme, "marker-ink")),
       ).toBeGreaterThanOrEqual(AA);
     });
+
+    it.each(["text", "text-2", "muted", "eyebrow", "hidden-coupling"])(
+      "meets AA for %s text on the surface of a territory card and on the page behind a quiet one",
+      (ink) => {
+        for (const ground of ["surface", "page"]) {
+          expect(
+            contrast(tokenOf(scheme, ink), tokenOf(scheme, ground)),
+          ).toBeGreaterThanOrEqual(AA);
+        }
+      },
+    );
   },
 );
