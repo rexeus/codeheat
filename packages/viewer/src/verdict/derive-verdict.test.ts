@@ -56,6 +56,33 @@ describe("deriveVerdict level", () => {
   });
 });
 
+describe("deriveVerdict leak target", () => {
+  it("does not call a territory leaking that no other territory shares changes with", () => {
+    const report = reportWithParts([
+      { id: "t1", path: "a", heat: 0.7, containment: 0.6, partner: null },
+    ]);
+
+    const verdict = verdictOf(report);
+
+    expect(verdict.level).toBe("unknown");
+    expect(verdict.label).toBe("Not enough evidence");
+  });
+
+  it("leaves such a territory out of the judged ones, and counts the rest", () => {
+    const report = reportWithParts([
+      { id: "t1", path: "a", heat: 0.4, containment: 0.3, partner: null },
+      { id: "t2", path: "b", heat: 0.3, containment: 0.3 },
+      { id: "t3", path: "c", heat: 0.3, containment: 0.9, partner: null },
+    ]);
+
+    const [leakFact] = verdictOf(report).facts;
+
+    // a is not judged (no leak target), b leaks, c holds: 1 of 2
+    expect(leakFact?.value).toBe("1 of 2");
+    expect(verdictOf(report).level).toBe("mixed");
+  });
+});
+
 describe("deriveVerdict leak line", () => {
   it("counts a territory that keeps exactly the limit as leaking, and one above it as holding", () => {
     const report = reportWithParts([
