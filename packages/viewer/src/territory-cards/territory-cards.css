@@ -1,0 +1,485 @@
+/* "Where the heat is": the detail slider and one card per territory. */
+.heat-controls {
+  display: grid;
+  grid-template-columns: minmax(320px, 5fr) minmax(0, 4fr);
+  gap: 16px 32px;
+  align-items: start;
+  padding: 16px 20px 14px;
+  margin-top: 20px;
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: 14px;
+}
+.detail-label {
+  font-size: 13px;
+  font-weight: 650;
+}
+.detail-track {
+  padding: 0 34px;
+  margin-top: 6px;
+}
+.detail-range {
+  display: block;
+  width: 100%;
+  margin: 0;
+  accent-color: var(--focus);
+  cursor: pointer;
+}
+.detail-range:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 4px;
+}
+.detail-ticks {
+  position: relative;
+  height: 52px;
+  margin-top: 4px;
+}
+.detail-tick {
+  position: absolute;
+  top: 0;
+  left: calc(8px + (100% - 16px) * var(--at));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 56px;
+  padding: 2px 0;
+  color: var(--text-2);
+  font: inherit;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.3;
+  cursor: pointer;
+  background: none;
+  border: 0;
+  transform: translateX(-50%);
+}
+.detail-tick:hover strong {
+  color: var(--text);
+}
+.detail-recommended {
+  color: var(--eyebrow);
+  font-size: 11px;
+  font-weight: 650;
+}
+.heat-explanation {
+  margin: 0;
+  color: var(--text-2);
+  font-size: 13px;
+  line-height: 1.45;
+}
+.heat-reset,
+.heat-more,
+.tcard-toggle {
+  padding: 5px 14px;
+  color: var(--text);
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  background: var(--surface);
+  border: 1px solid var(--hairline-strong);
+  border-radius: 8px;
+}
+.heat-reset {
+  display: block;
+  margin-top: 8px;
+}
+.heat-reset[hidden],
+.heat-more[hidden] {
+  display: none;
+}
+.heat-reset:hover,
+.heat-more:hover,
+.tcard-toggle:hover {
+  background: var(--group);
+}
+.heat-reset:focus-visible,
+.heat-more:focus-visible,
+.tcard-toggle:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+.heat-status {
+  margin: 14px 0 12px;
+  color: var(--text-2);
+  font-size: 13px;
+}
+.heat-more-row {
+  display: flex;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+.tcards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+.tcard {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  padding: 16px 18px;
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: 14px;
+  scroll-margin-top: 60px;
+}
+.tcard:target {
+  border-color: var(--focus);
+  box-shadow: 0 0 0 2px var(--focus);
+}
+.tcard[data-quiet="true"] {
+  background: transparent;
+  border-style: dashed;
+  border-color: var(--hairline-strong);
+}
+.tcard[data-expanded="true"] {
+  grid-column: 1 / -1;
+}
+.tcard[data-expanded="true"]
+  > :is(.tcard-desc, .tcard-figures, .tcard-row, .tcard-findings) {
+  max-width: 720px;
+}
+.tcard[data-expanded="true"] .tcard-findings {
+  display: none;
+}
+.tcard-head {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+.tcard-name {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+.tcard-dir {
+  color: var(--muted);
+}
+.tcard-base {
+  color: var(--text);
+  font-weight: 650;
+}
+.tcard[data-quiet="true"] .tcard-base {
+  color: var(--text-2);
+  font-weight: 600;
+}
+.tcard-badges {
+  display: flex;
+  flex: none;
+  gap: 4px;
+  align-items: center;
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 600;
+}
+.tcard-desc {
+  display: -webkit-box;
+  margin: -4px 0 0;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 12.5px;
+  line-height: 1.4;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+.tcard-figures {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+  gap: 16px;
+  min-height: 76px;
+  padding-top: 10px;
+  border-top: 1px solid var(--hairline);
+}
+.tcard-figure {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-variant-numeric: tabular-nums;
+}
+.tcard-figure strong {
+  font-size: 26px;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+.tcard-figure span {
+  color: var(--text-2);
+  font-size: 12px;
+  line-height: 1.3;
+}
+.tcard-unjudged span {
+  font-size: 12.5px;
+}
+.tcard-contained .meter {
+  margin-top: 4px;
+}
+.tcard-contained[data-fit="1"] .meter-fill {
+  background: var(--cohesion-1);
+}
+.tcard-contained[data-fit="2"] .meter-fill {
+  background: var(--cohesion-2);
+}
+.tcard-contained[data-fit="3"] .meter-fill {
+  background: var(--cohesion-3);
+}
+.tcard-contained[data-fit="4"] .meter-fill {
+  background: var(--cohesion-4);
+}
+.tcard-contained[data-fit="5"] .meter-fill {
+  background: var(--cohesion-5);
+}
+.tcard-contained[data-fit="6"] .meter-fill {
+  background: var(--cohesion-6);
+}
+.tcard-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 8px;
+  align-items: baseline;
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.4;
+}
+.tcard-key {
+  min-width: 108px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.tcard-partner {
+  overflow-wrap: anywhere;
+}
+.tcard-score {
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.tcard .file-link {
+  max-width: 100%;
+}
+.tcard-findings {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+.tcard-finding {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 8px;
+  align-items: baseline;
+  font-size: 12.5px;
+  line-height: 1.4;
+}
+.tcard-finding .chip {
+  align-self: flex-start;
+}
+.tcard-finding-stats {
+  flex: 1 1 160px;
+  min-width: 0;
+  color: var(--text-2);
+  font-variant-numeric: tabular-nums;
+}
+.tcard-finding-stats strong {
+  color: var(--text);
+}
+.tcard-where {
+  color: var(--text);
+  font-weight: 600;
+}
+.tcard-where + .tcard-finding-stats {
+  flex-basis: 100%;
+}
+.tcard-pair + .tcard-pair::before {
+  margin: 0 4px;
+  color: var(--muted);
+  content: "·";
+}
+.tcard-more-findings {
+  color: var(--muted);
+  font-size: 12px;
+}
+.tcard-foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 10px;
+  margin-top: auto;
+  border-top: 1px solid var(--hairline);
+}
+.tcard-foot .map-link {
+  font-size: 12.5px;
+}
+.tcard-toggle {
+  margin-left: auto;
+}
+
+.tcard-more {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--hairline);
+}
+.tcard-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+.tcard-blocks {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px 32px;
+}
+.tcard-block {
+  min-width: 0;
+}
+.tcard-block-title {
+  margin: 0 0 8px;
+  color: var(--text-2);
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.tcard-stats,
+.tcard-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+.tcard-stat {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 2px 12px;
+  align-items: baseline;
+  font-variant-numeric: tabular-nums;
+}
+.tcard-stat-label {
+  color: var(--text-2);
+  font-size: 12.5px;
+}
+.tcard-stat-value {
+  font-size: 14px;
+  text-align: right;
+}
+.tcard-stat .meter,
+.tcard-stat-ref {
+  grid-column: 1 / -1;
+}
+.tcard-stat-ref {
+  color: var(--muted);
+  font-size: 11.5px;
+}
+.meter {
+  position: relative;
+  display: block;
+  height: 6px;
+  background: color-mix(in srgb, var(--text) 12%, transparent);
+  border-radius: 3px;
+}
+.meter-fill {
+  display: block;
+  height: 100%;
+  background: var(--text-2);
+  border-radius: 3px;
+}
+.meter-tick {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  width: 2px;
+  margin-left: -1px;
+  background: var(--text);
+}
+.tcard-all-finding,
+.tcard-partner-row,
+.tcard-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 13px;
+  line-height: 1.4;
+}
+.tcard-all-finding .chip {
+  align-self: flex-start;
+}
+.tcard-all-finding .tcard-finding-stats {
+  flex: none;
+}
+.tcard-all-finding p {
+  margin: 0;
+}
+.tcard-partner-row .muted,
+.tcard-inner span {
+  color: var(--text-2);
+  font-size: 12.5px;
+}
+.tcard-partner-row .muted {
+  color: var(--muted);
+}
+.tcard-hidden {
+  color: var(--hidden-coupling);
+  font-weight: 600;
+}
+.tcard-split {
+  margin: 0 0 8px;
+  color: var(--text-2);
+  font-size: 12.5px;
+}
+.tcard-file {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 2px 8px;
+  align-items: baseline;
+  font-size: 12.5px;
+}
+.tcard-file-dir {
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.tcard-file-numbers {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  align-items: center;
+  color: var(--text-2);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 1200px) {
+  .tcards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 900px) {
+  .heat-controls {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 700px) {
+  .tcards {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .detail-track {
+    padding: 0 22px;
+  }
+  .detail-tick {
+    min-width: 40px;
+  }
+  .detail-word {
+    display: none;
+  }
+}

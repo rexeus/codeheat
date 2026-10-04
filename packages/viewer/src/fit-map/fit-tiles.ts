@@ -64,7 +64,7 @@ const ranksByTerritory = (
 };
 
 /** A bucket's description starts with its name, which the tile shows already; what follows says what is in it. */
-const descriptionOf = (territory: Territory): string => {
+export const descriptionOf = (territory: Territory): string => {
   if (territory.kind !== "other") {
     return territory.description;
   }

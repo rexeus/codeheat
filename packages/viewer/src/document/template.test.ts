@@ -46,8 +46,9 @@ describe("renderReportHtml page structure", () => {
   it("has the sections in a fixed order, each reachable from the bar", () => {
     const html = renderReportHtml(report);
 
-    expect(html).toMatch(/id="hero".*id="start".*id="map"/su);
+    expect(html).toMatch(/id="hero".*id="start".*id="heat".*id="map"/su);
     expect(html).toContain('<a href="#start">Where to start</a>');
+    expect(html).toContain('<a href="#heat">Where the heat is</a>');
     expect(html).toContain('<a href="#map">Map</a>');
   });
 
@@ -64,6 +65,7 @@ describe("renderReportHtml page structure", () => {
       "top-three",
       "summary",
       "start-body",
+      "heat-body",
       "legend",
       "stage",
       "treemap",
