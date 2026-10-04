@@ -1,46 +1,18 @@
 import { describe, expect, it } from "vitest";
 
-import type { CopyFamily } from "../report/copy-family.js";
-import type { Coupling } from "../report/report.js";
-import type { Territories } from "../report/territory.js";
 import { fileRecord } from "../testing/file-record.js";
+import {
+  CODE_FILES,
+  COPY_FILES,
+  copies,
+  hidden,
+  heated,
+  rankInput as input,
+  territories,
+} from "../testing/rank-input.js";
 import { DEFAULT_THRESHOLDS } from "../testing/report-defaults.js";
-import { fitRecord, territoryRecord } from "../testing/territory-record.js";
-import type { EntryPointInput } from "./gather-candidates.js";
+import { fitRecord } from "../testing/territory-record.js";
 import { rankEntryPoints } from "./rank-entry-points.js";
-
-const IDS = ["a", "b", "c", "d", "e", "f"];
-
-/** Six packages, `a` the leakiest and `f` the least. */
-const territories = (
-  kinds: ReadonlyArray<"package" | "other"> = [],
-): Territories => ({
-  recommended: 1,
-  details: [{ level: 1, ids: IDS }],
-  nodes: [
-    territoryRecord("r", "folder", null, IDS),
-    ...IDS.map((id, index) =>
-      Object.assign(territoryRecord(id, kinds[index] ?? "package", "r"), {
-        heatShare: 0.1,
-        changes: 40,
-        fit: fitRecord({ containment: 0.1 + index / 10 }),
-      }),
-    ),
-  ],
-});
-
-/** A coupling of two files that no import links. */
-const hidden = (a: string, b: string): Coupling => ({
-  a,
-  b,
-  sharedCommits: 8,
-  degree: 0.5,
-  distance: 2,
-  testPair: false,
-  kinds: { a: "code", b: "code" },
-  crossesModule: true,
-  imports: "none",
-});
 
 /** Four units that share one territory at most, so none is the same unit as another. */
 const FOUR_UNITS = [
@@ -64,40 +36,6 @@ const FOUR_HUBS = [10, 8, 6, 4].map((changedDependents) => ({
   dependents: [],
   reason: "",
 }));
-
-/** A file with `heat` units of heat and no other trait. */
-const heated = (path: string, territory: string, heat: number) =>
-  fileRecord(path, territory, {
-    changes: 1,
-    loc: heat,
-    complexity: { total: 0, mean: 0, max: 0 },
-  });
-
-/** Every territory holds 1000 of the 6000 units of the production code's heat. */
-const CODE_FILES = IDS.map((id) => heated(`${id}/main.ts`, id, 1000));
-
-/** The two copies hold 30 more units each. */
-const COPY_FILES = [heated("a/x.ts", "a", 30), heated("b/x.ts", "b", 30)];
-
-const copies = (): CopyFamily => ({
-  files: ["a/x.ts", "b/x.ts"],
-  similarity: { min: 0.8, max: 0.9 },
-  testOnly: false,
-  sharedChanges: 5,
-  changesToAll: 5,
-});
-
-const input = (overrides: Partial<EntryPointInput> = {}): EntryPointInput => ({
-  territories: territories(),
-  files: CODE_FILES,
-  cliques: [],
-  copyFamilies: [],
-  couplings: [],
-  unstableInterfaces: [],
-  minChanges: 10,
-  limits: DEFAULT_THRESHOLDS,
-  ...overrides,
-});
 
 describe("rankEntryPoints", () => {
   it("ranks by score from 1, on the share of the production code's heat that leaks", () => {
@@ -244,23 +182,6 @@ describe("rankEntryPoints of couplings and the cap", () => {
     expect(ranked.map(({ score }) => score)).toStrictEqual(
       ranked.map(({ score }) => score).toSorted((x, y) => y - x),
     );
-  });
-});
-
-describe("rankEntryPoints of repeats", () => {
-  it("leaves out an entry about files that a higher ranked entry names all of", () => {
-    const ranked = rankEntryPoints(
-      input({
-        files: [...CODE_FILES, ...COPY_FILES],
-        copyFamilies: [copies()],
-        couplings: [hidden("a/x.ts", "b/x.ts")],
-      }),
-    );
-
-    // the coupling of the two copies scores less than the copies, which name both
-    expect(
-      ranked.map(({ kind }) => kind).filter((kind) => kind !== "boundary"),
-    ).toStrictEqual(["copies"]);
   });
 });
 

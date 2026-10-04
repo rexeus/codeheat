@@ -49,4 +49,16 @@ describe("fileHeatOf", () => {
     expect(cold.share(["a.ts"])).toBe(0);
     expect(cold.weighted([["a.ts", 1]])).toBe(0);
   });
+
+  it("counts a test file for no heat, in the total too, but still knows its changes", () => {
+    const withTests = fileHeatOf([
+      file("a.ts", 2, 10, 5),
+      Object.assign(file("a.test.ts", 9, 100, 50), { test: true }),
+    ]);
+
+    expect(withTests.share(["a.ts"])).toBe(1);
+    expect(withTests.share(["a.test.ts"])).toBe(0);
+    expect(withTests.weighted([["a.test.ts", 1]])).toBe(0);
+    expect(withTests.changesOf("a.test.ts")).toBe(9);
+  });
 });

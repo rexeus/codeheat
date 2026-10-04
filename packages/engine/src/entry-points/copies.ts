@@ -9,7 +9,7 @@ import { COPIES_MOVE, COPIES_VERDICT } from "./moves.js";
 /**
  * The copy families with production code (never `testOnly`) in which at least
  * `limits.minEntryChanges` changes touched every copy. The score is the share
- * of all the heat that the copies hold (`heat.share`) times `lockstep`, the share of the changes that touched two or more
+ * of all the production code's heat that the copies hold (`heat.share`) times `lockstep`, the share of the changes that touched two or more
  * copies that touched all of them. `territoryOf` maps a path to its finest
  * territory.
  */

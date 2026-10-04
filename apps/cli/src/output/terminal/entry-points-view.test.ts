@@ -253,7 +253,7 @@ describe("entries with two findings", () => {
       "   40% of the code's heat; 50% of its 30 changes stay inside",
       "   Move.",
       "   Also hotspot: Chronic.",
-      "   30% of all heat sits in 2 chronic hotspots",
+      "   30% of the code's heat sits in 2 chronic hotspots",
       "   Split it.",
     ]);
   });

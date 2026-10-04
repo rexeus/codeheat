@@ -58,9 +58,10 @@ const isAboutFiles = ({ kind }: Entry): boolean =>
   kind === "hub" || kind === "coupling" || kind === "copies";
 
 /**
- * Picks the list (see `pick`) without an entry about files that a higher
- * ranked entry already names all of: such an entry says nothing new, and its
- * place goes to the next one.
+ * Picks the list (see `pick`) without an entry about files that a single
+ * higher ranked entry already names all of: such an entry says nothing new,
+ * and its place goes to the next one. Files named by two different entries
+ * are new information together.
  */
 const pickWithoutRepeats = (
   entries: ReadonlyArray<Entry>,
@@ -71,9 +72,11 @@ const pickWithoutRepeats = (
     (entry, index) =>
       isAboutFiles(entry) &&
       entry.files.length > 0 &&
-      entry.files.every((file) =>
-        picked.slice(0, index).some((higher) => namedBy(higher).includes(file)),
-      ),
+      picked
+        .slice(0, index)
+        .some((higher) =>
+          entry.files.every((file) => namedBy(higher).includes(file)),
+        ),
   );
   return repeat === undefined
     ? picked

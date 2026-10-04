@@ -25,10 +25,10 @@ const MAX_FILES = 5;
 /**
  * The territories that are chronic (at least `limits.minEntryChronicShare` of
  * their code's heat is in chronic hotspots, see `isChronic`) and hold at least
- * `limits.minEntryHeatShare` of the production code's heat. The score is the share of all the
- * heat that sits in the territory's chronic hotspots (`heat.share` of their
- * paths), more when it is spent on fixes (`× (1 + fix share)`); it does not
- * use `Territory.heatShare`, which counts test code too. The entry names up to
+ * `limits.minEntryHeatShare` of the production code's heat. The score is the
+ * share of all the production code's heat that sits in the territory's chronic
+ * hotspots (`heat.share` of their paths), more when it is spent on fixes
+ * (`× (1 + fix share)`). The entry names up to
  * five of the chronic hotspots, the hottest (highest scored) first.
  */
 export const hotspotEntries = (

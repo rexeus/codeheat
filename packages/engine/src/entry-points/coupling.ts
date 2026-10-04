@@ -15,7 +15,7 @@ import { COUPLING_VERDICT, couplingMove } from "./moves.js";
  * recommended detail; a file without one, such as a contract, is left out) and
  * are judgeable (see `isJudgeablePair`: no test code, no two contract files),
  * with at least `limits.minEntryCouplingChanges` shared changes. The score is
- * the share of all the heat that the two files hold (`heat.share`) times `Coupling.degree`, how tightly the two change
+ * the share of all the production code's heat that the two files hold (`heat.share`) times `Coupling.degree`, how tightly the two change
  * together. Of several pairs between the same two territories, only the best
  * is listed. `places.territoryOf` maps a path to its finest territory, for the
  * entry's `territories`.

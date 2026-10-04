@@ -31,12 +31,25 @@ export const territoryLines = ({
   ];
 };
 
+/** The nearest ancestor of `node` among `territories` that has a fit. */
+const ancestorWithFit = (
+  territories: InspectResult["territories"],
+  node: InspectResult["territories"][number],
+): InspectResult["territories"][number] | undefined => {
+  const parent = territories.find(({ id }) => id === node.parent);
+  if (parent === undefined || parent.fit !== null) {
+    return parent;
+  }
+  return ancestorWithFit(territories, parent);
+};
+
 /**
  * The lines for `inspect` on the territory of a file (`territoryId`, one of
  * `territories`): how many of its changes stay inside and the territory it
  * most often changes with. For a file in a `tests` territory, which has no fit,
- * the number of changes of the test code and the line of the territory it
- * belongs to. Nothing when the territory is not among `territories`.
+ * the number of changes of the test code and the line of the nearest territory
+ * above it that has a fit. Nothing when the territory is not among
+ * `territories`.
  */
 export const fileTerritoryLine = (
   territories: InspectResult["territories"],
@@ -51,11 +64,10 @@ export const fileTerritoryLine = (
   }
   if (node.kind === "tests") {
     const parent = territories.find(({ id }) => id === node.parent);
+    const above = ancestorWithFit(territories, node);
     return [
       `test code of ${escapeForTerminal(parent?.path ?? node.path)}: ${node.changes} changes`,
-      ...(parent === undefined
-        ? []
-        : fileTerritoryLine(territories, parent.id)),
+      ...(above === undefined ? [] : fileTerritoryLine(territories, above.id)),
     ];
   }
   const { fit } = node;

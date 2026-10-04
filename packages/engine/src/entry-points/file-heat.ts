@@ -1,4 +1,5 @@
-// Owns the heat share of a set of files: how much of all the heat they hold.
+// Owns the heat share of a set of files: how much of all the production
+// code's heat they hold.
 import type { FileStats } from "../report/report.js";
 import type { Territory } from "../report/territory.js";
 import { chainsOf } from "./ancestry.js";
@@ -14,12 +15,13 @@ const heatOf = ({
 /** What the entry points ask of the files' heat. */
 export type FileHeat = {
   /**
-   * The share of all the heat (the heat of every code file) that the files
-   * named by `paths` hold, each counted once; a path that names no file holds
-   * none, and no heat at all gives 0.
+   * The share of all the production code's heat (the heat of every file that
+   * is not test code) that the files named by `paths` hold, each counted once;
+   * a path that names no file, or a test file, holds none, and no heat at all
+   * gives 0.
    */
   readonly share: (paths: Iterable<string>) => number;
-  /** The share of all the heat that the files hold, each scaled by its weight. */
+  /** The share of all the production code's heat that the files hold, each scaled by its weight. */
   readonly weighted: (
     weights: Iterable<readonly [path: string, weight: number]>,
   ) => number;
@@ -27,13 +29,19 @@ export type FileHeat = {
   readonly changesOf: (path: string) => number;
 };
 
-/** The heat of the code files of `files`, as questions about sets of paths. */
+/**
+ * The heat of the production code of `files` (a test file holds none, in the
+ * total too), as questions about sets of paths. Every entry point scores in
+ * this one unit; tests are change effort but not design.
+ */
 export const fileHeatOf = (
   files: ReadonlyArray<
-    Pick<FileStats, "path" | "changes" | "loc" | "complexity">
+    Pick<FileStats, "path" | "test" | "changes" | "loc" | "complexity">
   >,
 ): FileHeat => {
-  const heat = new Map(files.map((file) => [file.path, heatOf(file)]));
+  const heat = new Map(
+    files.map((file) => [file.path, file.test ? 0 : heatOf(file)]),
+  );
   const changes = new Map(files.map(({ path, changes: own }) => [path, own]));
   const total = [...heat.values()].reduce((sum, own) => sum + own, 0);
   const weighted = (

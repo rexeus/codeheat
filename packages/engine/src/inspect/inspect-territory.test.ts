@@ -103,7 +103,9 @@ describe("inspect territories", () => {
       ["c/z.ts", []],
     ]);
   });
+});
 
+describe("inspect territories of test code", () => {
   it("lists the territory that holds the tests territory of a matched file, which has no fit of its own", () => {
     const report = reportOf();
     const withTests: Report = {
@@ -125,5 +127,26 @@ describe("inspect territories", () => {
       "t3",
       "t5",
     ]);
+  });
+
+  it("lists the ancestors of a tests territory up to the nearest one with a fit", () => {
+    const report = reportOf();
+    const withTests: Report = {
+      ...report,
+      files: [...report.files, fileRecord("a/x.test.ts", "t6", { rank: 4 })],
+      territories: {
+        ...report.territories,
+        nodes: [
+          ...NODES,
+          // t5 has no fit, so the walk goes on to t2, which has one
+          Object.assign(territoryRecord("t5", "folder", "t2"), { changes: 9 }),
+          Object.assign(territoryRecord("t6", "tests", "t5"), { changes: 9 }),
+        ],
+      },
+    };
+
+    expect(
+      inspect(withTests, ["a/x.test.ts"]).territories.map(({ id }) => id),
+    ).toStrictEqual(["t2", "t3", "t5", "t6"]);
   });
 });

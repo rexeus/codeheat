@@ -12,7 +12,7 @@ import { HUB_VERDICT, hubMove } from "./moves.js";
  * stake is that of the hub plus, for each dependent the report lists
  * (`UnstableInterface.dependents`, at most five), the share of its heat that
  * went along with the hub (`sharedCommits` of the dependent's changes);
- * `heat.weighted` gives it as a share of all the heat. The score is that share
+ * `heat.weighted` gives it as a share of all the production code's heat. The score is that share
  * times `ripple`, the share of the hub's dependents that changed together with
  * it. `territoryOf` maps a path to its finest territory.
  */

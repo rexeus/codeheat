@@ -65,7 +65,7 @@ export const Thresholds = Schema.Struct({
   hotTopShare: UnitInterval,
   /** Smallest share of the counted changes whose subject must match a fix rule or be a Conventional Commits type (`FixDensity.conventional`) for `Report.fixDensity` to be known; below it the fix density is unknown, not 0. */
   minConventionShare: UnitInterval,
-  /** Smallest share of all the heat a territory (or the members of a clique) needs to be an entry point (`Report.entryPoints`). */
+  /** Smallest share of all the production code's heat a territory (or the members of a clique) needs to be an entry point (`Report.entryPoints`). */
   minEntryHeatShare: UnitInterval,
   /** A territory is a `boundary` entry point only when at most this share of the changes touching it stay inside it (`TerritoryFit.containment`). */
   maxEntryContainment: UnitInterval,
@@ -75,7 +75,7 @@ export const Thresholds = Schema.Struct({
   minEntryChanges: Count,
   /** Fewest shared changes (`Coupling.sharedCommits`) of a hidden coupling for a `coupling` entry point. */
   minEntryCouplingChanges: Count,
-  /** Smallest `EntryPoint.score` an entry point needs, as a share of all the heat at stake (0.005 is half a percent of the change effort); a kind whose best entry scores less has none. */
+  /** Smallest `EntryPoint.score` an entry point needs, as a share of all the production code's heat at stake (0.005 is half a percent of the change effort); the best entry of each kind is exempt. */
   minEntryScore: UnitInterval,
   /** Most entry points of one kind (counting a territory that is both a boundary and a hotspot once, under its stronger kind). */
   maxEntriesPerKind: Count,

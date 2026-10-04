@@ -21,10 +21,11 @@ const judged = (
   id: string,
   heatShare: number,
   fit: Partial<TerritoryFit>,
+  codeHeatShare = heatShare,
 ): Judged => ({
   ...territoryRecord(id, "package", "r"),
   heatShare,
-  codeHeatShare: heatShare,
+  codeHeatShare,
   fit: fitRecord(fit),
 });
 
@@ -112,6 +113,15 @@ describe("hotspotEntries gates", () => {
     );
 
     expect(entry?.files).toStrictEqual(["a/x.ts"]);
+  });
+
+  it("gates on the production code's heat, not on the heat that tests add", () => {
+    expect(
+      entries(
+        [judged("a", 0.5, { chronicShare: 1 }, 0.01)],
+        [fileRecord("a/x.ts", "a", { heat: chronic })],
+      ),
+    ).toStrictEqual([]);
   });
 
   it("leaves out a territory that is not chronic or holds under two percent of the heat", () => {

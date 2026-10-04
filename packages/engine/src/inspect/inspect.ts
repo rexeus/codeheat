@@ -39,21 +39,36 @@ const toEntry = (
   entryPoints,
 });
 
+type Nodes = Report["territories"]["nodes"];
+
+/** The ancestors of the `tests` territory `id`, up to and including the nearest one with a fit; none for another kind of territory. */
+const ancestorsOfTests = (
+  byId: ReadonlyMap<string, Nodes[number]>,
+  id: string,
+): ReadonlyArray<string> => {
+  const chain: Array<string> = [];
+  let at = byId.get(id)?.kind === "tests" ? byId.get(id)?.parent : undefined;
+  while (at !== undefined && at !== null) {
+    chain.push(at);
+    at = byId.get(at)?.fit === null ? byId.get(at)?.parent : undefined;
+  }
+  return chain;
+};
+
 /**
- * The ids of the territories `ids`, the territory that holds each `tests`
- * territory among them (test code has no fit of its own), and the partners of
- * their fit.
+ * The ids of the territories `ids`, for each `tests` territory among them
+ * (test code has no fit of its own) its ancestors up to the nearest one with a
+ * fit, and the partners of their fit.
  */
 const focusedTerritoriesOf = (
-  nodes: Report["territories"]["nodes"],
+  nodes: Nodes,
   ids: ReadonlyArray<string>,
 ): ReadonlySet<string> => {
-  const focused = new Set(ids);
-  for (const node of nodes) {
-    if (focused.has(node.id) && node.kind === "tests" && node.parent !== null) {
-      focused.add(node.parent);
-    }
-  }
+  const byId = new Map(nodes.map((node) => [node.id, node]));
+  const focused = new Set([
+    ...ids,
+    ...ids.flatMap((id) => ancestorsOfTests(byId, id)),
+  ]);
   for (const node of nodes) {
     const partner = focused.has(node.id) ? node.fit?.partner : undefined;
     if (partner !== undefined && partner !== null) {
