@@ -34,6 +34,9 @@ export type FindingView = {
   readonly stats: readonly EntryStat[];
 };
 
+/** How many entry points the hero shows and the verdict sums up. */
+export const TOP_ENTRY_POINTS = 3;
+
 /** The territory a boundary's changes reach into most, from the fit of the territory. */
 export type LeakTarget = {
   readonly name: string;

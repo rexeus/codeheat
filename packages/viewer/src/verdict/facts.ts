@@ -1,5 +1,6 @@
 import type { Report } from "@codeheat/engine";
 
+import { TOP_ENTRY_POINTS } from "../entry-points/entry-views.js";
 import { formatCount, formatShare } from "../render/format.js";
 import type { TerritoryIndex } from "../territories/territory-index.js";
 import type { Leaks } from "./leaks.js";
@@ -12,9 +13,6 @@ export type VerdictFact = {
   readonly note: string;
 };
 
-/** How many entry points the hero shows and the verdict sums up. */
-export const TOP_ENTRY_POINTS = 3;
-
 /** How many of the judged territories leak, where the line is, and what judged means. */
 const leakFact = ({
   measured,
@@ -25,8 +23,8 @@ const leakFact = ({
   value: `${formatCount(leaking)} of ${formatCount(measured)}`,
   label:
     measured === 1
-      ? `territory with enough changes keeps less than ${formatShare(limit)} of its changes inside`
-      : `territories with enough changes keep less than ${formatShare(limit)} of their changes inside`,
+      ? `territory with enough changes keeps at most ${formatShare(limit)} of its changes inside`
+      : `territories with enough changes keep at most ${formatShare(limit)} of their changes inside`,
   note: `enough: at least ${formatCount(minChanges)} counted changes`,
 });
 
@@ -52,7 +50,7 @@ const startFact = (
   const places = Math.min(TOP_ENTRY_POINTS, report.entryPoints.length);
   return {
     value: formatShare(share),
-    label: `of the change effort sits in the top ${places === 1 ? "place" : `${places} places`} to start`,
+    label: `of the change effort sits in the territories of the top ${places === 1 ? "place" : `${places} places`} to start`,
     note: "",
   };
 };
@@ -72,18 +70,41 @@ const TREND_SIGNIFICANCE = {
   unknown: "",
 } as const;
 
-/** The trend of the share of changes that stay in one module, which is higher when the design holds. */
-const trendFact = ({ erosion }: Report): VerdictFact => {
+type Erosion = NonNullable<Report["erosion"]>;
+
+/** The line of the trend in words, with what a higher share means and, where the engine called it, how significant the shift is. */
+const rangeOf = (
+  locality: Erosion["locality"],
+  significance: string,
+): string => {
+  if (locality === null) {
+    return "";
+  }
+  const aside = significance === "" ? "" : `; ${significance}`;
+  return `${formatShare(locality.from)} → ${formatShare(locality.to)} of changes stay in one module (higher is better${aside})`;
+};
+
+/**
+ * The trend of the share of changes that stay in one module, which is higher
+ * when the design holds. The engine calls a trend only from
+ * `thresholds.minVerdictWindows` quarters on; with fewer the line is shown
+ * with its numbers and no verdict.
+ */
+const trendFact = ({ erosion, thresholds }: Report): VerdictFact => {
   const verdict = erosion?.verdict ?? "unknown";
+  const windows = erosion?.windows ?? 0;
   const locality = erosion?.locality ?? null;
-  const significance = TREND_SIGNIFICANCE[verdict];
+  if (verdict !== "unknown" && windows < thresholds.minVerdictWindows) {
+    return {
+      value: "Too few quarters to call a trend",
+      label: `${formatCount(windows)} of the ${formatCount(thresholds.minVerdictWindows)} quarters needed`,
+      note: rangeOf(locality, ""),
+    };
+  }
   return {
     value: TREND_WORDS[verdict],
     label: "over the last quarters",
-    note:
-      locality === null
-        ? ""
-        : `${formatShare(locality.from)} → ${formatShare(locality.to)} of changes stay in one module (higher is better${significance === "" ? "" : `; ${significance}`})`,
+    note: rangeOf(locality, TREND_SIGNIFICANCE[verdict]),
   };
 };
 

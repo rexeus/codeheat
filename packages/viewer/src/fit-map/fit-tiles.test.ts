@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 
 import { entryViewsOf } from "../entry-points/entry-views.js";
+import { indexTerritories } from "../territories/territory-index.js";
 import { boundaryOn, reportWithParts } from "../testing/design-fit.js";
 import { territoryNode } from "../testing/reports.js";
 import { fitTilesOf } from "./fit-tiles.js";
-import { indexTerritories } from "./territory-index.js";
 
 const tilesOf = (report: ReturnType<typeof reportWithParts>) => {
   const index = indexTerritories(report.territories);

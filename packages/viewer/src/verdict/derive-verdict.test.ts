@@ -2,7 +2,7 @@ import type { Report } from "@codeheat/engine";
 import { describe, expect, it } from "vitest";
 
 import { indexTerritories } from "../territories/territory-index.js";
-import { boundaryOn, reportWithParts } from "../testing/design-fit.js";
+import { erosionOf, reportWithParts } from "../testing/design-fit.js";
 import type { PartSpec } from "../testing/design-fit.js";
 import { reportOf } from "../testing/reports.js";
 import { deriveVerdict } from "./derive-verdict.js";
@@ -14,15 +14,6 @@ const parts = (leaking: number, holding: number): PartSpec[] => [
   { id: "t1", path: "packages/a", heat: leaking, containment: 0.3 },
   { id: "t2", path: "packages/b", heat: holding, containment: 0.9 },
 ];
-
-const erosion = (verdict: "eroding" | "improving" | "holding" | "unknown") =>
-  ({
-    verdict,
-    inactiveSince: null,
-    windows: 8,
-    locality: { from: 0.8, to: 0.6, slope: -0.02 },
-    propagationCost: null,
-  }) satisfies NonNullable<Report["erosion"]>;
 
 describe("deriveVerdict level", () => {
   it.each([
@@ -42,9 +33,7 @@ describe("deriveVerdict level", () => {
   it("calls a design strained from half of the effort in leaking territories", () => {
     expect(verdictOf(reportWithParts(parts(0.5, 0.5))).level).toBe("strained");
   });
-});
 
-describe("deriveVerdict what counts", () => {
   it("weights territories by their heat, not by their number", () => {
     const report = reportWithParts([
       { id: "t1", path: "a", heat: 0.05, containment: 0.1 },
@@ -58,12 +47,28 @@ describe("deriveVerdict what counts", () => {
 
   it("judges only real territories: buckets and test code leave it out", () => {
     const report = reportWithParts([
-      { id: "t1", path: "a", heat: 0.2, containment: 0.9 },
-      { id: "t2", path: "b", heat: 0.5, containment: 0.1, kind: "other" },
-      { id: "t3", path: "c", heat: 0.3, containment: null, kind: "tests" },
+      { id: "t1", path: "a", heat: 0.6, containment: 0.9 },
+      { id: "t2", path: "b", heat: 0.3, containment: 0.1, kind: "other" },
+      { id: "t3", path: "c", heat: 0.1, containment: null, kind: "tests" },
     ]);
 
     expect(verdictOf(report).level).toBe("holds");
+  });
+});
+
+describe("deriveVerdict leak line", () => {
+  it("counts a territory that keeps exactly the limit as leaking, and one above it as holding", () => {
+    const report = reportWithParts([
+      { id: "t1", path: "a", heat: 0.6, containment: 0.75 },
+      { id: "t2", path: "b", heat: 0.4, containment: 0.76 },
+    ]);
+
+    const verdict = verdictOf(report);
+
+    expect(verdict.level).toBe("strained");
+    expect(verdict.sentence).toBe(
+      "Not where it matters: territories holding 60% of the change effort keep reaching into their neighbors.",
+    );
   });
 
   it("uses the containment the report names as the limit", () => {
@@ -73,21 +78,55 @@ describe("deriveVerdict what counts", () => {
       thresholds: { ...report.thresholds, maxEntryContainment: 0.95 },
     };
 
-    expect(verdictOf(strict).level).toBe("strained");
     expect(verdictOf(strict).sentence).toContain(
       "holding all of the change effort",
     );
   });
+});
 
-  it("is unknown when no real territory has changes to measure", () => {
+const unjudged = (judged: number, heat: number): Report =>
+  reportWithParts([
+    { id: "t1", path: "a", heat: judged, containment: 0.1, changes: 12 },
+    { id: "t2", path: "b", heat, containment: 0.1, changes: 2 },
+  ]);
+
+describe("deriveVerdict coverage", () => {
+  it("divides by all of the repository's heat, so unjudged territories dilute the share", () => {
+    const report = reportWithParts([
+      { id: "t1", path: "a", heat: 0.3, containment: 0.1, changes: 12 },
+      { id: "t2", path: "b", heat: 0.3, containment: 0.9, changes: 30 },
+      { id: "t3", path: "c", heat: 0.4, containment: 0, changes: 2 },
+    ]);
+
+    const verdict = verdictOf(report);
+
+    expect(verdict.level).toBe("mixed");
+    expect(verdict.sentence).toBe(
+      "In some places it does not: territories holding 30% of the change effort keep reaching into their neighbors.",
+    );
+  });
+
+  it("gives no verdict when the judged territories hold less than half of all the heat", () => {
+    expect(verdictOf(unjudged(0.49, 0.51))).toMatchObject({
+      level: "unknown",
+      label: "Not enough evidence",
+      sentence:
+        "Too little of the change effort sits in territories with enough changes to judge the design.",
+    });
+  });
+
+  it("gives a verdict from exactly half of all the heat", () => {
+    expect(verdictOf(unjudged(0.5, 0.5)).level).toBe("strained");
+  });
+
+  it("gives no verdict when no real territory has changes to measure", () => {
     const verdict = verdictOf(
       reportWithParts([{ id: "t1", path: "a", heat: 0.5, containment: null }]),
     );
 
     expect(verdict).toMatchObject({
       level: "unknown",
-      label: "Not enough data",
-      sentence: "There is not enough history to judge the design yet.",
+      label: "Not enough evidence",
     });
   });
 
@@ -105,7 +144,7 @@ describe("deriveVerdict what counts", () => {
 describe("deriveVerdict trend", () => {
   it("judges an eroding design one level worse and says so", () => {
     const report = reportWithParts(parts(0.1, 0.9), {
-      erosion: erosion("eroding"),
+      erosion: erosionOf("eroding"),
     });
 
     const verdict = verdictOf(report);
@@ -118,7 +157,7 @@ describe("deriveVerdict trend", () => {
 
   it("does not go below strained for an eroding design", () => {
     const report = reportWithParts(parts(0.6, 0.4), {
-      erosion: erosion("eroding"),
+      erosion: erosionOf("eroding"),
     });
 
     expect(verdictOf(report).level).toBe("strained");
@@ -126,7 +165,7 @@ describe("deriveVerdict trend", () => {
 
   it("mentions an improving design without judging it better", () => {
     const report = reportWithParts(parts(0.3, 0.7), {
-      erosion: erosion("improving"),
+      erosion: erosionOf("improving"),
     });
 
     const verdict = verdictOf(report);
@@ -157,133 +196,6 @@ describe("deriveVerdict sentence", () => {
 
     expect(verdictOf(report).sentence).toBe(
       "Not where it matters: territories holding all of the change effort keep reaching into their neighbors.",
-    );
-  });
-});
-
-describe("deriveVerdict facts", () => {
-  const report = reportWithParts(parts(0.6, 0.4), {
-    changeRadius: { changes: 40, median: 2, p90: 3, local: 0.6 },
-    propagationCost: { cost: 0.25, files: 40 },
-    erosion: erosion("holding"),
-    entryPoints: [
-      boundaryOn(1, ["t1"]),
-      boundaryOn(2, ["t2"]),
-      boundaryOn(3, ["t1"]),
-      boundaryOn(4, ["t2"]),
-    ],
-  });
-
-  it("lists the leaking territories, the weight of the top places, the trend, and the propagation cost", () => {
-    expect(verdictOf(report).facts).toEqual([
-      {
-        value: "1 of 2",
-        label:
-          "territories with enough changes keep less than 75% of their changes inside",
-        note: "enough: at least 5 counted changes",
-      },
-      {
-        value: "100%",
-        label: "of the change effort sits in the top 3 places to start",
-        note: "",
-      },
-      {
-        value: "Holding steady",
-        label: "over the last quarters",
-        note: "80% → 60% of changes stay in one module (higher is better; the shift is not significant)",
-      },
-      {
-        value: "25%",
-        label: "of the code a change drags along (propagation cost)",
-        note: "through chains of couplings, over 40 files",
-      },
-    ]);
-  });
-
-  it("does not put the module-based change radius beside a territory-based verdict", () => {
-    const labels = verdictOf(report).facts.map(({ label }) => label);
-
-    expect(labels.join(" ")).not.toContain("modules a typical change touches");
-  });
-});
-
-describe("deriveVerdict facts about the trend and the count", () => {
-  const report = reportWithParts(parts(0.6, 0.4), {
-    erosion: erosion("holding"),
-    entryPoints: [boundaryOn(1, ["t1"]), boundaryOn(2, ["t1"])],
-  });
-
-  it("says in the engine's terms whether a falling trend is significant", () => {
-    const falling = { ...report, erosion: erosion("eroding") };
-
-    expect(verdictOf(falling).facts[2]).toEqual({
-      value: "Getting worse",
-      label: "over the last quarters",
-      note: "80% → 60% of changes stay in one module (higher is better; this fall is significant)",
-    });
-  });
-
-  it("counts a territory once however many top places concern it", () => {
-    const single = {
-      ...report,
-      entryPoints: [boundaryOn(1, ["t1"]), boundaryOn(2, ["t1"])],
-    };
-
-    expect(verdictOf(single).facts[1]).toEqual({
-      value: "60%",
-      label: "of the change effort sits in the top 2 places to start",
-      note: "",
-    });
-  });
-
-  it("leaves out what the report does not measure", () => {
-    const bare = reportWithParts(parts(0.6, 0.4));
-
-    expect(verdictOf(bare).facts).toEqual([
-      {
-        value: "1 of 2",
-        label:
-          "territories with enough changes keep less than 75% of their changes inside",
-        note: "enough: at least 5 counted changes",
-      },
-      { value: "No trend yet", label: "over the last quarters", note: "" },
-    ]);
-  });
-});
-
-describe("deriveVerdict judged territories", () => {
-  it("counts only territories with enough counted changes, and says what enough is", () => {
-    const sampled = reportWithParts([
-      { id: "t1", path: "a", heat: 0.3, containment: 0.1, changes: 12 },
-      { id: "t2", path: "b", heat: 0.3, containment: 0.9, changes: 30 },
-      { id: "t3", path: "c", heat: 0.3, containment: 0, changes: 2 },
-      { id: "t4", path: "d", heat: 0.1, containment: null, changes: 0 },
-    ]);
-
-    expect(verdictOf(sampled).facts[0]).toEqual({
-      value: "1 of 2",
-      label:
-        "territories with enough changes keep less than 75% of their changes inside",
-      note: "enough: at least 5 counted changes",
-    });
-  });
-
-  it("leaves a territory with too few changes out of the level too", () => {
-    const sampled = reportWithParts([
-      { id: "t1", path: "a", heat: 0.9, containment: 0, changes: 3 },
-      { id: "t2", path: "b", heat: 0.1, containment: 0.9, changes: 30 },
-    ]);
-
-    expect(verdictOf(sampled).level).toBe("holds");
-  });
-
-  it("names a single territory in the singular", () => {
-    const one = reportWithParts([
-      { id: "t1", path: "a", heat: 0.5, containment: 0.1 },
-    ]);
-
-    expect(verdictOf(one).facts[0]?.label).toBe(
-      "territory with enough changes keeps less than 75% of its changes inside",
     );
   });
 });

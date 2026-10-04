@@ -1,8 +1,8 @@
 import type { EntryView } from "../entry-points/entry-views.js";
+import { TOP_ENTRY_POINTS } from "../entry-points/entry-views.js";
 import type { EntryStat } from "../entry-points/evidence.js";
 import { breakable, h } from "../render/dom.js";
 import { rankBadge } from "../render/rank-badge.js";
-import { TOP_ENTRY_POINTS } from "../verdict/facts.js";
 
 /** A number with its words. */
 const statView = ({ value, label }: EntryStat): HTMLElement =>

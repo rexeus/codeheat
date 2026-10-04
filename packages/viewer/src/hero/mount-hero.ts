@@ -1,6 +1,6 @@
+import { renderFitLegend, renderFitList } from "../fit-map/fit-legend.js";
+import { renderFitMap } from "../fit-map/fit-map-view.js";
 import { byId, h } from "../render/dom.js";
-import { renderFitLegend, renderFitList } from "./fit-legend.js";
-import { renderFitMap } from "./fit-map-view.js";
 import type { HeroData } from "./hero-data.js";
 import { renderTopThree } from "./top-three.js";
 import { renderVerdict } from "./verdict-view.js";

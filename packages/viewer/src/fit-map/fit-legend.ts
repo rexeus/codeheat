@@ -2,7 +2,7 @@ import { COHESION_STEP_COUNT } from "../color/cohesion-scale.js";
 import { h } from "../render/dom.js";
 import { formatShare } from "../render/format.js";
 import { rankBadge } from "../render/rank-badge.js";
-import type { FitTile } from "../territories/fit-tiles.js";
+import type { FitTile } from "./fit-tiles.js";
 
 const swatch = (step: number): HTMLElement => {
   const element = h("span", "fit-swatch", "");
@@ -21,6 +21,11 @@ export const renderFitLegend = (target: HTMLElement): void => {
       "legend-item",
       h("span", "muted", "Area"),
       h("strong", "", "share of the change effort"),
+      h(
+        "span",
+        "muted",
+        "(square-root scaled, so small territories stay visible)",
+      ),
     ),
     h(
       "span",

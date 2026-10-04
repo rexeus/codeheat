@@ -1,4 +1,4 @@
-import { TOP_ENTRY_POINTS } from "../verdict/facts.js";
+import { TOP_ENTRY_POINTS } from "../entry-points/entry-views.js";
 import { h } from "./dom.js";
 
 /**

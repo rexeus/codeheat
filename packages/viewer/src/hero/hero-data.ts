@@ -2,8 +2,8 @@ import type { Report } from "@codeheat/engine";
 
 import { entryViewsOf, noEntriesNote } from "../entry-points/entry-views.js";
 import type { EntryView } from "../entry-points/entry-views.js";
-import { fitTilesOf } from "../territories/fit-tiles.js";
-import type { FitTile } from "../territories/fit-tiles.js";
+import { fitTilesOf } from "../fit-map/fit-tiles.js";
+import type { FitTile } from "../fit-map/fit-tiles.js";
 import { indexTerritories } from "../territories/territory-index.js";
 import { deriveVerdict } from "../verdict/derive-verdict.js";
 import type { Verdict } from "../verdict/derive-verdict.js";

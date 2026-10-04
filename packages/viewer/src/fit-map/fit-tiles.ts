@@ -4,14 +4,17 @@
 import { cohesionStep } from "../color/cohesion-scale.js";
 import type { EntryView } from "../entry-points/entry-views.js";
 import { formatShare } from "../render/format.js";
-import { judgeTerritory } from "./judgement.js";
-import type { JudgementLimits } from "./judgement.js";
-import { territoryName, territoryNameParts } from "./territory-index.js";
+import { judgeTerritory } from "../territories/judgement.js";
+import type { JudgementLimits } from "../territories/judgement.js";
+import {
+  territoryName,
+  territoryNameParts,
+} from "../territories/territory-index.js";
 import type {
   NameParts,
   Territory,
   TerritoryIndex,
-} from "./territory-index.js";
+} from "../territories/territory-index.js";
 
 export type FitTile = {
   readonly id: string;

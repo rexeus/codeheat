@@ -1,9 +1,9 @@
+import { TOP_ENTRY_POINTS } from "../entry-points/entry-views.js";
 import { breakable, h } from "../render/dom.js";
 import { formatShare } from "../render/format.js";
 import { rankBadge } from "../render/rank-badge.js";
-import { layoutFitMap } from "../territories/fit-layout.js";
-import type { FitTile } from "../territories/fit-tiles.js";
-import { TOP_ENTRY_POINTS } from "../verdict/facts.js";
+import { layoutFitMap } from "./fit-layout.js";
+import type { FitTile } from "./fit-tiles.js";
 
 /** One marker per tile: the best place to start that concerns it, and how many more there are. */
 const badgesOf = (ranks: readonly number[]): HTMLElement => {

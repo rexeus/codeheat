@@ -22,6 +22,8 @@ export type Verdict = {
   readonly facts: readonly VerdictFact[];
 };
 
+/** The share of all the change effort the judged territories must hold for the verdict to rest on evidence. */
+const MIN_COVERAGE = 0.5;
 /** Share of the change effort in leaking territories below which the design holds. */
 const HOLDS_BELOW = 0.2;
 /** Share from which the design is under strain; between the two it holds in parts. */
@@ -31,7 +33,7 @@ const LABELS: Record<VerdictLevel, string> = {
   holds: "Holds up",
   mixed: "Holds in parts",
   strained: "Under strain",
-  unknown: "Not enough data",
+  unknown: "Not enough evidence",
 };
 
 const baseLevel = (share: number): VerdictLevel => {
@@ -68,44 +70,53 @@ const leakClause = (share: number): string =>
 const NO_TERRITORIES =
   "This report has no territories, so it cannot say whether the design holds; analyze again with a current codeheat.";
 
+const TOO_LITTLE_EVIDENCE =
+  "Too little of the change effort sits in territories with enough changes to judge the design.";
+
 type Wording = {
+  /** The share of all the change effort in leaking territories. */
   readonly share: number;
+  /** The share of all the change effort in judged territories that do not leak. */
+  readonly contained: number;
   readonly trend: string;
   readonly hasTerritories: boolean;
 };
 
 const SENTENCES: Record<VerdictLevel, (wording: Wording) => string> = {
-  holds: ({ share, trend }) =>
-    `Changes stay where they start: territories holding ${formatShare(1 - share)} of the change effort contain them${trend}.`,
+  holds: ({ contained, trend }) =>
+    `Changes stay where they start: territories holding ${formatShare(contained)} of the change effort contain them${trend}.`,
   mixed: ({ share, trend }) =>
     `In some places it does not: ${leakClause(share)}${trend}.`,
   strained: ({ share, trend }) =>
     `Not where it matters: ${leakClause(share)}${trend}.`,
   unknown: ({ hasTerritories }) =>
-    hasTerritories
-      ? "There is not enough history to judge the design yet."
-      : NO_TERRITORIES,
+    hasTerritories ? TOO_LITTLE_EVIDENCE : NO_TERRITORIES,
 };
 
 /**
  * Whether the design holds up to the way the code changes, for the whole
- * repository: the share of the change effort in territories that keep leaking
- * into their neighbors decides the level, an eroding trend lowers it, and the
- * number of leaking territories, the weight of the top places to start, the
- * trend, and the propagation cost are the facts behind it.
+ * repository: the share of all the change effort in territories that keep
+ * leaking into their neighbors decides the level, an eroding trend lowers it,
+ * and with less than half of the effort in territories that can be judged
+ * there is no verdict. The number of leaking territories, the weight of the
+ * top places to start, the trend, and the propagation cost are the facts
+ * behind it.
  */
 export const deriveVerdict = (
   report: Report,
   territories: TerritoryIndex,
 ): Verdict => {
   const leaks = leaksOf(report, territories);
-  const level =
-    leaks === null ? "unknown" : withTrend(baseLevel(leaks.heatShare), report);
+  const evidence = leaks !== null && leaks.coverage >= MIN_COVERAGE;
+  const level = evidence
+    ? withTrend(baseLevel(leaks.heatShare), report)
+    : "unknown";
   return {
     level,
     label: LABELS[level],
     sentence: SENTENCES[level]({
       share: leaks?.heatShare ?? 0,
+      contained: (leaks?.coverage ?? 0) - (leaks?.heatShare ?? 0),
       trend: trendClause(report),
       hasTerritories: report.territories.nodes.length > 0,
     }),

@@ -4,45 +4,52 @@ import { judgeTerritory } from "../territories/judgement.js";
 import { isRealTerritory } from "../territories/territory-index.js";
 import type { TerritoryIndex } from "../territories/territory-index.js";
 
-/** How many real territories were measured, how many of them leak, and the share of the heat that sits in the leaking ones. */
+/** How many real territories were judged, how many of them leak, and how much of the repository's change effort each group holds. */
 export type Leaks = {
   readonly measured: number;
   readonly leaking: number;
-  /** 0..1 */
+  /** The share of all the repository's heat held by the leaking territories, 0..1: the denominator of the fit map's tiles. */
   readonly heatShare: number;
-  /** The share of its changes a territory needs to keep inside to not leak. */
+  /** The share of all the repository's heat held by the judged territories, leaking or not, 0..1. */
+  readonly coverage: number;
+  /** A territory leaks when at most this share of its changes stay inside (the engine's boundary gate). */
   readonly limit: number;
   /** How many counted changes a territory needs to be judged. */
   readonly minChanges: number;
 };
 
+const heatOf = (group: readonly { readonly heat: number }[]): number =>
+  group.reduce((sum, { heat }) => sum + heat, 0);
+
 /**
  * Reads the territories at the recommended detail that are real parts of the
  * design (packages, folders, groups; not buckets or test code) and have enough
- * counted changes to be judged (`thresholds.minModuleCommits`): a territory
- * leaks when fewer than `thresholds.maxEntryContainment` of its changes stay
- * inside. `null` without a judged territory.
+ * counted changes to be judged (`thresholds.minModuleCommits`). A territory
+ * leaks when at most `thresholds.maxEntryContainment` of its changes stay
+ * inside. A territory's `heatShare` is already its part of all the heat, so
+ * the sums are shares of the repository, not of the judged territories alone.
+ * `null` without a judged territory.
  */
 export const leaksOf = (
   report: Report,
   territories: TerritoryIndex,
 ): Leaks | null => {
-  const measured = territories.recommended.flatMap((territory) => {
+  const judged = territories.recommended.flatMap((territory) => {
     const { containment } = judgeTerritory(territory, report.thresholds);
     return isRealTerritory(territory) && containment !== null
       ? [{ containment, heat: territory.heatShare }]
       : [];
   });
-  const total = measured.reduce((sum, { heat }) => sum + heat, 0);
-  if (total === 0) {
+  if (judged.length === 0) {
     return null;
   }
   const limit = report.thresholds.maxEntryContainment;
-  const leaking = measured.filter(({ containment }) => containment < limit);
+  const leaking = judged.filter(({ containment }) => containment <= limit);
   return {
-    measured: measured.length,
+    measured: judged.length,
     leaking: leaking.length,
-    heatShare: leaking.reduce((sum, { heat }) => sum + heat, 0) / total,
+    heatShare: heatOf(leaking),
+    coverage: heatOf(judged),
     limit,
     minChanges: report.thresholds.minModuleCommits,
   };
