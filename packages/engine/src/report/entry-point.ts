@@ -46,8 +46,8 @@ const Finding = Schema.Struct({
    * `id`s of the territories this finding concerns: for a finding the entry's
    * own kind and territories say it all, but an entry that folds in findings
    * about other territories (a `clique` that takes in the boundary of one of
-   * its members, a `boundary` of two territories that lists each territory's
-   * own boundary) tells them apart by this.
+   * its members, a `boundary` that takes in a clique of its territories, a
+   * `boundary` of two territories that lists each territory's own boundary) tells them apart by this.
    */
   territories: Schema.Array(Schema.String),
 });
@@ -101,9 +101,10 @@ export const EntryPoint = Schema.Struct({
    * among the findings) first. A territory that qualifies as both a
    * `boundary` and a `hotspot` is one entry with two findings. A `boundary`
    * between two territories lists, after its own finding, the `boundary` of
-   * each territory (the stronger first) and the hotspots of both. A `clique`
-   * lists after its own the findings of the `boundary` entries of its members
-   * that it ranks above and explains. Every other entry has one, the one
+   * each territory (the stronger first) and the hotspots of both. A `boundary`
+   * and a `clique` that has all the boundary's territories as members are one
+   * entry, led by the higher ranked (a boundary on a tie), which lists the
+   * findings of the other after its own. Every other entry has one, the one
    * repeated in `kind`, `verdict`, `designMove`, `evidence`, and `files`;
    * each finding says which `territories` it is about.
    */

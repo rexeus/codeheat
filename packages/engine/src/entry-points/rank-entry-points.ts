@@ -6,7 +6,7 @@ import type { EntryPoint } from "../report/entry-point.js";
 import { roundReported } from "../report/precision.js";
 import type { Entry } from "./candidate.js";
 import { entriesOf } from "./entries-of.js";
-import { foldIntoCliques } from "./fold-into-cliques.js";
+import { foldBoundariesAndCliques } from "./fold-boundaries-and-cliques.js";
 import { gatherCandidates } from "./gather-candidates.js";
 import type { EntryPointInput } from "./gather-candidates.js";
 import type { EntryLimits } from "./limits.js";
@@ -98,8 +98,8 @@ const scored = (entries: ReadonlyArray<Entry>): ReadonlyArray<Entry> =>
 /**
  * Ranks the places to start (see `EntryPoint`) among the candidates of every
  * kind, a territory that is both a boundary and a hotspot counting once (see
- * `entriesOf`), and a boundary that a higher ranked clique explains being a
- * finding of that clique (see `foldIntoCliques`); see `gatherCandidates` and
+ * `entriesOf`), and a boundary and a clique that explain one another being
+ * one entry, led by the higher ranked (see `foldBoundariesAndCliques`); see `gatherCandidates` and
  * the modules of the kinds for the rules. Every entry scores at least `limits.minEntryScore`, except the best
  * entry of each kind, which the list always holds. An entry about files that
  * a higher ranked entry names all of is left out. Empty when nothing
@@ -109,6 +109,6 @@ export const rankEntryPoints = (
   input: EntryPointInput,
 ): ReadonlyArray<EntryPoint> =>
   pickWithoutRepeats(
-    foldIntoCliques(scored(entriesOf(gatherCandidates(input)))),
+    foldBoundariesAndCliques(scored(entriesOf(gatherCandidates(input)))),
     input.limits,
   ).map((entry, index) => Object.assign({ rank: index + 1 }, entry));

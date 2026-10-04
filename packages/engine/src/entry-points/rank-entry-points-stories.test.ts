@@ -74,15 +74,15 @@ describe("rankEntryPoints tells one story once", () => {
     ]);
   });
 
-  it("keeps the boundary that outranks the clique, and folds in what the clique outranks", () => {
+  it("makes the clique a finding of the boundary that outranks it", () => {
     const ranked = rankEntryPoints(
       input({ territories: mirrored(), cliques: [unit(0.3)] }),
     );
 
-    // the clique scores ½ × 0.3 = 0.15: below the pair, above c
+    // the clique scores ½ × 0.3 = 0.15: below the pair (0.2833), so the pair takes it in; c stays
     expect(summary(ranked).slice(0, 3)).toStrictEqual([
-      ["boundary", ["a", "b"], ["a+b", "a", "b"]],
-      ["clique", ["a", "b", "c"], ["a+b+c", "c"]],
+      ["boundary", ["a", "b"], ["a+b", "a", "b", "a+b+c"]],
+      ["boundary", ["c"], ["c"]],
       ["boundary", ["d"], ["d"]],
     ]);
   });
