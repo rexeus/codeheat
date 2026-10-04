@@ -24,9 +24,22 @@ const isReport = (value: unknown): value is Report =>
   Array.isArray(value.couplings);
 
 /**
+ * What a report written before the design-fit fields existed lacks: the page
+ * renders these as "no data" instead of failing on a missing field.
+ */
+const DESIGN_FIT_DEFAULTS = {
+  territories: { recommended: 0, details: [], nodes: [] },
+  entryPoints: [],
+  changeRadius: null,
+  propagationCost: null,
+  erosion: null,
+} satisfies Partial<Report>;
+
+/**
  * Reads a report written by `serializeReport`. The page embeds a report the
  * engine already decoded, so this only rejects a document of the wrong kind or
- * schema version instead of rendering garbage.
+ * schema version instead of rendering garbage. A report from an older codeheat
+ * gets empty design-fit fields.
  */
 export const parseReport = (json: string): Report => {
   const value: unknown = JSON.parse(json);
@@ -35,5 +48,5 @@ export const parseReport = (json: string): Report => {
       "The embedded document is not a codeheat report (schemaVersion 1).",
     );
   }
-  return value;
+  return { ...DESIGN_FIT_DEFAULTS, ...value };
 };

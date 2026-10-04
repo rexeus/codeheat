@@ -38,6 +38,48 @@ describe("renderReportHtml", () => {
       /name="color-mode" value="heat" checked>.*value="cohesion">.*value="change">/su,
     );
   });
+});
+
+describe("renderReportHtml page structure", () => {
+  const report = reportOf([fileStats("src/a.ts")]);
+
+  it("has the sections in a fixed order, each reachable from the bar", () => {
+    const html = renderReportHtml(report);
+
+    expect(html).toMatch(/id="hero".*id="start".*id="map"/su);
+    expect(html).toContain('<a href="#start">Where to start</a>');
+    expect(html).toContain('<a href="#map">Map</a>');
+  });
+
+  it("provides every element the viewer script fills", () => {
+    const html = renderReportHtml(report);
+
+    for (const id of [
+      "repository",
+      "verdict",
+      "fit-figure",
+      "fit-map",
+      "fit-legend",
+      "fit-list",
+      "top-three",
+      "summary",
+      "start-body",
+      "legend",
+      "stage",
+      "treemap",
+      "tooltip",
+      "panel",
+    ]) {
+      expect(html).toContain(`id="${id}"`);
+    }
+  });
+});
+
+describe("renderReportHtml embedding", () => {
+  const report = reportOf(
+    [fileStats("src/a.ts"), fileStats("src/b.ts")],
+    [coupling("src/a.ts", "src/b.ts", { degree: 0.75 })],
+  );
 
   it("embeds the whole report so it round-trips through JSON", () => {
     expect(embeddedReport(renderReportHtml(report))).toEqual(report);
@@ -78,7 +120,7 @@ describe("renderReportHtml", () => {
     const html = renderReportHtml(report);
 
     expect(html).not.toMatch(/https?:\/\//u);
-    expect(html).not.toMatch(/\s(?:src|href)="(?!data:)/u);
+    expect(html).not.toMatch(/\s(?:src|href)="(?![#]|data:)/u);
     expect(html).not.toContain("@import");
   });
 });
@@ -99,11 +141,13 @@ describe("renderReportHtml with a comparison", () => {
       [],
       [],
       {
-        previousSince: "2025-03-29T12:00:00.000Z",
-        previousUntil: "2025-09-29T12:00:00.000Z",
-        previousCommits: 12,
-        previousRealCommits: 12,
-        previousTruncated: false,
+        comparison: {
+          previousSince: "2025-03-29T12:00:00.000Z",
+          previousUntil: "2025-09-29T12:00:00.000Z",
+          previousCommits: 12,
+          previousRealCommits: 12,
+          previousTruncated: false,
+        },
       },
     );
 

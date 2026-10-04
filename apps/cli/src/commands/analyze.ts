@@ -54,19 +54,19 @@ export const analyzeCommand = Command.make(
     entry: entryFlag,
     html: Flag.Boolean("html").pipe(
       Flag.withDescription(
-        "Also write the treemap as a self-contained HTML file and open it",
+        "Also write the HTML report (does the design hold, where to start, a treemap of every file) as a self-contained file and open it",
       ),
       Flag.withDefault(false),
     ),
     out: Flag.String("out").pipe(
       Flag.withDescription(
-        `Where --html writes the treemap (default ${DEFAULT_HTML_FILE}); implies --html`,
+        `Where --html writes the HTML report (default ${DEFAULT_HTML_FILE}); implies --html`,
       ),
       Flag.optional,
     ),
     open: Flag.Boolean("open").pipe(
       Flag.withDescription(
-        "Open the treemap in the browser; --no-open skips it",
+        "Open the HTML report in the browser; --no-open skips it",
       ),
       Flag.withDefault(true),
     ),
@@ -134,7 +134,8 @@ export const analyzeCommand = Command.make(
     },
     {
       command: "codeheat analyze --html",
-      description: "Open the treemap of the current repository in the browser",
+      description:
+        "Open the HTML report of the current repository in the browser",
     },
     {
       command: "codeheat analyze --compare 3m",

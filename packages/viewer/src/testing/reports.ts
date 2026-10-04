@@ -1,5 +1,9 @@
 import type { Coupling, FileStats, Module, Report } from "@codeheat/engine";
 
+type Territory = Report["territories"]["nodes"][number];
+type TerritoryFit = NonNullable<Territory["fit"]>;
+type EntryPoint = Report["entryPoints"][number];
+
 /** A file with the given path; every metric can be overridden. */
 export const fileStats = (
   path: string,
@@ -67,6 +71,64 @@ export const moduleStats = (
   ...overrides,
 });
 
+/** The fit of a territory that contains 60 % of its changes; every measure can be overridden. */
+export const territoryFit = (
+  overrides: Partial<TerritoryFit> = {},
+): TerritoryFit => ({
+  detail: 1,
+  containment: 0.6,
+  radius: 2,
+  partner: null,
+  distantPairs: 0,
+  hiddenPairs: 0,
+  cliques: 0,
+  erosion: null,
+  chronicFiles: 0,
+  acuteFiles: 0,
+  chronicShare: 0,
+  fixDensity: null,
+  ...overrides,
+});
+
+/** A folder territory with the given id and path, no children and a fit; every field can be overridden. */
+export const territoryNode = (
+  id: string,
+  path: string,
+  overrides: Partial<Territory> = {},
+): Territory => ({
+  id,
+  path,
+  kind: "folder",
+  parent: null,
+  children: [],
+  files: 10,
+  testFiles: 0,
+  changes: 20,
+  heatShare: 0.1,
+  description: `main files: ${path}`,
+  splitReason: null,
+  fit: territoryFit(),
+  ...overrides,
+});
+
+/** A boundary entry point of the given rank; every field can be overridden. */
+export const entryPointOf = (
+  rank: number,
+  overrides: Partial<EntryPoint> = {},
+): EntryPoint => ({
+  rank,
+  kind: "boundary",
+  score: 0.1,
+  territories: [],
+  files: [],
+  evidence: {},
+  verdict: "The boundary does not hold.",
+  designMove:
+    "Move a boundary: bring what changes together into one territory.",
+  findings: [],
+  ...overrides,
+});
+
 const THRESHOLDS: Report["thresholds"] = {
   maxCommitFiles: 50,
   hubMinBreadth: 10,
@@ -130,12 +192,12 @@ const NO_FINDINGS = {
   entryPoints: [],
 } satisfies Partial<Report>;
 
-/** A minimal valid report around the given files and couplings; `comparison` is null unless given. */
+/** A minimal valid report around the given files, couplings, and modules; `overrides` replace any other field (`comparison` is null by default). */
 export const reportOf = (
   files: readonly FileStats[],
   couplings: readonly Coupling[] = [],
   modules: readonly Module[] = [],
-  comparison: Report["comparison"] = null,
+  overrides: Partial<Report> = {},
 ): Report => ({
   schemaVersion: 1,
   tool: { name: "codeheat", version: "0.0.0" },
@@ -156,7 +218,7 @@ export const reportOf = (
     duplicates: 0,
   },
   logicalChanges: { by: "commit", count: 0, largest: 0 },
-  comparison,
+  comparison: null,
   thresholds: THRESHOLDS,
   totals: {
     files: files.length,
@@ -171,4 +233,5 @@ export const reportOf = (
   modules,
   copyFamilies: [],
   ...NO_FINDINGS,
+  ...overrides,
 });
