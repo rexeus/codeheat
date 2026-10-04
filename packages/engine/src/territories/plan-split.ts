@@ -46,7 +46,9 @@ const cutOf = (
   part.kind === "group" || part.kind === "more"
     ? {
         base: part.base,
-        big: new Map(part.members.map(({ cut, files }) => [cut, files])),
+        big: new Map(
+          part.members.map(({ cut, path, files }) => [cut ?? path, files]),
+        ),
         rest: part.rest,
         outer: [],
       }

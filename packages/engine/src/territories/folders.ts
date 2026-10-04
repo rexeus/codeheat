@@ -21,9 +21,6 @@ export type FolderCut = {
   }>;
 };
 
-/** A directory is passed through only when it has at most this many loose files (a config file or two), so a directory of its own code keeps its shape. */
-const MAX_PASSED_LOOSE = 2;
-
 /** The directories above a file, the repository root ("") first and the file's own directory last. */
 export const ancestorDirectories = (file: string): ReadonlyArray<string> => {
   const parts = file.split("/").slice(0, -1);
@@ -106,10 +103,10 @@ export type CutOptions = {
   /** Whether a folder with fewer than `MIN_CHILD` files is a part of its own. */
   readonly isHot: IsHot;
   /**
-   * When the directory has a single child folder and at most
-   * `MAX_PASSED_LOOSE` loose files (a package with `src` and a config file),
-   * cut that folder's children instead; the loose files stay a node of their
-   * own at their own directory. Never through a package.
+   * When the directory has a single child folder (a package with its `src`
+   * and some files beside it), cut that folder's children instead; the loose
+   * files stay a node of their own at their own directory. Never through a
+   * package.
    */
   readonly passThrough: boolean;
 };
@@ -128,7 +125,6 @@ export const cutByFolders = (
     !passThrough ||
     cut.big.size !== 1 ||
     only === undefined ||
-    cut.rest.length > MAX_PASSED_LOOSE ||
     packages.has(only[0])
   ) {
     return cut;

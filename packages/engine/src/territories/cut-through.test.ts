@@ -23,12 +23,14 @@ const kindsAt = (tree: TerritoryTree, level: number) =>
     return [node?.path, node?.kind, node?.files];
   });
 
-describe("a package with a source folder and a config file", () => {
-  const tree = buildTerritories({
+const packageWith = (loose: number) =>
+  buildTerritories({
     files: [
-      ...["pkg/vitest.config.ts", ...filesIn("pkg/src/a", 3)].map((path) =>
-        code(path),
-      ),
+      ...Array.from(
+        { length: loose },
+        (_, index) => `pkg/loose${index}.ts`,
+      ).map((path) => code(path)),
+      ...filesIn("pkg/src/a", 3).map((path) => code(path)),
       ...filesIn("pkg/src/b", 3).map((path) => code(path)),
       ...filesIn("lib", 14).map((path) => code(path)),
       ...filesIn("tools", 14).map((path) => code(path)),
@@ -41,15 +43,19 @@ describe("a package with a source folder and a config file", () => {
     minChanges: 5,
   });
 
-  it("splits into the folders of its source folder, the config file a node of its own at the package's directory", () => {
-    expect(kindsAt(tree, 2)).toStrictEqual([
-      ["lib", "folder", 14],
-      ["tools", "folder", 14],
-      ["pkg/src/a", "folder", 3],
-      ["pkg/src/b", "folder", 3],
-      ["pkg", "other", 1],
-    ]);
-  });
+describe("a package with a source folder and files beside it", () => {
+  it.each([1, 3, 12])(
+    "splits into the folders of its source folder, its %s loose files a node of their own at the package's directory",
+    (loose) => {
+      expect(kindsAt(packageWith(loose), 2)).toStrictEqual([
+        ["lib", "folder", 14],
+        ["tools", "folder", 14],
+        ["pkg/src/a", "folder", 3],
+        ["pkg/src/b", "folder", 3],
+        ["pkg", "other", loose],
+      ]);
+    },
+  );
 });
 
 const layout = (loose: number) =>

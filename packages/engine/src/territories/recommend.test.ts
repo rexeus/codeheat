@@ -58,7 +58,6 @@ describe("recommendedOf", () => {
 const part = (overrides: Partial<Part>): Part => ({
   kind: "folder",
   path: "",
-  cut: "",
   files: [],
   members: [],
   base: "",
@@ -103,7 +102,7 @@ describe("shownOf", () => {
   const files = ["lib/a.ts", "lib/small/x.ts", "lib/small/y.ts"];
   const shown = shownOf(
     [
-      node("t1", "folder", null, part({ path: "", files })),
+      node("t1", "folder", null, part({ path: "", cut: "", files })),
       node(
         "t2",
         "other",

@@ -14,11 +14,12 @@ export type Part = {
   /** The directory of a folder or of loose files, "" for the repository root; the member directories joined by " + " for a group. */
   readonly path: string;
   /**
-   * The directory the part was cut out as, before `path` was cut down to where
-   * its files branch (the key of its cut, "" for the root): the one directory
-   * its heat is measured from.
+   * The directory a folder or a tests part was cut out as, before `path` was
+   * cut down to where its files branch (the key of its cut, "" for the root):
+   * the one directory its heat is measured from. A group, a bucket, and loose
+   * files have none: they are measured from their members (see `directoriesOf`).
    */
-  readonly cut: string;
+  readonly cut?: string;
   /** The files that shape the tree: code files, and test code that belongs to no code. */
   readonly files: ReadonlyArray<string>;
   /** The folders a group or a bucket is made of. */
@@ -94,9 +95,9 @@ export const heatOf = (
 /** The directories a part was cut from: those of its members, else its own; none for loose files. */
 export const directoriesOf = (part: Part): ReadonlyArray<string> => {
   if (part.members.length > 0) {
-    return part.members.map(({ cut }) => cut);
+    return part.members.flatMap(({ cut }) => cut ?? []);
   }
-  return part.kind === "other" ? [] : [part.cut];
+  return part.cut === undefined ? [] : [part.cut];
 };
 
 /** The indices of the changes that touched any of `files`. */

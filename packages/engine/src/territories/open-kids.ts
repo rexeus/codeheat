@@ -31,7 +31,6 @@ const groupPart = (paths: ReadonlyArray<string>, context: Cut): Part => {
   return {
     kind: "group",
     path: members.map((member) => member.path).join(" + "),
-    cut: "",
     files: members.flatMap((member) => member.files),
     members,
     base: context.cut.base,
@@ -46,7 +45,6 @@ const bucketPart = (paths: ReadonlyArray<string>, context: Cut): Part => {
   return {
     kind: "more",
     path: cut.base,
-    cut: cut.base,
     files: [...members.flatMap((member) => member.files), ...cut.rest],
     members,
     base: cut.base,
@@ -58,7 +56,6 @@ const bucketPart = (paths: ReadonlyArray<string>, context: Cut): Part => {
 const looseFiles = (directory: string, files: ReadonlyArray<string>): Part => ({
   kind: "other",
   path: directory,
-  cut: directory,
   files,
   members: [],
   base: directory,
