@@ -11,6 +11,8 @@ import type { Territory } from "../territories/territory-index.js";
 export type CardFinding = {
   /** A short name for what it is: the kind of the place to start, or `Eroding`. */
   readonly label: string;
+  /** The files it is about in one phrase, such as the hub or the copies; empty when it is about a territory. */
+  readonly subject: string;
   /** The rank of the place to start it comes from; `null` for a finding from the territory's own numbers. */
   readonly rank: number | null;
   /** Which part of the territory (`in a, b`) or which containing territory (`within x`) its place to start concerns; empty when it concerns the territory itself or comes from its own numbers. */
@@ -46,12 +48,13 @@ export type Concerning = {
 };
 
 const fromEntry = ({
-  entry: { rank, kindLabel, verdict, stats, also },
+  entry: { rank, kindLabel, subject, verdict, stats, also },
   where,
 }: Concerning): CardFinding[] => [
-  { label: kindLabel, rank, where, verdict, stats },
+  { label: kindLabel, subject, rank, where, verdict, stats },
   ...also.map((finding) => ({
     label: finding.kindLabel,
+    subject: finding.subject,
     rank,
     where,
     verdict: finding.verdict,
@@ -67,6 +70,7 @@ type Reading = {
 
 const own = (label: string, stats: readonly EntryStat[]): CardFinding => ({
   label,
+  subject: "",
   rank: null,
   where: "",
   verdict: "",

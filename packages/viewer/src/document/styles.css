@@ -512,7 +512,7 @@ button:focus-visible {
   color: var(--text-2);
 }
 
-.empty .flag {
+.flag {
   white-space: nowrap;
 }
 
@@ -779,8 +779,12 @@ button:focus-visible {
   flex: 1;
   min-width: 0;
 }
+/* A name never breaks inside a word: it ends in an ellipsis, and the folder below and the button's title carry the full path. */
 .file-button .path-name {
+  overflow: hidden;
   font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .rank {
   flex: none;
@@ -790,7 +794,26 @@ button:focus-visible {
 }
 .score-chip {
   flex: none;
+  min-width: 3.2ch;
+  text-align: right;
   font-variant-numeric: tabular-nums;
+}
+.hotspot-note {
+  margin-bottom: 6px;
+  font-size: 12.5px;
+}
+.hotspot-toggle {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin: 0 0 6px;
+  color: var(--text-2);
+  font-size: 12.5px;
+  cursor: pointer;
+}
+.hotspot-toggle input {
+  margin: 0;
+  accent-color: var(--focus);
 }
 .partner-body {
   display: flex;

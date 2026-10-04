@@ -2,14 +2,14 @@ import type { EntryStat } from "../entry-points/evidence.js";
 import { breakable, h } from "../render/dom.js";
 import { fileLink } from "../render/file-link.js";
 import type { FileLinkContext, MapLinks } from "../render/file-link.js";
-import { formatCount, formatScore, formatShare } from "../render/format.js";
+import { formatCount, formatScore } from "../render/format.js";
 import { rankBadge } from "../render/rank-badge.js";
 import type { CardPartner, TerritoryCard } from "./card-model.js";
 import { expansionView, moreId } from "./expansion-view.js";
 import type { Expansion } from "./expansion.js";
+import { figuresView } from "./face-figures.js";
 import { FACE_FINDINGS } from "./findings.js";
 import type { CardFinding } from "./findings.js";
-import { meterView } from "./meter-view.js";
 
 /** How a card talks back to the section. */
 export type CardHandlers = {
@@ -51,47 +51,22 @@ const badgesOf = (findings: readonly CardFinding[]): HTMLElement[] => {
       ];
 };
 
-const figure = (value: string, words: string): HTMLElement =>
-  h("div", "tcard-figure", h("strong", "", value), h("span", "", words));
-
-/** The two numbers the card is about, and a meter for the second. */
-const figuresView = (card: TerritoryCard): HTMLElement => {
-  const contained =
-    card.containment === null
-      ? h(
-          "div",
-          "tcard-figure tcard-unjudged",
-          h("span", "", `Not judged: ${card.noData ?? ""}`),
-        )
-      : figure(formatShare(card.containment), "of its changes stay inside");
-  contained.classList.add("tcard-contained");
-  if (card.containment !== null) {
-    contained.append(meterView(card.containment, null));
-  }
-  contained.dataset["fit"] = String(card.step);
-  return h(
-    "div",
-    "tcard-figures",
-    figure(formatShare(card.heatShare), "of the change effort"),
-    contained,
-  );
-};
-
+/** The hottest file, which a card leaves out when it has none worth naming (see `TerritoryCard.hottest`). */
 const hottestRow = (
   { hottest }: TerritoryCard,
   files: FileLinkContext,
-): HTMLElement =>
-  h(
-    "p",
-    "tcard-row",
-    h("span", "tcard-key", "Hottest file"),
-    ...(hottest === null
-      ? [h("span", "muted", "none listed")]
-      : [
+): HTMLElement[] =>
+  hottest === null
+    ? []
+    : [
+        h(
+          "p",
+          "tcard-row",
+          h("span", "tcard-key", "Hottest file"),
           fileLink(hottest.path, files),
           h("span", "muted tcard-score", `score ${formatScore(hottest.score)}`),
-        ]),
-  );
+        ),
+      ];
 
 const partnerRow = (partner: CardPartner | null): HTMLElement[] =>
   partner === null
@@ -113,11 +88,17 @@ const partnerRow = (partner: CardPartner | null): HTMLElement[] =>
 const statView = ({ value, label }: EntryStat): HTMLElement =>
   h("span", "tcard-pair", h("strong", "", value), ` ${label}`);
 
-const findingView = ({ label, where, stats }: CardFinding): HTMLElement =>
+const findingView = ({
+  label,
+  subject,
+  where,
+  stats,
+}: CardFinding): HTMLElement =>
   h(
     "li",
     "tcard-finding",
     h("span", "chip", label),
+    ...(subject === "" ? [] : [h("strong", "tcard-subject", subject)]),
     ...(where === "" ? [] : [h("span", "tcard-where", where)]),
     h(
       "span",
@@ -216,7 +197,7 @@ export const cardView = (
       ? []
       : [h("p", "tcard-desc", card.description)]),
     figuresView(card),
-    hottestRow(card, files),
+    ...hottestRow(card, files),
     ...partnerRow(card.partner),
     ...findingsView(card.findings),
     ...(expansion === null ? [] : [expansionView(id, card, expansion, files)]),
@@ -230,6 +211,7 @@ export const cardView = (
   );
   element.id = cardId(id);
   element.dataset["quiet"] = String(card.quiet);
+  element.dataset["compact"] = String(card.compact);
   element.dataset["expanded"] = String(expansion !== null);
   return element;
 };

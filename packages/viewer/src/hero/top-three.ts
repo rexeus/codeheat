@@ -1,5 +1,6 @@
 import type { EntryView } from "../entry-points/entry-views.js";
 import { TOP_ENTRY_POINTS } from "../entry-points/entry-views.js";
+import { nonZeroStats } from "../entry-points/evidence.js";
 import type { EntryStat } from "../entry-points/evidence.js";
 import { breakable, h } from "../render/dom.js";
 import { rankBadge } from "../render/rank-badge.js";
@@ -8,9 +9,9 @@ import { rankBadge } from "../render/rank-badge.js";
 const statView = ({ value, label }: EntryStat): HTMLElement =>
   h("span", "top-stat", h("strong", "", value), ` ${label}`);
 
-/** The first number of the entry, then where its boundary leaks to, or else its second number. */
-const statsOf = ({ stats, leaksTo }: EntryView): HTMLElement[] => {
-  const [first, second] = stats;
+/** The first number of the entry that is not zero (a count of nothing says little on the first screen), then where its boundary leaks to, or else its second number. */
+const statsOf = ({ stats: all, leaksTo }: EntryView): HTMLElement[] => {
+  const [first, second] = nonZeroStats(all);
   const next = leaksTo === null ? second : undefined;
   return [
     ...(first === undefined ? [] : [statView(first)]),

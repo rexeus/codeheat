@@ -1,6 +1,6 @@
 import { COHESION_STEP_COUNT } from "../color/cohesion-scale.js";
 import { h } from "../render/dom.js";
-import { formatShare } from "../render/format.js";
+import { formatShare, plural } from "../render/format.js";
 import { rankBadge } from "../render/rank-badge.js";
 import type { FitTile } from "./fit-tiles.js";
 
@@ -87,7 +87,11 @@ export const renderFitList = (
   tiles: readonly FitTile[],
 ): void => {
   target.replaceChildren(
-    h("summary", "", `All ${tiles.length} territories, with what each is`),
+    h(
+      "summary",
+      "",
+      `All ${plural(tiles.length, "territory", "territories")}, with what each is`,
+    ),
     h("ul", "fit-rows", ...tiles.map((tile) => rowOf(tile))),
   );
 };

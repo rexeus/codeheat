@@ -14,6 +14,7 @@ import type {
 } from "../territories/territory-index.js";
 import { statsOf } from "./evidence.js";
 import type { EntryKind, EntryStat } from "./evidence.js";
+import { subjectOf } from "./subject.js";
 
 type EntryPoint = Report["entryPoints"][number];
 
@@ -30,6 +31,8 @@ const KIND_LABELS: Record<EntryKind, string> = {
 export type FindingView = {
   readonly kind: EntryKind;
   readonly kindLabel: string;
+  /** The files it is about in one phrase (the hub, the copies); empty for a finding about territories. */
+  readonly subject: string;
   readonly verdict: string;
   readonly stats: readonly EntryStat[];
 };
@@ -53,6 +56,8 @@ export type EntryView = {
   readonly anchor: string;
   readonly kind: EntryKind;
   readonly kindLabel: string;
+  /** The files its primary finding is about in one phrase (the hub, the copies); empty for a finding about territories. */
+  readonly subject: string;
   /** The names it concerns, one per line: territories, or files; the second file of a coupling. */
   readonly heading: readonly string[];
   /** The heading on one short line, for a one-liner: file names without their folders. */
@@ -209,6 +214,7 @@ const viewOf = (
     anchor: `entry-${entry.rank}`,
     kind: entry.kind,
     kindLabel: KIND_LABELS[entry.kind],
+    subject: subjectOf(entry.kind, entry.files),
     heading,
     shortHeading: shortHeadingOf(entry.kind, heading),
     context: CONTEXTS[entry.kind](place),
@@ -220,6 +226,7 @@ const viewOf = (
     also: others.map((finding) => ({
       kind: finding.kind,
       kindLabel: KIND_LABELS[finding.kind],
+      subject: subjectOf(finding.kind, finding.files),
       verdict: finding.verdict,
       stats: statsOf(finding.kind, finding.evidence, 3),
     })),

@@ -90,6 +90,10 @@ const SPECS: Record<EntryKind, readonly StatSpec[]> = {
   ],
 };
 
+/** The numbers of `stats` that count something: a count of nothing (`0 file pairs`) says little where there is room for two numbers only. */
+export const nonZeroStats = (stats: readonly EntryStat[]): EntryStat[] =>
+  stats.filter(({ value }) => value !== "0");
+
 /** The most numbers a card shows for one finding. */
 const MAX_STATS = 4;
 

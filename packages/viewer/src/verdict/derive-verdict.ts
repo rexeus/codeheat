@@ -9,6 +9,9 @@ import type { TerritoryIndex } from "../territories/territory-index.js";
 import { factsOf } from "./facts.js";
 import type { VerdictFact } from "./facts.js";
 import { leaksOf } from "./leaks.js";
+import type { Leaks } from "./leaks.js";
+import { quietWindowOf } from "./quiet-window.js";
+import type { QuietWindow } from "./quiet-window.js";
 
 /** `holds`: territories that contain their changes hold most of the work. `unknown`: nothing to judge. */
 export type VerdictLevel = "holds" | "mixed" | "strained" | "unknown";
@@ -19,6 +22,8 @@ export type Verdict = {
   readonly label: string;
   /** One sentence for a reader who has never seen the repository. */
   readonly sentence: string;
+  /** A line under the sentence: where the history last changed and what to try, for a window without counted changes; empty otherwise. */
+  readonly note: string;
   readonly facts: readonly VerdictFact[];
 };
 
@@ -80,6 +85,8 @@ type Wording = {
   readonly contained: number;
   readonly trend: string;
   readonly hasTerritories: boolean;
+  /** What to say about a window without counted changes, in place of the evidence sentence; `null` for a window with changes. */
+  readonly quiet: string | null;
 };
 
 const SENTENCES: Record<VerdictLevel, (wording: Wording) => string> = {
@@ -89,16 +96,38 @@ const SENTENCES: Record<VerdictLevel, (wording: Wording) => string> = {
     `In some places it does not: ${leakClause(share)}${trend}.`,
   strained: ({ share, trend }) =>
     `Not where it matters: ${leakClause(share)}${trend}.`,
-  unknown: ({ hasTerritories }) =>
-    hasTerritories ? TOO_LITTLE_EVIDENCE : NO_TERRITORIES,
+  unknown: ({ hasTerritories, quiet }) => {
+    if (!hasTerritories) {
+      return NO_TERRITORIES;
+    }
+    return quiet ?? TOO_LITTLE_EVIDENCE;
+  },
 };
+
+const levelOf = (report: Report, leaks: Leaks | null): VerdictLevel =>
+  leaks !== null && leaks.coverage >= MIN_COVERAGE
+    ? withTrend(baseLevel(leaks.heatShare), report)
+    : "unknown";
+
+const wordingOf = (
+  report: Report,
+  leaks: Leaks | null,
+  quiet: QuietWindow | null,
+): Wording => ({
+  share: leaks?.heatShare ?? 0,
+  contained: (leaks?.coverage ?? 0) - (leaks?.heatShare ?? 0),
+  trend: trendClause(report),
+  hasTerritories: report.territories.nodes.length > 0,
+  quiet: quiet?.sentence ?? null,
+});
 
 /**
  * Whether the design holds up to the way the code changes, for the whole
  * repository: the share of all the change effort in territories that keep
  * leaking into their neighbors decides the level, an eroding trend lowers it,
  * and with less than half of the effort in territories that can be judged
- * there is no verdict. The number of leaking territories, the weight of the
+ * there is no verdict; a window without counted changes says so, and when the
+ * history last changed. The number of leaking territories, the weight of the
  * top places to start, the trend, and the propagation cost are the facts
  * behind it.
  */
@@ -107,19 +136,13 @@ export const deriveVerdict = (
   territories: TerritoryIndex,
 ): Verdict => {
   const leaks = leaksOf(report, territories);
-  const evidence = leaks !== null && leaks.coverage >= MIN_COVERAGE;
-  const level = evidence
-    ? withTrend(baseLevel(leaks.heatShare), report)
-    : "unknown";
+  const level = levelOf(report, leaks);
+  const quiet = level === "unknown" ? quietWindowOf(report) : null;
   return {
     level,
     label: LABELS[level],
-    sentence: SENTENCES[level]({
-      share: leaks?.heatShare ?? 0,
-      contained: (leaks?.coverage ?? 0) - (leaks?.heatShare ?? 0),
-      trend: trendClause(report),
-      hasTerritories: report.territories.nodes.length > 0,
-    }),
+    note: quiet?.note ?? "",
+    sentence: SENTENCES[level](wordingOf(report, leaks, quiet)),
     facts: factsOf(report, territories, leaks),
   };
 };

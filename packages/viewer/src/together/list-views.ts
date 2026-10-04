@@ -3,6 +3,8 @@ import { h } from "../render/dom.js";
 import { fileLink } from "../render/file-link.js";
 import type { FileLinkContext } from "../render/file-link.js";
 import { splitPath } from "../render/format.js";
+import { farApart, noDistantPairs } from "./empty-notes.js";
+import type { EmptyLimits } from "./empty-notes.js";
 import type {
   CliqueView,
   FamilyView,
@@ -157,12 +159,13 @@ export const cliqueCard = (cliques: readonly CliqueView[]): HTMLElement =>
 export const pairsCard = (
   pairs: readonly FilePairView[],
   context: FileLinkContext,
+  limits: EmptyLimits,
 ): HTMLElement =>
   card(
     "Files that change together across boundaries",
-    "Pairs in different territories or far apart, best first; a pair with no import between them is coupling the code does not show.",
+    `Pairs far apart in the design (${farApart(limits)}), best first; a pair with no import between them is coupling the code does not show.`,
     pairs.length === 0
-      ? [empty("No coupled pair lies far apart in the design.")]
+      ? [empty(noDistantPairs(limits))]
       : listOf(pairs, (pair) => pairItem(pair, context)),
   );
 

@@ -4,12 +4,12 @@
 import type { Report } from "@codeheat/engine";
 
 import { cohesionStep } from "../color/cohesion-scale.js";
+import { distinctNameParts } from "../territories/distinct-names.js";
 import { judgeTerritory } from "../territories/judgement.js";
 import type { JudgementLimits } from "../territories/judgement.js";
 import {
   isRealTerritory,
   territoryName,
-  territoryNameParts,
 } from "../territories/territory-index.js";
 import type {
   NameParts,
@@ -72,12 +72,16 @@ const byHeat = (a: Territory, b: Territory): number => {
   return a.id < b.id ? -1 : Number(a.id > b.id);
 };
 
-const rowOf = (territory: Territory, limits: JudgementLimits): MatrixRow => {
+const rowOf = (
+  territory: Territory,
+  limits: JudgementLimits,
+  partsOf: (territory: Territory) => NameParts,
+): MatrixRow => {
   const { containment, reason } = judgeTerritory(territory, limits);
   return {
     id: territory.id,
     name: territoryName(territory),
-    nameParts: territoryNameParts(territory),
+    nameParts: partsOf(territory),
     changes: territory.changes,
     containment,
     noData: reason,
@@ -114,10 +118,11 @@ export const matrixOf = (
   const compared = hottest.filter(
     ({ changes }) => changes >= limits.minModuleCommits,
   );
-  const rows = compared.map((territory) => rowOf(territory, limits));
+  const partsOf = distinctNameParts(hottest);
+  const rows = compared.map((territory) => rowOf(territory, limits, partsOf));
   const notCompared = hottest
     .filter(({ changes }) => changes < limits.minModuleCommits)
-    .map((territory) => rowOf(territory, limits));
+    .map((territory) => rowOf(territory, limits, partsOf));
   const shown = new Set(rows.map(({ id }) => id));
   const listed = pairs.filter(({ a, b }) => shown.has(a) && shown.has(b));
   const maxShared = Math.max(

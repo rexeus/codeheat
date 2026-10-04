@@ -186,6 +186,20 @@ describe("fitTilesOf groups", () => {
     ]);
   });
 
+  it("shows the parent folder of a name that two tiles share, as a narrow tile shows only the name", () => {
+    const twins = reportWithParts([
+      { id: "t1", path: "scripts", heat: 0.2, containment: null },
+      { id: "t2", path: "adev/scripts", heat: 0.1, containment: null },
+      { id: "t3", path: "adev/src", heat: 0.1, containment: 0.5 },
+    ]);
+
+    expect(tilesOf(twins).map(({ nameParts }) => nameParts)).toEqual([
+      { dir: "", base: "scripts" },
+      { dir: "", base: "adev/scripts" },
+      { dir: "adev/", base: "src" },
+    ]);
+  });
+
   it("has no tiles without territories", () => {
     expect(tilesOf(reportWithParts([]))).toEqual([]);
   });

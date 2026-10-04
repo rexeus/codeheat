@@ -10,6 +10,7 @@ import {
   formatPercent,
   formatScore,
 } from "./format.js";
+import { createHotspotSection } from "./hotspot-section.js";
 import { fileModuleSection, leastCohesiveSection } from "./module-panel.js";
 import { overviewIntro, overviewTitles } from "./overview-intro.js";
 
@@ -38,9 +39,6 @@ export type PanelHandlers = {
   readonly select: (path: string) => void;
   readonly clear: () => void;
 };
-
-/** Hotspots the overview lists; they always stay individual tiles. */
-export const OVERVIEW_HOTSPOTS = 10;
 
 type Context = PanelData & Pick<PanelHandlers, "select">;
 
@@ -73,6 +71,7 @@ const fileButton = (
     ...content,
   );
   button.type = "button";
+  button.title = path;
   button.addEventListener("click", () => {
     select(path);
   });
@@ -187,18 +186,15 @@ const hotspotRow = (context: Context, file: FileStats): HTMLElement =>
     ),
   );
 
-const hotspotsSection = (rows: readonly HTMLElement[]): HTMLElement => {
-  const element = section("Top hotspots", h("ul", "list", ...rows));
-  element.dataset["overview"] = "hotspots";
-  return element;
-};
-
 export const createPanel = (
   root: HTMLElement,
   data: PanelData,
   { select, clear }: PanelHandlers,
 ): Panel => {
   const context: Context = { ...data, select };
+  const hotspots = createHotspotSection(data.hotspots, (file) =>
+    hotspotRow(context, file),
+  );
 
   return {
     showFile: (path, partners) => {
@@ -214,18 +210,15 @@ export const createPanel = (
       root.scrollTop = 0;
     },
     showOverview: () => {
-      const rows = data.hotspots
-        .slice(0, OVERVIEW_HOTSPOTS)
-        .map((file) => hotspotRow(context, file));
       root.replaceChildren(
-        ...(rows.length === 0
+        ...(data.hotspots.length === 0
           ? [...overviewTitles(), h("p", "hint", EMPTY_PANEL_NOTE)]
           : [
               ...overviewIntro(),
               h(
                 "div",
                 "overview-sections",
-                hotspotsSection(rows),
+                hotspots.element(),
                 leastCohesiveSection(
                   data.modules,
                   data.thresholds.minModuleCommits,

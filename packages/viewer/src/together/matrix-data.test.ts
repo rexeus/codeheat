@@ -201,6 +201,25 @@ describe("matrixOf cap and ranking", () => {
     expect(matrix.considered).toBe(4);
   });
 
+  it("labels two rows that share a name with the folder that tells them apart", () => {
+    const twins = indexTerritories({
+      recommended: 1,
+      details: [{ level: 1, ids: ["a", "b"] }],
+      nodes: [
+        territoryNode("root", ".", { fit: null }),
+        territoryNode("a", "scripts", { parent: "root", heatShare: 0.5 }),
+        territoryNode("b", "adev/scripts", { parent: "root", heatShare: 0.4 }),
+      ],
+    });
+
+    expect(
+      matrixOf(twins, [], LIMITS).rows.map(({ nameParts }) => nameParts),
+    ).toStrictEqual([
+      { dir: "", base: "scripts" },
+      { dir: "", base: "adev/scripts" },
+    ]);
+  });
+
   it("draws no cell for a pair with a territory that is not compared", () => {
     const matrix = matrixOf(
       index,

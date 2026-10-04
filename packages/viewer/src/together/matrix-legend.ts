@@ -1,6 +1,6 @@
 import { COHESION_STEP_COUNT } from "../color/cohesion-scale.js";
 import { h } from "../render/dom.js";
-import { formatCount } from "../render/format.js";
+import { formatCount, plural } from "../render/format.js";
 import { MATRIX_LEVELS } from "./matrix-data.js";
 import type { Matrix } from "./matrix-data.js";
 
@@ -12,40 +12,54 @@ const legendSwatch = (attributes: Record<string, string>): HTMLElement => {
   return swatch;
 };
 
-/** What the cells of the matrix mean: their color, the diagonal, and the two marks. */
+const cellScale = (matrix: Matrix): HTMLElement =>
+  h(
+    "span",
+    "legend-item",
+    h("span", "muted", "Cell"),
+    h("strong", "", "changes that touched both"),
+    h("span", "muted", "few"),
+    ...Array.from({ length: MATRIX_LEVELS }, (_, step) =>
+      legendSwatch({ level: String(step + 1) }),
+    ),
+    h("span", "muted", `most (${formatCount(matrix.maxShared)})`),
+  );
+
+const diagonalKey = (): HTMLElement =>
+  h(
+    "span",
+    "legend-item",
+    legendSwatch({ diagonal: String(COHESION_STEP_COUNT - 2) }),
+    h("span", "muted", "diagonal: share of its changes that stay inside"),
+  );
+
+const crossingKeys = (): HTMLElement[] => [
+  h(
+    "span",
+    "legend-item",
+    legendSwatch({ level: "3", distant: "true" }),
+    h("span", "muted", "coupled files cross this boundary"),
+  ),
+  h(
+    "span",
+    "legend-item",
+    legendSwatch({ level: "3", distant: "true", hidden: "true" }),
+    h("span", "muted", "dashed: some of them have no import between them"),
+  ),
+];
+
+/**
+ * What the cells of the matrix mean: their color, the diagonal, and the two
+ * marks. A matrix in which no pair shared enough changes has no cell to color
+ * or mark, so its legend explains only the diagonal.
+ */
 export const legendOf = (matrix: Matrix): HTMLElement =>
   h(
     "div",
     "mx-legend",
-    h(
-      "span",
-      "legend-item",
-      h("span", "muted", "Cell"),
-      h("strong", "", "changes that touched both"),
-      h("span", "muted", "few"),
-      ...Array.from({ length: MATRIX_LEVELS }, (_, step) =>
-        legendSwatch({ level: String(step + 1) }),
-      ),
-      h("span", "muted", `most (${formatCount(matrix.maxShared)})`),
-    ),
-    h(
-      "span",
-      "legend-item",
-      legendSwatch({ diagonal: String(COHESION_STEP_COUNT - 2) }),
-      h("span", "muted", "diagonal: share of its changes that stay inside"),
-    ),
-    h(
-      "span",
-      "legend-item",
-      legendSwatch({ level: "3", distant: "true" }),
-      h("span", "muted", "coupled files cross this boundary"),
-    ),
-    h(
-      "span",
-      "legend-item",
-      legendSwatch({ level: "3", distant: "true", hidden: "true" }),
-      h("span", "muted", "dashed: some of them have no import between them"),
-    ),
+    ...(matrix.maxShared === 0
+      ? [diagonalKey()]
+      : [cellScale(matrix), diagonalKey(), ...crossingKeys()]),
   );
 
 /** How many territories the matrix compares, and of how many. */
@@ -54,7 +68,7 @@ export const capNote = (matrix: Matrix): string => {
     matrix.total > matrix.considered
       ? ` (the ${formatCount(matrix.considered)} hottest of ${formatCount(matrix.total)} were considered)`
       : "";
-  return `${formatCount(matrix.rows.length)} territories, hottest first${capped}; buckets and test code are left out.`;
+  return `${plural(matrix.rows.length, "territory", "territories")}, hottest first${capped}; buckets and test code are left out.`;
 };
 
 /** The hottest territories the matrix leaves out for having too few changes to compare, in one sentence; `null` when it leaves none out. */
