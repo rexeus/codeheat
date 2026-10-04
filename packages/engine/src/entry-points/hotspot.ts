@@ -5,27 +5,35 @@ import type { Territory } from "../report/territory.js";
 import { chainsOf } from "./ancestry.js";
 import { evidenceOf } from "./candidate.js";
 import type { Candidate } from "./candidate.js";
+import type { FileHeat } from "./file-heat.js";
 import { isChronic } from "./judged-territories.js";
 import type { Judged } from "./judged-territories.js";
 import type { EntryLimits } from "./limits.js";
 import { HOTSPOT_VERDICT, hotspotMove } from "./moves.js";
 
+/** What the hotspots of a territory are found among. */
+export type HotspotPlaces = {
+  readonly files: ReadonlyArray<FileStats>;
+  /** The territory tree, to find the files below a territory. */
+  readonly nodes: ReadonlyArray<Pick<Territory, "id" | "parent">>;
+  readonly heat: FileHeat;
+};
+
 /** An entry names at most this many of the hotspots. */
 const MAX_FILES = 5;
 
 /**
- * The territories that are chronic (at least `limits.minEntryChronicShare` of their
- * heat is in chronic hotspots, see `isChronic`) and hold at least
- * `limits.minEntryHeatShare` of the heat.
- * The score is `heatShare × chronicShare × (1 + fix share)`: the share of all
- * the heat that sits in long-lived hotspots, more when it is spent on fixes.
- * The entry names up to five of the territory's chronic hotspots, the highest
- * scored first; `nodes` is the territory tree, to find the files below a territory.
+ * The territories that are chronic (at least `limits.minEntryChronicShare` of
+ * their code's heat is in chronic hotspots, see `isChronic`) and hold at least
+ * `limits.minEntryHeatShare` of the heat. The score is the share of all the
+ * heat that sits in the territory's chronic hotspots (`heat.share` of their
+ * paths), more when it is spent on fixes (`× (1 + fix share)`); it does not
+ * use `Territory.heatShare`, which counts test code too. The entry names up to
+ * five of the chronic hotspots, the hottest (highest scored) first.
  */
 export const hotspotEntries = (
   judged: ReadonlyArray<Judged>,
-  files: ReadonlyArray<FileStats>,
-  nodes: ReadonlyArray<Pick<Territory, "id" | "parent">>,
+  { files, nodes, heat }: HotspotPlaces,
   limits: EntryLimits,
 ): ReadonlyArray<Candidate> => {
   const chainOf = chainsOf(nodes);
@@ -45,18 +53,15 @@ export const hotspotEntries = (
           chainOf(file.territory).has(territory.id),
       )
       .toSorted((a, b) => b.score - a.score || a.rank - b.rank);
+    const chronicHeatShare = heat.share(hotspots.map(({ path }) => path));
     return [
       {
         kind: "hotspot",
-        score:
-          heatShare * fit.chronicShare * (1 + (fit.fixDensity?.share ?? 0)),
+        score: chronicHeatShare * (1 + (fit.fixDensity?.share ?? 0)),
         territories: [territory.id],
-        files: hotspots
-          .slice(0, MAX_FILES)
-          .map(({ path }) => path)
-          .toSorted(),
+        files: hotspots.slice(0, MAX_FILES).map(({ path }) => path),
         evidence: evidenceOf({
-          heatShare,
+          chronicHeatShare,
           chronicShare: fit.chronicShare,
           chronicFiles: fit.chronicFiles,
           containment: fit.containment,

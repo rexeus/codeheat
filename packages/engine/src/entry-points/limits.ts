@@ -10,6 +10,7 @@ export type EntryLimits = Pick<
   | "minEntryChronicShare"
   | "minEntryChanges"
   | "minEntryCouplingChanges"
+  | "minEntryScore"
   | "maxEntriesPerKind"
   | "maxEntries"
 >;
@@ -20,6 +21,7 @@ export const ENTRY_THRESHOLDS: EntryLimits = {
   minEntryChronicShare: 0.5,
   minEntryChanges: 3,
   minEntryCouplingChanges: 5,
-  maxEntriesPerKind: 4,
+  minEntryScore: 0.005,
+  maxEntriesPerKind: 6,
   maxEntries: 10,
 };

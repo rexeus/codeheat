@@ -10,17 +10,15 @@ import { CLIQUE_VERDICT, cliqueMove } from "./moves.js";
 /** Shared changes at which a clique's evidence counts in full; fewer weigh in proportion. */
 const FULL_EVIDENCE_CHANGES = 10;
 
-/** Cliques that share at least this share of their territories are one unit seen twice; only the better one is listed. */
+/** A clique with at least this share of its territories in a better one is that unit seen again; only the better one is listed. */
 const SAME_UNIT_OVERLAP = 0.5;
 
-/** The share of the territories of `a` and `b` together that are in both. */
+/** The share of the territories of `candidate` that `kept` has too. */
 const overlap = (
-  a: ReadonlyArray<string>,
-  b: ReadonlyArray<string>,
-): number => {
-  const shared = a.filter((id) => b.includes(id)).length;
-  return shared / (a.length + b.length - shared);
-};
+  candidate: ReadonlyArray<string>,
+  kept: ReadonlyArray<string>,
+): number =>
+  candidate.filter((id) => kept.includes(id)).length / candidate.length;
 
 const scored = (
   cliques: ReadonlyArray<Clique>,
@@ -62,7 +60,7 @@ const scored = (
  * the weakest pair does, with `evidence` `min(1, shared changes / 10)` so that
  * a unit seen three times does not outrank one seen eleven times. A clique
  * with a member that is not a real territory is left out, and so is one that
- * shares at least half of its territories with a better scored one.
+ * has at least half of its territories in a better scored one.
  */
 export const cliqueEntries = (
   cliques: ReadonlyArray<Clique>,
@@ -78,7 +76,7 @@ export const cliqueEntries = (
     if (
       kept.every(
         ({ territories }) =>
-          overlap(territories, candidate.territories) < SAME_UNIT_OVERLAP,
+          overlap(candidate.territories, territories) < SAME_UNIT_OVERLAP,
       )
     ) {
       kept.push(candidate);

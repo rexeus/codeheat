@@ -1,7 +1,7 @@
 import type { Report } from "@codeheat/engine";
 import { describe, expect, it } from "vitest";
 
-import { territoryLines } from "./territory-view.js";
+import { fileTerritoryLine, territoryLines } from "./territory-view.js";
 
 type Territories = Report["territories"];
 
@@ -52,5 +52,48 @@ describe("territoryLines", () => {
         territories: { recommended: 0, details: [], nodes: [] },
       }),
     ).toStrictEqual([]);
+  });
+});
+
+describe("fileTerritoryLine", () => {
+  const fit = {
+    detail: 1,
+    containment: 0.4615,
+    radius: 2,
+    partner: { territory: "b", sharedChanges: 6, share: 0.4615 },
+    distantPairs: 0,
+    hiddenPairs: 0,
+    cliques: 0,
+    erosion: null,
+    chronicFiles: 0,
+    acuteFiles: 0,
+    chronicShare: 0,
+    fixDensity: null,
+  };
+  const nodes = [
+    { ...node("a", "folder"), path: "billing", changes: 13, fit },
+    { ...node("b", "folder"), path: "web" },
+    {
+      ...node("c", "folder"),
+      path: "quiet\u001B[0m",
+      changes: 0,
+      fit: { ...fit, containment: null, partner: null },
+    },
+  ];
+
+  it("says how many changes of the territory stay inside and which territory it changes with most", () => {
+    expect(fileTerritoryLine(nodes, "a")).toStrictEqual([
+      "territory billing: 46% of 13 changes stay inside, most often with web (6)",
+    ]);
+  });
+
+  it("says when the territory has no counted changes, with its path made safe to print", () => {
+    expect(fileTerritoryLine(nodes, "c")).toStrictEqual([
+      "territory quiet\\u001b[0m: no counted changes",
+    ]);
+  });
+
+  it("says nothing for a territory that is not listed", () => {
+    expect(fileTerritoryLine(nodes, "z")).toStrictEqual([]);
   });
 });

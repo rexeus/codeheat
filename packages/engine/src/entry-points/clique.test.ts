@@ -100,3 +100,16 @@ describe("cliqueEntries of one unit", () => {
     ]);
   });
 });
+
+describe("cliqueEntries of different sizes", () => {
+  it("drops a clique when half or more of its own territories are in a better one, whatever the size of the better", () => {
+    const entries = cliqueEntries(
+      [clique(["a", "b", "e"], 12, 0.5), clique(["a", "b", "c", "d"], 12, 0.5)],
+      BY_ID,
+    );
+
+    expect(entries.map(({ territories }) => territories)).toStrictEqual([
+      ["a", "b", "c", "d"],
+    ]);
+  });
+});

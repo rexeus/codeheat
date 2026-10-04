@@ -81,6 +81,9 @@ describe("codeheat names the entry points of a file", () => {
       });
 
       expect(text.stdout).toContain(
+        "territory billing: 46% of 13 changes stay inside, most often with web (7)",
+      );
+      expect(text.stdout).toContain(
         "entry point #1 (boundary): The boundary does not hold: changes here keep reaching into other territories.",
       );
       const result = yield* Schema.decodeUnknownEffect(InspectResult)(
@@ -89,6 +92,10 @@ describe("codeheat names the entry points of a file", () => {
       expect(
         result.matches[0]?.entryPoints.map(({ kind }) => kind),
       ).toStrictEqual(["boundary"]);
+      expect(result.territories.map(({ path }) => path)).toStrictEqual([
+        "billing",
+        "web",
+      ]);
     }).pipe(Effect.scoped),
   );
 });

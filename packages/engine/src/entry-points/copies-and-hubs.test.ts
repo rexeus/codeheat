@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import type { CopyFamily } from "../report/copy-family.js";
 import type { UnstableInterface } from "../report/unstable-interface.js";
 import { DEFAULT_THRESHOLDS } from "../testing/report-defaults.js";
+import { TENTH_EACH } from "../testing/tenth-heat.js";
 import { copiesEntries } from "./copies.js";
 import { hubEntries } from "./hub.js";
 
@@ -12,9 +13,6 @@ const TERRITORIES = new Map([
   ["b/y.ts", "t3"],
   ["lib/hub.ts", "t4"],
 ]);
-
-/** Every distinct path holds a tenth of all the heat. */
-const tenthEach = (paths: Iterable<string>): number => new Set(paths).size / 10;
 
 const family = (overrides: Partial<CopyFamily> = {}): CopyFamily => ({
   files: ["a/x.ts", "b/x.ts"],
@@ -26,7 +24,7 @@ const family = (overrides: Partial<CopyFamily> = {}): CopyFamily => ({
 });
 
 const copies = (families: ReadonlyArray<CopyFamily>) =>
-  copiesEntries(families, TERRITORIES, tenthEach, DEFAULT_THRESHOLDS);
+  copiesEntries(families, TERRITORIES, TENTH_EACH, DEFAULT_THRESHOLDS);
 
 describe("copiesEntries", () => {
   it("scores the heat of the copies times the share of the changes touching several that touched all", () => {
@@ -65,7 +63,7 @@ describe("copiesEntries", () => {
 
   it("reads the gate from the limits", () => {
     expect(
-      copiesEntries([family({ changesToAll: 5 })], TERRITORIES, tenthEach, {
+      copiesEntries([family({ changesToAll: 5 })], TERRITORIES, TENTH_EACH, {
         ...DEFAULT_THRESHOLDS,
         minEntryChanges: 6,
       }),
@@ -91,19 +89,19 @@ const hub = (
 });
 
 const hubs = (interfaces: ReadonlyArray<UnstableInterface>) =>
-  hubEntries(interfaces, TERRITORIES, tenthEach, DEFAULT_THRESHOLDS);
+  hubEntries(interfaces, TERRITORIES, TENTH_EACH, DEFAULT_THRESHOLDS);
 
 describe("hubEntries", () => {
-  it("scores the heat of the hub and its listed dependents times the share of its dependents that changed with it", () => {
+  it("scores the heat of the hub plus the part of its listed dependents that went along, times the share of its dependents that changed with it", () => {
     const [entry] = hubs([hub()]);
 
-    // heat 3 / 10, ripple 10 / 20
-    expect(entry?.score).toBeCloseTo(0.15, 10);
+    // heat (1 + 6/10 + 4/10) / 10, ripple 10 / 20
+    expect(entry?.score).toBeCloseTo(0.1, 10);
     expect(entry?.kind).toBe("hub");
     expect(entry?.files).toStrictEqual(["lib/hub.ts"]);
     expect(entry?.territories).toStrictEqual(["t4"]);
     expect(entry?.evidence).toStrictEqual({
-      heatShare: 0.3,
+      heatShare: 0.2,
       fanIn: 20,
       changes: 30,
       medianDependentChanges: 8,

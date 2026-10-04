@@ -100,7 +100,7 @@ describe("entryPointLines subjects", () => {
         rank: 2,
         kind: "hotspot",
         files: ["billing/a.ts", "billing/b.ts"],
-        evidence: { heatShare: 0.4, chronicShare: 0.5, chronicFiles: 2 },
+        evidence: { chronicHeatShare: 0.4, chronicShare: 0.5, chronicFiles: 2 },
       }),
       entry({
         rank: 3,
@@ -240,7 +240,7 @@ describe("entries with two findings", () => {
         kind: "hotspot",
         verdict: "Chronic.",
         designMove: "Split it.",
-        evidence: { heatShare: 0.4, chronicShare: 0.6, chronicFiles: 2 },
+        evidence: { chronicHeatShare: 0.3, chronicShare: 0.6, chronicFiles: 2 },
         files: ["a/hot.ts"],
       },
     ],
@@ -253,7 +253,7 @@ describe("entries with two findings", () => {
       "   40% of the heat; 50% of its 30 changes stay inside",
       "   Move.",
       "   Also hotspot: Chronic.",
-      "   40% of the heat; 60% of it in 2 chronic hotspots",
+      "   30% of all heat sits in 2 chronic hotspots",
       "   Split it.",
     ]);
   });

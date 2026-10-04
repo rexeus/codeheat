@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { Coupling } from "../report/report.js";
 import { DEFAULT_THRESHOLDS } from "../testing/report-defaults.js";
+import { TENTH_EACH } from "../testing/tenth-heat.js";
 import { couplingEntries } from "./coupling.js";
 
 const AREAS = new Map([
@@ -38,9 +39,6 @@ const coupling = (
   ...overrides,
 });
 
-/** Every distinct path holds a tenth of all the heat. */
-const tenthEach = (paths: Iterable<string>): number => new Set(paths).size / 10;
-
 const entries = (
   couplings: ReadonlyArray<Coupling>,
   limits = DEFAULT_THRESHOLDS,
@@ -48,7 +46,7 @@ const entries = (
   couplingEntries(
     couplings,
     { areaOfFile: AREAS, territoryOf: TERRITORIES },
-    tenthEach,
+    TENTH_EACH,
     limits,
   );
 

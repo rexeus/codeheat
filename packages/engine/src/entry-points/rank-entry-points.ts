@@ -23,7 +23,8 @@ const byScore = (a: Entry, b: Entry): number =>
  * `limits.maxEntriesPerKind` best, the best of every kind is listed whatever
  * its score, and the other places are filled by score, up to
  * `limits.maxEntries`. Ranked by score, then kind, then what the entry
- * concerns.
+ * concerns. Every entry has passed `limits.minEntryScore` already, so the best
+ * of a kind that scores less is not listed at all.
  */
 const pick = (
   entries: ReadonlyArray<Entry>,
@@ -47,21 +48,28 @@ const pick = (
     .toSorted(byScore);
 };
 
+/** The entries with their score rounded as the report rounds it, those below `limits.minEntryScore` left out. */
+const scored = (
+  entries: ReadonlyArray<Entry>,
+  limits: EntryLimits,
+): ReadonlyArray<Entry> =>
+  entries
+    .map((entry) =>
+      Object.assign({}, entry, { score: roundReported(entry.score) }),
+    )
+    .filter(({ score }) => score > 0 && score >= limits.minEntryScore);
+
 /**
  * Ranks the places to start (see `EntryPoint`) among the candidates of every
  * kind, a territory that is both a boundary and a hotspot counting once (see
- * `entriesOf`); see `gatherCandidates` and the modules of the kinds for the
- * rules. Empty when nothing qualifies.
+ * `entriesOf`), those scoring less than `limits.minEntryScore` left out; see
+ * `gatherCandidates` and the modules of the kinds for the rules. Empty when
+ * nothing qualifies.
  */
 export const rankEntryPoints = (
   input: EntryPointInput,
-): ReadonlyArray<EntryPoint> => {
-  const ranked: Array<EntryPoint> = [];
-  for (const entry of pick(entriesOf(gatherCandidates(input)), input.limits)) {
-    const score = roundReported(entry.score);
-    if (score > 0) {
-      ranked.push(Object.assign({ rank: ranked.length + 1 }, entry, { score }));
-    }
-  }
-  return ranked;
-};
+): ReadonlyArray<EntryPoint> =>
+  pick(
+    scored(entriesOf(gatherCandidates(input)), input.limits),
+    input.limits,
+  ).map((entry, index) => Object.assign({ rank: index + 1 }, entry));

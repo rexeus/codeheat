@@ -5,7 +5,9 @@ import type { TerritoryFit } from "../report/territory-fit.js";
 import { fileRecord } from "../testing/file-record.js";
 import { DEFAULT_THRESHOLDS } from "../testing/report-defaults.js";
 import { fitRecord, territoryRecord } from "../testing/territory-record.js";
+import { fileHeatOf } from "./file-heat.js";
 import { hotspotEntries } from "./hotspot.js";
+import type { HotspotPlaces } from "./hotspot.js";
 import type { Judged } from "./judged-territories.js";
 
 const NODES = [
@@ -27,13 +29,23 @@ const judged = (
 
 const chronic: Heat = { kind: "chronic", hotWindows: 6, windows: 8 };
 
+/** Three files of no territory of interest that hold 4500 of the 6000 units of heat once a 1500-unit hotspot is added. */
+const FILLER = ["f1", "f2", "f3"].map((name) =>
+  fileRecord(`z/${name}.ts`, "b"),
+);
+
 const entries = (
   territories: ReadonlyArray<Judged>,
-  files: Parameters<typeof hotspotEntries>[1],
-) => hotspotEntries(territories, files, NODES, DEFAULT_THRESHOLDS);
+  files: HotspotPlaces["files"],
+) =>
+  hotspotEntries(
+    territories,
+    { files, nodes: NODES, heat: fileHeatOf([...files, ...FILLER]) },
+    DEFAULT_THRESHOLDS,
+  );
 
 describe("hotspotEntries", () => {
-  it("scores the share of all the heat that sits in chronic hotspots, more with fixes", () => {
+  it("scores the share of all the heat that sits in the chronic hotspots, more with fixes, whatever the territory's heat share", () => {
     const [entry] = entries(
       [
         judged("a", 0.4, {
@@ -45,18 +57,19 @@ describe("hotspotEntries", () => {
       [fileRecord("a/x.ts", "a", { heat: chronic })],
     );
 
-    expect(entry?.score).toBeCloseTo(0.25, 10);
+    // one 1500-unit hotspot of 6000 units: 0.25, times 1.25 for the fixes
+    expect(entry?.score).toBeCloseTo(0.3125, 10);
     expect(entry?.kind).toBe("hotspot");
     expect(entry?.territories).toStrictEqual(["a"]);
     expect(entry?.evidence).toStrictEqual({
-      heatShare: 0.4,
+      chronicHeatShare: 0.25,
       chronicShare: 0.5,
       chronicFiles: 1,
       fixShare: 0.25,
     });
   });
 
-  it("names the chronic hotspots of the territory, below it included, highest score first, at most five", () => {
+  it("names the chronic hotspots of the territory, below it included, hottest first, at most five", () => {
     const files = [
       fileRecord("a/low.ts", "a", { heat: chronic, score: 0.1 }),
       ...["1", "2", "3", "4"].map((name, index) =>
@@ -72,11 +85,11 @@ describe("hotspotEntries", () => {
     const [entry] = entries([judged("a", 0.4, { chronicShare: 0.6 })], files);
 
     expect(entry?.files).toStrictEqual([
-      "a/low.ts",
       "a/sub/1.ts",
       "a/sub/2.ts",
       "a/sub/3.ts",
       "a/sub/4.ts",
+      "a/low.ts",
     ]);
     expect(entry?.designMove).toBe(
       "Split a hotspot: break a/sub/1.ts, a/sub/2.ts, a/sub/3.ts, and 2 more into parts that each change for one reason.",

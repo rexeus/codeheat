@@ -111,15 +111,21 @@ describe("rankEntryPoints", () => {
       [2, "boundary", ["b"]],
       [3, "boundary", ["c"]],
       [4, "boundary", ["d"]],
+      [5, "boundary", ["e"]],
+      [6, "boundary", ["f"]],
     ]);
     expect(ranked.map(({ score }) => score)).toStrictEqual([
-      0.09, 0.08, 0.07, 0.06,
+      0.09, 0.08, 0.07, 0.06, 0.05, 0.04,
     ]);
   });
 
-  it("lists at most four of a kind, but always the best of every kind", () => {
+  it("lists at most the limit of a kind, but always the best of every kind", () => {
     const ranked = rankEntryPoints(
-      input({ files: HEAT_FILES, copyFamilies: [copies()] }),
+      input({
+        files: HEAT_FILES,
+        copyFamilies: [copies()],
+        limits: { ...DEFAULT_THRESHOLDS, maxEntriesPerKind: 4 },
+      }),
     );
 
     // the copies score 0.02, below every boundary, yet they are listed
@@ -131,6 +137,19 @@ describe("rankEntryPoints", () => {
       "copies",
     ]);
     expect(ranked.at(-1)?.rank).toBe(5);
+  });
+
+  it("leaves out an entry below the least score, and with it a kind whose best scores less", () => {
+    const ranked = rankEntryPoints(
+      input({
+        files: HEAT_FILES,
+        copyFamilies: [copies()],
+        limits: { ...DEFAULT_THRESHOLDS, minEntryScore: 0.0201 },
+      }),
+    );
+
+    expect(ranked.map(({ kind }) => kind)).not.toContain("copies");
+    expect(ranked.every(({ score }) => score >= 0.0201)).toBe(true);
   });
 
   it("is empty when nothing qualifies", () => {
@@ -222,7 +241,10 @@ describe("rankEntryPoints of one territory", () => {
               : node,
           ),
         },
-        files: [fileRecord("a/hot.ts", "a", { heat: chronic, score: 0.9 })],
+        files: [
+          fileRecord("a/hot.ts", "a", { heat: chronic, score: 0.9 }),
+          heated("c/x.ts", "c", 13500),
+        ],
       }),
     );
 
@@ -230,7 +252,7 @@ describe("rankEntryPoints of one territory", () => {
     expect(
       ranked.filter(({ territories: ids }) => ids[0] === "a"),
     ).toHaveLength(1);
-    // boundary 0.1 × 0.9 × 1.5 = 0.135 against hotspot 0.1 × 0.6 = 0.06
+    // boundary 0.1 × 0.9 × 1.5 = 0.135 against hotspot 1500 / 15000 = 0.1
     expect(first?.kind).toBe("boundary");
     expect(first?.score).toBe(0.135);
     expect(first?.files).toStrictEqual([]);

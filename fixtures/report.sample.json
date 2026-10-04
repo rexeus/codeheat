@@ -71,8 +71,9 @@
     "minEntryChronicShare": 0.5,
     "minEntryChanges": 3,
     "minEntryCouplingChanges": 5,
-    "maxEntriesPerKind": 4,
-    "maxEntries": 10
+    "maxEntriesPerKind": 6,
+    "maxEntries": 10,
+    "minEntryScore": 0.005
   },
   "totals": {
     "files": 36,
@@ -2108,11 +2109,12 @@
       "territories": ["t2"],
       "files": [],
       "evidence": {
-        "heatShare": 0.6239,
+        "chronicHeatShare": 0.332,
         "chronicShare": 0.5321,
         "chronicFiles": 2,
         "containment": 0.5541,
         "fixShare": 0.3108,
+        "heatShare": 0.6239,
         "changes": 74,
         "distantPairs": 3,
         "hiddenPairs": 1,
@@ -2144,7 +2146,7 @@
           "verdict": "Chronic hotspot: the same files stay among the hottest quarter after quarter.",
           "designMove": "Split a hotspot: break packages/billing/src/invoice.ts and packages/billing/src/tax.ts into parts that each change for one reason.",
           "evidence": {
-            "heatShare": 0.6239,
+            "chronicHeatShare": 0.332,
             "chronicShare": 0.5321,
             "chronicFiles": 2,
             "containment": 0.5541,

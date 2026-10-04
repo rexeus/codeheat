@@ -85,6 +85,7 @@ const billing: Module = {
 const result = (
   matches: InspectResult["matches"],
   modules: InspectResult["modules"] = [billing],
+  territories: InspectResult["territories"] = [],
 ): InspectResult => ({
   schemaVersion: 1,
   window: {
@@ -96,6 +97,7 @@ const result = (
   },
   matches,
   modules,
+  territories,
   contractFiles: [],
   unmatched: [],
 });

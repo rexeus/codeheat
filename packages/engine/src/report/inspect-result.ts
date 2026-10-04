@@ -10,6 +10,7 @@ import { EntryPoint } from "./entry-point.js";
 import { Module } from "./module.js";
 import { FileStats } from "./report.js";
 import { Count, UnitInterval } from "./scalars.js";
+import { Territory } from "./territory.js";
 
 /** A file that changes together with an inspected file. */
 const Partner = Schema.Struct({
@@ -69,6 +70,14 @@ export const InspectResult = Schema.Struct({
   matches: Schema.Array(InspectEntry),
   /** The modules of the matched files, in report order: where a change would land and what it tends to pull in. */
   modules: Schema.Array(Module),
+  /**
+   * The territories of the matched files (`FileStats.territory`, the finest one
+   * of each) and the partners of their fit (`TerritoryFit.partner`), as they
+   * stand in `Report.territories`, in report order: how well the file's area
+   * holds up to the way the code changes, for the files that are in no entry
+   * point too.
+   */
+  territories: Schema.Array(Territory),
   /**
    * Contract files the patterns matched, sorted. A contract has no score and
    * no entry in `matches`: inspect the code that changes with it, which lists

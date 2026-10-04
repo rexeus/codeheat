@@ -75,6 +75,8 @@ export const Thresholds = Schema.Struct({
   minEntryChanges: Count,
   /** Fewest shared changes (`Coupling.sharedCommits`) of a hidden coupling for a `coupling` entry point. */
   minEntryCouplingChanges: Count,
+  /** Smallest `EntryPoint.score` an entry point needs, as a share of all the heat at stake (0.005 is half a percent of the change effort); a kind whose best entry scores less has none. */
+  minEntryScore: UnitInterval,
   /** Most entry points of one kind (counting a territory that is both a boundary and a hotspot once, under its stronger kind). */
   maxEntriesPerKind: Count,
   /** Most entry points in the report. */

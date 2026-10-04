@@ -4,6 +4,7 @@ import { isJudgeablePair } from "../distant/distant-couplings.js";
 import type { Coupling } from "../report/report.js";
 import { evidenceOf } from "./candidate.js";
 import type { Candidate } from "./candidate.js";
+import type { FileHeat } from "./file-heat.js";
 import type { EntryLimits } from "./limits.js";
 import { COUPLING_VERDICT, couplingMove } from "./moves.js";
 
@@ -14,8 +15,7 @@ import { COUPLING_VERDICT, couplingMove } from "./moves.js";
  * recommended detail; a file without one, such as a contract, is left out) and
  * are judgeable (see `isJudgeablePair`: no test code, no two contract files),
  * with at least `limits.minEntryCouplingChanges` shared changes. The score is
- * the share of all the heat that the two files hold (`heatShareOf` gives it
- * for a set of paths) times `Coupling.degree`, how tightly the two change
+ * the share of all the heat that the two files hold (`heat.share`) times `Coupling.degree`, how tightly the two change
  * together. Of several pairs between the same two territories, only the best
  * is listed. `places.territoryOf` maps a path to its finest territory, for the
  * entry's `territories`.
@@ -26,7 +26,7 @@ export const couplingEntries = (
     readonly areaOfFile: ReadonlyMap<string, string>;
     readonly territoryOf: ReadonlyMap<string, string>;
   },
-  heatShareOf: (paths: Iterable<string>) => number,
+  heat: FileHeat,
   limits: EntryLimits,
 ): ReadonlyArray<Candidate> => {
   const best = new Map<string, Candidate>();
@@ -43,7 +43,7 @@ export const couplingEntries = (
     ) {
       continue;
     }
-    const heatShare = heatShareOf([coupling.a, coupling.b]);
+    const heatShare = heat.share([coupling.a, coupling.b]);
     const candidate: Candidate = {
       kind: "coupling",
       score: heatShare * coupling.degree,

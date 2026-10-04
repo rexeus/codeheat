@@ -10,7 +10,7 @@ import type { Candidate } from "./candidate.js";
 import { cliqueEntries } from "./clique.js";
 import { copiesEntries } from "./copies.js";
 import { couplingEntries } from "./coupling.js";
-import { heatShareOf } from "./file-heat.js";
+import { fileHeatOf } from "./file-heat.js";
 import { hotspotEntries } from "./hotspot.js";
 import { hubEntries } from "./hub.js";
 import { judgedTerritories } from "./judged-territories.js";
@@ -49,18 +49,22 @@ export const gatherCandidates = (
   const territoryOf = new Map(
     files.map(({ path, territory }) => [path, territory]),
   );
-  const heatShares = heatShareOf(files);
+  const heat = fileHeatOf(files);
   const areaOfFile = realAreaOfFile(territories, territoryOf);
   return [
     ...boundaryEntries(judged, pathOf, limits),
-    ...hotspotEntries(judged, files, territories.nodes, limits),
+    ...hotspotEntries(
+      judged,
+      { files, nodes: territories.nodes, heat },
+      limits,
+    ),
     ...cliqueEntries(input.cliques, byId, limits),
-    ...copiesEntries(input.copyFamilies, territoryOf, heatShares, limits),
-    ...hubEntries(input.unstableInterfaces, territoryOf, heatShares, limits),
+    ...copiesEntries(input.copyFamilies, territoryOf, heat, limits),
+    ...hubEntries(input.unstableInterfaces, territoryOf, heat, limits),
     ...couplingEntries(
       input.couplings,
       { areaOfFile, territoryOf },
-      heatShares,
+      heat,
       limits,
     ),
   ];

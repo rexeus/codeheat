@@ -12,6 +12,7 @@ import { radiusClause } from "./spread-view.js";
 import type { Style } from "./style.js";
 import { plain, renderTable } from "./table.js";
 import type { Cell } from "./table.js";
+import { fileTerritoryLine } from "./territory-view.js";
 
 type Entry = InspectResult["matches"][number];
 
@@ -111,7 +112,7 @@ const moduleLine = (module: Module | undefined): ReadonlyArray<string> => {
 
 const entryLines = (
   entry: Entry,
-  modules: ReadonlyArray<Module>,
+  places: Pick<InspectResult, "modules" | "territories">,
   style: Style,
 ): ReadonlyArray<string> => [
   style.bold(escapeForTerminal(entry.path)),
@@ -120,7 +121,8 @@ const entryLines = (
   `indentation complexity ${entry.complexity.total} (mean ${twoDecimals(entry.complexity.mean)}, max ${entry.complexity.max})`,
   ...heatLines(entry),
   ...fileEntryPointLines(entry.entryPoints),
-  ...moduleLine(modules.find(({ path }) => path === entry.module)),
+  ...moduleLine(places.modules.find(({ path }) => path === entry.module)),
+  ...fileTerritoryLine(places.territories, entry.territory),
   ...entry.reasons.map((reason) => `- ${escapeForTerminal(reason)}`),
   ...copyFamilyLine(entry.path, entry.copyFamily),
   "",
@@ -138,6 +140,6 @@ export const renderInspect = (result: InspectResult, style: Style): string =>
     style.dim(`${day(result.window.since)} to ${day(result.window.until)}`),
     ...result.matches.flatMap((entry) => [
       "",
-      ...entryLines(entry, result.modules, style),
+      ...entryLines(entry, result, style),
     ]),
   ].join("\n");

@@ -39,10 +39,28 @@ const toEntry = (
   entryPoints,
 });
 
+/** The ids of the territories `ids` and the partners of their fit. */
+const focusedTerritoriesOf = (
+  nodes: Report["territories"]["nodes"],
+  ids: ReadonlyArray<string>,
+): ReadonlySet<string> => {
+  const focused = new Set(ids);
+  for (const node of nodes) {
+    if (
+      focused.has(node.id) &&
+      node.fit?.partner !== undefined &&
+      node.fit.partner !== null
+    ) {
+      focused.add(node.fit.partner.territory);
+    }
+  }
+  return focused;
+};
+
 /**
  * Reports the files matching `patterns`, each with its rank in the whole
  * universe, its strongest co-change partners, its copy family, and the entry
- * points it belongs to, and the modules they belong to.
+ * points it belongs to, and the modules and territories they belong to.
  *
  * `report` must be unlimited (as `analyze` returns it); a truncated report
  * would drop matches and partners.
@@ -78,6 +96,10 @@ export const inspect = (
     report.entryPoints,
     report.territories.nodes,
   );
+  const focusedTerritories = focusedTerritoriesOf(
+    report.territories.nodes,
+    matches.map((file) => file.territory),
+  );
   return {
     schemaVersion: 1,
     window: report.window,
@@ -90,6 +112,9 @@ export const inspect = (
       }),
     ),
     modules: report.modules.filter(({ path }) => focusedModules.has(path)),
+    territories: report.territories.nodes.filter(({ id }) =>
+      focusedTerritories.has(id),
+    ),
     contractFiles: [...contractFiles].toSorted((a, b) => Order.String(a, b)),
     unmatched,
   };

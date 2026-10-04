@@ -39,7 +39,7 @@ const Finding = Schema.Struct({
    * out.
    */
   evidence: Schema.Record(Schema.String, Schema.Finite),
-  /** The files this finding names, sorted; see `EntryPoint.files`. */
+  /** The files this finding names (a hotspot's hottest first); see `EntryPoint.files`. */
   files: Schema.Array(Schema.String),
 });
 
@@ -70,8 +70,9 @@ export const EntryPoint = Schema.Struct({
    */
   territories: Schema.Array(Schema.String),
   /**
-   * The files it concerns, sorted: the chronic hotspots of a `hotspot`, the
-   * members of `copies`, the file of `hub`, the two files of `coupling`. Empty
+   * The files it concerns: the chronic hotspots of a `hotspot`, the hottest
+   * first, the members of `copies` (sorted), the file of `hub`, the two files of
+   * `coupling`. They may be missing from `Report.files` when `--limit` cut it. Empty
    * for `boundary` and `clique`, which concern whole territories, and for a
    * territory that is both a boundary and a hotspot (its hotspot files are
    * in the finding).
