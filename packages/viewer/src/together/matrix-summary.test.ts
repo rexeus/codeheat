@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 
 import { indexTerritories } from "../territories/territory-index.js";
-import { territoryNode } from "../testing/reports.js";
+import { territoryFit, territoryNode } from "../testing/reports.js";
 import { matrixOf } from "./matrix-data.js";
 import { cellSummary } from "./matrix-summary.js";
 
-const LIMITS = { minSharedCommits: 3, minModuleCommits: 5 };
+const LIMITS = { minSharedCommits: 3 };
 
 const index = indexTerritories({
   recommended: 1,
@@ -18,7 +18,7 @@ const index = indexTerritories({
     territoryNode("d", "docs", {
       parent: "root",
       heatShare: 0.1,
-      changes: 2,
+      fit: territoryFit({ containment: null }),
     }),
   ],
 });
@@ -34,7 +34,7 @@ const pair = (a: string, b: string, distant: number, hidden: number) => ({
 const matrix = matrixOf(
   index,
   [pair("a", "b", 3, 3), pair("a", "c", 3, 1), pair("b", "c", 2, 0)],
-  { maxCommitFiles: 50, minModuleCommits: 5 },
+  { maxCommitFiles: 50, minModuleCommits: 5, maxCoupledTerritories: 24 },
 );
 
 const say = (row: number, column: number) =>
@@ -67,23 +67,12 @@ describe("cellSummary", () => {
 
   it("says how much of a territory's changes stay inside it", () => {
     expect(say(0, 0)).toBe("core: 60% of its 20 changes stay inside it.");
-    expect(say(3, 3)).toBe("docs is not judged: too few changes to judge (2).");
+    expect(say(3, 3)).toBe(
+      "docs is not judged: no counted changes in this window.",
+    );
   });
 
-  it("says why a pair is not listed", () => {
-    expect(say(1, 3)).toBe(
-      "web and docs are not compared: docs has fewer than 5 changes.",
-    );
-    expect(say(0, 3)).toBe(
-      "core and docs are not compared: docs has fewer than 5 changes.",
-    );
-    expect(
-      cellSummary(
-        matrixOf(index, [], { maxCommitFiles: 50, minModuleCommits: 5 }),
-        0,
-        1,
-        LIMITS,
-      ),
-    ).toBe("core and web shared fewer than 3 changes.");
+  it("says that a pair the report does not list shared too few changes", () => {
+    expect(say(1, 3)).toBe("web and docs shared fewer than 3 changes.");
   });
 });

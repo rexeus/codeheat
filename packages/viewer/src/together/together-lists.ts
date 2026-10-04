@@ -28,7 +28,7 @@ export type FilePairView = {
   readonly imports: string;
   /** Whether no import links them: hidden coupling. */
   readonly hidden: boolean;
-  /** How far apart the files lie in the design, in words. */
+  /** Whether the files lie in different territories, or how many folders apart they are, in words. */
   readonly apart: string;
   readonly stats: readonly EntryStat[];
 };
@@ -82,14 +82,15 @@ const importsOf = (relation: string | null): string =>
     ? "import relation not known"
     : (IMPORTS[relation] ?? "import relation not known");
 
-const apartOf = ({
-  crossesModule,
-  distance,
-}: Report["distantCouplings"][number]): string => {
-  if (crossesModule) {
-    return "in different modules";
-  }
-  return `${formatCount(distance)} folders apart`;
+/** How far apart the files of a pair lie in the design, in words: in different territories (at the recommended detail), or how many folders apart inside one. */
+const apartOf = (
+  distance: number,
+  territories: readonly [string | undefined, string | undefined],
+): string => {
+  const [a, b] = territories;
+  return a !== undefined && b !== undefined && a !== b
+    ? "in different territories"
+    : `${formatCount(distance)} folders apart`;
 };
 
 /**
@@ -111,13 +112,17 @@ export const filePairViews = (
       ? null
       : { id: territory.id, name: territoryName(territory) };
   };
+  const visibleId = (path: string): string | undefined => {
+    const id = territoryOfFile.get(path);
+    return id === undefined ? undefined : index.visibleOf(id)?.id;
+  };
   return report.distantCouplings.map((pair) => ({
     a: pair.a,
     b: pair.b,
     territories: [refOf(pair.a), refOf(pair.b)],
     imports: importsOf(pair.imports),
     hidden: pair.imports === "none",
-    apart: apartOf(pair),
+    apart: apartOf(pair.distance, [visibleId(pair.a), visibleId(pair.b)]),
     stats: [
       count(pair.sharedCommits, "shared changes"),
       share(pair.strength, "coupling degree"),

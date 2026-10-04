@@ -14,6 +14,7 @@ const report = reportOf(
     fileStats("core/a.ts", { territory: "t2" }),
     fileStats("web/b.ts", { territory: "t3" }),
     fileStats("misc/c.ts", { territory: "t4" }),
+    fileStats("core/z.ts", { territory: "t2" }),
   ],
   [],
   [],
@@ -51,14 +52,25 @@ const report = reportOf(
       },
       {
         a: "core/a.ts",
-        b: "misc/c.ts",
+        b: "core/z.ts",
         sharedCommits: 5,
+        strength: 0.3,
+        distance: 5,
+        crossesModule: true,
+        modules: { a: "core", b: "core" },
+        imports: null,
+        score: 1,
+      },
+      {
+        a: "core/a.ts",
+        b: "misc/c.ts",
+        sharedCommits: 4,
         strength: 0.3,
         distance: 5,
         crossesModule: false,
         modules: { a: "core", b: "core" },
         imports: null,
-        score: 1,
+        score: 0.5,
       },
     ],
     copyFamilies: [
@@ -103,19 +115,25 @@ describe("cliqueViews", () => {
 });
 
 describe("filePairViews", () => {
-  const [hidden, near] = filePairViews(report, index);
+  const [hidden, near, bucket] = filePairViews(report, index);
 
   it("says whether an import links the files and how far apart they lie", () => {
     expect(hidden).toMatchObject({
       hidden: true,
       imports: "no import between them",
-      apart: "in different modules",
+      apart: "in different territories",
     });
     expect(near).toMatchObject({
       hidden: false,
       imports: "import relation not known",
       apart: "5 folders apart",
     });
+    expect(bucket?.apart).toBe("in different territories");
+  });
+
+  it("speaks of territories and never of modules, whatever crossesModule says", () => {
+    expect(near?.apart).toBe("5 folders apart");
+    expect(hidden?.apart).not.toMatch(/module/u);
   });
 
   it("names the real territory of each file and none for a bucket", () => {
@@ -123,7 +141,7 @@ describe("filePairViews", () => {
       { id: "t2", name: "core" },
       { id: "t3", name: "web" },
     ]);
-    expect(near?.territories[1]).toBeNull();
+    expect(bucket?.territories[1]).toBeNull();
   });
 
   it("carries the shared changes and the degree", () => {

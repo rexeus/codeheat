@@ -3,10 +3,9 @@
 import { formatCount, formatShare } from "../render/format.js";
 import type { Matrix, MatrixCell, MatrixRow } from "./matrix-data.js";
 
-/** The limits of the report that say why a pair is not listed. */
+/** The limit of the report that says why a pair is not listed. */
 export type SummaryLimits = {
   readonly minSharedCommits: number;
-  readonly minModuleCommits: number;
 };
 
 const times = (count: number): string =>
@@ -39,19 +38,15 @@ const diagonal = (row: MatrixRow): string =>
 const notListed = (
   a: MatrixRow,
   b: MatrixRow,
-  { minSharedCommits, minModuleCommits }: SummaryLimits,
-): string => {
-  const few = [a, b].find((row) => row.changes < minModuleCommits);
-  return few === undefined
-    ? `${a.name} and ${b.name} shared fewer than ${formatCount(minSharedCommits)} changes.`
-    : `${a.name} and ${b.name} are not compared: ${few.name} has fewer than ${formatCount(minModuleCommits)} changes.`;
-};
+  { minSharedCommits }: SummaryLimits,
+): string =>
+  `${a.name} and ${b.name} shared fewer than ${formatCount(minSharedCommits)} changes.`;
 
 /**
  * One cell in a sentence. The diagonal says how much of the territory's
  * changes stay inside; a pair says how often the two changed together and
  * whether an import links the files between them; a pair the report does not
- * list says why not.
+ * list says it shared too few changes.
  */
 export const cellSummary = (
   matrix: Matrix,

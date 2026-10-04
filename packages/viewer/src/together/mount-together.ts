@@ -5,6 +5,7 @@ import type { FileLinkContext } from "../render/file-link.js";
 import { indexTerritories } from "../territories/territory-index.js";
 import { cliqueCard, familiesCard, pairsCard } from "./list-views.js";
 import { matrixOf } from "./matrix-data.js";
+import { notComparedNote } from "./matrix-legend.js";
 import { renderMatrix } from "./matrix-view.js";
 import {
   cliqueViews,
@@ -16,6 +17,9 @@ import {
 /** What the matrix area says when the report has no territories to compare. */
 const NO_TERRITORIES =
   "This report has no territories, so there is no matrix of how they change together; analyze again with a current codeheat.";
+
+const NO_RANKED = (least: number): string =>
+  `No territory has the ${least} changes it takes to compare it with another.`;
 
 /**
  * Fills the "What changes together" section: the territory matrix, the
@@ -31,8 +35,13 @@ export const mountTogether = (
   const matrix = matrixOf(index, report.territoryCoupling, report.thresholds);
   const body = byId("together-body", HTMLElement);
   const matrixCard = h("section", "tg-card mx-card");
-  if (matrix.rows.length === 0) {
+  if (matrix.total === 0) {
     matrixCard.append(h("p", "tg-empty", NO_TERRITORIES));
+  } else if (matrix.rows.length === 0) {
+    matrixCard.append(
+      h("p", "tg-empty", NO_RANKED(report.thresholds.minModuleCommits)),
+      h("p", "tg-note", notComparedNote(matrix) ?? ""),
+    );
   } else {
     renderMatrix(matrixCard, matrix, report.thresholds);
   }

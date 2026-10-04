@@ -160,7 +160,7 @@ export const pairsCard = (
 ): HTMLElement =>
   card(
     "Files that change together across boundaries",
-    "Pairs in different modules or far apart, best first; a pair with no import between them is coupling the code does not show.",
+    "Pairs in different territories or far apart, best first; a pair with no import between them is coupling the code does not show.",
     pairs.length === 0
       ? [empty("No coupled pair lies far apart in the design.")]
       : listOf(pairs, (pair) => pairItem(pair, context)),

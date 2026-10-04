@@ -37,12 +37,6 @@ export const legendOf = (matrix: Matrix): HTMLElement =>
     h(
       "span",
       "legend-item",
-      legendSwatch({ diagonal: "0" }),
-      h("span", "muted", "not compared: too few changes"),
-    ),
-    h(
-      "span",
-      "legend-item",
       legendSwatch({ level: "3", distant: "true" }),
       h("span", "muted", "coupled files cross this boundary"),
     ),
@@ -54,8 +48,17 @@ export const legendOf = (matrix: Matrix): HTMLElement =>
     ),
   );
 
-/** How many territories the matrix covers. */
-export const capNote = (matrix: Matrix): string =>
-  matrix.total > matrix.rows.length
-    ? `The ${formatCount(matrix.rows.length)} hottest of ${formatCount(matrix.total)} territories, hottest first; buckets and test code are left out.`
-    : `All ${formatCount(matrix.rows.length)} territories, hottest first; buckets and test code are left out.`;
+/** How many territories the matrix compares, and of how many. */
+export const capNote = (matrix: Matrix): string => {
+  const capped =
+    matrix.total > matrix.considered
+      ? ` (the ${formatCount(matrix.considered)} hottest of ${formatCount(matrix.total)} were considered)`
+      : "";
+  return `${formatCount(matrix.rows.length)} territories, hottest first${capped}; buckets and test code are left out.`;
+};
+
+/** The hottest territories the matrix leaves out for having too few changes to compare, in one sentence; `null` when it leaves none out. */
+export const notComparedNote = (matrix: Matrix): string | null =>
+  matrix.notCompared.length === 0
+    ? null
+    : `Not compared, too few changes: ${matrix.notCompared.map(({ name }) => name).join(", ")}.`;

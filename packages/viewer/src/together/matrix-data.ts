@@ -17,9 +17,6 @@ import type {
   TerritoryIndex,
 } from "../territories/territory-index.js";
 
-/** The matrix covers this many territories, the hottest; the engine lists the pairs of the same ones. */
-const MATRIX_TERRITORIES = 24;
-
 /** Steps of the ramp a cell is colored by: 1 is the fewest shared changes shown, 5 the most. */
 export const MATRIX_LEVELS = 5;
 
@@ -48,10 +45,20 @@ export type MatrixCell = {
   readonly level: number;
 };
 
+/** What the matrix reads from the report: how a territory is judged, how many it covers, and how many changes rank one. */
+export type MatrixLimits = JudgementLimits & {
+  readonly maxCoupledTerritories: number;
+};
+
 export type Matrix = {
+  /** The territories compared, hottest first: those among the hottest `maxCoupledTerritories` with at least `minModuleCommits` changes. */
   readonly rows: readonly MatrixRow[];
-  /** The real territories at the recommended detail; more than `rows` when the matrix is capped. */
+  /** The hottest territories left out of the matrix for having too few changes to compare, hottest first. */
+  readonly notCompared: readonly MatrixRow[];
+  /** The real territories at the recommended detail; more than the matrix considered when it is capped. */
   readonly total: number;
+  /** How many of them the matrix considered: the hottest `maxCoupledTerritories`. */
+  readonly considered: number;
   /** The most changes two territories of the matrix share; 0 without a pair. */
   readonly maxShared: number;
   /** The cell of two rows, the same for `(a, b)` and `(b, a)`; `null` on the diagonal and for a pair that shares too few changes to be listed. */
@@ -91,21 +98,25 @@ const levelOf = (shared: number, max: number): number =>
   );
 
 /**
- * The matrix of the territories at the recommended detail: a row for each of
- * the `MATRIX_TERRITORIES` hottest real territories (the hottest first, ties
- * by id, as the engine picks them) and a cell for each pair the report lists
- * among them. A pair of the report that involves another territory is not
- * drawn.
+ * The matrix of the territories at the recommended detail: among the
+ * `maxCoupledTerritories` hottest real territories (the hottest first, ties by
+ * id, as the engine picks them), a row for each with at least
+ * `minModuleCommits` changes, the others named apart, and a cell for each pair
+ * the report lists among the rows.
  */
 export const matrixOf = (
   index: TerritoryIndex,
   pairs: Report["territoryCoupling"],
-  limits: JudgementLimits,
+  limits: MatrixLimits,
 ): Matrix => {
   const real = index.recommended.filter(isRealTerritory);
-  const rows = real
-    .toSorted(byHeat)
-    .slice(0, MATRIX_TERRITORIES)
+  const hottest = real.toSorted(byHeat).slice(0, limits.maxCoupledTerritories);
+  const compared = hottest.filter(
+    ({ changes }) => changes >= limits.minModuleCommits,
+  );
+  const rows = compared.map((territory) => rowOf(territory, limits));
+  const notCompared = hottest
+    .filter(({ changes }) => changes < limits.minModuleCommits)
     .map((territory) => rowOf(territory, limits));
   const shown = new Set(rows.map(({ id }) => id));
   const listed = pairs.filter(({ a, b }) => shown.has(a) && shown.has(b));
@@ -126,7 +137,9 @@ export const matrixOf = (
   );
   return {
     rows,
+    notCompared,
     total: real.length,
+    considered: hottest.length,
     maxShared,
     cellAt: (row, column) => {
       const a = rows[row]?.id;

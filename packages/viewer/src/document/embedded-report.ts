@@ -37,11 +37,16 @@ const DESIGN_FIT_DEFAULTS = {
   erosion: null,
 } satisfies Partial<Report>;
 
+/** The limits a report from before the territory matrix lacks. */
+const OLDER_THRESHOLDS = { maxCoupledTerritories: 24 } satisfies Partial<
+  Report["thresholds"]
+>;
+
 /**
  * Reads a report written by `serializeReport`. The page embeds a report the
  * engine already decoded, so this only rejects a document of the wrong kind or
  * schema version instead of rendering garbage. A report from an older codeheat
- * gets empty design-fit fields.
+ * gets empty design-fit fields and the limits it lacks.
  */
 export const parseReport = (json: string): Report => {
   const value: unknown = JSON.parse(json);
@@ -50,5 +55,9 @@ export const parseReport = (json: string): Report => {
       "The embedded document is not a codeheat report (schemaVersion 1).",
     );
   }
-  return { ...DESIGN_FIT_DEFAULTS, ...value };
+  return {
+    ...DESIGN_FIT_DEFAULTS,
+    ...value,
+    thresholds: { ...OLDER_THRESHOLDS, ...value.thresholds },
+  };
 };

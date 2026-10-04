@@ -1,10 +1,14 @@
 import { describe, expect, it } from "vitest";
 
 import { indexTerritories } from "../territories/territory-index.js";
-import { territoryNode } from "../testing/reports.js";
+import { territoryFit, territoryNode } from "../testing/reports.js";
 import { matrixOf } from "./matrix-data.js";
 
-const LIMITS = { maxCommitFiles: 50, minModuleCommits: 5 };
+const LIMITS = {
+  maxCommitFiles: 50,
+  minModuleCommits: 5,
+  maxCoupledTerritories: 24,
+};
 
 type Spec = { id: string; heat: number; kind?: "folder" | "other" | "tests" };
 
@@ -130,7 +134,7 @@ describe("matrixOf diagonal", () => {
     const matrix = matrixOf(
       indexTerritories({
         recommended: 1,
-        details: [{ level: 1, ids: ["a", "b"] }],
+        details: [{ level: 1, ids: ["a", "b", "c"] }],
         nodes: [
           territoryNode("root", ".", { fit: null }),
           territoryNode("a", "a", {
@@ -141,6 +145,12 @@ describe("matrixOf diagonal", () => {
           territoryNode("b", "b", {
             parent: "root",
             heatShare: 0.3,
+            changes: 20,
+            fit: territoryFit({ containment: null }),
+          }),
+          territoryNode("c", "c", {
+            parent: "root",
+            heatShare: 0.1,
             changes: 2,
           }),
         ],
@@ -152,8 +162,53 @@ describe("matrixOf diagonal", () => {
     expect(matrix.rows[0]).toMatchObject({ containment: 0.6, step: 4 });
     expect(matrix.rows[1]).toMatchObject({
       containment: null,
-      noData: "too few changes to judge (2)",
+      noData: "no counted changes in this window",
       step: 0,
     });
+    expect(matrix.notCompared[0]).toMatchObject({
+      noData: "too few changes to judge (2)",
+    });
+  });
+});
+
+describe("matrixOf cap and ranking", () => {
+  const nodes = [
+    territoryNode("root", ".", { fit: null }),
+    territoryNode("a", "core", { parent: "root", heatShare: 0.4, changes: 30 }),
+    territoryNode("b", "web", { parent: "root", heatShare: 0.3, changes: 3 }),
+    territoryNode("c", "auth", { parent: "root", heatShare: 0.2, changes: 12 }),
+    territoryNode("d", "docs", { parent: "root", heatShare: 0.1, changes: 20 }),
+  ];
+  const index = indexTerritories({
+    recommended: 1,
+    details: [{ level: 1, ids: ["a", "b", "c", "d"] }],
+    nodes,
+  });
+
+  it("reads the cap from the report's limit instead of its own", () => {
+    const matrix = matrixOf(index, [], { ...LIMITS, maxCoupledTerritories: 3 });
+
+    expect(matrix.considered).toBe(3);
+    expect(matrix.total).toBe(4);
+    expect(matrix.rows.map(({ id }) => id)).toStrictEqual(["a", "c"]);
+  });
+
+  it("ranks only territories with enough changes and names the others apart", () => {
+    const matrix = matrixOf(index, [], LIMITS);
+
+    expect(matrix.rows.map(({ id }) => id)).toStrictEqual(["a", "c", "d"]);
+    expect(matrix.notCompared.map(({ name }) => name)).toStrictEqual(["web"]);
+    expect(matrix.considered).toBe(4);
+  });
+
+  it("draws no cell for a pair with a territory that is not compared", () => {
+    const matrix = matrixOf(
+      index,
+      [pair("a", "b", 9), pair("a", "c", 6)],
+      LIMITS,
+    );
+
+    expect(matrix.maxShared).toBe(6);
+    expect(matrix.cellAt(0, 1)?.sharedChanges).toBe(6);
   });
 });

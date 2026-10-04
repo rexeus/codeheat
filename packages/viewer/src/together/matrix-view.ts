@@ -2,7 +2,7 @@ import { h } from "../render/dom.js";
 import type { Matrix } from "./matrix-data.js";
 import { moveFocus, matrixHint } from "./matrix-focus.js";
 import { gridOf } from "./matrix-grid.js";
-import { capNote, legendOf } from "./matrix-legend.js";
+import { capNote, legendOf, notComparedNote } from "./matrix-legend.js";
 import type { SummaryLimits } from "./matrix-summary.js";
 
 /**
@@ -17,7 +17,7 @@ export const renderMatrix = (
   limits: SummaryLimits,
 ): void => {
   const summary = h("p", "mx-summary", matrixHint());
-  summary.setAttribute("aria-live", "polite");
+  const notCompared = notComparedNote(matrix);
   const table = gridOf(matrix, limits);
   moveFocus(table, summary, matrix);
   target.replaceChildren(
@@ -31,5 +31,6 @@ export const renderMatrix = (
     summary,
     h("div", "mx-scroll", table),
     h("p", "mx-hint", "Scroll sideways to see every column."),
+    ...(notCompared === null ? [] : [h("p", "tg-note", notCompared)]),
   );
 };
