@@ -167,6 +167,28 @@ describe("zoomedTo", () => {
     });
   });
 
+  it("moves to the coarsest detail that shows a territory neither the current nor the recommended detail does", () => {
+    const wide: Report["territories"] = {
+      ...territories,
+      recommended: 2,
+      details: [
+        { level: 1, ids: ["t2", "t3"] },
+        { level: 2, ids: ["t4", "t5", "t3"] },
+        { level: 3, ids: ["t4", "t5", "t3", "t6"] },
+      ],
+      nodes: [
+        ...territories.nodes,
+        territoryNode("t6", "web/x", { parent: "t3" }),
+      ],
+    };
+
+    expect(zoomedTo(initialView(wide), "t6", wide)).toStrictEqual({
+      grouping: "territories",
+      detail: 3,
+      zoom: "t6",
+    });
+  });
+
   it("switches from folders to territories", () => {
     const folders = withGrouping(view, "folders");
 

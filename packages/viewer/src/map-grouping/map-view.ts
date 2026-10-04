@@ -51,18 +51,21 @@ export const withDetail = (
 
 /**
  * `view` zoomed to the territory `id`, grouped by territory. Stays at the
- * detail that shows the territory, or moves to the recommended one, which every
- * territory of the fit map and of a place to start is visible at; an id no
- * detail shows leaves the view as it is.
+ * detail that shows the territory, or moves to the recommended one, or to the
+ * coarsest detail that shows it (a territory of a card at another detail); an
+ * id no detail shows leaves the view as it is.
  */
 export const zoomedTo = (
   view: MapView,
   id: string,
   territories: Territories,
 ): MapView => {
-  const detail = [view.detail, territories.recommended].find((level) =>
-    visibleAt(territories, level).has(id),
-  );
+  const levels = [
+    view.detail,
+    territories.recommended,
+    ...territories.details.map(({ level }) => level),
+  ];
+  const detail = levels.find((level) => visibleAt(territories, level).has(id));
   return detail === undefined
     ? view
     : { grouping: "territories", detail, zoom: id };

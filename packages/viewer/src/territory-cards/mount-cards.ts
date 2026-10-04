@@ -1,7 +1,7 @@
 import type { Report } from "@codeheat/engine";
 
 import { byId, h } from "../render/dom.js";
-import type { FileLinkContext } from "../render/file-link.js";
+import type { MapLinks } from "../render/file-link.js";
 import { formatCount, formatShare } from "../render/format.js";
 import { cardsOf } from "./card-model.js";
 import type { CardSource, TerritoryCard } from "./card-model.js";
@@ -32,7 +32,7 @@ const EXPLANATION =
 type SectionInput = {
   readonly source: CardSource;
   readonly territories: Report["territories"];
-  readonly files: FileLinkContext;
+  readonly files: MapLinks;
   readonly choices: readonly LevelChoice[];
   readonly recommended: number;
 };
@@ -201,7 +201,7 @@ class CardsSection {
 export const mountCards = (
   source: CardSource,
   { territories }: Pick<Report, "territories">,
-  files: FileLinkContext,
+  files: MapLinks,
 ): void => {
   const body = byId("heat-body", HTMLElement);
   const choices = levelChoicesOf(territories);
