@@ -217,6 +217,7 @@ describe("entryViewsOf findings", () => {
         designMove: "Move a boundary: bring it together.",
         evidence: { containment: 0.35 },
         files: [],
+        territories: ["t1"],
       },
       {
         kind: "hotspot",
@@ -224,6 +225,7 @@ describe("entryViewsOf findings", () => {
         designMove: "Split a hotspot: break up a.ts.",
         evidence: { chronicHeatShare: 0.12, chronicFiles: 5 },
         files: ["packages/core/a.ts", "packages/core/b.ts"],
+        territories: ["t1"],
       },
     ],
   });

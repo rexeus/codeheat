@@ -24,6 +24,18 @@ export const boundaryVerdict = (eroding: boolean): string =>
 export const boundaryMove = (path: string, partner: string): string =>
   `Move a boundary: bring what changes together with ${path} into one territory, or give the part they share a home of its own; start with ${partner}.`;
 
+/** Says the boundary between the territories at paths `a` and `b`, each the other's leak target, does not hold. */
+export const boundaryPairVerdict = (
+  a: string,
+  b: string,
+  eroding: boolean,
+): string =>
+  `The boundary between ${a} and ${b} does not hold${eroding ? ", and it holds less than it used to" : ""}: changes in one keep reaching into the other.`;
+
+/** Move the boundary between the territories at paths `a` and `b`. */
+export const boundaryPairMove = (a: string, b: string): string =>
+  `Move a boundary: redraw the boundary between ${a} and ${b}, or give what they share a home of its own.`;
+
 export const HOTSPOT_VERDICT =
   "Chronic hotspot: the same files stay among the hottest quarter after quarter.";
 

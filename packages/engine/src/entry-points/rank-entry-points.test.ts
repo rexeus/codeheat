@@ -14,7 +14,7 @@ import { DEFAULT_THRESHOLDS } from "../testing/report-defaults.js";
 import { fitRecord } from "../testing/territory-record.js";
 import { rankEntryPoints } from "./rank-entry-points.js";
 
-/** Four units that share one territory at most, so none is the same unit as another. */
+/** Four units that share one territory at most, so none is the same unit as another, and that rank below every boundary, so that none of them takes a boundary in. */
 const FOUR_UNITS = [
   ["a", "b", "c"],
   ["a", "d", "e"],
@@ -23,7 +23,7 @@ const FOUR_UNITS = [
 ].map((modules, index) => ({
   modules,
   sharedCommits: 10,
-  weakestShare: 0.5 - index / 10,
+  weakestShare: 0.1 - index / 100,
   reason: "",
 }));
 const FOUR_HUBS = [10, 8, 6, 4].map((changedDependents) => ({

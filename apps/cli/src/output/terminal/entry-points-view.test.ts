@@ -26,6 +26,7 @@ const entry = (overrides: Partial<EntryPoint>): EntryPoint => {
         designMove: own.designMove,
         evidence: own.evidence,
         files: own.files,
+        territories: ["t2"],
       },
     ],
     ...own,
@@ -235,6 +236,7 @@ describe("entries with two findings", () => {
         designMove: "Move it.",
         evidence: { codeHeatShare: 0.4, containment: 0.5, changes: 30 },
         files: [],
+        territories: ["t2"],
       },
       {
         kind: "hotspot",
@@ -242,6 +244,7 @@ describe("entries with two findings", () => {
         designMove: "Split it.",
         evidence: { chronicHeatShare: 0.3, chronicShare: 0.6, chronicFiles: 2 },
         files: ["a/hot.ts"],
+        territories: ["t2"],
       },
     ],
   });

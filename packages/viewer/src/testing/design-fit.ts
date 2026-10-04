@@ -81,6 +81,7 @@ export const boundaryOn = (
         designMove: "Move a boundary: bring what changes together into one.",
         evidence: { containment: 0.35, distantPairs: 79, heatShare: 0.1 },
         files: [],
+        territories,
       },
     ],
   });

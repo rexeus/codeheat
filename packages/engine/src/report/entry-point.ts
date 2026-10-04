@@ -5,7 +5,8 @@ import { Schema } from "effect";
 
 /**
  * What kind of weakness an entry point is, each with one design move:
- * `boundary` (a territory whose boundary does not hold: move a boundary),
+ * `boundary` (a territory, or two territories that are each other's leak
+ * target, whose boundary does not hold: move a boundary),
  * `hotspot` (chronic hotspot files in a territory: split a hotspot),
  * `clique` (territories that change as one unit: extract a shared
  * abstraction), `copies` (a family of copies that change in lockstep: extract
@@ -28,7 +29,7 @@ const EntryPointKind = Schema.Literals([
  */
 const Finding = Schema.Struct({
   kind: EntryPointKind,
-  /** One fixed sentence per kind (a variant when the territory also erodes) saying what is wrong, for a reader new to the repository. */
+  /** One fixed sentence per kind (a variant when the territory also erodes; a `boundary` between two territories names both) saying what is wrong, for a reader new to the repository. */
   verdict: Schema.String,
   /** One sentence per kind, built from a fixed template with the paths filled in, saying what to do: move a boundary, extract a shared abstraction, break up a hub, split a hotspot, or centralize a contract. */
   designMove: Schema.String,
@@ -41,6 +42,14 @@ const Finding = Schema.Struct({
   evidence: Schema.Record(Schema.String, Schema.Finite),
   /** The files this finding names (a hotspot's hottest first); see `EntryPoint.files`. */
   files: Schema.Array(Schema.String),
+  /**
+   * `id`s of the territories this finding concerns: for a finding the entry's
+   * own kind and territories say it all, but an entry that folds in findings
+   * about other territories (a `clique` that takes in the boundary of one of
+   * its members, a `boundary` of two territories that lists each territory's
+   * own boundary) tells them apart by this.
+   */
+  territories: Schema.Array(Schema.String),
 });
 
 /**
@@ -66,8 +75,10 @@ export const EntryPoint = Schema.Struct({
   score: Schema.Finite.check(Schema.isGreaterThan(0)),
   /**
    * `id`s of the territories (see `Territories`) it concerns: the territory
-   * itself for `boundary` and `hotspot`, the members of a `clique`, and the
-   * territories that hold the files of `copies`, `hub`, and `coupling`.
+   * itself for `boundary` and `hotspot` (both territories of a `boundary`
+   * between two that leak into each other, the stronger first), the members
+   * of a `clique`, and the territories that hold the files of `copies`,
+   * `hub`, and `coupling`.
    */
   territories: Schema.Array(Schema.String),
   /**
@@ -88,9 +99,13 @@ export const EntryPoint = Schema.Struct({
   /**
    * Every finding about the entry, the primary one (the stronger, by its score
    * among the findings) first. A territory that qualifies as both a
-   * `boundary` and a `hotspot` is one entry with two findings; every other
-   * entry has one, the one repeated in `kind`, `verdict`, `designMove`,
-   * `evidence`, and `files`.
+   * `boundary` and a `hotspot` is one entry with two findings. A `boundary`
+   * between two territories lists, after its own finding, the `boundary` of
+   * each territory (the stronger first) and the hotspots of both. A `clique`
+   * lists after its own the findings of the `boundary` entries of its members
+   * that it ranks above and explains. Every other entry has one, the one
+   * repeated in `kind`, `verdict`, `designMove`, `evidence`, and `files`;
+   * each finding says which `territories` it is about.
    */
   findings: Schema.Array(Finding),
 });
