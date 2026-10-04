@@ -14,18 +14,6 @@ import { DEFAULT_THRESHOLDS } from "../testing/report-defaults.js";
 import { fitRecord } from "../testing/territory-record.js";
 import { rankEntryPoints } from "./rank-entry-points.js";
 
-/** Four units that share one territory at most, so none is the same unit as another. */
-const FOUR_UNITS = [
-  ["a", "b", "c"],
-  ["a", "d", "e"],
-  ["b", "d", "f"],
-  ["c", "e", "f"],
-].map((modules, index) => ({
-  modules,
-  sharedCommits: 10,
-  weakestShare: 0.5 - index / 10,
-  reason: "",
-}));
 const FOUR_HUBS = [10, 8, 6, 4].map((changedDependents) => ({
   path: `lib/hub${changedDependents}.ts`,
   module: "lib",
@@ -166,8 +154,12 @@ describe("rankEntryPoints of couplings and the cap", () => {
         files: [
           ...CODE_FILES,
           ...FOUR_HUBS.map(({ path }) => heated(path, "a", 100)),
+          ...COPY_FILES,
+          heated("c/x.ts", "c", 30),
+          heated("d/x.ts", "d", 30),
         ],
-        cliques: FOUR_UNITS,
+        copyFamilies: [copies()],
+        couplings: [hidden("c/x.ts", "d/x.ts")],
         unstableInterfaces: FOUR_HUBS,
       }),
     );
@@ -196,7 +188,11 @@ describe("rankEntryPoints of one territory", () => {
           nodes: both.nodes.map((node) =>
             node.id === "a"
               ? Object.assign({}, node, {
-                  fit: fitRecord({ containment: 0.1, chronicShare: 0.6 }),
+                  fit: fitRecord({
+                    containment: 0.1,
+                    chronicShare: 0.6,
+                    partner: { territory: "b", sharedChanges: 8, share: 0.2 },
+                  }),
                 })
               : node,
           ),

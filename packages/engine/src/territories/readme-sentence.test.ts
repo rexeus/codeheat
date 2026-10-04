@@ -120,6 +120,84 @@ describe("readmeSentence past badges and directives", () => {
   });
 });
 
+describe("readmeSentence on instructions", () => {
+  it.each([
+    ["See", "See the docs folder for an example of the setup."],
+    ["After", "After installing the tools, the settings file should exist."],
+    ["Run", "Run the migration before you start the service."],
+    ["To", "To use the client, create it with your token."],
+    ["Before", "Before you begin, install the toolchain."],
+    ["Note:", "Note: this package is not published yet."],
+    ["Note that", "Note that the client needs a token."],
+    ["Make sure", "Make sure the database is running first."],
+    ["Please", "Please read the contributing guide."],
+    ["Refer to", "Refer to the wiki for the details."],
+    ["a lower case opening", "see the docs folder for an example."],
+  ])("passes over a sentence that opens with %s", (_name, sentence) => {
+    expect(readmeSentence(sentence)).toBe(undefined);
+  });
+
+  it.each([
+    "Creates the audit entries described in src/audit/trace.ts.",
+    "The request helper lives in src/helper.ts and prints requests.",
+    "Config comes from ./config/default.json at startup.",
+  ])("passes over a sentence that names a file path: %s", (sentence) => {
+    expect(readmeSentence(sentence)).toBe(undefined);
+  });
+
+  it("takes the next paragraph of prose in place of an instruction", () => {
+    const readme = [
+      "# api",
+      "",
+      "See apps/web/src/example.ts for a usage example.",
+      "",
+      "Serves the public REST API of the shop.",
+    ].join("\n");
+
+    expect(readmeSentence(readme)).toBe(
+      "Serves the public REST API of the shop.",
+    );
+  });
+
+  it("keeps a sentence that merely contains an instruction word, a slash, or a dot", () => {
+    expect(
+      readmeSentence("Runs the nightly import of CI/CD data, v1.2 and I/O."),
+    ).toBe("Runs the nightly import of CI/CD data, v1.2 and I/O.");
+    expect(readmeSentence("Run-time checks for the billing service.")).toBe(
+      "Run-time checks for the billing service.",
+    );
+    expect(readmeSentence("Tokens and sessions for the web shop.")).toBe(
+      "Tokens and sessions for the web shop.",
+    );
+  });
+});
+
+describe("readmeSentence on product names and paths", () => {
+  it.each([
+    "Shared UI components for React/Next.js apps.",
+    "A TypeScript/Node.js client for the billing API.",
+    "Run time checks for the data model.",
+    "Run-time checks for the data model.",
+  ])("keeps the sentence %j, which names products and no path", (sentence) => {
+    expect(readmeSentence(sentence)).toBe(sentence);
+  });
+
+  it("still passes over a path whose folders are lower case, however its file is named", () => {
+    expect(
+      readmeSentence("The client lives in src/Client.js and wraps fetch."),
+    ).toBe(undefined);
+  });
+
+  it("finishes quickly on a paragraph of slashes and dots", () => {
+    const start = performance.now();
+
+    readmeSentence("a/b.".repeat(512));
+    readmeSentence(`${"a.".repeat(1024)} sentence of words`);
+
+    expect(performance.now() - start).toBeLessThan(2000);
+  });
+});
+
 describe("readmeSentence on hostile input", () => {
   it.each([
     ["square brackets", "[".repeat(262_144)],

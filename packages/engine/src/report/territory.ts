@@ -60,8 +60,9 @@ export const Territory = Schema.Struct({
   /**
    * One line, safe to print (no control characters, one line, at most 160
    * characters): the `description` of the territory's manifest, else the first
-   * sentence of its README, else `main files: a, b, c` naming its most changed
-   * files. A territory of kind `other` or `tests` says what it is
+   * sentence of its README that describes (not an instruction such as "See
+   * x.ts for an example.", and none that names a file path), else
+   * `main files: a, b, c` naming its most changed files. A territory of kind `other` or `tests` says what it is
    * (`12 smaller folders in packages`, `test code`) before its main files.
    */
   description: Schema.String,

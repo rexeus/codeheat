@@ -120,7 +120,7 @@ const entryLines = (
   `${entry.revisions} revisions, ${entry.breadth} co-changed files, +${entry.linesAdded} -${entry.linesDeleted} lines, ${entry.loc} loc`,
   `indentation complexity ${entry.complexity.total} (mean ${twoDecimals(entry.complexity.mean)}, max ${entry.complexity.max})`,
   ...heatLines(entry),
-  ...fileEntryPointLines(entry.entryPoints),
+  ...fileEntryPointLines(entry.entryPoints, places.territories),
   ...moduleLine(places.modules.find(({ path }) => path === entry.module)),
   ...fileTerritoryLine(places.territories, entry.territory),
   ...entry.reasons.map((reason) => `- ${escapeForTerminal(reason)}`),

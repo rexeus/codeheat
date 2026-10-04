@@ -20,8 +20,15 @@ export type PartSpec = {
   readonly description?: string;
   /** Counted changes that touched it; 20 unless given. */
   readonly changes?: number;
-  /** The territory it changes with most, as `{ territory, sharedChanges, share }`. */
+  /** The territory it changes with most, as `{ territory, sharedChanges, share }`; one that is not in the report unless given, `null` for none. */
   readonly partner?: NonNullable<Territory["fit"]>["partner"];
+};
+
+/** The partner of a part that names none: a territory that is not in the report, so that it leaks somewhere. */
+const REACHES_ELSEWHERE = {
+  territory: "elsewhere",
+  sharedChanges: 5,
+  share: 0.25,
 };
 
 /**
@@ -45,7 +52,10 @@ export const reportWithParts = (
           changes: changes ?? 20,
           kind: kind ?? "folder",
           description: description ?? `What ${path} is`,
-          fit: territoryFit({ containment, partner: partner ?? null }),
+          fit: territoryFit({
+            containment,
+            partner: partner === undefined ? REACHES_ELSEWHERE : partner,
+          }),
         }),
     ),
   ];
@@ -81,6 +91,7 @@ export const boundaryOn = (
         designMove: "Move a boundary: bring what changes together into one.",
         evidence: { containment: 0.35, distantPairs: 79, heatShare: 0.1 },
         files: [],
+        territories,
       },
     ],
   });

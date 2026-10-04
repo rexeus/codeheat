@@ -26,6 +26,7 @@ const entry = (overrides: Partial<EntryPoint>): EntryPoint => {
         designMove: own.designMove,
         evidence: own.evidence,
         files: own.files,
+        territories: ["t2"],
       },
     ],
     ...own,
@@ -235,6 +236,7 @@ describe("entries with two findings", () => {
         designMove: "Move it.",
         evidence: { codeHeatShare: 0.4, containment: 0.5, changes: 30 },
         files: [],
+        territories: ["t2"],
       },
       {
         kind: "hotspot",
@@ -242,6 +244,7 @@ describe("entries with two findings", () => {
         designMove: "Split it.",
         evidence: { chronicHeatShare: 0.3, chronicShare: 0.6, chronicFiles: 2 },
         files: ["a/hot.ts"],
+        territories: ["t2"],
       },
     ],
   });
@@ -265,7 +268,7 @@ describe("entries with two findings", () => {
   });
 
   it("lists the further finding of an entry in inspect", () => {
-    expect(fileEntryPointLines([both])).toStrictEqual([
+    expect(fileEntryPointLines([both], [])).toStrictEqual([
       "entry point #1 (boundary): Verdict.",
       "  Move.",
       "  also hotspot: Chronic.",
@@ -277,10 +280,13 @@ describe("entries with two findings", () => {
 describe("fileEntryPointLines", () => {
   it("names the rank, kind, verdict, and move of each entry point", () => {
     expect(
-      fileEntryPointLines([
-        entry({ rank: 2, kind: "hub" }),
-        entry({ rank: 5, kind: "copies", verdict: "V.", designMove: "M." }),
-      ]),
+      fileEntryPointLines(
+        [
+          entry({ rank: 2, kind: "hub" }),
+          entry({ rank: 5, kind: "copies", verdict: "V.", designMove: "M." }),
+        ],
+        [],
+      ),
     ).toStrictEqual([
       "entry point #2 (hub): Verdict.",
       "  Move.",
@@ -290,6 +296,6 @@ describe("fileEntryPointLines", () => {
   });
 
   it("says nothing for a file that is in none", () => {
-    expect(fileEntryPointLines([])).toStrictEqual([]);
+    expect(fileEntryPointLines([], [])).toStrictEqual([]);
   });
 });

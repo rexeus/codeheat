@@ -78,6 +78,18 @@ const focusedTerritoriesOf = (
   return focused;
 };
 
+/** The ids of the territories that the entry points of the matched files and their findings are about. */
+const namedByEntryPoints = (
+  entryPoints: ReadonlyMap<string, ReadonlyArray<EntryPoint>>,
+): ReadonlyArray<string> =>
+  [...entryPoints.values()].flat().flatMap((entry) => {
+    const ids = [entry.territories];
+    for (const finding of entry.findings) {
+      ids.push(finding.territories);
+    }
+    return ids.flat();
+  });
+
 /**
  * Reports the files matching `patterns`, each with its rank in the whole
  * universe, its strongest co-change partners, its copy family, and the entry
@@ -117,10 +129,13 @@ export const inspect = (
     report.entryPoints,
     report.territories.nodes,
   );
-  const focusedTerritories = focusedTerritoriesOf(
-    report.territories.nodes,
-    matches.map((file) => file.territory),
-  );
+  const focusedTerritories = new Set([
+    ...focusedTerritoriesOf(
+      report.territories.nodes,
+      matches.map((file) => file.territory),
+    ),
+    ...namedByEntryPoints(entryPoints),
+  ]);
   return {
     schemaVersion: 1,
     window: report.window,

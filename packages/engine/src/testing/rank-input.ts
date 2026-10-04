@@ -3,13 +3,14 @@ import type { EntryPointInput } from "../entry-points/gather-candidates.js";
 import type { CopyFamily } from "../report/copy-family.js";
 import type { Coupling } from "../report/report.js";
 import type { Territories } from "../report/territory.js";
+import { NO_CROSSINGS } from "../territory-fit/crossing-pairs.js";
 import { fileRecord } from "./file-record.js";
 import { DEFAULT_THRESHOLDS } from "./report-defaults.js";
 import { fitRecord, territoryRecord } from "./territory-record.js";
 
 const IDS = ["a", "b", "c", "d", "e", "f"];
 
-/** Six packages, `a` the leakiest and `f` the least. */
+/** Six packages, `a` the leakiest and `f` the least; each reaches into the next and `f` into `a`, so no two are each other's partner. */
 export const territories = (
   kinds: ReadonlyArray<"package" | "other"> = [],
 ): Territories => ({
@@ -21,7 +22,14 @@ export const territories = (
       Object.assign(territoryRecord(id, kinds[index] ?? "package", "r"), {
         heatShare: 0.1,
         changes: 40,
-        fit: fitRecord({ containment: 0.1 + index / 10 }),
+        fit: fitRecord({
+          containment: 0.1 + index / 10,
+          partner: {
+            territory: IDS[(index + 1) % IDS.length] ?? "a",
+            sharedChanges: 8,
+            share: 0.2,
+          },
+        }),
       }),
     ),
   ],
@@ -75,6 +83,7 @@ export const rankInput = (
   couplings: [],
   unstableInterfaces: [],
   minChanges: 10,
+  crossings: NO_CROSSINGS,
   limits: DEFAULT_THRESHOLDS,
   ...overrides,
 });

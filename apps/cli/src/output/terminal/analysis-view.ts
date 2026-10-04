@@ -3,7 +3,7 @@ import type { FileStats, Module, Report } from "@codeheat/engine";
 
 import { escapeForTerminal } from "../escape.js";
 import { changeLines } from "./changes-view.js";
-import { contractNote, partnerName, ubiquitousLines } from "./contract-view.js";
+import { partnerName, ubiquitousLines } from "./contract-view.js";
 import { copyLines } from "./copies-view.js";
 import { shallowestLines } from "./depth-view.js";
 import {
@@ -12,12 +12,12 @@ import {
   distantSection,
 } from "./distant-view.js";
 import { entryPointLines } from "./entry-points-view.js";
-import { day, percent } from "./format.js";
+import { percent } from "./format.js";
 import { leakySection } from "./leakage-view.js";
 import { overTimeSection } from "./over-time-view.js";
-import { spreadLines } from "./spread-view.js";
 import { stabilitySections } from "./stability-view.js";
 import type { Style } from "./style.js";
+import { summaryLines } from "./summary-view.js";
 import { plain, renderTable } from "./table.js";
 import { territoryLines } from "./territory-view.js";
 
@@ -93,7 +93,8 @@ const rankedModules = (report: Report): ReadonlyArray<Module> =>
     .slice(0, TOP_MODULES);
 
 /**
- * Renders the terminal view of an `analyze` report: how far a change spreads
+ * Renders the terminal view of an `analyze` report: the day of the repository's
+ * newest commit for a window without counted changes, how far a change spreads
  * (change radius and propagation cost, each left out when the report has
  * none), how many territories the recommended detail has, where to start (the
  * ranked entry points, left out when there are none), the ten hottest files, how the design moved over time (the verdict,
@@ -118,7 +119,6 @@ const rankedModules = (report: Report): ReadonlyArray<Module> =>
  * The result has no trailing newline.
  */
 export const renderAnalysis = (report: Report, style: Style): string => {
-  const summary = `${escapeForTerminal(report.repository.name)}  ${day(report.window.since)} to ${day(report.window.until)}  ${report.window.commits} commits, ${report.totals.files} files${contractNote(report)}`;
   const hotspots =
     report.files.length === 0
       ? ["No files in the analysis universe."]
@@ -133,8 +133,7 @@ export const renderAnalysis = (report: Report, style: Style): string => {
   const modules = rankedModules(report);
   const shallow = shallowestLines(report, style);
   return [
-    style.bold(summary),
-    ...spreadLines(report),
+    ...summaryLines(report, style),
     ...territoryLines(report),
     "",
     ...entryPointLines(report, style),

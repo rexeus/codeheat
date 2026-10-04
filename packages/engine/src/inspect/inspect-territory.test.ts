@@ -47,6 +47,7 @@ const reportOf = (): Report => ({
     commits: 40,
     realCommits: 40,
     couplingCommits: 38,
+    lastCommitAt: null,
   },
   mechanicalCommits: {
     ignored: 0,
@@ -80,6 +81,29 @@ describe("inspect territories", () => {
 
     expect(result.territories.map(({ id }) => id)).toStrictEqual(["t2", "t3"]);
     expect(result.territories[0]?.fit?.containment).toBe(0.4);
+  });
+
+  it("lists the territories that the entry points of the matched files name in their findings", () => {
+    const folded: EntryPoint = {
+      ...boundary,
+      kind: "clique",
+      territories: ["t2", "t3"],
+      findings: [
+        {
+          kind: "boundary",
+          verdict: "Leaks.",
+          designMove: "Move it.",
+          evidence: {},
+          files: [],
+          territories: ["t4"],
+        },
+      ],
+    };
+    const report = { ...reportOf(), entryPoints: [folded] };
+
+    expect(
+      inspect(report, ["a/x.ts"]).territories.map(({ id }) => id),
+    ).toStrictEqual(["t2", "t3", "t4"]);
   });
 
   it("lists no territory that no matched file lies in or reaches into", () => {

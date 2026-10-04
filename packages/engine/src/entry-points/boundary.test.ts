@@ -1,11 +1,19 @@
 import { describe, expect, it } from "vitest";
 
 import type { TerritoryFit } from "../report/territory-fit.js";
+import { NO_CROSSINGS } from "../territory-fit/crossing-pairs.js";
 import { DEFAULT_THRESHOLDS } from "../testing/report-defaults.js";
 import { fitRecord, territoryRecord } from "../testing/territory-record.js";
 import { boundaryEntries as boundaryEntriesWith } from "./boundary.js";
 import type { Judged } from "./judged-territories.js";
 
+const REACHES_Z: TerritoryFit["partner"] = {
+  territory: "z",
+  sharedChanges: 9,
+  share: 0.225,
+};
+
+/** A territory that, unless `fit` says otherwise, reaches into `z`, which is not judged. */
 const judged = (
   id: string,
   heatShare: number,
@@ -17,18 +25,25 @@ const judged = (
   heatShare,
   codeHeatShare,
   changes: 40,
-  fit: fitRecord(fit),
+  fit: fitRecord({ partner: REACHES_Z, ...fit }),
 });
 
 const boundaryEntries = (
   judgedTerritories: ReadonlyArray<Judged>,
   paths: ReadonlyMap<string, string>,
   limits = DEFAULT_THRESHOLDS,
-) => boundaryEntriesWith(judgedTerritories, paths, limits);
+) =>
+  boundaryEntriesWith(judgedTerritories, {
+    pathOf: paths,
+    limits,
+    crossings: NO_CROSSINGS,
+    cliques: [],
+  });
 
 const PATHS = new Map([
   ["a", "packages/a"],
   ["b", "packages/b"],
+  ["z", "packages/z"],
 ]);
 
 describe("boundaryEntries score", () => {
@@ -165,7 +180,7 @@ describe("boundaryEntries words and evidence", () => {
     );
   });
 
-  it("says so when the territory has no partner, and when it also erodes", () => {
+  it("says so when the territory also erodes", () => {
     const [entry] = boundaryEntries(
       [
         judged("a", 0.3, {
@@ -184,11 +199,33 @@ describe("boundaryEntries words and evidence", () => {
       PATHS,
     );
 
-    expect(entry?.designMove).toBe(
-      "Move a boundary: bring what changes together with packages/a into one territory, or give the part they share a home of its own.",
-    );
     expect(entry?.verdict).toBe(
       "The boundary does not hold, and it holds less than it used to: changes here keep reaching into other territories.",
+    );
+  });
+});
+
+describe("boundaryEntries leak target", () => {
+  it("leaves out a territory that no other territory shares changes with, however little it keeps inside", () => {
+    expect(
+      boundaryEntries(
+        [
+          judged("a", 0.3, { containment: 0.6, partner: null }),
+          judged("b", 0.3, { containment: 0.6 }),
+        ],
+        PATHS,
+      ).map(({ territories }) => territories),
+    ).toStrictEqual([["b"]]);
+  });
+
+  it("names the territory it leaks into in the move", () => {
+    const [entry] = boundaryEntries(
+      [judged("a", 0.3, { containment: 0.4 })],
+      PATHS,
+    );
+
+    expect(entry?.designMove).toBe(
+      "Move a boundary: bring what changes together with packages/a into one territory, or give the part they share a home of its own; start with packages/z.",
     );
   });
 });

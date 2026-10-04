@@ -37,8 +37,9 @@ const distantTable = (report: Report, style: Style): ReadonlyArray<string> =>
 /**
  * The "Distant coupling" section, with its heading and a closing blank line: a
  * table of the five best ranked distant couplings (see
- * `Report.distantCouplings`), hidden couplings marked as such. None when the
- * report has no distant coupling.
+ * `Report.distantCouplings`), hidden couplings marked as such. The heading says
+ * what distant means: other modules, or `thresholds.minLocalDistance`
+ * directories apart within one. None when the report has no distant coupling.
  */
 export const distantSection = (
   report: Report,
@@ -48,7 +49,7 @@ export const distantSection = (
     ? []
     : [
         style.bold(
-          "Distant coupling (across modules or far apart, tests excluded)",
+          `Distant coupling (in different modules, or at least ${report.thresholds.minLocalDistance} directories apart within one module; tests excluded)`,
         ),
         ...distantTable(report, style),
         "",

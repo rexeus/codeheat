@@ -99,12 +99,37 @@ const leaking = (partner: string | null): Report => ({
   ],
 });
 
+describe("entryViewsOf the design move", () => {
+  it.each([
+    [
+      "packages/compiler/src/a.ts and b.ts agree.",
+      "packages/compiler/src/a.ts and b.ts agree.",
+    ],
+    ["package.json lists it.", "package.json lists it."],
+    ["src/x agrees.", "src/x agrees."],
+    ["the files a.ts and b.ts agree.", "The files a.ts and b.ts agree."],
+    ["e.g. the router.", "E.g. the router."],
+    ["bring it together.", "Bring it together."],
+  ])("capitalizes the move %j as %j and never a path", (move, expected) => {
+    const report = withEntries(
+      entryPointOf(1, {
+        kind: "coupling",
+        territories: ["t1"],
+        designMove: `Centralize a contract: ${move}`,
+      }),
+    );
+
+    expect(viewsOf(report)[0]?.move).toBe(expected);
+  });
+});
+
 describe("entryViewsOf where a boundary leaks to", () => {
   it("names the territory the boundary changes with most, with the numbers", () => {
     expect(viewsOf(leaking("t2"))[0]?.leaksTo).toEqual({
       name: "packages/forms",
       sharedChanges: 136,
       share: 0.544,
+      mutual: false,
     });
   });
 
@@ -217,6 +242,7 @@ describe("entryViewsOf findings", () => {
         designMove: "Move a boundary: bring it together.",
         evidence: { containment: 0.35 },
         files: [],
+        territories: ["t1"],
       },
       {
         kind: "hotspot",
@@ -224,6 +250,7 @@ describe("entryViewsOf findings", () => {
         designMove: "Split a hotspot: break up a.ts.",
         evidence: { chronicHeatShare: 0.12, chronicFiles: 5 },
         files: ["packages/core/a.ts", "packages/core/b.ts"],
+        territories: ["t1"],
       },
     ],
   });
@@ -243,6 +270,7 @@ describe("entryViewsOf findings", () => {
           { value: "12%", label: "of the change effort is here" },
           { value: "5", label: "files hot quarter after quarter" },
         ],
+        about: [],
       },
     ]);
   });

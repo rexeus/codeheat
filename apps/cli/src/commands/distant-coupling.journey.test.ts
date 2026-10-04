@@ -18,10 +18,10 @@ describe("codeheat shows distant coupling in the terminal", () => {
         expect(result.exitCode).toBe(0);
         const lines = result.stdout.split("\n");
         const start = lines.indexOf(
-          "Distant coupling (across modules or far apart, tests excluded)",
+          "Distant coupling (in different modules, or at least 3 directories apart within one module; tests excluded)",
         );
         expect(lines.slice(start, start + 8)).toStrictEqual([
-          "Distant coupling (across modules or far apart, tests excluded)",
+          "Distant coupling (in different modules, or at least 3 directories apart within one module; tests excluded)",
           "score  degree  shared  imports  files",
           " 1.94    100%       5  hidden   packages/a/src/a.ts <-> packages/b/src/b.ts",
           " 1.94    100%       5  hidden   packages/a/src/a.ts <-> packages/c/src/c.ts",

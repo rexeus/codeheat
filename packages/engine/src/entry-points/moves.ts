@@ -21,8 +21,20 @@ export const boundaryVerdict = (eroding: boolean): string =>
     : "The boundary does not hold: changes here keep reaching into other territories.";
 
 /** Move a boundary; `partner` is the path of the territory its changes most often reach into. */
-export const boundaryMove = (path: string, partner: string | null): string =>
-  `Move a boundary: bring what changes together with ${path} into one territory, or give the part they share a home of its own${partner === null ? "" : `; start with ${partner}`}.`;
+export const boundaryMove = (path: string, partner: string): string =>
+  `Move a boundary: bring what changes together with ${path} into one territory, or give the part they share a home of its own; start with ${partner}.`;
+
+/** Says the boundary between the territories at paths `a` and `b`, each the other's leak target, does not hold. */
+export const boundaryPairVerdict = (
+  a: string,
+  b: string,
+  eroding: boolean,
+): string =>
+  `The boundary between ${a} and ${b} does not hold${eroding ? ", and it holds less than it used to" : ""}: changes in one keep reaching into the other.`;
+
+/** Move the boundary between the territories at paths `a` and `b`. */
+export const boundaryPairMove = (a: string, b: string): string =>
+  `Move a boundary: redraw the boundary between ${a} and ${b}, or give what they share a home of its own.`;
 
 export const HOTSPOT_VERDICT =
   "Chronic hotspot: the same files stay among the hottest quarter after quarter.";
@@ -53,6 +65,6 @@ export const hubMove = (path: string): string =>
 export const COUPLING_VERDICT =
   "These files keep changing together across territories, and no import links them.";
 
-/** Centralize a contract between the two files `a` and `b` that change together without an import. */
+/** Centralize a contract between the two files `a` and `b` that change together without an import; the sentence after the label never opens with a path, so that a reader may capitalize it. */
 export const couplingMove = (a: string, b: string): string =>
-  `Centralize a contract: ${a} and ${b} agree on something that neither shows to the other; define it once, in a place both use.`;
+  `Centralize a contract: the files ${a} and ${b} agree on something that neither shows to the other; define it once, in a place both use.`;

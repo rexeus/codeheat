@@ -78,4 +78,26 @@ describe("entryPointsOfFiles", () => {
       "b/z.ts": [],
     });
   });
+
+  it("puts the files of a territory that only a finding names in the entry point too", () => {
+    const folded: EntryPoint = {
+      ...entry(1, "boundary", ["a"]),
+      findings: [
+        {
+          kind: "clique",
+          verdict: "",
+          designMove: "",
+          evidence: {},
+          files: [],
+          territories: ["a", "b"],
+        },
+      ],
+    };
+
+    expect(ranksOf([folded])).toStrictEqual({
+      "a/x.ts": [1],
+      "a/sub/y.ts": [1],
+      "b/z.ts": [1],
+    });
+  });
 });

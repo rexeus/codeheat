@@ -16,7 +16,8 @@
     "until": "2026-09-29T12:00:00.000Z",
     "commits": 212,
     "realCommits": 197,
-    "couplingCommits": 178
+    "couplingCommits": 178,
+    "lastCommitAt": "2026-09-27T16:42:10.000Z"
   },
   "mechanicalCommits": {
     "ignored": 2,
@@ -2173,7 +2174,8 @@
             "partnerShare": 0.2838,
             "codeHeatShare": 0.5812
           },
-          "files": []
+          "files": [],
+          "territories": ["t2"]
         },
         {
           "kind": "hotspot",
@@ -2189,7 +2191,8 @@
           "files": [
             "packages/billing/src/invoice.ts",
             "packages/billing/src/tax.ts"
-          ]
+          ],
+          "territories": ["t2"]
         }
       ]
     },
@@ -2220,7 +2223,8 @@
             "medianDependentChanges": 9,
             "changedDependents": 9
           },
-          "files": ["packages/shared/src/config.ts"]
+          "files": ["packages/shared/src/config.ts"],
+          "territories": ["t6"]
         }
       ]
     },
@@ -2254,7 +2258,8 @@
           "files": [
             "packages/auth/src/index.ts",
             "packages/billing/src/index.ts"
-          ]
+          ],
+          "territories": ["t2", "t4"]
         }
       ]
     },
@@ -2289,7 +2294,8 @@
           "files": [
             "packages/billing/src/invoice.ts",
             "packages/web/src/routes/invoices.tsx"
-          ]
+          ],
+          "territories": ["t2", "t3"]
         }
       ]
     }

@@ -212,6 +212,7 @@ export const reportOf = (
     commits: 12,
     realCommits: 12,
     couplingCommits: 10,
+    lastCommitAt: null,
   },
   mechanicalCommits: {
     ignored: 0,

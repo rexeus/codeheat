@@ -278,6 +278,7 @@ layer(NodeServices.layer)("analyze window", (it) => {
           commits: 1,
           realCommits: 1,
           couplingCommits: 1,
+          lastCommitAt: "2026-07-01T12:00:00.000Z",
         });
         assert.strictEqual(report.generatedAt, "2026-06-01T12:00:00.000Z");
         assert.deepStrictEqual(

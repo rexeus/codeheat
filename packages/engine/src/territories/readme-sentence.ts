@@ -34,6 +34,33 @@ const onlyLinks = (text: string): boolean =>
     "",
   ) === "";
 
+/**
+ * A sentence that tells the reader what to do, not what the code is: it opens
+ * with an instruction ("See", "After", "Run", "To", "Before", "Note:", "Make
+ * sure", "Please", "Refer to"). Such a README line is not a description.
+ */
+const INSTRUCTION =
+  /^(?:see|after|run(?!\s+time\b)|to|before|please|refer to|make sure|note(?::|\s+that\b))(?=[\s:,]|$)/iu;
+
+/** A word with a slash and an extension, such as `src/tools/helper.ts`. */
+const FILE_PATH = /[\w.@~-]+\/[\w./@~-]*\.[A-Za-z][A-Za-z0-9]{0,7}\b/gu;
+
+/** A segment that starts with a capital letter, as in `React/Next.js`. */
+const CAPITALIZED = /^\p{Lu}/u;
+
+/**
+ * Whether the sentence names a file path. A word whose every segment starts
+ * with a capital letter (`React/Next.js`, `TypeScript/Node.js`) is a pair of
+ * product names, not a path.
+ */
+const namesPath = (sentence: string): boolean =>
+  [...sentence.matchAll(FILE_PATH)].some(([word]) =>
+    word.split("/").some((segment) => !CAPITALIZED.test(segment)),
+  );
+
+const isInstruction = (sentence: string): boolean =>
+  INSTRUCTION.test(sentence) || namesPath(sentence);
+
 const SENTENCE_END = /[.!?](?=\s+[A-Z0-9"'([]|$)/gu;
 const ABBREVIATION = /(?:^|\s)(?:e\.g|i\.e|etc|vs|approx|incl)\.$/iu;
 
@@ -51,8 +78,8 @@ const firstSentence = (text: string): string => {
 /**
  * The first sentence of a paragraph of README lines; undefined for markup, a
  * heading, a row of images or links, a label of fewer than three words, text
- * with no alphabetic word, or a sentence that introduces a list or code (ends
- * in a colon).
+ * with no alphabetic word, a sentence that introduces a list or code (ends in
+ * a colon), or one that instructs or points at a file (see `isInstruction`).
  */
 const sentenceOf = (lines: ReadonlyArray<string>): string | undefined => {
   const [first, second] = lines;
@@ -73,7 +100,8 @@ const sentenceOf = (lines: ReadonlyArray<string>): string | undefined => {
     : firstSentence(withoutMarkup(raw).trim());
   return sentence.split(/\s+/u).length < MIN_WORDS ||
     sentence.endsWith(":") ||
-    !/\p{L}{2,}/u.test(sentence)
+    !/\p{L}{2,}/u.test(sentence) ||
+    isInstruction(sentence)
     ? undefined
     : sentence;
 };
@@ -93,7 +121,9 @@ const withoutFrontMatter = (
 /**
  * The first sentence of the first paragraph of prose in a README: headings,
  * badges, markup, code blocks, lists, tables, and reStructuredText directives
- * are passed over, links and emphasis lose their markup. Undefined when the
+ * are passed over, links and emphasis lose their markup, and so are
+ * instructions and sentences that name a file path ("See src/x.ts for an
+ * example."), the next paragraph taking their place. Undefined when the
  * README holds no prose in its first 120 lines. The work is bounded by the
  * lines and the paragraph length read, whatever the README looks like.
  */

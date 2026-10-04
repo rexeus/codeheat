@@ -20,12 +20,12 @@ describe("codeheat says where to start", () => {
         const start = lines.indexOf("Where to start");
         expect(lines[start - 2]).toMatch(/^Territories: /u);
         expect(lines.slice(start + 1, start + 5)).toStrictEqual([
-          "1. boundary  billing",
-          "   The boundary does not hold: changes here keep reaching into other territories.",
+          "1. boundary  billing, web",
+          "   The boundary between billing and web does not hold: changes in one keep reaching into the other.",
           expect.stringMatching(
-            /^ {3}\d+% of the code's heat; 46% of its 13 changes stay inside, \d+% also touch its closest partner$/u,
+            /^ {3}\d+% of the code's heat; \d+% of their 13 changes stay inside one of the two, 7 changes touched both$/u,
           ),
-          "   Move a boundary: bring what changes together with billing into one territory, or give the part they share a home of its own; start with web.",
+          "   Move a boundary: redraw the boundary between billing and web, or give what they share a home of its own.",
         ]);
         expect(lines.indexOf("Hotspots")).toBeGreaterThan(start);
       }).pipe(Effect.scoped),
@@ -51,16 +51,20 @@ describe("codeheat reports entry points as JSON", () => {
         const billing = report.territories.nodes.find(
           ({ path }) => path === "billing",
         );
-        expect(report.entryPoints.map(({ rank }) => rank)).toStrictEqual([
-          1, 2,
-        ]);
+        const web = report.territories.nodes.find(({ path }) => path === "web");
+        expect(report.entryPoints.map(({ rank }) => rank)).toStrictEqual([1]);
         expect(first).toMatchObject({
           rank: 1,
           kind: "boundary",
-          territories: [billing?.id],
           files: [],
-          evidence: { containment: 0.4615, changes: 13 },
+          evidence: { changes: 13, sharedChanges: 7 },
         });
+        expect(new Set(first?.territories)).toStrictEqual(
+          new Set([billing?.id, web?.id]),
+        );
+        expect(
+          first?.findings.map(({ territories }) => territories.length),
+        ).toStrictEqual([2, 1, 1]);
         expect(report.schemaVersion).toBe(1);
       }).pipe(Effect.scoped),
   );
@@ -84,7 +88,7 @@ describe("codeheat names the entry points of a file", () => {
         "territory billing: 46% of 13 changes stay inside, most often with web (7)",
       );
       expect(text.stdout).toContain(
-        "entry point #1 (boundary): The boundary does not hold: changes here keep reaching into other territories.",
+        "entry point #1 (boundary): The boundary between billing and web does not hold: changes in one keep reaching into the other.",
       );
       const result = yield* Schema.decodeUnknownEffect(InspectResult)(
         JSON.parse(json.stdout),

@@ -74,6 +74,7 @@ const hotspotOn = (rank: number, territories: readonly string[]) =>
         designMove: "Split a hotspot: cut it.",
         evidence: { chronicHeatShare: 0.2, chronicFiles: 4 },
         files: [],
+        territories,
       },
     ],
   });

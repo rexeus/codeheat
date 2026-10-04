@@ -5,7 +5,7 @@ import { isJudgeablePair } from "../distant/distant-couplings.js";
 import type { Coupling } from "../report/report.js";
 
 /** The pairs that leave one territory for another. */
-type Crossings = {
+export type Crossings = {
   readonly pairs: number;
   /** Pairs no import links. */
   readonly hidden: number;
@@ -63,4 +63,20 @@ export const crossingPairs = (
     ofPair.set(low, partners);
   }
   return { ofArea, ofPair };
+};
+
+/** No crossing at all, for a report without a recommended detail. */
+export const NO_CROSSINGS: AreaCrossings = {
+  ofArea: new Map(),
+  ofPair: new Map(),
+};
+
+/** The pairs between areas `a` and `b`, which both of them count among their own; none when no pair crosses between them. */
+export const crossingsBetween = (
+  { ofPair }: AreaCrossings,
+  a: string,
+  b: string,
+): Crossings => {
+  const [low, high] = Order.String(a, b) <= 0 ? [a, b] : [b, a];
+  return ofPair.get(low)?.get(high) ?? { pairs: 0, hidden: 0 };
 };

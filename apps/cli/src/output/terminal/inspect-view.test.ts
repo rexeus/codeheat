@@ -94,6 +94,7 @@ const result = (
     commits: 212,
     realCommits: 212,
     couplingCommits: 198,
+    lastCommitAt: null,
   },
   matches,
   modules,

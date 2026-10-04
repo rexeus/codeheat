@@ -27,4 +27,12 @@ export const AnalysisWindow = Schema.Struct({
    * `Thresholds.maxCommitFiles`).
    */
   couplingCommits: Count,
+  /**
+   * When the newest commit of the repository was made, as an ISO timestamp
+   * (the committer time of `HEAD`), whatever the window. It is the repository's
+   * newest commit, which need not touch an analysed file (a documentation-only
+   * commit, an analysis of one folder), so it is not when the analysed code
+   * last changed. Null for a repository without commits.
+   */
+  lastCommitAt: Schema.NullOr(Schema.String),
 });

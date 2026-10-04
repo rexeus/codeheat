@@ -1,7 +1,7 @@
 // Owns what a territory card says is wrong: the places to start that concern
 // it, then what its own numbers add, and which few of them the card face shows.
 
-import type { EntryView } from "../entry-points/entry-views.js";
+import type { EntryView, FindingView } from "../entry-points/entry-views.js";
 import type { EntryKind, EntryStat } from "../entry-points/evidence.js";
 import { formatCount, formatShare } from "../render/format.js";
 import { isRealTerritory } from "../territories/territory-index.js";
@@ -45,13 +45,26 @@ export type Concerning = {
   readonly where: string;
   /** The entry names the territory itself. */
   readonly itself: boolean;
+  /** The entry's primary finding is about the territory; false when only a further finding is (see `concerningOf`). */
+  readonly primary: boolean;
+  /** The further findings of the entry that concern the territory, in the entry's order: not those about other territories, such as the boundary of the other of two. */
+  readonly also: readonly FindingView[];
 };
 
+/**
+ * What a place to start says about the card's territory: its primary finding,
+ * unless only a further finding concerns the territory, and the further
+ * findings that concern it (see `Concerning.also`).
+ */
 const fromEntry = ({
-  entry: { rank, kindLabel, subject, verdict, stats, also },
+  entry: { rank, kindLabel, subject, verdict, stats },
   where,
+  primary,
+  also,
 }: Concerning): CardFinding[] => [
-  { label: kindLabel, subject, rank, where, verdict, stats },
+  ...(primary
+    ? [{ label: kindLabel, subject, rank, where, verdict, stats }]
+    : []),
   ...also.map((finding) => ({
     label: finding.kindLabel,
     subject: finding.subject,
@@ -168,10 +181,12 @@ export const findingsOf = (
   context: FindingContext,
 ): CardFinding[] => {
   const said = new Set<EntryKind>();
-  for (const { entry, itself } of concerning) {
+  for (const { entry, itself, primary, also } of concerning) {
     if (itself) {
-      said.add(entry.kind);
-      for (const { kind } of entry.also) {
+      if (primary) {
+        said.add(entry.kind);
+      }
+      for (const { kind } of also) {
         said.add(kind);
       }
     }

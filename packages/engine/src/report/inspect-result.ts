@@ -56,7 +56,8 @@ const InspectEntry = Schema.Struct({
   /**
    * The entry points of the report the file belongs to, best first (see
    * `Report.entryPoints`): one that names files concerns exactly those, one
-   * that names none (`boundary`, `clique`) every file in its territories.
+   * that names none (`boundary`, `clique`) every file in its territories or in
+   * those of its findings.
    * Empty for a file that is part of none.
    */
   entryPoints: Schema.Array(EntryPoint),
@@ -74,11 +75,11 @@ export const InspectResult = Schema.Struct({
    * The territories of the matched files (`FileStats.territory`, the finest one
    * of each), for each of them that is a `tests` territory (test code has no
    * fit) its ancestors up to the nearest one with a fit, and the partners of
-   * their fit
-   * (`TerritoryFit.partner`), as they
-   * stand in `Report.territories`, in report order: how well the file's area
-   * holds up to the way the code changes, for the files that are in no entry
-   * point too.
+   * their fit (`TerritoryFit.partner`), as they stand in
+   * `Report.territories`, in report order: how well the file's area holds up
+   * to the way the code changes, for the files that are in no entry point too.
+   * The territories that the entry points of the matched files and their
+   * findings are about are listed too, so that a finding can be named.
    */
   territories: Schema.Array(Territory),
   /**

@@ -120,6 +120,7 @@ export const territoryTreeReport = (
         commits: 600,
         realCommits: 550,
         couplingCommits: 120,
+        lastCommitAt: "2026-09-28T15:30:00.000Z",
       },
       ...overrides,
     },
