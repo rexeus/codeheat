@@ -79,6 +79,7 @@ const commonDirectory = (files: ReadonlyArray<string>): string => {
 const testsPart = (files: ReadonlyArray<string>): Part => ({
   kind: "tests",
   path: commonDirectory(files),
+  cut: commonDirectory(files),
   files,
   members: [],
   base: "",

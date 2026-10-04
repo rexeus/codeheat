@@ -13,6 +13,12 @@ export type Part = {
   readonly kind: PartKind;
   /** The directory of a folder or of loose files, "" for the repository root; the member directories joined by " + " for a group. */
   readonly path: string;
+  /**
+   * The directory the part was cut out as, before `path` was cut down to where
+   * its files branch (the key of its cut, "" for the root): the one directory
+   * its heat is measured from.
+   */
+  readonly cut: string;
   /** The files that shape the tree: code files, and test code that belongs to no code. */
   readonly files: ReadonlyArray<string>;
   /** The folders a group or a bucket is made of. */
@@ -59,25 +65,23 @@ export type Evidence = {
   /** Per file that shapes the tree, its heat (`changes × (loc + complexity)`) and that of the test code paired with it. */
   readonly heat: ReadonlyMap<string, number>;
   /**
-   * The heat of the test code placed in a directory (see `attachTests`), by
-   * that directory. It ends up in the territory of the code below the
-   * directory, so a folder counts it only when the directory is at or below it.
+   * The heat of the test code placed in a directory at or below each directory
+   * (see `attachTests`): a home's heat counts for the home and for every
+   * directory above it, the root included. Test code ends up in the territory of
+   * the code below its directory, so a folder counts it only when that
+   * directory is at or below the folder.
    */
   readonly placed: ReadonlyMap<string, number>;
   /** The heat of every code file, test code that is paired with none included. */
   readonly totalHeat: number;
 };
 
-/** The directory `home` is `directory` or lies below it; every directory contains the root (""). */
-const isWithin = (home: string, directory: string): boolean =>
-  directory === "" || home === directory || home.startsWith(`${directory}/`);
-
 /**
- * The heat of a part that holds `files` and was cut from `directories`: that of
- * the files and of the test code paired with them, and that of the test code
- * placed in a directory at or below one of `directories`. Test code placed in
- * a directory above them lands in a territory that holds more than the part,
- * so it heats none of its parts.
+ * The heat of a part that holds `files` and was cut from `directories` (none
+ * of them within another): that of the files and of the test code paired with
+ * them, and that of the test code placed in a directory at or below one of
+ * `directories`. Test code placed in a directory above them lands in a
+ * territory that holds more than the part, so it heats none of its parts.
  */
 export const heatOf = (
   evidence: Evidence,
@@ -85,16 +89,14 @@ export const heatOf = (
   directories: ReadonlyArray<string>,
 ): number =>
   files.reduce((sum, file) => sum + (evidence.heat.get(file) ?? 0), 0) +
-  [...evidence.placed]
-    .filter(([home]) => directories.some((at) => isWithin(home, at)))
-    .reduce((sum, [, heat]) => sum + heat, 0);
+  directories.reduce((sum, at) => sum + (evidence.placed.get(at) ?? 0), 0);
 
 /** The directories a part was cut from: those of its members, else its own; none for loose files. */
 export const directoriesOf = (part: Part): ReadonlyArray<string> => {
   if (part.members.length > 0) {
-    return part.members.map(({ path }) => path);
+    return part.members.map(({ cut }) => cut);
   }
-  return part.kind === "other" ? [] : [part.path];
+  return part.kind === "other" ? [] : [part.cut];
 };
 
 /** The indices of the changes that touched any of `files`. */

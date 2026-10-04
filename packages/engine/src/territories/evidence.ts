@@ -1,6 +1,7 @@
 // Owns what the counted changes and the files' heat say about the files that
 // shape the territory tree.
 import type { TestAttachment } from "./attach-tests.js";
+import { ancestorDirectories } from "./folders.js";
 import type { TerritoryFile } from "./node-measures.js";
 import type { Evidence } from "./part.js";
 
@@ -31,19 +32,25 @@ const unitOf = (
 const heatOfFile = (file: TerritoryFile): number =>
   file.changes * (file.loc + file.complexity.total);
 
-/** The heat of the test code placed in each directory (see `attachTests`). */
+/**
+ * The heat of the test code placed at or below each directory (see
+ * `attachTests`): the heat of a test counts for its home and every directory
+ * above it, so a lookup answers for a folder at once.
+ */
 const placedHeat = (
   files: ReadonlyArray<TerritoryFile>,
   attachment: TestAttachment,
 ): ReadonlyMap<string, number> => {
-  const heatOfHome = new Map<string, number>();
+  const placed = new Map<string, number>();
   for (const file of files) {
     const home = attachment.placedIn.get(file.path);
-    if (home !== undefined) {
-      heatOfHome.set(home, (heatOfHome.get(home) ?? 0) + heatOfFile(file));
+    for (const directory of home === undefined
+      ? []
+      : ancestorDirectories(`${home === "" ? "" : `${home}/`}x`)) {
+      placed.set(directory, (placed.get(directory) ?? 0) + heatOfFile(file));
     }
   }
-  return heatOfHome;
+  return placed;
 };
 
 /** The heat of every unit: its own and that of the tests paired with it. */

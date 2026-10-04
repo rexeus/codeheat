@@ -31,6 +31,7 @@ const groupPart = (paths: ReadonlyArray<string>, context: Cut): Part => {
   return {
     kind: "group",
     path: members.map((member) => member.path).join(" + "),
+    cut: "",
     files: members.flatMap((member) => member.files),
     members,
     base: context.cut.base,
@@ -45,6 +46,7 @@ const bucketPart = (paths: ReadonlyArray<string>, context: Cut): Part => {
   return {
     kind: "more",
     path: cut.base,
+    cut: cut.base,
     files: [...members.flatMap((member) => member.files), ...cut.rest],
     members,
     base: cut.base,
@@ -52,17 +54,24 @@ const bucketPart = (paths: ReadonlyArray<string>, context: Cut): Part => {
   };
 };
 
-const looseFiles = ({ cut }: Cut): Part => ({
+/** The loose files of one directory, a node of their own named after it. */
+const looseFiles = (directory: string, files: ReadonlyArray<string>): Part => ({
   kind: "other",
-  path: cut.base,
-  files: cut.rest,
+  path: directory,
+  cut: directory,
+  files,
   members: [],
-  base: cut.base,
+  base: directory,
   rest: [],
 });
 
-const leftover = (context: Cut): ReadonlyArray<Part> =>
-  context.cut.rest.length > 0 ? [looseFiles(context)] : [];
+/** The nodes of loose files: those of the directory cut (unless a bucket holds them) and those of each directory passed through, each named after its own directory. */
+const leftover = ({ cut }: Cut, restInBucket: boolean): ReadonlyArray<Part> => [
+  ...(restInBucket || cut.rest.length === 0
+    ? []
+    : [looseFiles(cut.base, cut.rest)]),
+  ...cut.outer.map(({ directory, files }) => looseFiles(directory, files)),
+];
 
 /** Territories first, then test-only code, then buckets and loose files. */
 const roleOf = ({ kind }: Part): number => {
@@ -85,8 +94,9 @@ export const openKids = (
 ): ReadonlyArray<Part> => {
   const { cut } = context;
   const ranked = groups
-    .map(({ folders }) => folders)
-    .toSorted((a, b) => heavier(weigh(a), weigh(b)));
+    .map(({ folders }) => ({ folders, weight: weigh(folders) }))
+    .toSorted((a, b) => heavier(a.weight, b.weight))
+    .map(({ folders }) => folders);
   const crowded = ranked.length > FANOUT;
   const opened = (crowded ? ranked.slice(0, FANOUT - 1) : ranked).map(
     (paths) => {
@@ -96,8 +106,10 @@ export const openKids = (
         : groupPart(paths, context);
     },
   );
-  const waiting = crowded
+  const bucket = crowded
     ? [bucketPart(ranked.slice(FANOUT - 1).flat(), context)]
-    : leftover(context);
-  return [...opened, ...waiting].toSorted((a, b) => roleOf(a) - roleOf(b));
+    : [];
+  return [...opened, ...bucket, ...leftover(context, crowded)].toSorted(
+    (a, b) => roleOf(a) - roleOf(b),
+  );
 };

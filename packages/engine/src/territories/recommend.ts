@@ -27,6 +27,9 @@ export const isTerritoryKind = (kind: Territory["kind"]): boolean =>
 
 /** The folder a file lies in below `base`, by the folder's first directory; undefined for a file directly in `base`. */
 const folderBelow = (base: string, file: string): string | undefined => {
+  if (base !== "" && !file.startsWith(`${base}/`)) {
+    return undefined;
+  }
   const relative = base === "" ? file : file.slice(base.length + 1);
   const slash = relative.indexOf("/");
   return slash < 0

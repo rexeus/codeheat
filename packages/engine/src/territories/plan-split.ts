@@ -46,8 +46,9 @@ const cutOf = (
   part.kind === "group" || part.kind === "more"
     ? {
         base: part.base,
-        big: new Map(part.members.map(({ path, files }) => [path, files])),
+        big: new Map(part.members.map(({ cut, files }) => [cut, files])),
         rest: part.rest,
+        outer: [],
       }
     : cutByFolders(part.path, part.files, {
         packages,

@@ -14,7 +14,15 @@ export type FolderCut = {
   readonly big: ReadonlyMap<string, ReadonlyArray<string>>;
   /** Files directly in `base` and the files of smaller folders. */
   readonly rest: ReadonlyArray<string>;
+  /** The loose files of the directories passed through to reach `base` (see `CutOptions.passThrough`), each with its own directory. */
+  readonly outer: ReadonlyArray<{
+    readonly directory: string;
+    readonly files: ReadonlyArray<string>;
+  }>;
 };
+
+/** A directory is passed through only when it has at most this many loose files (a config file or two), so a directory of its own code keeps its shape. */
+const MAX_PASSED_LOOSE = 2;
 
 /** The directories above a file, the repository root ("") first and the file's own directory last. */
 export const ancestorDirectories = (file: string): ReadonlyArray<string> => {
@@ -98,9 +106,10 @@ export type CutOptions = {
   /** Whether a folder with fewer than `MIN_CHILD` files is a part of its own. */
   readonly isHot: IsHot;
   /**
-   * When the directory has a single child folder and loose files (a package
-   * with its `src` and a config file), cut that folder's children instead and
-   * leave the loose files with theirs; never through a package.
+   * When the directory has a single child folder and at most
+   * `MAX_PASSED_LOOSE` loose files (a package with `src` and a config file),
+   * cut that folder's children instead; the loose files stay a node of their
+   * own at their own directory. Never through a package.
    */
   readonly passThrough: boolean;
 };
@@ -113,17 +122,27 @@ export const cutByFolders = (
 ): FolderCut => {
   const { packages, isHot, passThrough } = options;
   const base = descend(directory, files, packages);
-  const cut = { base, ...groupByFolder(base, files, isHot) };
+  const cut = { base, ...groupByFolder(base, files, isHot), outer: [] };
   const [only] = cut.big;
-  if (!passThrough || cut.big.size !== 1 || only === undefined) {
+  if (
+    !passThrough ||
+    cut.big.size !== 1 ||
+    only === undefined ||
+    cut.rest.length > MAX_PASSED_LOOSE ||
+    packages.has(only[0])
+  ) {
     return cut;
   }
-  const [folder, inside] = only;
-  if (packages.has(folder)) {
-    return cut;
-  }
-  const deeper = cutByFolders(folder, inside, options);
-  return { ...deeper, rest: [...deeper.rest, ...cut.rest] };
+  const deeper = cutByFolders(only[0], only[1], options);
+  return {
+    ...deeper,
+    outer: [
+      ...deeper.outer,
+      ...(cut.rest.length === 0
+        ? []
+        : [{ directory: cut.base, files: cut.rest }]),
+    ],
+  };
 };
 
 /** A folder part for the files below `path`, which is cut down to where the files actually branch unless it is a package. */
@@ -133,6 +152,7 @@ export const folderPart = (
   packages: ReadonlySet<string>,
 ): Part => ({
   kind: files.every((file) => isTestPath(file)) ? "tests" : "folder",
+  cut: path,
   path:
     path === "" || packages.has(path) ? path : descend(path, files, packages),
   files,
@@ -151,5 +171,8 @@ export const rootPart = (
   packages: ReadonlySet<string>,
 ): Part => {
   const top = descend("", files, packages);
-  return folderPart(packages.has(top) ? top : "", files, packages);
+  return {
+    ...folderPart(packages.has(top) ? top : "", files, packages),
+    cut: "",
+  };
 };
