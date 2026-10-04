@@ -46,6 +46,7 @@ const ANSWERS = `    <section id="answers" class="answers" aria-labelledby="answ
         <h1 id="answers-question">Does your design hold up to the way your code actually changes?</h1>
         <p id="verdict" class="verdict-badge"></p>
         <p id="trend" class="trend"></p>
+        <p id="comparison" class="comparison-note" hidden></p>
         <p id="verdict-reason" class="verdict-reason" hidden></p>
       </header>
       <div id="answer-cards" class="answer-cards"></div>

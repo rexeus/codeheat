@@ -59,6 +59,7 @@ describe("renderReportHtml page structure", () => {
       "summary",
       "verdict",
       "trend",
+      "comparison",
       "verdict-reason",
       "answer-cards",
       "legend",
