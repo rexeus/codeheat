@@ -170,6 +170,23 @@ describe("readmeSentence on instructions", () => {
       "Tokens and sessions for the web shop.",
     );
   });
+});
+
+describe("readmeSentence on product names and paths", () => {
+  it.each([
+    "Shared UI components for React/Next.js apps.",
+    "A TypeScript/Node.js client for the billing API.",
+    "Run time checks for the data model.",
+    "Run-time checks for the data model.",
+  ])("keeps the sentence %j, which names products and no path", (sentence) => {
+    expect(readmeSentence(sentence)).toBe(sentence);
+  });
+
+  it("still passes over a path whose folders are lower case, however its file is named", () => {
+    expect(
+      readmeSentence("The client lives in src/Client.js and wraps fetch."),
+    ).toBe(undefined);
+  });
 
   it("finishes quickly on a paragraph of slashes and dots", () => {
     const start = performance.now();

@@ -40,13 +40,26 @@ const onlyLinks = (text: string): boolean =>
  * sure", "Please", "Refer to"). Such a README line is not a description.
  */
 const INSTRUCTION =
-  /^(?:see|after|run|to|before|please|refer to|make sure|note(?::|\s+that\b))(?=[\s:,]|$)/iu;
+  /^(?:see|after|run(?!\s+time\b)|to|before|please|refer to|make sure|note(?::|\s+that\b))(?=[\s:,]|$)/iu;
 
-/** A file path: a name with a slash and an extension, such as `src/tools/helper.ts`. */
-const FILE_PATH = /[\w.@~-]+\/[\w./@~-]*\.[A-Za-z][A-Za-z0-9]{0,7}\b/u;
+/** A word with a slash and an extension, such as `src/tools/helper.ts`. */
+const FILE_PATH = /[\w.@~-]+\/[\w./@~-]*\.[A-Za-z][A-Za-z0-9]{0,7}\b/gu;
+
+/** A segment that starts with a capital letter, as in `React/Next.js`. */
+const CAPITALIZED = /^\p{Lu}/u;
+
+/**
+ * Whether the sentence names a file path. A word whose every segment starts
+ * with a capital letter (`React/Next.js`, `TypeScript/Node.js`) is a pair of
+ * product names, not a path.
+ */
+const namesPath = (sentence: string): boolean =>
+  [...sentence.matchAll(FILE_PATH)].some(([word]) =>
+    word.split("/").some((segment) => !CAPITALIZED.test(segment)),
+  );
 
 const isInstruction = (sentence: string): boolean =>
-  INSTRUCTION.test(sentence) || FILE_PATH.test(sentence);
+  INSTRUCTION.test(sentence) || namesPath(sentence);
 
 const SENTENCE_END = /[.!?](?=\s+[A-Z0-9"'([]|$)/gu;
 const ABBREVIATION = /(?:^|\s)(?:e\.g|i\.e|etc|vs|approx|incl)\.$/iu;
