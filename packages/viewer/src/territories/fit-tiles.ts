@@ -4,6 +4,8 @@
 import { cohesionStep } from "../color/cohesion-scale.js";
 import type { EntryView } from "../entry-points/entry-views.js";
 import { formatShare } from "../render/format.js";
+import { judgeTerritory } from "./judgement.js";
+import type { JudgementLimits } from "./judgement.js";
 import { territoryName, territoryNameParts } from "./territory-index.js";
 import type {
   NameParts,
@@ -25,7 +27,7 @@ export type FitTile = {
   readonly heatShare: number;
   /** The share of its changes that touch no other territory; `null` without data. */
   readonly containment: number | null;
-  /** Why a tile has no containment to color it by; `null` when it has one. */
+  /** Why a tile is not colored by containment: test code, no counted change, only changes too large to judge, or too few changes; `null` when it is. */
   readonly noData: string | null;
   /** The color step (see `cohesionStep`): 0 no data, 1 leaks most, 6 holds best. */
   readonly step: number;
@@ -67,12 +69,6 @@ const descriptionOf = (territory: Territory): string => {
   return cut === -1 ? "" : territory.description.slice(cut + 2);
 };
 
-/** Why a territory has no containment: test code is not judged, anything else saw no counted change. */
-const noDataReason = (kind: Territory["kind"]): string =>
-  kind === "tests"
-    ? "test code is not judged"
-    : "no counted changes in this window";
-
 const summaryOf = (
   name: string,
   containment: number | string,
@@ -96,13 +92,13 @@ const summaryOf = (
 export const fitTilesOf = (
   index: TerritoryIndex,
   entries: readonly EntryView[],
+  limits: JudgementLimits,
 ): FitTile[] => {
   const ranks = ranksByTerritory(entries);
   return index.recommended.map((territory) => {
     const name = territoryName(territory);
-    const containment = territory.fit?.containment ?? null;
+    const { containment, reason: noData } = judgeTerritory(territory, limits);
     const own = ranks.get(territory.id) ?? [];
-    const noData = containment === null ? noDataReason(territory.kind) : null;
     return {
       id: territory.id,
       name,

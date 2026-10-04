@@ -64,6 +64,7 @@ const tileView = (tile: FitTile): HTMLElement => {
   element.title = `${tile.summary}\n${tile.description}`;
   element.dataset["fit"] = String(tile.step);
   element.dataset["kind"] = tile.kind;
+  element.dataset["judged"] = String(tile.noData === null);
   element.dataset["top"] = String(
     tile.ranks.some((rank) => rank <= TOP_ENTRY_POINTS),
   );

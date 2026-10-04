@@ -8,7 +8,7 @@ import { indexTerritories } from "./territory-index.js";
 
 const tilesOf = (report: ReturnType<typeof reportWithParts>) => {
   const index = indexTerritories(report.territories);
-  return fitTilesOf(index, entryViewsOf(report, index));
+  return fitTilesOf(index, entryViewsOf(report, index), report.thresholds);
 };
 
 const report = reportWithParts(
@@ -109,21 +109,59 @@ describe("fitTilesOf labels", () => {
       "5 smaller folders in packages; no counted changes in this window; <1% of the change effort",
     ]);
   });
+});
 
-  it("says why a tile has no data: test code is not judged, anything else saw no counted change", () => {
+describe("fitTilesOf judgement", () => {
+  it("says why a tile is not judged, naming the real reason", () => {
     const quiet = reportWithParts([
-      { id: "t1", path: "a", heat: 0.1, containment: null },
+      { id: "t1", path: "a", heat: 0, containment: null, changes: 0 },
       { id: "t2", path: "b", heat: 0.1, containment: null, kind: "tests" },
       { id: "t3", path: "c", heat: 0.1, containment: 0.5 },
+      { id: "t4", path: "d", heat: 0.02, containment: null, changes: 0 },
+      { id: "t5", path: "e", heat: 0.1, containment: 0, changes: 2 },
     ]);
 
     expect(tilesOf(quiet).map(({ noData }) => noData)).toEqual([
       "no counted changes in this window",
       "test code is not judged",
       null,
+      "changed only in changes of more than 50 files, which are not judged",
+      "too few changes to judge (2)",
     ]);
   });
 
+  it("reads the size of an uncounted change from the report's thresholds", () => {
+    const large = reportWithParts(
+      [{ id: "t1", path: "a", heat: 0.02, containment: null, changes: 0 }],
+      {},
+    );
+    const limited = {
+      ...large,
+      thresholds: { ...large.thresholds, maxCommitFiles: 80 },
+    };
+
+    expect(tilesOf(limited)[0]?.noData).toBe(
+      "changed only in changes of more than 80 files, which are not judged",
+    );
+  });
+
+  it("does not color a tile with too few changes by its containment, and says so in its summary", () => {
+    const few = reportWithParts([
+      { id: "t1", path: "code", heat: 0.1, containment: 0, changes: 2 },
+      { id: "t2", path: "enough", heat: 0.1, containment: 0.2, changes: 5 },
+    ]);
+
+    const [small, enough] = tilesOf(few);
+
+    expect(small).toMatchObject({ containment: null, step: 0 });
+    expect(small?.summary).toBe(
+      "code; too few changes to judge (2); 10% of the change effort",
+    );
+    expect(enough).toMatchObject({ containment: 0.2, step: 1, noData: null });
+  });
+});
+
+describe("fitTilesOf groups", () => {
   it("splits a group into its shared folder and what tells its members apart", () => {
     const grouped = reportWithParts([
       {

@@ -18,6 +18,8 @@ export type PartSpec = {
   readonly containment: number | null;
   readonly kind?: Territory["kind"];
   readonly description?: string;
+  /** Counted changes that touched it; 20 unless given. */
+  readonly changes?: number;
   /** The territory it changes with most, as `{ territory, sharedChanges, share }`. */
   readonly partner?: NonNullable<Territory["fit"]>["partner"];
 };
@@ -36,10 +38,11 @@ export const reportWithParts = (
       fit: null,
     }),
     ...parts.map(
-      ({ id, path, heat, containment, kind, description, partner }) =>
+      ({ id, path, heat, containment, kind, description, partner, changes }) =>
         territoryNode(id, path, {
           parent: "root",
           heatShare: heat,
+          changes: changes ?? 20,
           kind: kind ?? "folder",
           description: description ?? `What ${path} is`,
           fit: territoryFit({ containment, partner: partner ?? null }),

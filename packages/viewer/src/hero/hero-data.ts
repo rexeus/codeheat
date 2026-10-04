@@ -24,7 +24,7 @@ export const heroDataOf = (report: Report): HeroData => {
   const entries = entryViewsOf(report, territories);
   return {
     verdict: deriveVerdict(report, territories),
-    tiles: fitTilesOf(territories, entries),
+    tiles: fitTilesOf(territories, entries, report.thresholds),
     entries,
     noEntries: noEntriesNote(report),
   };

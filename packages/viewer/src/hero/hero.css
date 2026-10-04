@@ -407,7 +407,7 @@
   }
 }
 
-/* The labels give way in this order as a tile runs out of room (see trimLabels). */
+/* The labels give way in this order as a tile runs out of room (see trimLabels). A tile that is not judged keeps its reason longer than its folder. */
 .fit-tile[data-trim] .fit-desc,
 .fit-tile:is(
     [data-trim="2"],
@@ -417,9 +417,32 @@
     [data-trim="6"]
   )
   .fit-share,
-.fit-tile:is([data-trim="3"], [data-trim="4"], [data-trim="5"], [data-trim="6"])
+.fit-tile:not([data-judged="false"]):is(
+    [data-trim="3"],
+    [data-trim="4"],
+    [data-trim="5"],
+    [data-trim="6"]
+  )
   .fit-stat,
-.fit-tile:is([data-trim="4"], [data-trim="5"], [data-trim="6"]) .fit-dir {
+.fit-tile[data-judged="false"]:is(
+    [data-trim="4"],
+    [data-trim="5"],
+    [data-trim="6"]
+  )
+  .fit-stat,
+.fit-tile:not([data-judged="false"]):is(
+    [data-trim="4"],
+    [data-trim="5"],
+    [data-trim="6"]
+  )
+  .fit-dir,
+.fit-tile[data-judged="false"]:is(
+    [data-trim="3"],
+    [data-trim="4"],
+    [data-trim="5"],
+    [data-trim="6"]
+  )
+  .fit-dir {
   display: none;
 }
 .fit-tile[data-trim="5"] .fit-name {

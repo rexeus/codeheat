@@ -178,8 +178,9 @@ describe("deriveVerdict facts", () => {
     expect(verdictOf(report).facts).toEqual([
       {
         value: "1 of 2",
-        label: "territories keep less than 75% of their changes inside",
-        note: "",
+        label:
+          "territories with enough changes keep less than 75% of their changes inside",
+        note: "enough: at least 5 counted changes",
       },
       {
         value: "100%",
@@ -241,11 +242,39 @@ describe("deriveVerdict facts about the trend and the count", () => {
     expect(verdictOf(bare).facts).toEqual([
       {
         value: "1 of 2",
-        label: "territories keep less than 75% of their changes inside",
-        note: "",
+        label:
+          "territories with enough changes keep less than 75% of their changes inside",
+        note: "enough: at least 5 counted changes",
       },
       { value: "No trend yet", label: "over the last quarters", note: "" },
     ]);
+  });
+});
+
+describe("deriveVerdict judged territories", () => {
+  it("counts only territories with enough counted changes, and says what enough is", () => {
+    const sampled = reportWithParts([
+      { id: "t1", path: "a", heat: 0.3, containment: 0.1, changes: 12 },
+      { id: "t2", path: "b", heat: 0.3, containment: 0.9, changes: 30 },
+      { id: "t3", path: "c", heat: 0.3, containment: 0, changes: 2 },
+      { id: "t4", path: "d", heat: 0.1, containment: null, changes: 0 },
+    ]);
+
+    expect(verdictOf(sampled).facts[0]).toEqual({
+      value: "1 of 2",
+      label:
+        "territories with enough changes keep less than 75% of their changes inside",
+      note: "enough: at least 5 counted changes",
+    });
+  });
+
+  it("leaves a territory with too few changes out of the level too", () => {
+    const sampled = reportWithParts([
+      { id: "t1", path: "a", heat: 0.9, containment: 0, changes: 3 },
+      { id: "t2", path: "b", heat: 0.1, containment: 0.9, changes: 30 },
+    ]);
+
+    expect(verdictOf(sampled).level).toBe("holds");
   });
 
   it("names a single territory in the singular", () => {
@@ -254,7 +283,7 @@ describe("deriveVerdict facts about the trend and the count", () => {
     ]);
 
     expect(verdictOf(one).facts[0]?.label).toBe(
-      "territory keeps less than 75% of its changes inside",
+      "territory with enough changes keeps less than 75% of its changes inside",
     );
   });
 });

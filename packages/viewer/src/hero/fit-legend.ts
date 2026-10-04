@@ -37,7 +37,7 @@ export const renderFitLegend = (target: HTMLElement): void => {
       "span",
       "legend-item",
       swatch(0),
-      h("span", "muted", "no counted changes in this window, or test code"),
+      h("span", "muted", "not judged (the tile says why)"),
     ),
     h(
       "span",

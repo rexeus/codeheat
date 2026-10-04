@@ -15,14 +15,19 @@ export type VerdictFact = {
 /** How many entry points the hero shows and the verdict sums up. */
 export const TOP_ENTRY_POINTS = 3;
 
-/** How many of the measured territories leak, and where the line is. */
-const leakFact = ({ measured, leaking, limit }: Leaks): VerdictFact => ({
+/** How many of the judged territories leak, where the line is, and what judged means. */
+const leakFact = ({
+  measured,
+  leaking,
+  limit,
+  minChanges,
+}: Leaks): VerdictFact => ({
   value: `${formatCount(leaking)} of ${formatCount(measured)}`,
   label:
     measured === 1
-      ? `territory keeps less than ${formatShare(limit)} of its changes inside`
-      : `territories keep less than ${formatShare(limit)} of their changes inside`,
-  note: "",
+      ? `territory with enough changes keeps less than ${formatShare(limit)} of its changes inside`
+      : `territories with enough changes keep less than ${formatShare(limit)} of their changes inside`,
+  note: `enough: at least ${formatCount(minChanges)} counted changes`,
 });
 
 /** The share of the change effort that the top entry points' territories hold; `null` without any. */
