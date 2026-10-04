@@ -83,13 +83,23 @@ export const boundaryOn = (
 ): Report["entryPoints"][number] =>
   entryPointOf(rank, {
     territories,
-    evidence: { containment: 0.35, distantPairs: 79, heatShare: 0.1 },
+    evidence: {
+      containment: 0.35,
+      distantPairs: 79,
+      heatShare: 0.1,
+      codeHeatShare: 0.12,
+    },
     findings: [
       {
         kind: "boundary",
         verdict: "The boundary does not hold.",
         designMove: "Move a boundary: bring what changes together into one.",
-        evidence: { containment: 0.35, distantPairs: 79, heatShare: 0.1 },
+        evidence: {
+          containment: 0.35,
+          distantPairs: 79,
+          heatShare: 0.1,
+          codeHeatShare: 0.12,
+        },
         files: [],
         territories,
       },

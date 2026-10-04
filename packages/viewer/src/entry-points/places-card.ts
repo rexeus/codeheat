@@ -43,7 +43,7 @@ const cardRow = (place: EntryView): HTMLElement =>
       placeName(place),
       h("span", "place-move", icon(KIND_ICONS[place.kind]), place.moveLabel),
     ),
-    h("strong", "place-heat", formatShare(place.heatShare)),
+    h("strong", "place-heat", formatShare(place.codeHeatShare)),
   );
 
 const kindChip = ({ kind, kindLabel }: EntryView): HTMLElement => {
@@ -64,8 +64,8 @@ const placeCell = (place: EntryView): HTMLElement =>
       h(
         "span",
         "place-stake",
-        h("strong", "", formatShare(place.heatShare)),
-        " of heat",
+        h("strong", "", formatShare(place.codeHeatShare)),
+        " of the code's heat",
       ),
     ),
     h("h3", "place-title", placeName(place)),
@@ -100,7 +100,7 @@ const bodyOf = (
   return {
     kind: "answer",
     figure: formatShare(topShare),
-    unit: "of heat",
+    unit: "of the code's heat",
     sub: [top === 1 ? "in the top place" : `in the top ${top} places`],
     visual: [
       h(
@@ -112,7 +112,7 @@ const bodyOf = (
     chart: {
       title: "Places to start",
       intro:
-        "Best first: the change effort at stake, times how clearly the design fails there. Each says what is wrong and what to do about it.",
+        "Best first: the share of the code's heat at stake (test code holds none: tests are change effort but not design), times how clearly the design fails there. Each says what is wrong and what to do about it.",
       content: [
         h(
           "div",

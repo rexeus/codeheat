@@ -103,7 +103,7 @@ const bodyOf = (
   return {
     kind: "answer",
     figure: formatShare(topShare),
-    unit: "of heat",
+    unit: "of all heat",
     sub: [
       "in ",
       h("strong", "", String(top)),
@@ -120,7 +120,7 @@ const bodyOf = (
     chart: {
       title: "Heat by territory",
       intro:
-        "Each territory's share of all the change effort, hottest first. Select one to show its files in the map.",
+        "Each territory's share of all the change effort, test code included, hottest first. Select one to show its files in the map.",
       content: [
         chartRows(
           rows

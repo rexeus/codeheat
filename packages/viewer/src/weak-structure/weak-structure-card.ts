@@ -146,7 +146,7 @@ const bodyOf = (model: WeakStructure): AnswerBody => {
     kind: "answer",
     figure: `${leaking} of ${rows.length}`,
     unit: "leak",
-    sub: [h("strong", "", formatShare(leakShare)), " of heat sits in them"],
+    sub: [h("strong", "", formatShare(leakShare)), " of all heat sits in them"],
     visual: [strip(rows, limit)],
     chart: {
       title: "How much of each territory's change stays inside",

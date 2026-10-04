@@ -3,8 +3,12 @@ import { describe, expect, it } from "vitest";
 
 import { indexTerritories } from "../territories/territory-index.js";
 import { boundaryOn, reportWithParts } from "../testing/design-fit.js";
-import { entryPointOf, reportOf } from "../testing/reports.js";
-import { entryViewsOf, noEntriesNote, topEntriesHeat } from "./entry-views.js";
+import { entryPointOf, fileStats, reportOf } from "../testing/reports.js";
+import {
+  entryViewsOf,
+  noEntriesNote,
+  topEntriesCodeHeat,
+} from "./entry-views.js";
 import { statsOf } from "./evidence.js";
 
 type EntryPoint = Report["entryPoints"][number];
@@ -13,7 +17,7 @@ const viewsOf = (report: Report) =>
   entryViewsOf(report, indexTerritories(report.territories));
 
 const topOf = (report: Report) =>
-  topEntriesHeat(report, indexTerritories(report.territories));
+  topEntriesCodeHeat(report, indexTerritories(report.territories));
 
 const base = reportWithParts([
   { id: "t1", path: "packages/core", heat: 0.4, containment: 0.35 },
@@ -48,8 +52,8 @@ describe("entryViewsOf a boundary", () => {
     });
   });
 
-  it("puts the heat of its evidence at stake", () => {
-    expect(view?.heatShare).toBe(0.1);
+  it("puts the production code's heat of its territory at stake", () => {
+    expect(view?.codeHeatShare).toBe(0.12);
   });
 
   it("shows the boundary's numbers in plain words, most telling first", () => {
@@ -65,16 +69,14 @@ describe("entryViewsOf a boundary between two territories", () => {
   it("reads A + B, and counts each territory once", () => {
     const entry = entryPointOf(1, {
       territories: ["t1", "t2", "t1"],
-      evidence: { containment: 0.4, sharedChanges: 30 },
+      evidence: { containment: 0.4, sharedChanges: 30, codeHeatShare: 0.55 },
     });
 
-    const [view] = viewsOf(withEntries(entry));
-
-    expect(view).toMatchObject({
+    expect(viewsOf(withEntries(entry))[0]).toMatchObject({
       name: "core + forms",
       title: "packages/core + packages/forms",
+      codeHeatShare: 0.55,
     });
-    expect(view?.heatShare).toBeCloseTo(0.6);
   });
 });
 
@@ -112,7 +114,7 @@ describe("entryViewsOf the design move", () => {
 });
 
 describe("entryViewsOf entries about files", () => {
-  it("names a hub by its file and a coupling by both, with the files' own heat at stake", () => {
+  it("names a hub by its file and a coupling by both, with the files' own heat in the code at stake", () => {
     const hub = entryPointOf(1, {
       kind: "hub",
       territories: ["t2"],
@@ -132,16 +134,16 @@ describe("entryViewsOf entries about files", () => {
       name: "types.ts",
       title: "packages/forms/types.ts",
       kindLabel: "Hub",
-      heatShare: 0.0211,
+      codeHeatShare: 0.0211,
     });
     expect(couplingView).toMatchObject({
       name: "a.ts ↔ b.ts",
       kindLabel: "Hidden coupling",
-      heatShare: 0.03,
+      codeHeatShare: 0.03,
     });
   });
 
-  it("names a hotspot by its territory, whose heat is at stake", () => {
+  it("names a hotspot by its territory, and puts the heat of its chronic hotspots at stake", () => {
     const hotspot = entryPointOf(1, {
       kind: "hotspot",
       territories: ["t3"],
@@ -151,26 +153,70 @@ describe("entryViewsOf entries about files", () => {
 
     expect(viewsOf(withEntries(hotspot))[0]).toMatchObject({
       name: "web",
-      heatShare: 0.15,
+      codeHeatShare: 0.05,
     });
   });
 });
 
-describe("topEntriesHeat", () => {
-  it("sums the heat of the territories of the top three places, each territory once", () => {
-    const report = withEntries(
-      entryPointOf(1, { territories: ["t1", "t2"] }),
-      entryPointOf(2, { territories: ["t2"] }),
-      entryPointOf(3, { kind: "hub", territories: ["t3"], files: ["x.ts"] }),
-      entryPointOf(4, { territories: ["t4"] }),
+const COMPLEXITY = { total: 50, mean: 1, max: 2 };
+
+/** One code file per territory with the heat `changes × (50 + 50)`, and a hot test file in t1. */
+const withHeat = (report: Report): Report => ({
+  ...report,
+  files: [
+    fileStats("packages/core/a.ts", {
+      territory: "t1",
+      changes: 4,
+      loc: 50,
+      complexity: COMPLEXITY,
+    }),
+    fileStats("packages/core/a.spec.ts", {
+      territory: "t1",
+      test: true,
+      changes: 9,
+      loc: 950,
+      complexity: COMPLEXITY,
+    }),
+    fileStats("packages/forms/b.ts", {
+      territory: "t2",
+      changes: 3,
+      loc: 50,
+      complexity: COMPLEXITY,
+    }),
+    fileStats("apps/web/c.ts", {
+      territory: "t3",
+      changes: 2,
+      loc: 50,
+      complexity: COMPLEXITY,
+    }),
+    fileStats("apps/docs/d.ts", {
+      territory: "t4",
+      changes: 1,
+      loc: 50,
+      complexity: COMPLEXITY,
+    }),
+  ],
+});
+
+describe("topEntriesCodeHeat", () => {
+  it("sums the production code's heat in the territories of the top three places, each territory once", () => {
+    const report = withHeat(
+      withEntries(
+        entryPointOf(1, { territories: ["t1", "t2"] }),
+        entryPointOf(2, { territories: ["t2"] }),
+        entryPointOf(3, { kind: "hub", territories: ["t4"], files: ["x.ts"] }),
+        entryPointOf(4, { territories: ["t3"] }),
+      ),
     );
 
-    // core 40 % + forms 20 % + web 15 %; docs is fourth and left out
-    expect(topOf(report)).toBeCloseTo(0.75);
+    // 400 + 300 + 100 of 1,000 (the test file holds none); web, the fourth place, is left out.
+    expect(topOf(report)).toBeCloseTo(0.8);
   });
 
   it("sums fewer places when there are fewer", () => {
-    expect(topOf(withEntries(boundaryOn(1, ["t2"])))).toBeCloseTo(0.2);
+    expect(topOf(withHeat(withEntries(boundaryOn(1, ["t2"]))))).toBeCloseTo(
+      0.3,
+    );
   });
 
   it("is null without places to start", () => {

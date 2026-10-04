@@ -7,7 +7,7 @@ import { concentrationOf } from "../concentration/concentration.js";
 import {
   entryViewsOf,
   noEntriesNote,
-  topEntriesHeat,
+  topEntriesCodeHeat,
 } from "../entry-points/entry-views.js";
 import { placesAnswer } from "../entry-points/places-card.js";
 import { byId } from "../render/dom.js";
@@ -35,7 +35,7 @@ const answersOf = (
     weakStructureAnswer(weakStructureOf(report, territories)),
     placesAnswer(
       entryViewsOf(report, territories),
-      topEntriesHeat(report, territories),
+      topEntriesCodeHeat(report, territories),
       noEntriesNote(report),
     ),
   ];
