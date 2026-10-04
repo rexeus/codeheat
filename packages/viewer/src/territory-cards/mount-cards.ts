@@ -92,8 +92,7 @@ class CardsSection {
       this.slider.element.querySelector("input")?.focus();
     });
     this.more.addEventListener("click", () => {
-      this.state = showAllCards(this.state);
-      this.render();
+      this.showAll();
     });
   }
 
@@ -125,6 +124,17 @@ class CardsSection {
     const made = { index, cards: cardsOf(this.input.source, index) };
     this.levels.set(level, made);
     return made;
+  }
+
+  /** Shows the rest of the cards and moves focus to the first of them, since the button that had it is gone. */
+  private showAll(): void {
+    const { cards } = this.levelAt(this.state.detail);
+    const shownBefore = shownCards(cards, this.state).cards.length;
+    this.state = showAllCards(this.state);
+    this.render();
+    this.grid.children[shownBefore]
+      ?.querySelector<HTMLElement>(".tcard-toggle")
+      ?.focus();
   }
 
   private chooseDetail(level: number): void {

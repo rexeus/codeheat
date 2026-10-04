@@ -11,8 +11,8 @@ import type { FileLinkContext } from "./file-link.js";
 
 /**
  * Links to files from cards: a file the card names is selected in the map,
- * which scrolls into view; a file the report does not list (after `--limit`)
- * is not offered as a link.
+ * which scrolls into view; a file the report does not list is not offered as
+ * a link.
  */
 const fileLinksOf = (
   report: Report,

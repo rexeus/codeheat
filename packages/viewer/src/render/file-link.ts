@@ -9,7 +9,7 @@ export type FileLinkContext = {
 
 /**
  * A file's name as a button that shows the file in the map. A file the
- * report does not list (after `--limit`) is a plain, dashed label instead.
+ * report does not list is a plain, dashed label instead.
  */
 export const fileLink = (
   path: string,
