@@ -5,6 +5,8 @@ import type { Clique } from "../report/clique.js";
 import type { FileStats } from "../report/report.js";
 import type { Territories } from "../report/territory.js";
 import { chronicHeat } from "./chronic-heat.js";
+import { NO_CROSSINGS } from "./crossing-pairs.js";
+import type { AreaCrossings } from "./crossing-pairs.js";
 import { homeDetails, levelAt } from "./levels.js";
 import type { Level } from "./levels.js";
 import { measureLevel } from "./measure-level.js";
@@ -27,6 +29,8 @@ export type FittedTerritories = {
     readonly level: Level;
     readonly measured: MeasuredLevel;
   } | null;
+  /** The coupled file pairs between the territories at the recommended detail; none without one. */
+  readonly crossings: AreaCrossings;
 };
 
 /**
@@ -78,6 +82,7 @@ export const measureTerritoryFit = (
       }),
     },
     cliques: recommendedMeasured?.cliques ?? [],
+    crossings: recommendedMeasured?.crossings ?? NO_CROSSINGS,
     recommended:
       recommendedLevel === undefined || recommendedMeasured === undefined
         ? null

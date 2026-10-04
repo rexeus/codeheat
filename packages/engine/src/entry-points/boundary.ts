@@ -1,13 +1,18 @@
 // Owns the entry points of kind `boundary`: territories that carry much of the
 // heat and whose changes keep reaching into other territories.
 import { boundaryBetween } from "./boundary-pair.js";
-import type { Leak } from "./boundary-pair.js";
+import type { Leak, PairContext } from "./boundary-pair.js";
 import { evidenceOf } from "./candidate.js";
 import type { Candidate } from "./candidate.js";
 import { isChronic } from "./judged-territories.js";
 import type { Judged } from "./judged-territories.js";
 import type { EntryLimits } from "./limits.js";
 import { boundaryMove, boundaryVerdict } from "./moves.js";
+
+/** What the boundaries are read against: the paths of the territories, the gates, and for a boundary between two territories the file pairs and cliques that count once. */
+export type BoundaryContext = PairContext & {
+  readonly limits: EntryLimits;
+};
 
 /** How much more a territory ranks when most of its heat is chronic. */
 const CHRONIC_BOOST = 1.5;
@@ -91,8 +96,7 @@ const leakOf = (
  */
 export const boundaryEntries = (
   judged: ReadonlyArray<Judged>,
-  pathOf: ReadonlyMap<string, string>,
-  limits: EntryLimits,
+  { pathOf, limits, crossings, cliques }: BoundaryContext,
 ): ReadonlyArray<Candidate> => {
   const all = judged.flatMap((territory) => leakOf(territory, pathOf, limits));
   const byId = new Map(all.map((leak) => [leak.territory.id, leak]));
@@ -103,7 +107,7 @@ export const boundaryEntries = (
     }
     // the pair is met from both sides; the one met first tells it
     return index < all.indexOf(other)
-      ? [boundaryBetween(leak, other, pathOf)]
+      ? [boundaryBetween(leak, other, { pathOf, crossings, cliques })]
       : [];
   });
 };

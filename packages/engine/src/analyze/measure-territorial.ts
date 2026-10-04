@@ -93,6 +93,7 @@ export const measureTerritorial = (options: {
         couplings,
         unstableInterfaces: options.unstableInterfaces,
         minChanges,
+        crossings: fitted.crossings,
         limits: options.limits,
       }),
     };

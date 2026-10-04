@@ -86,7 +86,7 @@ describe("entryPointLines of a boundary between two territories", () => {
     expect(lines().slice(1, 5)).toStrictEqual([
       "1. boundary  billing, web",
       "   The boundary between billing and web does not hold.",
-      "   40% of the code's heat; 43% of their 48 changes stay inside, 12 changes touched both",
+      "   40% of the code's heat; 43% of their 48 changes stay inside one of the two, 12 changes touched both",
       "   Move.",
     ]);
   });

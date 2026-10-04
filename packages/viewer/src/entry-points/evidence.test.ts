@@ -21,4 +21,29 @@ describe("nonZeroStats", () => {
 
     expect(nonZeroStats(stats).map(({ value }) => value)).toEqual(["<1%"]);
   });
+
+  it("speaks of their changes and their edges for a boundary between two territories", () => {
+    const stats = statsOf("boundary", {
+      containment: 0.47,
+      sharedChanges: 12,
+      distantPairs: 7,
+      fixShare: 0.2,
+    });
+
+    expect(stats.map(({ label }) => label)).toEqual([
+      "of their changes stay inside one of the two",
+      "changes touched both territories",
+      "file pairs across their edges change together",
+      "of their changes are fixes",
+    ]);
+  });
+
+  it("speaks of its changes and its edge for the boundary of one territory", () => {
+    const stats = statsOf("boundary", { containment: 0.47, distantPairs: 7 });
+
+    expect(stats.map(({ label }) => label)).toEqual([
+      "of its changes stay inside",
+      "file pairs across its edge change together",
+    ]);
+  });
 });

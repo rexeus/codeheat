@@ -6,6 +6,7 @@ import type { Coupling, FileStats } from "../report/report.js";
 import type { Territories } from "../report/territory.js";
 import type { UnstableInterface } from "../report/unstable-interface.js";
 import { boundaryEntries } from "./boundary.js";
+import type { BoundaryContext } from "./boundary.js";
 import type { Candidate } from "./candidate.js";
 import { cliqueEntries } from "./clique.js";
 import { copiesEntries } from "./copies.js";
@@ -30,6 +31,8 @@ export type EntryPointInput = {
   readonly unstableInterfaces: ReadonlyArray<UnstableInterface>;
   /** Fewest counted changes at which a territory is judged (`Thresholds.minModuleCommits`). */
   readonly minChanges: number;
+  /** The coupled file pairs that cross between the territories at the recommended detail, which a boundary between two territories counts once. */
+  readonly crossings: BoundaryContext["crossings"];
   /** The gates (`Report.thresholds`). */
   readonly limits: EntryLimits;
 };
@@ -53,7 +56,12 @@ export const gatherCandidates = (
   const heat = fileHeatOf(files);
   const areaOfFile = realAreaOfFile(territories, territoryOf);
   return [
-    ...boundaryEntries(judged, pathOf, limits),
+    ...boundaryEntries(judged, {
+      pathOf,
+      limits,
+      crossings: input.crossings,
+      cliques: input.cliques,
+    }),
     ...hotspotEntries(
       judged,
       { files, nodes: territories.nodes, heat },

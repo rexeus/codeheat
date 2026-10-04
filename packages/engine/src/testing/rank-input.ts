@@ -3,6 +3,7 @@ import type { EntryPointInput } from "../entry-points/gather-candidates.js";
 import type { CopyFamily } from "../report/copy-family.js";
 import type { Coupling } from "../report/report.js";
 import type { Territories } from "../report/territory.js";
+import { NO_CROSSINGS } from "../territory-fit/crossing-pairs.js";
 import { fileRecord } from "./file-record.js";
 import { DEFAULT_THRESHOLDS } from "./report-defaults.js";
 import { fitRecord, territoryRecord } from "./territory-record.js";
@@ -82,6 +83,7 @@ export const rankInput = (
   couplings: [],
   unstableInterfaces: [],
   minChanges: 10,
+  crossings: NO_CROSSINGS,
   limits: DEFAULT_THRESHOLDS,
   ...overrides,
 });

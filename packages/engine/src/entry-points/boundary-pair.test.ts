@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 
 import type { TerritoryFit } from "../report/territory-fit.js";
+import { NO_CROSSINGS } from "../territory-fit/crossing-pairs.js";
 import { DEFAULT_THRESHOLDS } from "../testing/report-defaults.js";
 import { fitRecord, territoryRecord } from "../testing/territory-record.js";
 import { boundaryEntries as boundaryEntriesWith } from "./boundary.js";
+import type { BoundaryContext } from "./boundary.js";
 import type { Judged } from "./judged-territories.js";
 
 const judged = (
@@ -24,8 +26,17 @@ const PATHS = new Map(
   ["a", "b", "c"].map((id) => [id, `packages/${id}`] as const),
 );
 
-const boundaryEntries = (territories: ReadonlyArray<Judged>) =>
-  boundaryEntriesWith(territories, PATHS, DEFAULT_THRESHOLDS);
+const boundaryEntries = (
+  territories: ReadonlyArray<Judged>,
+  context: Partial<BoundaryContext> = {},
+) =>
+  boundaryEntriesWith(territories, {
+    pathOf: PATHS,
+    limits: DEFAULT_THRESHOLDS,
+    crossings: NO_CROSSINGS,
+    cliques: [],
+    ...context,
+  });
 
 /** Replaces some of what the fit of `territory` says. */
 const refit = (territory: Judged, fit: Partial<TerritoryFit>): Judged => ({
@@ -107,26 +118,54 @@ describe("boundaryEntries of two territories that leak into each other", () => {
   });
 });
 
-describe("boundaryEntries of two territories, evidence and findings", () => {
-  it("gives the numbers of both together under the names of one boundary", () => {
-    const [entry] = boundaryEntries([A, B]);
+const unit = (modules: ReadonlyArray<string>) => ({
+  modules,
+  sharedCommits: 5,
+  weakestShare: 0.5,
+  reason: "",
+});
 
-    // containment: (0.4 × 40 + 0.5 × 20) / 60; changes: 40 + 20 − 12 shared;
-    // chronic: (0 × 0.3 + 0.6 × 0.1) / 0.4; partner: 12 of those 48
+/** Three file pairs between a and b, one of them without an import. */
+const BETWEEN_A_AND_B = {
+  ofArea: new Map(),
+  ofPair: new Map([["a", new Map([["b", { pairs: 3, hidden: 1 }]])]]),
+};
+
+/** Three of the four have a or b as a member. */
+const CLIQUES = [
+  unit(["a", "c", "x"]),
+  unit(["b", "y", "z"]),
+  unit(["a", "b", "w"]),
+  unit(["x", "y", "z"]),
+];
+
+describe("boundaryEntries of two territories, evidence", () => {
+  it("gives the numbers of both together under the names of one boundary, each change and file pair counted once", () => {
+    const [entry] = boundaryEntries([A, B], {
+      crossings: BETWEEN_A_AND_B,
+      cliques: CLIQUES,
+    });
+
+    // changes: 40 + 20 − 12 shared; containment: the 16 changes that stayed inside a and
+    // the 10 inside b (0.4 × 40, 0.5 × 20) over those 48; partner: 12 of the 48;
+    // chronic: (0 × 0.3 + 0.6 × 0.1) / 0.4; file pairs: 6 + 4 − 3 between the two once,
+    // 2 + 1 − 1 without an import; cliques: three have a or b as a member
     expect(entry?.evidence).toStrictEqual({
       codeHeatShare: 0.4,
       heatShare: 0.47,
-      containment: 0.4333,
+      containment: 0.5417,
       changes: 48,
       sharedChanges: 12,
       chronicShare: 0.15,
-      distantPairs: 10,
-      hiddenPairs: 3,
-      cliques: 2,
+      distantPairs: 7,
+      hiddenPairs: 2,
+      cliques: 3,
       partnerShare: 0.25,
     });
   });
+});
 
+describe("boundaryEntries of two territories, findings", () => {
   it("weights the share of fixes by changes, and takes the one that is known", () => {
     expect(fixShareOf(0.2, 0.5)).toBeCloseTo(0.3, 4);
     expect(fixShareOf(0.2, null)).toBe(0.2);

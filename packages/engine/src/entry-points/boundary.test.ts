@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { TerritoryFit } from "../report/territory-fit.js";
+import { NO_CROSSINGS } from "../territory-fit/crossing-pairs.js";
 import { DEFAULT_THRESHOLDS } from "../testing/report-defaults.js";
 import { fitRecord, territoryRecord } from "../testing/territory-record.js";
 import { boundaryEntries as boundaryEntriesWith } from "./boundary.js";
@@ -31,7 +32,13 @@ const boundaryEntries = (
   judgedTerritories: ReadonlyArray<Judged>,
   paths: ReadonlyMap<string, string>,
   limits = DEFAULT_THRESHOLDS,
-) => boundaryEntriesWith(judgedTerritories, paths, limits);
+) =>
+  boundaryEntriesWith(judgedTerritories, {
+    pathOf: paths,
+    limits,
+    crossings: NO_CROSSINGS,
+    cliques: [],
+  });
 
 const PATHS = new Map([
   ["a", "packages/a"],

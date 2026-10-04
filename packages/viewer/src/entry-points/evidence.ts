@@ -99,13 +99,20 @@ const SPECS: Record<EntryKind, readonly StatSpec[]> = {
 export const nonZeroStats = (stats: readonly EntryStat[]): EntryStat[] =>
   stats.filter(({ value }) => value !== "0");
 
+/** What a boundary between two territories says in place of what a boundary of one territory says: their changes, their edges. */
+const BETWEEN_LABELS: Readonly<Record<string, string>> = {
+  containment: "of their changes stay inside one of the two",
+  distantPairs: "file pairs across their edges change together",
+  fixShare: "of their changes are fixes",
+};
+
 /** The most numbers a card shows for one finding. */
 const MAX_STATS = 4;
 
 const formatValue = (value: number, unit: Unit): string =>
   unit === "share" ? formatShare(value) : formatCount(value);
 
-/** The numbers of `evidence` worth showing for a finding of `kind`, at most `limit`, in the kind's order. */
+/** The numbers of `evidence` worth showing for a finding of `kind`, at most `limit`, in the kind's order; a boundary that counts `sharedChanges` is one between two territories, which speaks of their changes. */
 export const statsOf = (
   kind: EntryKind,
   evidence: Readonly<Record<string, number>>,
@@ -114,8 +121,15 @@ export const statsOf = (
   SPECS[kind]
     .flatMap(({ key, unit, label }) => {
       const value = evidence[key];
+      const between =
+        kind === "boundary" && evidence["sharedChanges"] !== undefined;
       return value === undefined
         ? []
-        : [{ value: formatValue(value, unit), label }];
+        : [
+            {
+              value: formatValue(value, unit),
+              label: (between ? BETWEEN_LABELS[key] : undefined) ?? label,
+            },
+          ];
     })
     .slice(0, limit);
