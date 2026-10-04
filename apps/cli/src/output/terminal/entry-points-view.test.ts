@@ -268,7 +268,7 @@ describe("entries with two findings", () => {
   });
 
   it("lists the further finding of an entry in inspect", () => {
-    expect(fileEntryPointLines([both])).toStrictEqual([
+    expect(fileEntryPointLines([both], [])).toStrictEqual([
       "entry point #1 (boundary): Verdict.",
       "  Move.",
       "  also hotspot: Chronic.",
@@ -280,10 +280,13 @@ describe("entries with two findings", () => {
 describe("fileEntryPointLines", () => {
   it("names the rank, kind, verdict, and move of each entry point", () => {
     expect(
-      fileEntryPointLines([
-        entry({ rank: 2, kind: "hub" }),
-        entry({ rank: 5, kind: "copies", verdict: "V.", designMove: "M." }),
-      ]),
+      fileEntryPointLines(
+        [
+          entry({ rank: 2, kind: "hub" }),
+          entry({ rank: 5, kind: "copies", verdict: "V.", designMove: "M." }),
+        ],
+        [],
+      ),
     ).toStrictEqual([
       "entry point #2 (hub): Verdict.",
       "  Move.",
@@ -293,6 +296,6 @@ describe("fileEntryPointLines", () => {
   });
 
   it("says nothing for a file that is in none", () => {
-    expect(fileEntryPointLines([])).toStrictEqual([]);
+    expect(fileEntryPointLines([], [])).toStrictEqual([]);
   });
 });

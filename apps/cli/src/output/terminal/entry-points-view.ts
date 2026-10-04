@@ -127,13 +127,17 @@ export const entryPointLines = (
  * One line pair per finding of each entry point a file belongs to, for
  * `inspect`: the rank and kind with the verdict, and the design move beneath;
  * a further finding of the entry follows as "also", except for the boundary of
- * one territory of a boundary between two, which the verdict already tells.
- * Empty for a file in none.
+ * one territory of a boundary between two, which the verdict already tells; a
+ * finding about other territories than its entry's names them ("also boundary
+ * of <path>"), by the `territories` of the inspect result. Empty for a file in
+ * none.
  */
 export const fileEntryPointLines = (
   entryPoints: ReadonlyArray<EntryPoint>,
-): ReadonlyArray<string> =>
-  entryPoints.flatMap((entry) => [
+  territories: ReadonlyArray<{ readonly id: string; readonly path: string }>,
+): ReadonlyArray<string> => {
+  const pathOf = new Map(territories.map(({ id, path }) => [id, path]));
+  return entryPoints.flatMap((entry) => [
     `entry point #${entry.rank} (${entry.kind}): ${escapeForTerminal(entry.verdict)}`,
     `  ${escapeForTerminal(entry.designMove)}`,
     ...entry.findings
@@ -142,8 +146,9 @@ export const fileEntryPointLines = (
         isPartOf(finding, entry)
           ? []
           : [
-              `  also ${finding.kind}: ${escapeForTerminal(finding.verdict)}`,
+              `  also ${finding.kind}${concerning(finding, entry, pathOf)}: ${escapeForTerminal(finding.verdict)}`,
               `  ${escapeForTerminal(finding.designMove)}`,
             ],
       ),
   ]);
+};

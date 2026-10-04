@@ -48,6 +48,11 @@ const between: EntryPoint = {
   ],
 };
 
+const PATHS = [
+  { id: "t2", path: "billing" },
+  { id: "t3", path: "web" },
+];
+
 const lines = (): ReadonlyArray<string> =>
   entryPointLines(
     {
@@ -100,9 +105,41 @@ describe("entryPointLines of a boundary between two territories", () => {
 
 describe("fileEntryPointLines of a boundary between two territories", () => {
   it("tells the boundary between both once, not once more for each territory", () => {
-    expect(fileEntryPointLines([between])).toStrictEqual([
+    expect(fileEntryPointLines([between], PATHS)).toStrictEqual([
       "entry point #1 (boundary): The boundary between billing and web does not hold.",
       "  Move.",
     ]);
+  });
+});
+
+describe("fileEntryPointLines of a clique that took in boundaries", () => {
+  const clique: EntryPoint = {
+    ...between,
+    kind: "clique",
+    verdict: "These change as one unit.",
+    designMove: "Extract.",
+    evidence: {},
+    findings: [
+      {
+        ...finding("These change as one unit.", "Extract.", ["t2", "t3"], {}),
+        kind: "clique",
+      },
+      finding("Leaks.", "Move billing.", ["t2"], {}),
+    ],
+  };
+
+  it("names the territory of a boundary the clique took in", () => {
+    expect(fileEntryPointLines([clique], PATHS)).toStrictEqual([
+      "entry point #1 (clique): These change as one unit.",
+      "  Extract.",
+      "  also boundary of billing: Leaks.",
+      "  Move billing.",
+    ]);
+  });
+
+  it("names a territory the result does not list by its id,", () => {
+    expect(fileEntryPointLines([clique], [])[2]).toBe(
+      "  also boundary of t2: Leaks.",
+    );
   });
 });
