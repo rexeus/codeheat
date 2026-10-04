@@ -31,6 +31,17 @@ type Tally = {
   strongest: CouplingPartner["strongest"];
 };
 
+/**
+ * The engine's rule for a pair that says something about the design
+ * (`isJudgeablePair`): neither file is test code, and the two are not both
+ * contract files.
+ */
+const isJudgeable = (pair: Pair, source: CardSource): boolean =>
+  !pair.testPair &&
+  !(pair.kinds.a === "contract" && pair.kinds.b === "contract") &&
+  source.filesByPath.get(pair.a)?.test === false &&
+  source.filesByPath.get(pair.b)?.test === false;
+
 /** The territory on the other side of `pair` when exactly one file is in the territory `id`; `undefined` otherwise. */
 const otherSideOf = (
   pair: Pair,
@@ -38,8 +49,8 @@ const otherSideOf = (
   level: LevelIndex,
   source: CardSource,
 ): string | undefined => {
-  const one = level.ownerOf(source.territoryOfFile.get(pair.a) ?? "");
-  const other = level.ownerOf(source.territoryOfFile.get(pair.b) ?? "");
+  const one = level.ownerOf(source.filesByPath.get(pair.a)?.territory ?? "");
+  const other = level.ownerOf(source.filesByPath.get(pair.b)?.territory ?? "");
   if (one === id && other !== id) {
     return other;
   }
@@ -70,9 +81,10 @@ const addPair = (
 
 /**
  * The territories that share coupled file pairs with the territory `id`,
- * most pairs first, ties by the strongest pair. Pairs of a file and its test,
- * pairs with a file the report does not list, and pairs inside the territory
- * are not counted.
+ * most pairs first, ties by the strongest pair. Pairs with test code (a file
+ * and its test, or any spec file), two contract files, a file the report
+ * does not list, or inside the territory are not counted, and test territories
+ * are no partners, so the numbers agree with `fit.distantPairs`.
  */
 export const couplingPartnersOf = (
   id: string,
@@ -80,10 +92,13 @@ export const couplingPartnersOf = (
   source: CardSource,
 ): CouplingPartner[] => {
   const tallies = new Map<string, Tally>();
+  if (source.territories.byId.get(id)?.kind === "tests") {
+    return [];
+  }
   for (const pair of source.couplings) {
-    const partner = pair.testPair
-      ? undefined
-      : otherSideOf(pair, id, level, source);
+    const partner = isJudgeable(pair, source)
+      ? otherSideOf(pair, id, level, source)
+      : undefined;
     if (partner !== undefined) {
       addPair(tallies, partner, pair);
     }
@@ -97,7 +112,7 @@ export const couplingPartnersOf = (
     .slice(0, MAX_PARTNERS)
     .flatMap(([partner, tally]) => {
       const territory = source.territories.byId.get(partner);
-      return territory === undefined
+      return territory === undefined || territory.kind === "tests"
         ? []
         : [{ name: territoryName(territory), ...tally }];
     });

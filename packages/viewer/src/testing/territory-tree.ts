@@ -25,6 +25,7 @@ const coreNodes = (): Report["territories"]["nodes"] => [
     changes: 30,
     files: 2,
     fit: territoryFit({
+      detail: 2,
       containment: 0.3,
       partner: { territory: "t4", sharedChanges: 9, share: 0.3 },
       chronicFiles: 1,
@@ -41,14 +42,14 @@ const otherNodes = (): Report["territories"]["nodes"] => [
     heatShare: 0.2,
     changes: 12,
     files: 1,
-    fit: territoryFit({ containment: 0.8 }),
+    fit: territoryFit({ detail: 2, containment: 0.8 }),
   }),
   territoryNode("t5", "docs", {
     parent: "t1",
     heatShare: 0.1,
     changes: 10,
     files: 1,
-    fit: territoryFit({ containment: 0.9 }),
+    fit: territoryFit({ detail: 2, containment: 0.9 }),
   }),
   territoryNode("t6", "core", {
     parent: "t1",
@@ -98,6 +99,8 @@ export const territoryTreeReport = (
         sharedCommits: 9,
         testPair: true,
       }),
+      // A spec file that is nobody's own test, crossing the edge of t3.
+      coupling("core/src/a.test.ts", "docs/d.md", { sharedCommits: 20 }),
     ],
     [],
     {
@@ -109,7 +112,15 @@ export const territoryTreeReport = (
         ],
         nodes,
       },
-      logicalChanges: { by: "commit", count: 100, largest: 5 },
+      // Logical changes count before the size limit; the window's `couplingCommits` is what territories count.
+      logicalChanges: { by: "commit", count: 500, largest: 80 },
+      window: {
+        since: "2025-09-29T12:00:00.000Z",
+        until: "2026-09-29T12:00:00.000Z",
+        commits: 600,
+        realCommits: 550,
+        couplingCommits: 120,
+      },
       ...overrides,
     },
   );

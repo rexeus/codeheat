@@ -118,7 +118,7 @@ const findingView = ({ label, where, stats }: CardFinding): HTMLElement =>
     "li",
     "tcard-finding",
     h("span", "chip", label),
-    ...(where === "" ? [] : [h("span", "tcard-where", `in ${where}`)]),
+    ...(where === "" ? [] : [h("span", "tcard-where", where)]),
     h(
       "span",
       "tcard-finding-stats",

@@ -115,7 +115,7 @@ const findingRow = ({
     "li",
     "tcard-all-finding",
     h("span", "chip", label),
-    ...(where === "" ? [] : [h("strong", "", `in ${where}`)]),
+    ...(where === "" ? [] : [h("strong", "", where)]),
     ...(rank === null ? [] : [h("span", "muted", `place to start #${rank}`)]),
     ...(verdict === "" ? [] : [h("p", "", verdict)]),
     h(

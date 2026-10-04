@@ -4,10 +4,7 @@
 import type { EntryView } from "../entry-points/entry-views.js";
 import type { EntryKind, EntryStat } from "../entry-points/evidence.js";
 import { formatCount, formatShare } from "../render/format.js";
-import {
-  isRealTerritory,
-  territoryName,
-} from "../territories/territory-index.js";
+import { isRealTerritory } from "../territories/territory-index.js";
 import type { Territory } from "../territories/territory-index.js";
 
 /** One thing worth knowing about a territory, with the numbers behind it. */
@@ -16,7 +13,7 @@ export type CardFinding = {
   readonly label: string;
   /** The rank of the place to start it comes from; `null` for a finding from the territory's own numbers. */
   readonly rank: number | null;
-  /** Where inside the territory it applies, when its place to start concerns one part of it; empty otherwise. */
+  /** Which part of the territory (`in a, b`) or which containing territory (`within x`) its place to start concerns; empty when it concerns the territory itself or comes from its own numbers. */
   readonly where: string;
   /** The sentence the place to start gives for it; empty for a finding from the territory's own numbers. */
   readonly verdict: string;
@@ -39,31 +36,28 @@ export type FindingContext = {
   readonly minChanges: number;
 };
 
-/** A place to start that concerns a territory, and the parts of that territory it names when it concerns only a part. */
+/** A place to start that belongs on the card of a territory, and how it concerns it. */
 export type Concerning = {
   readonly entry: EntryView;
-  /** The territories of the entry that lie inside the card's territory, without the territory itself. */
-  readonly inner: readonly Territory[];
+  /** Which part of the card's territory (`in a, b`) or which containing territory (`within x`) it concerns; empty when it concerns the territory itself. */
+  readonly where: string;
+  /** The entry names the territory itself. */
+  readonly itself: boolean;
 };
 
 const fromEntry = ({
   entry: { rank, kindLabel, verdict, stats, also },
-  inner,
-}: Concerning): CardFinding[] => {
-  const [only, ...more] = inner;
-  const where =
-    only === undefined || more.length > 0 ? "" : territoryName(only);
-  return [
-    { label: kindLabel, rank, where, verdict, stats },
-    ...also.map((finding) => ({
-      label: finding.kindLabel,
-      rank,
-      where,
-      verdict: finding.verdict,
-      stats: finding.stats,
-    })),
-  ];
-};
+  where,
+}: Concerning): CardFinding[] => [
+  { label: kindLabel, rank, where, verdict, stats },
+  ...also.map((finding) => ({
+    label: finding.kindLabel,
+    rank,
+    where,
+    verdict: finding.verdict,
+    stats: finding.stats,
+  })),
+];
 
 /** A finding drawn from the territory's `fit`; `says` is the kind of entry point that already says it. */
 type Reading = {
@@ -170,8 +164,8 @@ export const findingsOf = (
   context: FindingContext,
 ): CardFinding[] => {
   const said = new Set<EntryKind>();
-  for (const { entry, inner } of concerning) {
-    if (inner.length === 0) {
+  for (const { entry, itself } of concerning) {
+    if (itself) {
       said.add(entry.kind);
       for (const { kind } of entry.also) {
         said.add(kind);

@@ -1,32 +1,10 @@
 import type { Report } from "@codeheat/engine";
 import { describe, expect, it } from "vitest";
 
-import { entryViewsOf } from "../entry-points/entry-views.js";
-import { indexTerritories } from "../territories/territory-index.js";
-import { boundaryOn } from "../testing/design-fit.js";
+import { cardAt, cardsAt } from "../testing/territory-cards.js";
 import { territoryTreeReport } from "../testing/territory-tree.js";
-import { cardSourceOf, cardsOf } from "./card-model.js";
-import { indexLevel } from "./level-index.js";
 
-const cardsAt = (report: Report, level: number) => {
-  const territories = indexTerritories(report.territories);
-  const source = cardSourceOf(
-    report,
-    territories,
-    entryViewsOf(report, territories),
-  );
-  return cardsOf(source, indexLevel(report.territories, report.files, level));
-};
-
-const card = (report: Report, level: number, id: string) => {
-  const found = cardsAt(report, level).find(
-    ({ territory }) => territory.id === id,
-  );
-  if (found === undefined) {
-    throw new Error(`no card ${id} at detail ${level}`);
-  }
-  return found;
-};
+const card = cardAt;
 
 const report = territoryTreeReport();
 
@@ -107,32 +85,6 @@ describe("cardsOf at another detail", () => {
       territory: "t2",
       exact: false,
       name: "core",
-    });
-  });
-});
-
-describe("cardsOf with places to start", () => {
-  const withEntry: Report = {
-    ...report,
-    entryPoints: [boundaryOn(1, ["t3"])],
-  };
-
-  it("gives a place to start to the card of its territory", () => {
-    expect(card(withEntry, 2, "t3").findings[0]).toMatchObject({
-      label: "Boundary",
-      rank: 1,
-      where: "",
-    });
-    expect(
-      card(withEntry, 2, "t4").findings.map(({ rank }) => rank),
-    ).not.toContain(1);
-  });
-
-  it("gives it to the coarser card that holds the territory, and says which part", () => {
-    expect(card(withEntry, 1, "t2").findings[0]).toMatchObject({
-      label: "Boundary",
-      rank: 1,
-      where: "core/src",
     });
   });
 });

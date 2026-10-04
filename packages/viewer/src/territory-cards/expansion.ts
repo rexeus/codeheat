@@ -93,6 +93,7 @@ const sizeRows = (
 const containmentRow = (
   card: TerritoryCard,
   cards: readonly TerritoryCard[],
+  level: number,
 ): StatRow => {
   if (card.containment === null) {
     return {
@@ -103,8 +104,10 @@ const containmentRow = (
     };
   }
   const typical = median(
-    cards.flatMap(({ quiet, containment }) =>
-      quiet || containment === null ? [] : [containment],
+    cards.flatMap(({ quiet, containment, territory }) =>
+      quiet || containment === null || territory.fit?.detail !== level
+        ? []
+        : [containment],
     ),
   );
   return {
@@ -112,8 +115,8 @@ const containmentRow = (
     value: formatShare(card.containment),
     reference:
       typical === null
-        ? ""
-        : `the median territory here: ${formatShare(typical)}`,
+        ? `no territory is measured at detail ${level} to compare with`
+        : `the median of the territories measured at detail ${level}: ${formatShare(typical)}`,
     meter: { value: card.containment, reference: typical },
   };
 };
@@ -225,7 +228,7 @@ export const expansionOf = (
   return {
     stats: [
       ...sizeRows(card, source),
-      containmentRow(card, cards),
+      containmentRow(card, cards, level.level),
       ...fixRow(card, source),
       ...reachRows(card, files),
     ],

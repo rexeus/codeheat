@@ -292,6 +292,9 @@
   color: var(--text);
   font-weight: 600;
 }
+.tcard-where + .tcard-finding-stats {
+  flex-basis: 100%;
+}
 .tcard-pair + .tcard-pair::before {
   margin: 0 4px;
   color: var(--muted);

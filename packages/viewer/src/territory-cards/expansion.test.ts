@@ -1,29 +1,15 @@
 import type { Report } from "@codeheat/engine";
 import { describe, expect, it } from "vitest";
 
-import { indexTerritories } from "../territories/territory-index.js";
+import { expansionAt } from "../testing/territory-cards.js";
 import { territoryTreeReport } from "../testing/territory-tree.js";
-import { cardSourceOf, cardsOf } from "./card-model.js";
-import { expansionOf } from "./expansion.js";
-import { indexLevel } from "./level-index.js";
-
-const expansionAt = (report: Report, level: number, id: string) => {
-  const source = cardSourceOf(report, indexTerritories(report.territories), []);
-  const index = indexLevel(report.territories, report.files, level);
-  const cards = cardsOf(source, index);
-  const card = cards.find(({ territory }) => territory.id === id);
-  if (card === undefined) {
-    throw new Error(`no card ${id} at detail ${level}`);
-  }
-  return expansionOf(card, cards, index, source);
-};
 
 const report = territoryTreeReport();
 
-describe("the stats of an expanded card", () => {
-  const stats = expansionAt(report, 2, "t3").stats;
-  const row = (label: string) => stats.find((stat) => stat.label === label);
+const row = (label: string) =>
+  expansionAt(report, 2, "t3").stats.find((stat) => stat.label === label);
 
+describe("the stats of an expanded card", () => {
   it("sets the share of the effort against the share of the files", () => {
     expect(row("Share of the change effort")).toMatchObject({
       value: "40%",
@@ -32,17 +18,13 @@ describe("the stats of an expanded card", () => {
     });
   });
 
-  it("counts the changes that touch it against the whole window", () => {
+  it("counts the changes that touch it against the changes that count, not the logical changes before the size limit", () => {
+    // 30 of the 120 counted changes (`window.couplingCommits`) is 25%; of the
+    // 500 logical changes it would be 6%.
     expect(row("Counted changes touching it")).toMatchObject({
       value: "30",
-      reference: "30% of 100 in the window",
-    });
-  });
-
-  it("sets what stays inside against the median territory of the detail", () => {
-    expect(row("Changes that stay inside")).toMatchObject({
-      value: "30%",
-      reference: "the median territory here: 80%",
+      reference: "25% of 120 in the window",
+      meter: { value: 0.25, reference: null },
     });
   });
 
@@ -60,6 +42,53 @@ describe("the stats of an expanded card", () => {
 
   it("leaves out the fixes when commit subjects do not tell", () => {
     expect(row("Changes that are fixes")).toBeUndefined();
+  });
+});
+
+describe("the containment of an expanded card", () => {
+  it("sets what stays inside against the median of the territories measured at the detail shown", () => {
+    // t3, t4 and t5 are measured at detail 2 with 30%, 80% and 90%.
+    expect(row("Changes that stay inside")).toMatchObject({
+      value: "30%",
+      reference: "the median of the territories measured at detail 2: 80%",
+    });
+  });
+
+  it("leaves out the territories measured at another detail from that median", () => {
+    // At detail 1 only t2 (60%) is measured at detail 1; t5 is measured at 2.
+    const stat = expansionAt(report, 1, "t2").stats.find(
+      ({ label }) => label === "Changes that stay inside",
+    );
+
+    expect(stat?.reference).toBe(
+      "the median of the territories measured at detail 1: 60%",
+    );
+  });
+
+  it("says so when no territory at the detail shown is measured at it", () => {
+    const base = territoryTreeReport();
+    const finer: Report = {
+      ...base,
+      territories: {
+        ...base.territories,
+        nodes: base.territories.nodes.map((node) =>
+          node.fit === null
+            ? node
+            : Object.assign({}, node, {
+                fit: Object.assign({}, node.fit, { detail: 1 }),
+              }),
+        ),
+      },
+    };
+
+    const stat = expansionAt(finer, 2, "t3").stats.find(
+      ({ label }) => label === "Changes that stay inside",
+    );
+
+    expect(stat).toMatchObject({
+      reference: "no territory is measured at detail 2 to compare with",
+      meter: { value: 0.3, reference: null },
+    });
   });
 
   it("says a territory is not judged and why, without a meter", () => {
@@ -83,35 +112,6 @@ describe("the rest of an expanded card", () => {
     expect(hotFiles[0]?.heat).toBeNull();
   });
 
-  it("lists the territories it shares coupled file pairs with, most pairs first", () => {
-    const { partners } = expansionAt(report, 2, "t3");
-
-    expect(partners).toEqual([
-      {
-        name: "core/rest",
-        pairs: 1,
-        hiddenPairs: 1,
-        strongest: {
-          a: "core/src/a.ts",
-          b: "core/rest/b.ts",
-          sharedChanges: 7,
-        },
-      },
-      {
-        name: "docs",
-        pairs: 1,
-        hiddenPairs: 0,
-        strongest: { a: "core/src/a.ts", b: "docs/d.md", sharedChanges: 4 },
-      },
-    ]);
-  });
-
-  it("does not count the pair of a file and its test as coupling", () => {
-    const { partners } = expansionAt(report, 2, "t3");
-
-    expect(partners.map(({ name }) => name)).not.toContain("core/src");
-  });
-
   it("lists the territories inside it and why it splits", () => {
     const { inner, splitReason } = expansionAt(report, 1, "t2");
 
@@ -130,7 +130,7 @@ describe("the rest of an expanded card", () => {
   });
 
   it("says when the containment is measured against another detail than the one shown", () => {
-    expect(expansionAt(report, 1, "t5").detailNote).toBeNull();
-    expect(expansionAt(report, 2, "t5").detailNote).toContain("detail 1");
+    expect(expansionAt(report, 2, "t5").detailNote).toBeNull();
+    expect(expansionAt(report, 1, "t5").detailNote).toContain("detail 2");
   });
 });

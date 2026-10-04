@@ -16,8 +16,10 @@ import type {
   Territory,
   TerritoryIndex,
 } from "../territories/territory-index.js";
+import { attachableEntries, concerningOf } from "./entry-attachment.js";
+import type { AttachableEntry } from "./entry-attachment.js";
 import { findingsOf } from "./findings.js";
-import type { CardFinding, Concerning } from "./findings.js";
+import type { CardFinding } from "./findings.js";
 import { codeFirst } from "./level-index.js";
 import type { LevelIndex } from "./level-index.js";
 
@@ -26,15 +28,15 @@ export type CardSource = {
   readonly territories: TerritoryIndex;
   /** Hottest first, as the report lists them. */
   readonly files: readonly FileStats[];
-  /** The places to start, best first. */
-  readonly entries: readonly EntryView[];
+  /** The places to start, best first, with what they concern. */
+  readonly entries: readonly AttachableEntry[];
   readonly thresholds: Report["thresholds"];
   /** The share of the counted changes that are fixes in the repository; `null` when commit subjects do not tell. */
   readonly fixShare: number | null;
   readonly couplings: Report["couplings"];
-  /** The finest territory of each file the report lists, by path. */
-  readonly territoryOfFile: ReadonlyMap<string, string>;
-  /** Counted changes of the window, and code files of the repository. */
+  /** The files the report lists, by path. */
+  readonly filesByPath: ReadonlyMap<string, FileStats>;
+  /** The changes that count (`window.couplingCommits`: the logical changes within the size limit `maxCommitFiles`, which `Territory.changes` counts too), and the code files of the repository. */
   readonly totals: { readonly changes: number; readonly files: number };
 };
 
@@ -77,20 +79,6 @@ export type TerritoryCard = {
 };
 
 /** The places to start whose territories lie inside `territory` at this detail. */
-const entriesOf = (
-  territory: Territory,
-  level: LevelIndex,
-  entries: readonly EntryView[],
-): Concerning[] =>
-  entries.flatMap((entry) => {
-    const held = entry.territories.filter(
-      ({ id }) => level.ownerOf(id) === territory.id,
-    );
-    return held.length === 0
-      ? []
-      : [{ entry, inner: held.filter(({ id }) => id !== territory.id) }];
-  });
-
 const partnerOf = (
   territory: Territory,
   index: TerritoryIndex,
@@ -146,7 +134,7 @@ export const cardsOf = (
       partner: partnerOf(territory, source.territories),
       findings: findingsOf(
         territory,
-        entriesOf(territory, level, source.entries),
+        concerningOf(territory, level, source.territories.byId, source.entries),
         {
           fixShare: source.fixShare,
           minChanges: source.thresholds.minModuleCommits,
@@ -161,20 +149,21 @@ export const cardSourceOf = (
   report: Report,
   territories: TerritoryIndex,
   entries: readonly EntryView[],
-): CardSource => ({
-  territories,
-  files: report.files,
-  entries,
-  thresholds: report.thresholds,
-  fixShare: report.fixDensity.share,
-  couplings: report.couplings,
-  territoryOfFile: new Map(
-    report.files.map(({ path, territory }) => [path, territory]),
-  ),
-  totals: {
-    changes: report.logicalChanges.count,
-    files:
-      report.territories.nodes.find(({ parent }) => parent === null)?.files ??
-      report.totals.files,
-  },
-});
+): CardSource => {
+  const filesByPath = new Map(report.files.map((file) => [file.path, file]));
+  return {
+    territories,
+    files: report.files,
+    entries: attachableEntries(report, entries, filesByPath),
+    thresholds: report.thresholds,
+    fixShare: report.fixDensity.share,
+    couplings: report.couplings,
+    filesByPath,
+    totals: {
+      changes: report.window.couplingCommits,
+      files:
+        report.territories.nodes.find(({ parent }) => parent === null)?.files ??
+        report.totals.files,
+    },
+  };
+};
