@@ -59,7 +59,18 @@ describe("weakStructureOf without an answer", () => {
 
     expect(weakStructure(sparse)).toEqual({
       kind: "none",
-      note: "No territory has enough changes to judge: it takes 5 counted changes, and a partner to leak to.",
+      note: "No territory has enough changes to judge: it takes 5 counted changes and a partner to leak to, and test code is not judged.",
+    });
+  });
+
+  it("says only test code or leftover files changed when no territory is real", () => {
+    const testsOnly = reportWithParts([
+      { id: "t1", path: "test", heat: 1, containment: null, kind: "tests" },
+    ]);
+
+    expect(weakStructure(testsOnly)).toEqual({
+      kind: "none",
+      note: "No real territory: only test code or leftover files changed.",
     });
   });
 

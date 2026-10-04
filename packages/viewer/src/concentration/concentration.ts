@@ -5,7 +5,10 @@ import type { Report } from "@codeheat/engine";
 import { distinctNameParts } from "../territories/distinct-names.js";
 import { standingOf } from "../territories/judgement.js";
 import type { Standing } from "../territories/judgement.js";
-import { isRealTerritory } from "../territories/territory-index.js";
+import {
+  isRealTerritory,
+  NO_REAL_TERRITORY,
+} from "../territories/territory-index.js";
 import type {
   NameParts,
   TerritoryIndex,
@@ -51,7 +54,7 @@ const sumOf = (shares: readonly number[]): number =>
  * detail, hottest first, and the share of all the heat the three hottest
  * hold. Test code and leftover files are change effort too, but no part of
  * the design: they count in the total, not as a territory. Says so plainly
- * when the report has no territories or no change effort.
+ * when the report has no territories, no real one, or no change effort.
  */
 export const concentrationOf = (
   report: Report,
@@ -70,6 +73,9 @@ export const concentrationOf = (
       heatShare: territory.heatShare,
       standing: standingOf(territory, report.thresholds),
     }));
+  if (rows.length === 0) {
+    return { kind: "none", note: NO_REAL_TERRITORY };
+  }
   const total = sumOf(index.recommended.map(({ heatShare }) => heatShare));
   if (total === 0 || rows.every(({ heatShare }) => heatShare === 0)) {
     return { kind: "none", note: NO_HEAT };

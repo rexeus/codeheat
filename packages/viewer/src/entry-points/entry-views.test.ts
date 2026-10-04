@@ -253,7 +253,7 @@ describe("noEntriesNote", () => {
 
   it("says nothing stands out for a repository that was judged", () => {
     expect(noEntriesNote(judged)).toBe(
-      "Nothing stands out: no territory is both hot enough and leaky enough to be a place to start.",
+      "Nothing stands out: no place has enough evidence to rank.",
     );
   });
 

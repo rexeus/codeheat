@@ -4,7 +4,10 @@
 import type { Report } from "@codeheat/engine";
 
 import { distinctNameParts } from "../territories/distinct-names.js";
-import { isRealTerritory } from "../territories/territory-index.js";
+import {
+  isRealTerritory,
+  NO_REAL_TERRITORY,
+} from "../territories/territory-index.js";
 import type {
   NameParts,
   TerritoryIndex,
@@ -45,7 +48,7 @@ const NO_TERRITORIES =
  * changes to judge (`thresholds.minModuleCommits`), and which of them leak:
  * at most `thresholds.maxEntryContainment` of their changes stay inside, and
  * another territory shares changes with them. Says so plainly when the
- * report has no territories or none can be judged.
+ * report has no territories, no real one, or none that can be judged.
  */
 export const weakStructureOf = (
   report: Report,
@@ -54,11 +57,17 @@ export const weakStructureOf = (
   if (index.recommended.length === 0) {
     return { kind: "none", note: NO_TERRITORIES };
   }
+  const real = index.recommended.filter((territory) =>
+    isRealTerritory(territory),
+  ).length;
+  if (real === 0) {
+    return { kind: "none", note: NO_REAL_TERRITORY };
+  }
   const leaks = leaksOf(report, index);
   if (leaks === null) {
     return {
       kind: "none",
-      note: `No territory has enough changes to judge: it takes ${report.thresholds.minModuleCommits} counted changes, and a partner to leak to.`,
+      note: `No territory has enough changes to judge: it takes ${report.thresholds.minModuleCommits} counted changes and a partner to leak to, and test code is not judged.`,
     };
   }
   const nameOf = distinctNameParts(index.recommended);
@@ -86,8 +95,6 @@ export const weakStructureOf = (
     leakShare: leaks.heatShare,
     limit: report.thresholds.maxEntryContainment,
     rows,
-    unjudged:
-      index.recommended.filter((territory) => isRealTerritory(territory))
-        .length - rows.length,
+    unjudged: real - rows.length,
   };
 };

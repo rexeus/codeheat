@@ -44,6 +44,10 @@ export const indexTerritories = ({
 export const isRealTerritory = ({ kind }: Territory): boolean =>
   kind === "package" || kind === "folder" || kind === "group";
 
+/** What an answer says when the recommended detail holds no real territory. */
+export const NO_REAL_TERRITORY =
+  "No real territory: only test code or leftover files changed.";
+
 /** The text before the first `; main files:` of a description, which says what a bucket is. */
 const bucketName = (description: string): string => {
   const cut = description.indexOf(";");

@@ -179,5 +179,5 @@ export const noEntriesNote = ({ territories, window }: Report): string => {
   if (window.realCommits === 0) {
     return "No counted changes in this window, so there is nothing to rank; try a longer window with --since.";
   }
-  return "Nothing stands out: no territory is both hot enough and leaky enough to be a place to start.";
+  return "Nothing stands out: no place has enough evidence to rank.";
 };

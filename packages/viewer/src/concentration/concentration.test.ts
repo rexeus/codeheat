@@ -66,6 +66,18 @@ describe("concentrationOf without an answer", () => {
     });
   });
 
+  it("says only test code or leftover files changed when no territory is real", () => {
+    const testsOnly = reportWithParts([
+      { id: "t1", path: "test", heat: 0.7, containment: null, kind: "tests" },
+      { id: "t2", path: ".", heat: 0.3, containment: 0.5, kind: "other" },
+    ]);
+
+    expect(concentration(testsOnly)).toEqual({
+      kind: "none",
+      note: "No real territory: only test code or leftover files changed.",
+    });
+  });
+
   it("says nothing changed when no territory holds heat", () => {
     const quiet = reportWithParts([
       { id: "t1", path: "a", heat: 0, containment: null },
