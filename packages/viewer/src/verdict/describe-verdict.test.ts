@@ -1,6 +1,10 @@
 import type { Report } from "@codeheat/engine";
 import { describe, expect, it } from "vitest";
 
+import { parseReport } from "../document/embedded-report.js";
+import { standingOf } from "../territories/judgement.js";
+import { indexTerritories } from "../territories/territory-index.js";
+import { reportWithParts } from "../testing/design-fit.js";
 import { reportOf } from "../testing/reports.js";
 import { describeVerdict } from "./describe-verdict.js";
 
@@ -69,5 +73,34 @@ describe("describeVerdict", () => {
         "No counted changes in this window, so there is nothing to judge.",
       note: "Try a longer window with --since.",
     });
+  });
+});
+
+describe("describeVerdict of a report from before the verdict", () => {
+  const { verdict: _verdict, ...older } = reportWithParts([
+    { id: "t1", path: "packages/core", heat: 0.6, containment: 0.3 },
+    { id: "t2", path: "packages/web", heat: 0.4, containment: 0.9 },
+  ]);
+  const report = parseReport(JSON.stringify(older));
+
+  it("says the report has no verdict, not that it has no territories", () => {
+    expect(describeVerdict(report)).toEqual({
+      level: "unknown",
+      label: "Not enough evidence",
+      reason:
+        "This report has no verdict; analyze again with a current codeheat.",
+      note: "",
+    });
+  });
+
+  it("calls its territories not judged, not short of a partner", () => {
+    const index = indexTerritories(report.territories);
+
+    expect(
+      index.recommended.map((territory) => standingOf(territory, report)),
+    ).toEqual([
+      { kind: "unjudged", reason: "not judged" },
+      { kind: "unjudged", reason: "not judged" },
+    ]);
   });
 });

@@ -48,6 +48,14 @@ describe("standingOf", () => {
     ).toEqual({ kind: "unjudged", reason: "no partner to leak to" });
   });
 
+  it("calls a territory with a partner that the verdict did not judge only not judged", () => {
+    // a report from before the verdict judged nothing
+    expect(standingOf(territory(0.2), judgedAs([]))).toEqual({
+      kind: "unjudged",
+      reason: "not judged",
+    });
+  });
+
   it.each([
     ["test code", { kind: "tests" }],
     ["leftover files", { kind: "other" }],

@@ -28,6 +28,9 @@ const LABELS: Record<VerdictLevel, string> = {
 const NO_TERRITORIES =
   "This report has no territories, so it cannot say whether the design holds; analyze again with a current codeheat.";
 
+const NO_VERDICT =
+  "This report has no verdict; analyze again with a current codeheat.";
+
 const TOO_LITTLE_EVIDENCE =
   "Too little of the change effort sits in territories with enough changes to judge the design.";
 
@@ -35,12 +38,21 @@ type Words = Pick<Verdict, "reason" | "note">;
 
 const TOO_LITTLE: Words = { reason: TOO_LITTLE_EVIDENCE, note: "" };
 
-/** What to say for each reason the engine gives; a window without counted changes also says when the history last changed. */
+/**
+ * What to say for each reason the engine gives; a window without counted
+ * changes also says when the history last changed. The engine gives
+ * `no-territories` only for a report without territories, so a report that
+ * has territories and that reason carries the verdict `parseReport` fills in
+ * for a report from before the verdict: it has none.
+ */
 const WORDS: Record<
   NonNullable<Report["verdict"]["reason"]>,
   (report: Report) => Words
 > = {
-  "no-territories": () => ({ reason: NO_TERRITORIES, note: "" }),
+  "no-territories": (report) => ({
+    reason: report.territories.nodes.length === 0 ? NO_TERRITORIES : NO_VERDICT,
+    note: "",
+  }),
   "quiet-window": (report) => {
     const quiet = quietWindowOf(report);
     return quiet === null

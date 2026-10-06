@@ -19,9 +19,10 @@ const unjudged = (reason: string): Standing => ({ kind: "unjudged", reason });
  * not judged. A territory with no counted change either saw no change at all
  * or changed only in changes of more than `maxCommitFiles` files, which the
  * engine does not count for spread; one with fewer than `minModuleCommits`
- * counted changes has too few for its share to mean anything. Any other one
- * keeps little inside but shares changes with no other territory, which says
- * nothing about where it leaks.
+ * counted changes has too few for its share to mean anything. One without a
+ * partner keeps little inside but shares changes with no other territory,
+ * which says nothing about where it leaks. A report from before the verdict
+ * judged nothing, so any other territory is only not judged.
  */
 const whyUnjudged = (
   territory: Territory,
@@ -42,7 +43,9 @@ const whyUnjudged = (
   if (territory.changes < minModuleCommits) {
     return unjudged("too few changes");
   }
-  return unjudged("no partner to leak to");
+  return (territory.fit?.partner ?? null) === null
+    ? unjudged("no partner to leak to")
+    : unjudged("not judged");
 };
 
 /** How `territory` holds up, read from the territories the engine judged for the verdict. */
