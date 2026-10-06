@@ -23,10 +23,11 @@ export const Verdict = Schema.Struct({
   /**
    * `holds`: less than `Thresholds.minMixedLeakShare` of all the heat sits in
    * leaking territories; `mixed`: less than `Thresholds.minStrainedLeakShare`;
-   * `strained`: more. An `eroding` design is one level worse (`strained`
-   * stays `strained`); an improving one is not judged better. `unknown`: the
-   * judged territories hold less than `Thresholds.minVerdictCoverage` of all
-   * the heat, or none is judged (see `reason`).
+   * `strained`: from `Thresholds.minStrainedLeakShare` on. An `eroding`
+   * design is one level worse (`strained` stays `strained`); an improving one
+   * is not judged better. `unknown`: the judged territories hold less than
+   * `Thresholds.minVerdictCoverage` of all the heat, or none is judged (see
+   * `reason`).
    */
   level: Schema.Literals(["holds", "mixed", "strained", "unknown"]),
   /**
