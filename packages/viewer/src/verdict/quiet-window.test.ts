@@ -1,9 +1,7 @@
 import type { Report } from "@codeheat/engine";
 import { describe, expect, it } from "vitest";
 
-import { indexTerritories } from "../territories/territory-index.js";
 import { reportWithParts } from "../testing/design-fit.js";
-import { deriveVerdict } from "./derive-verdict.js";
 import { quietWindowOf } from "./quiet-window.js";
 
 type Window = Report["series"][number];
@@ -107,30 +105,5 @@ describe("quietWindowOf with the day of the newest commit", () => {
     expect(quietWindowOf(report)?.note).toBe(
       "The last counted changes fall between 2025-04-04 and 2025-07-04. A longer window, set with --since, would include them.",
     );
-  });
-});
-
-describe("the verdict of a window without counted changes", () => {
-  it("gives the window as the reason, and carries the note", () => {
-    const report = quietReport([], null);
-
-    const verdict = deriveVerdict(report, indexTerritories(report.territories));
-
-    expect(verdict).toMatchObject({
-      level: "unknown",
-      reason:
-        "No counted changes in this window, so there is nothing to judge.",
-      note: "Try a longer window with --since.",
-    });
-  });
-
-  it("has no note when the window has changes", () => {
-    const report = reportWithParts([
-      { id: "t1", path: "src/a", heat: 0.5, containment: 0.5 },
-    ]);
-
-    expect(
-      deriveVerdict(report, indexTerritories(report.territories)).note,
-    ).toBe("");
   });
 });

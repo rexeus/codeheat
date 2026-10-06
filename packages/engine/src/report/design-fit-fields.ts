@@ -11,9 +11,17 @@ import { FixDensity } from "./fix-density.js";
 import { SeriesWindow } from "./series.js";
 import { TerritoryClique, TerritoryCoupling } from "./territory-coupling.js";
 import { Territories } from "./territory.js";
+import { Verdict } from "./verdict.js";
 
 /** Fields of `Report`; each is documented here, where it is defined. */
 export const DesignFitFields = {
+  /**
+   * Whether the design holds up to the way the code changes, for the whole
+   * repository, judged from the territories at the recommended detail and
+   * `erosion` (see `Verdict`): the answer the HTML report shows beside the
+   * question.
+   */
+  verdict: Verdict,
   /** How far a counted change spreads over `modules` (see `ChangeRadius`); null when none touched a module. */
   changeRadius: Schema.NullOr(ChangeRadius),
   /** How much of the code a change drags along, read from `couplings` (see `PropagationCost`); null without two files to couple. */

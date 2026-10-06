@@ -22,6 +22,37 @@ export type PartSpec = {
   readonly changes?: number;
   /** The territory it changes with most, as `{ territory, sharedChanges, share }`; one that is not in the report unless given, `null` for none. */
   readonly partner?: NonNullable<Territory["fit"]>["partner"];
+  /** How the engine judged it for the verdict; not judged unless given. */
+  readonly standing?: "leaks" | "holds";
+};
+
+const sumOf = (values: readonly number[]): number =>
+  values.reduce((sum, value) => sum + value, 0);
+
+/**
+ * The verdict of a report with `parts`, as the engine would carry it: the
+ * judged and leaking territories are the parts with a `standing`, hottest
+ * first; the level is `unknown` (too little evidence) unless `verdict` says
+ * otherwise.
+ */
+const verdictOfParts = (
+  parts: readonly PartSpec[],
+  verdict: Partial<Report["verdict"]> = {},
+): Report["verdict"] => {
+  const judged = parts
+    .filter(({ standing }) => standing !== undefined)
+    .toSorted((one, other) => other.heat - one.heat);
+  const leaking = judged.filter(({ standing }) => standing === "leaks");
+  return {
+    level: "unknown",
+    reason: "too-little-evidence",
+    leakShare: sumOf(leaking.map(({ heat }) => heat)),
+    coverage: sumOf(judged.map(({ heat }) => heat)),
+    judged: judged.map(({ id }) => id),
+    leaking: leaking.map(({ id }) => id),
+    eroding: false,
+    ...verdict,
+  };
 };
 
 /** The partner of a part that names none: a territory that is not in the report, so that it leaks somewhere. */
@@ -33,11 +64,18 @@ const REACHES_ELSEWHERE = {
 
 /**
  * A report whose territory tree is a root with the given parts as its
- * children, all visible at the one detail, which is the recommended one.
+ * children, all visible at the one detail, which is the recommended one, and
+ * whose verdict judged the parts with a `standing` (see `verdictOfParts`;
+ * `verdict` in `overrides` replaces any of its fields).
  */
 export const reportWithParts = (
   parts: readonly PartSpec[],
-  overrides: Partial<Report> = {},
+  {
+    verdict,
+    ...overrides
+  }: Omit<Partial<Report>, "verdict"> & {
+    readonly verdict?: Partial<Report["verdict"]>;
+  } = {},
 ): Report => {
   const nodes = [
     territoryNode("root", ".", {
@@ -71,6 +109,7 @@ export const reportWithParts = (
         details: [{ level: 1, ids: parts.map(({ id }) => id) }],
         nodes,
       },
+      verdict: verdictOfParts(parts, verdict),
       ...overrides,
     },
   );

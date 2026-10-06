@@ -38,12 +38,24 @@ export const DEFAULT_THRESHOLDS: Report["thresholds"] = {
   maxEntriesPerKind: 6,
   maxEntries: 10,
   maxCoupledTerritories: 24,
+  minVerdictCoverage: 0.5,
+  minMixedLeakShare: 0.2,
+  minStrainedLeakShare: 0.5,
   maxMeanLineLength: 300,
   maxFileBytes: 1_048_576,
 };
 
 /** The design-fit lists of a report, all empty, and no territories. */
 export const NO_DESIGN_FINDINGS = {
+  verdict: {
+    level: "unknown",
+    reason: "no-territories",
+    leakShare: 0,
+    coverage: 0,
+    judged: [],
+    leaking: [],
+    eroding: false,
+  },
   changeRadius: null,
   propagationCost: null,
   series: [],

@@ -25,9 +25,21 @@ const isReport = (value: unknown): value is Report =>
 
 /**
  * What a report written before the design-fit fields existed lacks: the page
- * renders these as "no data" instead of failing on a missing field.
+ * renders these as "no data" instead of failing on a missing field. A report
+ * from before the verdict judged nothing: its default reason,
+ * `no-territories`, which the engine gives only without territories, tells
+ * the page to say so when the report has territories (see `describeVerdict`).
  */
 const DESIGN_FIT_DEFAULTS = {
+  verdict: {
+    level: "unknown",
+    reason: "no-territories",
+    leakShare: 0,
+    coverage: 0,
+    judged: [],
+    leaking: [],
+    eroding: false,
+  },
   territories: { recommended: 0, details: [], nodes: [] },
   territoryCoupling: [],
   territoryCliques: [],

@@ -120,6 +120,9 @@ const DEFAULT_LIMITS = {
   maxEntriesPerKind: 6,
   maxEntries: 10,
   maxCoupledTerritories: 24,
+  minVerdictCoverage: 0.5,
+  minMixedLeakShare: 0.2,
+  minStrainedLeakShare: 0.5,
   maxMeanLineLength: 300,
   maxFileBytes: 1_048_576,
 };

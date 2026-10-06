@@ -83,6 +83,12 @@ export const Thresholds = Schema.Struct({
   maxEntries: Count,
   /** Most territories the territory matrix covers (`Report.territoryCoupling`): the hottest real ones at the recommended detail. */
   maxCoupledTerritories: Count,
+  /** Smallest share of all the heat the judged territories must hold for `Report.verdict` to have a level (see `Verdict`). */
+  minVerdictCoverage: UnitInterval,
+  /** Smallest share of all the heat in leaking territories at which `Report.verdict` holds only in parts (`mixed`). */
+  minMixedLeakShare: UnitInterval,
+  /** Smallest share of all the heat in leaking territories at which `Report.verdict` is under strain (`strained`). */
+  minStrainedLeakShare: UnitInterval,
   maxMeanLineLength: Count,
   maxFileBytes: Count,
 });

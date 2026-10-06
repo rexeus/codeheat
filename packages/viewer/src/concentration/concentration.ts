@@ -71,7 +71,7 @@ export const concentrationOf = (
       id: territory.id,
       name: nameOf(territory),
       heatShare: territory.heatShare,
-      standing: standingOf(territory, report.thresholds),
+      standing: standingOf(territory, report),
     }));
   if (rows.length === 0) {
     return { kind: "none", note: NO_REAL_TERRITORY };

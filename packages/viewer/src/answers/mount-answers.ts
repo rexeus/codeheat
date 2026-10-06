@@ -12,7 +12,7 @@ import {
 import { placesAnswer } from "../entry-points/places-card.js";
 import { byId } from "../render/dom.js";
 import { indexTerritories } from "../territories/territory-index.js";
-import { deriveVerdict } from "../verdict/derive-verdict.js";
+import { describeVerdict } from "../verdict/describe-verdict.js";
 import { trendOf } from "../verdict/trend.js";
 import { weakStructureAnswer } from "../weak-structure/weak-structure-card.js";
 import { weakStructureOf } from "../weak-structure/weak-structure.js";
@@ -92,7 +92,7 @@ export const mountAnswers = (
       trend: byId("trend", HTMLElement),
       reason: byId("verdict-reason", HTMLElement),
     },
-    deriveVerdict(report, indexTerritories(report.territories)),
+    describeVerdict(report),
     trendOf(report),
   );
   const rendered = answersOf(report, showTerritory).map((answer, index) =>

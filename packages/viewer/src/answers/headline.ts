@@ -1,5 +1,5 @@
 import { h, withFlags } from "../render/dom.js";
-import type { Verdict, VerdictLevel } from "../verdict/derive-verdict.js";
+import type { Verdict, VerdictLevel } from "../verdict/describe-verdict.js";
 import type { Trend, TrendDirection } from "../verdict/trend.js";
 import { icon } from "./icon.js";
 import type { IconName } from "./icon.js";
