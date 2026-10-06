@@ -1,6 +1,6 @@
 {
   "name": "codeheat",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Find hotspots and change coupling in a git repository — a treemap for humans, JSON for agents.",
   "keywords": [
     "ai-agents",
