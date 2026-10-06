@@ -291,3 +291,28 @@ describe("judgeVerdict order", () => {
     });
   });
 });
+
+describe("judgeVerdict on the shares it reports", () => {
+  it("decides the level on the rounded leak share, so a reported 0.2 is never holds", () => {
+    // 0.1994 + 0.0006 sums to just below 0.2 in floating point
+    const verdict = judge([
+      { id: "t1", heat: 0.8, containment: 0.9 },
+      { id: "t2", heat: 0.1994, containment: 0.3 },
+      { id: "t3", heat: 0.0006, containment: 0.3 },
+    ]);
+
+    expect(verdict).toMatchObject({ level: "mixed", leakShare: 0.2 });
+  });
+
+  it("decides on the rounded coverage, so a reported half of the heat has a level", () => {
+    // 0.25 + 0.1284 + 0.1216 sums to just below 0.5 in floating point
+    const verdict = judge([
+      { id: "t1", heat: 0.25, containment: 0.9 },
+      { id: "t2", heat: 0.1284, containment: 0.9 },
+      { id: "t3", heat: 0.1216, containment: 0.9 },
+      { id: "t4", heat: 0.5, containment: 0.1, changes: 2 },
+    ]);
+
+    expect(verdict).toMatchObject({ level: "holds", coverage: 0.5 });
+  });
+});

@@ -65,8 +65,14 @@ const recommendedOf = ({
   return ids.flatMap((id) => byId.get(id) ?? []);
 };
 
-const heatOf = (territories: ReadonlyArray<Territory>): number =>
-  territories.reduce((sum, { heatShare }) => sum + heatShare, 0);
+/** The share of all the heat `territories` hold, as the report carries it: at most 1, rounded. */
+const reportedShare = (territories: ReadonlyArray<Territory>): number =>
+  roundReported(
+    Math.min(
+      1,
+      territories.reduce((sum, { heatShare }) => sum + heatShare, 0),
+    ),
+  );
 
 const baseLevel = (leakShare: number, limits: VerdictLimits): Level => {
   if (leakShare < limits.minMixedLeakShare) {
@@ -96,8 +102,9 @@ const reasonOf = (
 /**
  * Judges whether the design holds up to the way the code changes (see
  * `Verdict`). The shares are sums of the reported `heatShare` values of the
- * territories, compared as they are and rounded only for the report;
- * `realCommits` is `window.realCommits`.
+ * territories, rounded as the report carries them, and the level is decided
+ * on those rounded shares, so that the report never contradicts itself (a
+ * `leakShare` of 0.2 is never `holds`); `realCommits` is `window.realCommits`.
  */
 export const judgeVerdict = (input: {
   readonly territories: Territories;
@@ -116,8 +123,8 @@ export const judgeVerdict = (input: {
       (one, other) => other.territory.heatShare - one.territory.heatShare,
     );
   const leaking = judged.filter(({ standing }) => standing === "leaks");
-  const leakShare = heatOf(leaking.map(({ territory }) => territory));
-  const coverage = heatOf(judged.map(({ territory }) => territory));
+  const leakShare = reportedShare(leaking.map(({ territory }) => territory));
+  const coverage = reportedShare(judged.map(({ territory }) => territory));
   const eroding = input.erosion?.verdict === "eroding";
   const base =
     judged.length > 0 && coverage >= limits.minVerdictCoverage
@@ -128,8 +135,8 @@ export const judgeVerdict = (input: {
     level,
     reason:
       level === "unknown" ? reasonOf(territories, input.realCommits) : null,
-    leakShare: roundReported(Math.min(1, leakShare)),
-    coverage: roundReported(Math.min(1, coverage)),
+    leakShare,
+    coverage,
     judged: judged.map(({ territory }) => territory.id),
     leaking: leaking.map(({ territory }) => territory.id),
     eroding,
