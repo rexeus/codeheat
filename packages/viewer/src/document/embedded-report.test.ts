@@ -14,8 +14,9 @@ describe("embedded report", () => {
     expect(serializeReport(report)).not.toContain("<");
   });
 
-  it("gives a report from before territories and entry points empty design-fit fields", () => {
+  it("gives a report from before the verdict, territories, and entry points empty design-fit fields", () => {
     const {
+      verdict: _verdict,
       territories: _territories,
       entryPoints: _entryPoints,
       territoryCoupling: _territoryCoupling,
@@ -33,6 +34,15 @@ describe("embedded report", () => {
     ).toEqual({
       ...older,
       thresholds: report.thresholds,
+      verdict: {
+        level: "unknown",
+        reason: "no-territories",
+        leakShare: 0,
+        coverage: 0,
+        judged: [],
+        leaking: [],
+        eroding: false,
+      },
       territories: { recommended: 0, details: [], nodes: [] },
       entryPoints: [],
       territoryCoupling: [],

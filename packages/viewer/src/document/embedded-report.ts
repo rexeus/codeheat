@@ -25,9 +25,20 @@ const isReport = (value: unknown): value is Report =>
 
 /**
  * What a report written before the design-fit fields existed lacks: the page
- * renders these as "no data" instead of failing on a missing field.
+ * renders these as "no data" instead of failing on a missing field. A report
+ * from before the verdict has none, which the page reads as a report to
+ * analyze again with a current codeheat.
  */
 const DESIGN_FIT_DEFAULTS = {
+  verdict: {
+    level: "unknown",
+    reason: "no-territories",
+    leakShare: 0,
+    coverage: 0,
+    judged: [],
+    leaking: [],
+    eroding: false,
+  },
   territories: { recommended: 0, details: [], nodes: [] },
   territoryCoupling: [],
   territoryCliques: [],

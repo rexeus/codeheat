@@ -3,20 +3,42 @@ import { describe, expect, it } from "vitest";
 
 import { indexTerritories } from "../territories/territory-index.js";
 import { reportWithParts } from "../testing/design-fit.js";
+import type { PartSpec } from "../testing/design-fit.js";
 import { reportOf } from "../testing/reports.js";
 import { concentrationOf } from "./concentration.js";
 
 const concentration = (report: Report) =>
   concentrationOf(report, indexTerritories(report.territories));
 
+/** Five territories: core leaks, web and forms hold, docs has too few changes, and test code. */
+const PARTS: PartSpec[] = [
+  {
+    id: "t1",
+    path: "packages/forms",
+    heat: 0.1,
+    containment: 0.9,
+    standing: "holds",
+  },
+  {
+    id: "t2",
+    path: "packages/core",
+    heat: 0.4,
+    containment: 0.3,
+    standing: "leaks",
+  },
+  {
+    id: "t3",
+    path: "apps/web",
+    heat: 0.2,
+    containment: 0.8,
+    standing: "holds",
+  },
+  { id: "t4", path: "apps/docs", heat: 0.15, containment: 0.5, changes: 2 },
+  { id: "t5", path: "test", heat: 0.15, containment: null, kind: "tests" },
+];
+
 describe("concentrationOf", () => {
-  const report = reportWithParts([
-    { id: "t1", path: "packages/forms", heat: 0.1, containment: 0.9 },
-    { id: "t2", path: "packages/core", heat: 0.4, containment: 0.3 },
-    { id: "t3", path: "apps/web", heat: 0.2, containment: 0.8 },
-    { id: "t4", path: "apps/docs", heat: 0.15, containment: 0.5, changes: 2 },
-    { id: "t5", path: "test", heat: 0.15, containment: null, kind: "tests" },
-  ]);
+  const report = reportWithParts(PARTS);
   const result = concentration(report);
 
   it("sums the heat of the three hottest territories out of the real ones", () => {

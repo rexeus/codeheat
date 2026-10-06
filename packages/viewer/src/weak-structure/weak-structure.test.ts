@@ -11,15 +11,28 @@ const weakStructure = (report: Report) =>
 
 describe("weakStructureOf", () => {
   const report = reportWithParts([
-    { id: "t1", path: "packages/forms", heat: 0.2, containment: 0.9 },
+    {
+      id: "t1",
+      path: "packages/forms",
+      heat: 0.2,
+      containment: 0.9,
+      standing: "holds",
+    },
     {
       id: "t2",
       path: "packages/core",
       heat: 0.4,
       containment: 0.3,
       partner: { territory: "t3", sharedChanges: 12, share: 0.49 },
+      standing: "leaks",
     },
-    { id: "t3", path: "packages/compiler", heat: 0.25, containment: 0.75 },
+    {
+      id: "t3",
+      path: "packages/compiler",
+      heat: 0.25,
+      containment: 0.75,
+      standing: "leaks",
+    },
     { id: "t4", path: "apps/docs", heat: 0.1, containment: 0.2, changes: 3 },
     { id: "t5", path: "apps/web", heat: 0.05, containment: 0.1, partner: null },
   ]);
