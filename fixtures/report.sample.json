@@ -38,6 +38,15 @@
     "previousRealCommits": 180,
     "previousTruncated": false
   },
+  "verdict": {
+    "level": "strained",
+    "reason": null,
+    "leakShare": 1,
+    "coverage": 1,
+    "judged": ["t2", "t3", "t4", "t5", "t6"],
+    "leaking": ["t2", "t3", "t4", "t5", "t6"],
+    "eroding": true
+  },
   "thresholds": {
     "maxCommitFiles": 50,
     "hubMinBreadth": 10,
@@ -75,6 +84,9 @@
     "maxEntriesPerKind": 6,
     "maxEntries": 10,
     "maxCoupledTerritories": 24,
+    "minVerdictCoverage": 0.5,
+    "minMixedLeakShare": 0.2,
+    "minStrainedLeakShare": 0.5,
     "minEntryScore": 0.005
   },
   "totals": {

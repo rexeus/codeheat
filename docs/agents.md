@@ -20,7 +20,7 @@ Run `npx codeheat inspect <file> --json` (quote globs) before changing a file an
 - `heat` says how old the file's hotness is: `chronic` (hot in at least half of the windows before the last two and half of all its windows, so a design problem: do not add more to it, split it) or `acute` (hot in both of the last two windows and in fewer than half of the earlier ones, so current work: expect it to settle, and finish the feature before refactoring); `null` for any other file. The series covers at least the last 24 months, so a file can be chronic unless the repository is younger than about 15 months.
 - `modules` describes the module the file lives in (see below): a low `cohesion` means changes there usually reach into other modules; a low `depth.linesPerExport` marks a shallow module, where a new export widens an interface with little behind it.
 
-For orientation in an unfamiliar repository, run `npx codeheat analyze --json` once: `erosion.verdict` says whether the design holds over time, `changeRadius` and `propagationCost` say how far a typical change spreads, `files` are the top hotspots, `couplings` the strongest co-changing pairs, and `totals` the full size. `distantCouplings` are the pairs that change together across modules or far apart, `cliques` the modules that change as a group, `unstableInterfaces` the files many others import that keep changing, and `dependencyDirection` the imports that point from stable to volatile modules (see "Reading distant coupling and scaling signals"). `territories` divides the code into areas with a description each: read `details[recommended - 1]` to find your way (see "Reading territories"), `territoryCoupling` and `territoryCliques` say which of them change together, and `entryPoints` ranks the places to start (see "Reading entry points").
+For orientation in an unfamiliar repository, run `npx codeheat analyze --json` once: `verdict.level` says whether the design holds up to the way the code changes (`holds`, `mixed`, `strained`, or `unknown`; see "Reading the verdict"), `erosion.verdict` whether it holds over time, `changeRadius` and `propagationCost` say how far a typical change spreads, `files` are the top hotspots, `couplings` the strongest co-changing pairs, and `totals` the full size. `distantCouplings` are the pairs that change together across modules or far apart, `cliques` the modules that change as a group, `unstableInterfaces` the files many others import that keep changing, and `dependencyDirection` the imports that point from stable to volatile modules (see "Reading distant coupling and scaling signals"). `territories` divides the code into areas with a description each: read `details[recommended - 1]` to find your way (see "Reading territories"), `territoryCoupling` and `territoryCliques` say which of them change together, and `entryPoints` ranks the places to start (see "Reading entry points").
 ```
 
 ## Choosing the call
@@ -80,6 +80,28 @@ The files of a repository are grouped into modules: workspace packages (a direct
 - A coupling with `crossesModule: true` joins files of different modules. That is neutral information: an app changes with the library it uses. It is worth a look when the modules should not know each other.
 
 `codeheat analyze --json` lists every module in `modules`, bounded by `--limit` like `files` and `couplings`; `totals.modules` is the full count. The order is the ranking: first the modules with at least `thresholds.minModuleCommits` changes that are not `testOnly`, then the other modules with counted changes (each group least cohesive first, ties by more `commits`, then `path`), last the modules with `cohesion: null`. The first entries are therefore the ones worth reading, also under a small `--limit`.
+
+## Reading the verdict
+
+`analyze --json` answers the first question of the HTML report, whether the design holds up to the way the code changes, in `verdict`; the page shows the same answer:
+
+```json
+{
+  "verdict": {
+    "level": "mixed",
+    "reason": null,
+    "leakShare": 0.3412,
+    "coverage": 0.8805,
+    "judged": ["t2", "t3", "t5"],
+    "leaking": ["t3"],
+    "eroding": false
+  }
+}
+```
+
+- `level` is `holds` (less than `thresholds.minMixedLeakShare`, 20 %, of all the heat sits in territories that leak), `mixed` (less than `thresholds.minStrainedLeakShare`, 50 %), `strained`, or `unknown`. `eroding: true` means `erosion.verdict` is `eroding`, which makes a known level one worse (`strained` stays `strained`).
+- The judged territories are the real ones (`package`, `folder`, `group`) at the recommended detail with at least `thresholds.minModuleCommits` counted changes. One leaks when at most `thresholds.maxEntryContainment` of its changes stay inside (`fit.containment`) and it has a `fit.partner` to leak to; one without a partner is not judged. `judged` and `leaking` are their ids, the most heat first: read the `leaking` ones before you change code there.
+- `leakShare` and `coverage` are the shares of all the heat (`heatShare` summed, test code included) in the leaking and in all judged territories. Below `thresholds.minVerdictCoverage` (half) of the heat in judged territories the level is `unknown`, and `reason` says why: `no-territories` (no files), `quiet-window` (`window.realCommits` is 0: see `window.lastCommitAt` and `series` for when the history last changed, and try a longer `--since`), or `too-little-evidence`.
 
 ## Reading territories
 

@@ -18,6 +18,7 @@ import {
 import type { HistoryOptions } from "../history/history.js";
 import { withDepths } from "../modules/depth.js";
 import type { Report } from "../report/report.js";
+import { judgeVerdict } from "../verdict/judge-verdict.js";
 import type { InvalidCompare, InvalidSince } from "./analysis-window.js";
 import { measureLinked } from "./measure-linked.js";
 import { readUniverse } from "./read-universe.js";
@@ -102,6 +103,16 @@ const totalsOf = ({
   modules: modules.length,
 });
 
+/** The report's `verdict`, judged from what the analysis measured. */
+const verdictOf = (
+  {
+    territories,
+    erosion,
+    thresholds,
+  }: Pick<Report, "territories" | "erosion" | "thresholds">,
+  realCommits: number,
+) => judgeVerdict({ territories, erosion, realCommits, limits: thresholds });
+
 const analyzeRepository = (
   options: AnalyzeOptions,
   root: string,
@@ -152,6 +163,7 @@ const analyzeRepository = (
         head,
       ),
       comparison: comparisonOf(windows, histories, timeline.oldestCommit),
+      verdict: verdictOf({ ...measured, thresholds }, realCommits),
       thresholds,
       totals: totalsOf(measured),
       ...measured,

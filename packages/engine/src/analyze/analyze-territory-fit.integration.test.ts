@@ -154,3 +154,38 @@ layer(NodeServices.layer)("analyze territory coupling", (it) => {
       }),
   );
 });
+
+layer(NodeServices.layer)("analyze verdict", (it) => {
+  it.effect(
+    "judges the design from the territories that leak at the recommended detail",
+    () =>
+      Effect.gen(function* () {
+        yield* setNow;
+        const repo = yield* makeTempRepository;
+        yield* buildHistory(repo);
+
+        const { verdict, territories } = yield* analyze(
+          analyzeOptionsFor(repo),
+        );
+
+        const pathOf = new Map(
+          territories.nodes.map(({ id, path }) => [id, path]),
+        );
+        // billing (heat 144) and web (90) leak into each other, auth (100) holds
+        assert.deepStrictEqual(
+          {
+            level: verdict.level,
+            reason: verdict.reason,
+            judged: verdict.judged.map((id) => pathOf.get(id)),
+            leaking: verdict.leaking.map((id) => pathOf.get(id)),
+          },
+          {
+            level: "strained",
+            reason: null,
+            judged: ["billing", "auth", "web"],
+            leaking: ["billing", "web"],
+          },
+        );
+      }),
+  );
+});
