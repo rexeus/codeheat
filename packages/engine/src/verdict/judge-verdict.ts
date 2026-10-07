@@ -32,22 +32,17 @@ const isRealTerritory = ({ kind }: Territory): boolean =>
   kind === "package" || kind === "folder" || kind === "group";
 
 /**
- * Whether a real territory leaks, holds, or cannot be judged. One with heat
- * but no counted change changed only in changes too large to count; one
- * below `minModuleCommits` has too few changes for its share to mean
- * anything; one that keeps little inside but has no partner says nothing
- * about where it leaks.
+ * Whether a real territory leaks, holds, or cannot be judged. One below
+ * `minModuleCommits` has too few changes for its share to mean anything;
+ * one that keeps little inside but has no partner says nothing about where
+ * it leaks.
  */
 const standingOf = (
   territory: Territory,
   limits: VerdictLimits,
 ): "leaks" | "holds" | "unjudged" => {
   const containment = territory.fit?.containment ?? null;
-  if (
-    (territory.changes === 0 && territory.heatShare > 0) ||
-    containment === null ||
-    territory.changes < limits.minModuleCommits
-  ) {
+  if (containment === null || territory.changes < limits.minModuleCommits) {
     return "unjudged";
   }
   if (containment > limits.maxEntryContainment) {

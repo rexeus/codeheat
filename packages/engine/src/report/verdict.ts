@@ -12,8 +12,8 @@ import { UnitInterval } from "./scalars.js";
  * `Territories.recommended` that are real parts of the design (`package`,
  * `folder`, `group`). A territory is judged when it has at least
  * `Thresholds.minModuleCommits` counted changes and a `fit.containment`
- * (one with heat but no counted change, because every change touching it was
- * larger than `Thresholds.maxCommitFiles` files, is not). It leaks when at
+ * (heat rests on the same counted changes, so a territory without one has
+ * no heat either). It leaks when at
  * most `Thresholds.maxEntryContainment` of its changes stay inside and another
  * territory shares changes with it (`fit.partner`); one that keeps little
  * inside but has no partner says nothing about where it leaks and is not

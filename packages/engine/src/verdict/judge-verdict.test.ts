@@ -206,15 +206,6 @@ describe("judgeVerdict coverage", () => {
       coverage: 0,
     });
   });
-
-  it("does not judge a territory with heat whose every change was too large to count", () => {
-    const verdict = judge([
-      { id: "t1", heat: 0.6, containment: 0.1, changes: 0 },
-      { id: "t2", heat: 0.4, containment: 0.9 },
-    ]);
-
-    expect(verdict).toMatchObject({ level: "unknown", judged: ["t2"] });
-  });
 });
 
 describe("judgeVerdict reason", () => {
