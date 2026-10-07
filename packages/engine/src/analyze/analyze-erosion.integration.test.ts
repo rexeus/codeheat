@@ -4,9 +4,11 @@ import { Effect } from "effect";
 import { TestClock } from "effect/testing";
 
 import { analyzeOptionsFor } from "../testing/analyze-options.js";
+import { lines } from "../testing/logical-changes.js";
 import {
   commitInMonth,
   commitQuarters,
+  createFiles,
   createTwoPackages,
   FILE_A,
   quartersSpreading,
@@ -78,6 +80,49 @@ layer(NodeServices.layer)("analyze erosion", (it) => {
         const report = yield* erosionOf([14, 14, 14, 14, 14]);
 
         assert.strictEqual(report.erosion?.verdict, "holding");
+      }),
+    60_000,
+  );
+});
+
+/** Two top-level folders of three files, `a` and `b`, each its own territory. */
+const FOLDER_FILES = Object.fromEntries(
+  ["a", "b"].flatMap((folder) =>
+    ["x", "y", "z"].map((name) => [`${folder}/${name}.ts`, lines(3, name)]),
+  ),
+);
+
+layer(NodeServices.layer)("analyze verdict trend", (it) => {
+  it.effect(
+    "lowers the verdict when the territories it judges keep less inside each quarter",
+    () =>
+      Effect.gen(function* () {
+        yield* setNow;
+        const repo = yield* makeTempRepository;
+        yield* createFiles(repo, FOLDER_FILES);
+        // a keeps 1, .75, .5, .25, 0 of its changes inside; b never changes alone
+        yield* commitQuarters(
+          repo,
+          [0, 7, 14, 21, 28].map((both) =>
+            repeated(both, "a/x.ts", "b/x.ts").concat(
+              repeated(28 - both, "a/x.ts"),
+            ),
+          ),
+        );
+
+        const report = yield* analyze(analyzeOptionsFor(repo));
+
+        const paths = new Map(
+          report.territories.nodes.map(({ id, path }) => [id, path]),
+        );
+        assert.deepStrictEqual(
+          report.verdict.judged.map((id) => paths.get(id)),
+          ["a", "b"],
+        );
+        assert.deepStrictEqual(
+          [report.verdict.trend, report.verdict.eroding],
+          ["eroding", true],
+        );
       }),
     60_000,
   );
