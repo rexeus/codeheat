@@ -123,7 +123,7 @@ const readRepository = (root: string, scope: string) =>
       head,
       shallowBoundary,
       repository: {
-        name: yield* readRepositoryName,
+        name: yield* readRepositoryName(root),
         head: head?.commit ?? null,
         scope,
         shallow: shallowBoundary !== undefined,

@@ -124,9 +124,10 @@ export const Report = Schema.Struct({
   generatedAt: Schema.String,
   repository: Schema.Struct({
     /**
-     * The repository's name: the folder of its main work tree, also when the
-     * analysis runs in a linked work tree (`git worktree add`), or the name of
-     * a bare repository without its `.git` suffix.
+     * The repository's name: the folder of its work tree, except in a linked
+     * work tree (`git worktree add`), which is named after the repository it
+     * belongs to (the folder of its main work tree, or a bare repository's
+     * name without `.git`).
      */
     name: Schema.String,
     /** HEAD commit, or null for a repository without commits. */
