@@ -94,7 +94,7 @@ const FOLDER_FILES = Object.fromEntries(
 
 layer(NodeServices.layer)("analyze verdict trend", (it) => {
   it.effect(
-    "lowers the verdict when the territories it judges keep less inside each quarter",
+    "calls the verdict's trend eroding when the territories it judges keep less inside each quarter",
     () =>
       Effect.gen(function* () {
         yield* setNow;
