@@ -1,13 +1,14 @@
 // Owns the one entry point that turns a repository into a Report.
 // It composes inventory, history, and metrics; callers never see git or parsers.
 // New signals join here as new Report fields, not as new entry points.
-import { Effect, Path } from "effect";
-import type { FileSystem } from "effect";
+import { Effect } from "effect";
+import type { FileSystem, Path } from "effect";
 import type { ChildProcessSpawner } from "effect/process";
 
 import type { LanguageAdapter } from "../code/language-adapter.js";
 import type { GitError } from "../git/git-errors.js";
 import { Git } from "../git/git.js";
+import { readRepositoryName } from "../git/repository-name.js";
 import {
   readHead,
   readOldestCommitTime,
@@ -120,7 +121,7 @@ const analyzeRepository = (
   windows: Windows,
 ) =>
   Effect.gen(function* () {
-    const path = yield* Path.Path;
+    const name = yield* readRepositoryName;
     const head = yield* readHead;
     const shallowBoundary = yield* readShallowBoundary(root);
     const { depths, ...universe } = yield* readUniverse({
@@ -152,7 +153,7 @@ const analyzeRepository = (
       tool: { name: "codeheat", version: options.toolVersion },
       generatedAt: windows.current.until,
       repository: {
-        name: path.basename(root),
+        name,
         head: head?.commit ?? null,
         scope,
         shallow: shallowBoundary !== undefined,
