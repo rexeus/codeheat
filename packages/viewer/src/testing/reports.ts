@@ -168,6 +168,8 @@ const THRESHOLDS: Analysis["thresholds"] = {
   minVerdictCoverage: 0.5,
   minMixedLeakShare: 0.2,
   minStrainedLeakShare: 0.5,
+  thinBelowChanges: 100,
+  thinBelowAreas: 3,
   maxMeanLineLength: 300,
   maxFileBytes: 1048576,
 };

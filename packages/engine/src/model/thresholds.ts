@@ -89,6 +89,10 @@ export const Thresholds = Schema.Struct({
   minMixedLeakShare: UnitInterval,
   /** Smallest share of all the heat in leaking territories at which `Analysis.verdict` is under strain (`strained`). */
   minStrainedLeakShare: UnitInterval,
+  /** Fewer counted changes in the window (`window.couplingCommits`) make the evidence of `Analysis.verdict` thin. */
+  thinBelowChanges: Count,
+  /** Fewer judged territories (`Verdict.judged`) make the evidence of `Analysis.verdict` thin. */
+  thinBelowAreas: Count,
   maxMeanLineLength: Count,
   maxFileBytes: Count,
 });

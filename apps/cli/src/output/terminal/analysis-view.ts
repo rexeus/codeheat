@@ -1,4 +1,4 @@
-// Owns the human view of `analyze`: top hotspots, couplings, the weakest and shallowest modules, biggest changes, one hint.
+// Owns the human view of `analyze`: the answer, top hotspots, couplings, the weakest and shallowest modules, biggest changes, one hint.
 import type { FileStats, Module, Analysis } from "@codeheat/engine";
 
 import { escapeForTerminal } from "../escape.js";
@@ -93,7 +93,8 @@ const rankedModules = (report: Analysis): ReadonlyArray<Module> =>
     .slice(0, TOP_MODULES);
 
 /**
- * Renders the terminal view of an `analyze` report: the day of the repository's
+ * Renders the terminal view of an `analyze` report: the answer and the
+ * summary line (see `summaryLines`), the day of the repository's
  * newest commit for a window without counted changes, how far a change spreads
  * (change radius and propagation cost, each left out when the report has
  * none), how many territories the recommended detail has, where to start (the
