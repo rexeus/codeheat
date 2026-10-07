@@ -23,13 +23,13 @@ export const Thresholds = Schema.Struct({
   minModuleCommits: Count,
   /** Fewest directory hops (`Coupling.distance`) at which two files of one module are a distant coupling; files of different modules always are. */
   minLocalDistance: Count,
-  /** Smallest share of the smaller module's counted commits that every pair of a clique (`Report.cliques`) shares. */
+  /** Smallest share of the smaller module's counted commits that every pair of a clique (`Analysis.cliques`) shares. */
   minCliqueShare: UnitInterval,
   /** Fewest dependents (`UnstableInterface.fanIn`) that make a file an interface many rely on. */
   minFanIn: Count,
   /** Fewest revisions a file needs to be an unstable interface. */
   minInterfaceChanges: Count,
-  /** How many times as many counted commits as an importing module the imported one needs to be flagged in `Report.dependencyDirection`. */
+  /** How many times as many counted commits as an importing module the imported one needs to be flagged in `Analysis.dependencyDirection`. */
   minVolatilityRatio: Count,
   /**
    * Smallest `Partner.probability` at which a partner that no import links to
@@ -42,16 +42,16 @@ export const Thresholds = Schema.Struct({
   minLeakage: UnitInterval,
   /** Fewest `Module.implementationCommits` a module needs before its entry points get that reason line. */
   minImplementationCommits: Count,
-  /** Longest chain of couplings (`Report.couplings`, at least `minSharedCommits` shared changes and `minDegree`) that `Report.propagationCost` follows from a file. */
+  /** Longest chain of couplings (`Analysis.couplings`, at least `minSharedCommits` shared changes and `minDegree`) that `Analysis.propagationCost` follows from a file. */
   propagationDepth: Count,
   /**
    * A contract file that changed in more than this share of the counted
-   * changes is ubiquitous (see `Report.ubiquitousFiles`).
+   * changes is ubiquitous (see `Analysis.ubiquitousFiles`).
    */
   ubiquitousShare: UnitInterval,
   /** Fewest counted changes a contract file needs to be ubiquitous. */
   ubiquitousMinCommits: Count,
-  /** Fewest counted changes a window of `Report.series` needs to be `active`, which is what the erosion, trend, and heat classifications count, and the fewest changes a module needs in a window for that window to count towards its `ModuleErosion` (at least what `minModuleCommits` is for a window of that size). */
+  /** Fewest counted changes a window of `Analysis.series` needs to be `active`, which is what the erosion, trend, and heat classifications count, and the fewest changes a module needs in a window for that window to count towards its `ModuleErosion` (at least what `minModuleCommits` is for a window of that size). */
   minWindowChanges: Count,
   /** Fewest windows with evidence a trend (`Erosion`, `ModuleErosion`) is fitted through. */
   minTrendWindows: Count,
@@ -61,11 +61,11 @@ export const Thresholds = Schema.Struct({
   minVerdictWindows: Count,
   /** How many standard errors of the shift (from the windows' binomial variances, see `Erosion.verdict`) a fitted line must move to count as eroding or improving, for the repository and for a module. */
   minErosionSigmas: Count,
-  /** Share of the files with revisions in a window of `Report.series` that are hot in it (see `Heat`). */
+  /** Share of the files with revisions in a window of `Analysis.series` that are hot in it (see `Heat`). */
   hotTopShare: UnitInterval,
-  /** Smallest share of the counted changes whose subject must match a fix rule or be a Conventional Commits type (`FixDensity.conventional`) for `Report.fixDensity` to be known; below it the fix density is unknown, not 0. */
+  /** Smallest share of the counted changes whose subject must match a fix rule or be a Conventional Commits type (`FixDensity.conventional`) for `Analysis.fixDensity` to be known; below it the fix density is unknown, not 0. */
   minConventionShare: UnitInterval,
-  /** Smallest share of all the production code's heat a territory (or the members of a clique) needs to be an entry point (`Report.entryPoints`). */
+  /** Smallest share of all the production code's heat a territory (or the members of a clique) needs to be an entry point (`Analysis.entryPoints`). */
   minEntryHeatShare: UnitInterval,
   /** A territory is a `boundary` entry point only when at most this share of the changes touching it stay inside it (`TerritoryFit.containment`). */
   maxEntryContainment: UnitInterval,
@@ -81,13 +81,13 @@ export const Thresholds = Schema.Struct({
   maxEntriesPerKind: Count,
   /** Most entry points in the report. */
   maxEntries: Count,
-  /** Most territories the territory matrix covers (`Report.territoryCoupling`): the hottest real ones at the recommended detail. */
+  /** Most territories the territory matrix covers (`Analysis.territoryCoupling`): the hottest real ones at the recommended detail. */
   maxCoupledTerritories: Count,
-  /** Smallest share of all the heat the judged territories must hold for `Report.verdict` to have a level (see `Verdict`). */
+  /** Smallest share of all the heat the judged territories must hold for `Analysis.verdict` to have a level (see `Verdict`). */
   minVerdictCoverage: UnitInterval,
-  /** Smallest share of all the heat in leaking territories at which `Report.verdict` holds only in parts (`mixed`). */
+  /** Smallest share of all the heat in leaking territories at which `Analysis.verdict` holds only in parts (`mixed`). */
   minMixedLeakShare: UnitInterval,
-  /** Smallest share of all the heat in leaking territories at which `Report.verdict` is under strain (`strained`). */
+  /** Smallest share of all the heat in leaking territories at which `Analysis.verdict` is under strain (`strained`). */
   minStrainedLeakShare: UnitInterval,
   maxMeanLineLength: Count,
   maxFileBytes: Count,

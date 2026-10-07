@@ -2,8 +2,8 @@
 // the history-based signal for shallow or leaky modules.
 import { countedChanges } from "../coupling/coupling.js";
 import type { History } from "../history/history.js";
-import type { Module } from "../report/module.js";
-import { roundReported } from "../report/precision.js";
+import type { Module } from "../model/module.js";
+import { roundReported } from "../model/precision.js";
 import type { ModuleRef } from "./detect.js";
 import { isTestPath } from "./test-path.js";
 

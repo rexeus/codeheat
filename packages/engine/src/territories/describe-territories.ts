@@ -4,7 +4,7 @@
 // tracks as regular files.
 import { Effect, FileSystem, Option, Path } from "effect";
 
-import type { Territories } from "../report/territory.js";
+import type { Territories } from "../model/territory.js";
 import type { TerritoryTree, TerritoryDraft } from "./build-territories.js";
 import { mainFiles, tidy } from "./description-text.js";
 import { manifestDescription } from "./manifest-description.js";

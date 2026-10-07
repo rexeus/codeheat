@@ -27,7 +27,7 @@ export const TerritoryCoupling = Schema.Struct({
   b: Schema.String,
   /** Counted changes that touched both territories; at least `Thresholds.minSharedCommits`. */
   sharedChanges: Count,
-  /** Coupled file pairs (`Report.couplings`) of which one file lies in `a` and the other in `b`, neither test code, not two contract files (the rule of `TerritoryFit.distantPairs`). */
+  /** Coupled file pairs (`Analysis.couplings`) of which one file lies in `a` and the other in `b`, neither test code, not two contract files (the rule of `TerritoryFit.distantPairs`). */
   distantPairs: Count,
   /** Of those, the pairs no import links (`Coupling.imports` is `none`). */
   hiddenPairs: Count,

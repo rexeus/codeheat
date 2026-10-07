@@ -1,7 +1,7 @@
-import type { TerritoryFit } from "../report/territory-fit.js";
+import type { TerritoryFit } from "../model/territory-fit.js";
 // Owns which territories entry points judge: the real ones at the recommended
 // detail with enough changes to say anything.
-import type { Territories, Territory } from "../report/territory.js";
+import type { Territories, Territory } from "../model/territory.js";
 import { isTerritoryKind } from "../territories/recommend.js";
 
 /**

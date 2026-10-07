@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import type { Coupling, FileStats, Report } from "../report/report.js";
+import type { Coupling, FileStats, Analysis } from "../model/analysis.js";
 import {
   DEFAULT_THRESHOLDS,
   NO_DESIGN_FINDINGS,
@@ -45,7 +45,7 @@ const coupling = (
 });
 
 // Least cohesive first, as `analyze` reports them.
-const modules: Report["modules"] = [
+const modules: Analysis["modules"] = [
   {
     path: "lib",
     kind: "directory",
@@ -91,7 +91,7 @@ const modules: Report["modules"] = [
 const reportOf = (
   files: ReadonlyArray<FileStats>,
   couplings: ReadonlyArray<Coupling> = [],
-): Report => ({
+): Analysis => ({
   schemaVersion: 1,
   tool: { name: "codeheat", version: "0.0.0-test" },
   generatedAt: "2026-06-01T12:00:00.000Z",
@@ -361,7 +361,7 @@ describe("inspect contract partners", () => {
   });
 });
 
-const withContracts = (paths: ReadonlyArray<string>): Report => ({
+const withContracts = (paths: ReadonlyArray<string>): Analysis => ({
   ...reportOf([stats("src/a.ts", 1, 10)]),
   contracts: paths.map((path) => ({
     path,

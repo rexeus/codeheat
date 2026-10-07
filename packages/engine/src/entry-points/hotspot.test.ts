@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import type { Heat } from "../report/heat.js";
-import type { TerritoryFit } from "../report/territory-fit.js";
+import type { Heat } from "../model/heat.js";
+import type { TerritoryFit } from "../model/territory-fit.js";
 import { fileRecord } from "../testing/file-record.js";
 import { DEFAULT_THRESHOLDS } from "../testing/report-defaults.js";
 import { fitRecord, territoryRecord } from "../testing/territory-record.js";

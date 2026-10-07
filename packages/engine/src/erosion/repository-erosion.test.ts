@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import type { SeriesWindow } from "../report/series.js";
+import type { SeriesWindow } from "../model/series.js";
 import { judgeErosion } from "./repository-erosion.js";
 
 /** A window with 100 changes of which the share `local` stays in one module; null for an inactive window. */

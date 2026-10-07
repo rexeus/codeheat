@@ -1,5 +1,5 @@
 // Owns walking up the territory tree from a file's territory.
-import type { Territory } from "../report/territory.js";
+import type { Territory } from "../model/territory.js";
 
 /**
  * For each territory id, the ids of its ancestors and itself, the root

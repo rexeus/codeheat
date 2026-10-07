@@ -1,6 +1,6 @@
 // Owns the answer to "where does change concentrate?": how much of the
 // change effort the hottest territories hold.
-import type { Report } from "@codeheat/engine";
+import type { Analysis } from "@codeheat/engine";
 
 import { distinctNameParts } from "../territories/distinct-names.js";
 import { standingOf } from "../territories/judgement.js";
@@ -57,7 +57,7 @@ const sumOf = (shares: readonly number[]): number =>
  * when the report has no territories, no real one, or no change effort.
  */
 export const concentrationOf = (
-  report: Report,
+  report: Analysis,
   index: TerritoryIndex,
 ): Concentration => {
   if (index.recommended.length === 0) {

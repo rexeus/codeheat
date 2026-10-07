@@ -3,7 +3,7 @@ import { assert, layer } from "@effect/vitest";
 import { Effect } from "effect";
 import { TestClock } from "effect/testing";
 
-import type { Module } from "../report/module.js";
+import type { Module } from "../model/module.js";
 import { analyzeOptionsFor } from "../testing/analyze-options.js";
 import { makeTempRepository } from "../testing/temp-repository.js";
 import type { TempRepository } from "../testing/temp-repository.js";

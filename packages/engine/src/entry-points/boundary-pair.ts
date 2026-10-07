@@ -1,6 +1,6 @@
 // Owns the entry point of two territories whose boundaries leak into each
 // other: one story told once, not once from each side.
-import type { Clique } from "../report/clique.js";
+import type { Clique } from "../model/clique.js";
 import { crossingsBetween } from "../territory-fit/crossing-pairs.js";
 import type { AreaCrossings } from "../territory-fit/crossing-pairs.js";
 import { evidenceOf, findingOf } from "./candidate.js";

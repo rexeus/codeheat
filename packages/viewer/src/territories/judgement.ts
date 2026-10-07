@@ -1,10 +1,10 @@
-import type { Report } from "@codeheat/engine";
+import type { Analysis } from "@codeheat/engine";
 
 import type { Territory } from "./territory-index.js";
 
 /**
  * How a territory holds up: it `leaks` or `holds` as the engine judged it for
- * the verdict (`Report.verdict`), or it is `unjudged`, with the `reason` in a
+ * the verdict (`Analysis.verdict`), or it is `unjudged`, with the `reason` in a
  * few plain words.
  */
 export type Standing =
@@ -25,7 +25,7 @@ const unjudged = (reason: string): Standing => ({ kind: "unjudged", reason });
  */
 const whyUnjudged = (
   territory: Territory,
-  { minModuleCommits }: Report["thresholds"],
+  { minModuleCommits }: Analysis["thresholds"],
 ): Standing => {
   if (territory.kind === "tests") {
     return unjudged("test code");
@@ -47,7 +47,7 @@ const whyUnjudged = (
 /** How `territory` holds up, read from the territories the engine judged for the verdict. */
 export const standingOf = (
   territory: Territory,
-  { verdict, thresholds }: Pick<Report, "verdict" | "thresholds">,
+  { verdict, thresholds }: Pick<Analysis, "verdict" | "thresholds">,
 ): Standing => {
   const containment = territory.fit?.containment ?? null;
   if (containment === null || !verdict.judged.includes(territory.id)) {

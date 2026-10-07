@@ -8,8 +8,8 @@ import { Count, UnitInterval } from "./scalars.js";
 const ModuleCount = Schema.Int.check(Schema.isGreaterThanOrEqualTo(1));
 
 /**
- * How far the counted changes of the window (see `Report.logicalChanges`)
- * spread over the modules of `Report.modules`, test-only modules left out
+ * How far the counted changes of the window (see `Analysis.logicalChanges`)
+ * spread over the modules of `Analysis.modules`, test-only modules left out
  * (the test of a change is no spread). A place that holds only contract files
  * (see `ModulePartner.contractsOnly`) counts as a module. Changes that touched
  * no other module than test-only ones, or none at all (only files that are

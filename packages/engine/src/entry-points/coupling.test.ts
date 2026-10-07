@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import type { Coupling } from "../report/report.js";
+import type { Coupling } from "../model/analysis.js";
 import { DEFAULT_THRESHOLDS } from "../testing/report-defaults.js";
 import { TENTH_EACH } from "../testing/tenth-heat.js";
 import { couplingEntries } from "./coupling.js";

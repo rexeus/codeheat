@@ -1,5 +1,5 @@
 // Owns the terminal view of how far a change spreads: the change radius.
-import type { Module, Report } from "@codeheat/engine";
+import type { Module, Analysis } from "@codeheat/engine";
 
 import { percent } from "./format.js";
 
@@ -17,7 +17,7 @@ const moduleCount = (count: number): string =>
  */
 export const spreadLines = ({
   changeRadius,
-}: Pick<Report, "changeRadius">): ReadonlyArray<string> => {
+}: Pick<Analysis, "changeRadius">): ReadonlyArray<string> => {
   if (changeRadius === null) {
     return [];
   }

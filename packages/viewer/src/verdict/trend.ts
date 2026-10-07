@@ -1,4 +1,4 @@
-import type { Report } from "@codeheat/engine";
+import type { Analysis } from "@codeheat/engine";
 
 /** Which way the design moves, for an arrow beside the words. */
 export type TrendDirection = "worse" | "better" | "steady" | "none";
@@ -22,7 +22,7 @@ const TRENDS = {
  * `thresholds.minVerdictWindows` quarters with enough changes on; with judged
  * territories but fewer quarters it says so.
  */
-export const trendOf = ({ verdict }: Report): Trend =>
+export const trendOf = ({ verdict }: Analysis): Trend =>
   verdict.trend === "unknown" && verdict.judged.length > 0
     ? { direction: "none", label: "Too few quarters to call a trend" }
     : TRENDS[verdict.trend];

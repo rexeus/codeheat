@@ -1,4 +1,4 @@
-import type { Report } from "@codeheat/engine";
+import type { Analysis } from "@codeheat/engine";
 
 import { CHANGE_STEP_COUNT } from "../color/change-scale.js";
 import { COHESION_STEP_COUNT } from "../color/cohesion-scale.js";
@@ -12,7 +12,7 @@ const comparisonCaveat = ({
   previousCommits,
   previousRealCommits,
   previousTruncated,
-}: NonNullable<Report["comparison"]>): string => {
+}: NonNullable<Analysis["comparison"]>): string => {
   if (previousRealCommits === 0) {
     return previousCommits === 0
       ? " (no commits: nothing to compare)"
@@ -23,7 +23,7 @@ const comparisonCaveat = ({
 
 const SHORT_SHA_LENGTH = 7;
 
-const summaryParts = ({ repository, window, files }: Report): string[] => [
+const summaryParts = ({ repository, window, files }: Analysis): string[] => [
   `${formatDay(window.since)} → ${formatDay(window.until)}`,
   `${formatCount(window.commits)} commits`,
   `${formatCount(files.length)} files`,
@@ -33,7 +33,7 @@ const summaryParts = ({ repository, window, files }: Report): string[] => [
 ];
 
 /** The window a `--compare` report measures its trends against; empty without one. */
-const comparisonNote = ({ comparison }: Report): string =>
+const comparisonNote = ({ comparison }: Analysis): string =>
   comparison === null
     ? ""
     : `Compared with ${formatDay(comparison.previousSince)} → ${formatDay(comparison.previousUntil)}${comparisonCaveat(comparison)}.`;
@@ -44,7 +44,7 @@ const comparisonNote = ({ comparison }: Report): string =>
  * a `--compare` report compares with (hidden without one).
  */
 export const renderHeader = (
-  report: Report,
+  report: Analysis,
   {
     title,
     summary,

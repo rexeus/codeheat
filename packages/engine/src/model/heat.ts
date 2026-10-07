@@ -6,7 +6,7 @@ import { Schema } from "effect";
 import { Count } from "./scalars.js";
 
 /**
- * How long a file has been among the hottest. A window of `Report.series` is
+ * How long a file has been among the hottest. A window of `Analysis.series` is
  * judged on its own: a file is hot in it when it has revisions in the window
  * and its score (see `FileStats.score`, computed from the window's revisions)
  * is among the best `Thresholds.hotTopShare` of the non-test files that have

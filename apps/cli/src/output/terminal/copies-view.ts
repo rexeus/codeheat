@@ -1,12 +1,12 @@
 // Owns the terminal view of copy families: files with largely the same content that change in lockstep.
-import type { InspectResult, Report } from "@codeheat/engine";
+import type { InspectResult, Analysis } from "@codeheat/engine";
 
 import { escapeForTerminal } from "../escape.js";
 import { percent } from "./format.js";
 import type { Style } from "./style.js";
 import { plain, renderTable } from "./table.js";
 
-type Family = Report["copyFamilies"][number];
+type Family = Analysis["copyFamilies"][number];
 
 const TOP_FAMILIES = 5;
 const SHOWN_FILES = 3;
@@ -61,7 +61,7 @@ const familyRows = (
  * no family.
  */
 export const copyLines = (
-  report: Report,
+  report: Analysis,
   style: Style,
 ): ReadonlyArray<string> => {
   const production = report.copyFamilies.filter(({ testOnly }) => !testOnly);

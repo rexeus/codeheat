@@ -1,5 +1,5 @@
 // Tests only: a measured module record with every field at its neutral value.
-import type { Module } from "../report/module.js";
+import type { Module } from "../model/module.js";
 
 /** A module with `commits` counted commits that is not test-only unless said; everything else is neutral. */
 export const moduleRecord = (

@@ -1,11 +1,11 @@
-import type { Report } from "@codeheat/engine";
+import type { Analysis } from "@codeheat/engine";
 import { describe, expect, it } from "vitest";
 
 import { sampleReport } from "../../testing/sample-report.js";
 import { stabilitySections } from "./stability-view.js";
 import { makeStyle } from "./style.js";
 
-const direction = (report: Report) => {
+const direction = (report: Analysis) => {
   const [edge] = report.dependencyDirection;
   return edge === undefined ? [] : [edge];
 };

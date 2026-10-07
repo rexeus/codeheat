@@ -1,5 +1,5 @@
 // Owns the human view of `analyze`: top hotspots, couplings, the weakest and shallowest modules, biggest changes, one hint.
-import type { FileStats, Module, Report } from "@codeheat/engine";
+import type { FileStats, Module, Analysis } from "@codeheat/engine";
 
 import { escapeForTerminal } from "../escape.js";
 import { changeLines } from "./changes-view.js";
@@ -83,7 +83,7 @@ const moduleLines = (
   );
 
 /** The first modules of the report's ranking: enough commits to say something, not test-only. The report already lists them least cohesive first. */
-const rankedModules = (report: Report): ReadonlyArray<Module> =>
+const rankedModules = (report: Analysis): ReadonlyArray<Module> =>
   report.modules
     .filter(
       (module) =>
@@ -118,7 +118,7 @@ const rankedModules = (report: Report): ReadonlyArray<Module> =>
  * rendering throws otherwise.
  * The result has no trailing newline.
  */
-export const renderAnalysis = (report: Report, style: Style): string => {
+export const renderAnalysis = (report: Analysis, style: Style): string => {
   const hotspots =
     report.files.length === 0
       ? ["No files in the analysis universe."]

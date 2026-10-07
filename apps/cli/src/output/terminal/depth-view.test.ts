@@ -1,11 +1,11 @@
-import type { Module, Report } from "@codeheat/engine";
+import type { Module, Analysis } from "@codeheat/engine";
 import { describe, expect, it } from "vitest";
 
 import { sampleReport } from "../../testing/sample-report.js";
 import { renderAnalysis } from "./analysis-view.js";
 import { makeStyle } from "./style.js";
 
-const shallowest = (report: Report): ReadonlyArray<string> => {
+const shallowest = (report: Analysis): ReadonlyArray<string> => {
   const lines = renderAnalysis(report, makeStyle(false)).split("\n");
   const start = lines.indexOf("Shallowest modules");
   const end = lines.findIndex((line, index) => index > start && line === "");
@@ -13,9 +13,9 @@ const shallowest = (report: Report): ReadonlyArray<string> => {
 };
 
 const withModules = (
-  report: Report,
+  report: Analysis,
   change: (module: Module) => Partial<Module>,
-): Report => ({
+): Analysis => ({
   ...report,
   modules: report.modules.map((module) => ({ ...module, ...change(module) })),
 });

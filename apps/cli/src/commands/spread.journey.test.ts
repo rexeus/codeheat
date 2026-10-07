@@ -1,4 +1,4 @@
-import { InspectResult, Report } from "@codeheat/engine";
+import { InspectResult, Analysis } from "@codeheat/engine";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Schema } from "effect";
 
@@ -18,7 +18,7 @@ describe("codeheat reports how far a change spreads", () => {
           cwd: repo.root,
         });
 
-        const report = yield* Schema.decodeUnknownEffect(Report)(
+        const report = yield* Schema.decodeUnknownEffect(Analysis)(
           JSON.parse(result.stdout),
         );
         expect(report.changeRadius).toStrictEqual({

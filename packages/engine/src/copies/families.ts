@@ -3,9 +3,9 @@ import { Order } from "effect";
 
 import { countedChanges } from "../coupling/coupling.js";
 import type { History } from "../history/history.js";
+import type { CopyFamily } from "../model/copy-family.js";
+import { roundReported } from "../model/precision.js";
 import { isTestPath } from "../modules/test-path.js";
-import type { CopyFamily } from "../report/copy-family.js";
-import { roundReported } from "../report/precision.js";
 
 /** Two coupled files whose content is alike enough to be copies. */
 export type Link = { readonly a: string; readonly b: string };

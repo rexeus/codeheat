@@ -1,8 +1,8 @@
 import type { EntryPointInput } from "../entry-points/gather-candidates.js";
+import type { Coupling } from "../model/analysis.js";
 // Tests only: six territories with a thousand units of production heat each, and what to rank them with.
-import type { CopyFamily } from "../report/copy-family.js";
-import type { Coupling } from "../report/report.js";
-import type { Territories } from "../report/territory.js";
+import type { CopyFamily } from "../model/copy-family.js";
+import type { Territories } from "../model/territory.js";
 import { NO_CROSSINGS } from "../territory-fit/crossing-pairs.js";
 import { fileRecord } from "./file-record.js";
 import { DEFAULT_THRESHOLDS } from "./report-defaults.js";

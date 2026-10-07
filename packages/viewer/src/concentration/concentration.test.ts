@@ -1,4 +1,4 @@
-import type { Report } from "@codeheat/engine";
+import type { Analysis } from "@codeheat/engine";
 import { describe, expect, it } from "vitest";
 
 import { indexTerritories } from "../territories/territory-index.js";
@@ -7,7 +7,7 @@ import type { PartSpec } from "../testing/design-fit.js";
 import { reportOf } from "../testing/reports.js";
 import { concentrationOf } from "./concentration.js";
 
-const concentration = (report: Report) =>
+const concentration = (report: Analysis) =>
   concentrationOf(report, indexTerritories(report.territories));
 
 /** Five territories: core leaks, web and forms hold, docs has too few changes, and test code. */

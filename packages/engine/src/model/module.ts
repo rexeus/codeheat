@@ -8,7 +8,7 @@ import { ModuleErosion } from "./erosion.js";
 import { ModuleFixes } from "./fix-density.js";
 import { Count, UnitDelta, UnitInterval } from "./scalars.js";
 
-/** Another module that changes in the same logical changes (see `Report.logicalChanges`). */
+/** Another module that changes in the same logical changes (see `Analysis.logicalChanges`). */
 const ModulePartner = Schema.Struct({
   /** The partner module's `path`. */
   path: Schema.String,
@@ -71,7 +71,7 @@ export const Module = Schema.Struct({
    * mocks, or __snapshots__. Test-only modules are never ranked.
    */
   testOnly: Schema.Boolean,
-  /** Counted changes (logical changes of at most `Thresholds.maxCommitFiles` files, see `Report.logicalChanges`) that touched the module. */
+  /** Counted changes (logical changes of at most `Thresholds.maxCommitFiles` files, see `Analysis.logicalChanges`) that touched the module. */
   commits: Count,
   /** Of those, changes that touched no universe file outside the module. */
   localCommits: Count,
@@ -80,7 +80,7 @@ export const Module = Schema.Struct({
   /**
    * The change radius around the module: the median number of modules,
    * itself included, that the counted changes touching it touched (see
-   * `Report.changeRadius`; test-only modules are not counted, and a lower
+   * `Analysis.changeRadius`; test-only modules are not counted, and a lower
    * median keeps it a whole number). 1 means its changes usually stay inside.
    * Null when no counted change touched it, and for a test-only module.
    */
@@ -131,14 +131,14 @@ export const Module = Schema.Struct({
    */
   trend: Schema.NullOr(ModuleTrend),
   /**
-   * How the module's cohesion moved over `Report.series`; null for a test-only
+   * How the module's cohesion moved over `Analysis.series`; null for a test-only
    * module and unless the module has evidence in at least
    * `Thresholds.minTrendWindows` windows (see `ModuleErosion`).
    */
   erosion: Schema.NullOr(ModuleErosion),
   /**
    * The fixes among the counted changes that touched the module (see
-   * `FixDensity`); null unless `Report.fixDensity` is `known`, for a
+   * `FixDensity`); null unless `Analysis.fixDensity` is `known`, for a
    * test-only module, and for one no counted change touched.
    */
   fixDensity: Schema.NullOr(ModuleFixes),

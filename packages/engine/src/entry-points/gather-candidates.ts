@@ -1,10 +1,10 @@
 // Owns reading the report's findings as entry point candidates, one rule per
 // kind (see the modules of the kinds).
-import type { Clique } from "../report/clique.js";
-import type { CopyFamily } from "../report/copy-family.js";
-import type { Coupling, FileStats } from "../report/report.js";
-import type { Territories } from "../report/territory.js";
-import type { UnstableInterface } from "../report/unstable-interface.js";
+import type { Coupling, FileStats } from "../model/analysis.js";
+import type { Clique } from "../model/clique.js";
+import type { CopyFamily } from "../model/copy-family.js";
+import type { Territories } from "../model/territory.js";
+import type { UnstableInterface } from "../model/unstable-interface.js";
 import { boundaryEntries } from "./boundary.js";
 import type { BoundaryContext } from "./boundary.js";
 import type { Candidate } from "./candidate.js";
@@ -33,7 +33,7 @@ export type EntryPointInput = {
   readonly minChanges: number;
   /** The coupled file pairs that cross between the territories at the recommended detail, which a boundary between two territories counts once. */
   readonly crossings: BoundaryContext["crossings"];
-  /** The gates (`Report.thresholds`). */
+  /** The gates (`Analysis.thresholds`). */
   readonly limits: EntryLimits;
 };
 

@@ -1,8 +1,8 @@
 // Owns the change radius: how many modules the counted changes touched, for
 // the repository and for each module.
-import type { ChangeRadius } from "../report/change-radius.js";
-import type { Module } from "../report/module.js";
-import { roundReported } from "../report/precision.js";
+import type { ChangeRadius } from "../model/change-radius.js";
+import type { Module } from "../model/module.js";
+import { roundReported } from "../model/precision.js";
 
 const MEDIAN = 0.5;
 const P90 = 0.9;

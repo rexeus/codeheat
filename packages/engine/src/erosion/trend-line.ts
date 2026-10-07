@@ -1,6 +1,6 @@
 // Owns fitting a robust straight line through a measure over the windows of a series.
-import type { TrendLine } from "../report/erosion.js";
-import { roundReported } from "../report/precision.js";
+import type { TrendLine } from "../model/erosion.js";
+import { roundReported } from "../model/precision.js";
 
 /** Fewest windows with evidence a trend needs: two always form a line. */
 export const MIN_TREND_WINDOWS = 3;

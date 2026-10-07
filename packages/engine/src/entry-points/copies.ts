@@ -1,5 +1,5 @@
 // Owns the entry points of kind `copies`: families of copies that change in lockstep.
-import type { CopyFamily } from "../report/copy-family.js";
+import type { CopyFamily } from "../model/copy-family.js";
 import { evidenceOf } from "./candidate.js";
 import type { Candidate } from "./candidate.js";
 import type { FileHeat } from "./file-heat.js";

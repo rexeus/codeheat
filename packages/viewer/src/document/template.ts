@@ -1,4 +1,4 @@
-import type { Report } from "@codeheat/engine";
+import type { Analysis } from "@codeheat/engine";
 
 import { viewerScript, viewerStyles } from "../../dist/assets.js";
 import { REPORT_ELEMENT_ID, serializeReport } from "./embedded-report.js";
@@ -12,7 +12,7 @@ const escapeHtmlText = (text: string): string =>
  * styles, script and data are inline, and nothing loads from the network.
  * The report is embedded whole; the page renders every path as text.
  */
-export const renderReportHtml = (report: Report): string => `<!doctype html>
+export const renderReportHtml = (report: Analysis): string => `<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">

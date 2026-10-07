@@ -1,4 +1,4 @@
-import type { Report } from "@codeheat/engine";
+import type { Analysis } from "@codeheat/engine";
 
 import { coChangeAnswer } from "../co-change/co-change-card.js";
 import { coChangeOf } from "../co-change/pairs.js";
@@ -26,7 +26,7 @@ import { renderHeadline } from "./headline.js";
 
 /** The four answers, in the order the page asks them. */
 const answersOf = (
-  report: Report,
+  report: Analysis,
   showTerritory: (id: string) => void,
 ): Answer[] => {
   const territories = indexTerritories(report.territories);
@@ -83,7 +83,7 @@ const showChart = (
  * the map through `showTerritory`.
  */
 export const mountAnswers = (
-  report: Report,
+  report: Analysis,
   showTerritory: (id: string) => void,
 ): void => {
   renderHeadline(

@@ -1,7 +1,7 @@
 // Owns the heat share of a set of files: how much of all the production
 // code's heat they hold.
-import type { FileStats } from "../report/report.js";
-import type { Territory } from "../report/territory.js";
+import type { FileStats } from "../model/analysis.js";
+import type { Territory } from "../model/territory.js";
 import { chainsOf } from "./ancestry.js";
 
 /** The heat of a file: `changes × (loc + complexity.total)`, as `Territory.heatShare` counts it. */

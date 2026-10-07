@@ -1,11 +1,11 @@
-import type { Report } from "@codeheat/engine";
+import type { Analysis } from "@codeheat/engine";
 import { describe, expect, it } from "vitest";
 
 import { sampleReport } from "../../testing/sample-report.js";
 import { cliqueSection, distantSection } from "./distant-view.js";
 import { makeStyle } from "./style.js";
 
-type Clique = Report["cliques"][number];
+type Clique = Analysis["cliques"][number];
 
 const clique = (modules: ReadonlyArray<string>, sharedCommits = 6): Clique => ({
   modules,

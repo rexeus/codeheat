@@ -1,7 +1,7 @@
 // Owns the entry points of kind `hotspot`: territories whose heat is mostly in
 // chronic hotspot files.
-import type { FileStats } from "../report/report.js";
-import type { Territory } from "../report/territory.js";
+import type { FileStats } from "../model/analysis.js";
+import type { Territory } from "../model/territory.js";
 import { chainsOf } from "./ancestry.js";
 import { evidenceOf } from "./candidate.js";
 import type { Candidate } from "./candidate.js";

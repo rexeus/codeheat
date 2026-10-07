@@ -1,10 +1,10 @@
-import type { Report } from "@codeheat/engine";
+import type { Analysis } from "@codeheat/engine";
 
 import { h, withFlags } from "./dom.js";
 import { EMPTY_NOTICE } from "./empty-notice.js";
 
 /** Overlays the notice on `stage` when `report` has no files; otherwise leaves it alone. */
-export const showEmptyNotice = (report: Report, stage: HTMLElement): void => {
+export const showEmptyNotice = (report: Analysis, stage: HTMLElement): void => {
   if (report.files.length > 0) {
     return;
   }

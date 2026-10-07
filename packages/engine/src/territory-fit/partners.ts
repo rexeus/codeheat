@@ -3,8 +3,8 @@ import { Order } from "effect";
 
 import { MIN_SHARED_COMMITS } from "../coupling/coupling.js";
 import type { ModuleCoChange } from "../distant/module-co-change.js";
-import { roundReported } from "../report/precision.js";
-import type { TerritoryFit } from "../report/territory-fit.js";
+import { roundReported } from "../model/precision.js";
+import type { TerritoryFit } from "../model/territory-fit.js";
 
 type Partner = NonNullable<TerritoryFit["partner"]>;
 

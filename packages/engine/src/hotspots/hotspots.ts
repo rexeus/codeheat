@@ -3,9 +3,9 @@ import { Order } from "effect";
 
 import { groupByPath, partnersOf } from "../coupling/partners.js";
 import type { Complexity } from "../metrics/complexity.js";
+import type { Coupling, FileStats } from "../model/analysis.js";
+import { roundReported } from "../model/precision.js";
 import { isTestPath } from "../modules/test-path.js";
-import { roundReported } from "../report/precision.js";
-import type { Coupling, FileStats } from "../report/report.js";
 import { describeFile, isHubCandidate } from "./reasons.js";
 
 /** What is known about one universe file before it is scored. */

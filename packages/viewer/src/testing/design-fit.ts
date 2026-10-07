@@ -1,4 +1,4 @@
-import type { Report } from "@codeheat/engine";
+import type { Analysis } from "@codeheat/engine";
 
 import {
   entryPointOf,
@@ -8,7 +8,7 @@ import {
   territoryNode,
 } from "./reports.js";
 
-type Territory = Report["territories"]["nodes"][number];
+type Territory = Analysis["territories"]["nodes"][number];
 
 /** A territory at the recommended detail, as `{ id, path, heat, containment }`, with the kind `folder` unless overridden. */
 export type PartSpec = {
@@ -37,8 +37,8 @@ const sumOf = (values: readonly number[]): number =>
  */
 const verdictOfParts = (
   parts: readonly PartSpec[],
-  verdict: Partial<Report["verdict"]> = {},
-): Report["verdict"] => {
+  verdict: Partial<Analysis["verdict"]> = {},
+): Analysis["verdict"] => {
   const judged = parts
     .filter(({ standing }) => standing !== undefined)
     .toSorted((one, other) => other.heat - one.heat);
@@ -74,10 +74,10 @@ export const reportWithParts = (
   {
     verdict,
     ...overrides
-  }: Omit<Partial<Report>, "verdict"> & {
-    readonly verdict?: Partial<Report["verdict"]>;
+  }: Omit<Partial<Analysis>, "verdict"> & {
+    readonly verdict?: Partial<Analysis["verdict"]>;
   } = {},
-): Report => {
+): Analysis => {
   const nodes = [
     territoryNode("root", ".", {
       children: parts.map(({ id }) => id),
@@ -120,7 +120,7 @@ export const reportWithParts = (
 export const boundaryOn = (
   rank: number,
   territories: readonly string[],
-): Report["entryPoints"][number] =>
+): Analysis["entryPoints"][number] =>
   entryPointOf(rank, {
     territories,
     evidence: {

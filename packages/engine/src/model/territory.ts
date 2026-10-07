@@ -52,7 +52,7 @@ export const Territory = Schema.Struct({
   /** Of those, files that are test code (see `FileStats.test`). */
   testFiles: Count,
   /**
-   * Counted changes (see `Report.logicalChanges`) that touched any file of the
+   * Counted changes (see `Analysis.logicalChanges`) that touched any file of the
    * territory, test code included.
    */
   changes: Count,

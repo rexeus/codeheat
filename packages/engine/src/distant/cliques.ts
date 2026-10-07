@@ -2,8 +2,8 @@
 import { Order } from "effect";
 
 import { MIN_SHARED_COMMITS } from "../coupling/coupling.js";
-import type { Clique } from "../report/clique.js";
-import { roundReported } from "../report/precision.js";
+import type { Clique } from "../model/clique.js";
+import { roundReported } from "../model/precision.js";
 import { distinctGroups } from "./distinct-groups.js";
 import { sharedShare } from "./module-co-change.js";
 import type { ModuleCoChange } from "./module-co-change.js";

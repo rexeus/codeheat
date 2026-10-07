@@ -1,4 +1,4 @@
-import { InspectResult, Report } from "@codeheat/engine";
+import { InspectResult, Analysis } from "@codeheat/engine";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Schema } from "effect";
 
@@ -17,7 +17,7 @@ describe("codeheat measures module depth", () => {
         cwd: repo.root,
       });
 
-      const report = yield* Schema.decodeUnknownEffect(Report)(
+      const report = yield* Schema.decodeUnknownEffect(Analysis)(
         JSON.parse(result.stdout),
       );
       expect(
@@ -89,7 +89,7 @@ describe("codeheat without a parser", () => {
         ),
       });
 
-      const report = yield* Schema.decodeUnknownEffect(Report)(
+      const report = yield* Schema.decodeUnknownEffect(Analysis)(
         JSON.parse(result.stdout),
       );
       expect(report.modules.map(({ depth }) => depth)).toStrictEqual([

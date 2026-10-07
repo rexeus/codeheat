@@ -1,5 +1,5 @@
 // Owns publishing the treemap: writing the HTML file and handing it to a browser.
-import type { Report } from "@codeheat/engine";
+import type { Analysis } from "@codeheat/engine";
 import { renderReportHtml } from "@codeheat/viewer";
 import { Console, Effect, FileSystem, Path } from "effect";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
@@ -39,7 +39,7 @@ const openInBrowser = (file: string) =>
  * error.
  */
 export const writeHtmlReport = (options: {
-  readonly report: Report;
+  readonly report: Analysis;
   readonly file: string;
   readonly cwd: string;
   readonly open: boolean;

@@ -1,6 +1,6 @@
 // Owns the terminal's section on modules whose interface leaks: changes inside
 // them that keep changing their public entry points too.
-import type { Module, Report } from "@codeheat/engine";
+import type { Module, Analysis } from "@codeheat/engine";
 
 import { escapeForTerminal } from "../escape.js";
 import { percent } from "./format.js";
@@ -39,14 +39,14 @@ const leakageLines = (
   );
 
 /** The first modules the report flags as having a leaky interface, in the report's order. */
-const leakyModules = (report: Report): ReadonlyArray<Module> =>
+const leakyModules = (report: Analysis): ReadonlyArray<Module> =>
   report.modules
     .filter((module) => module.leakyInterface)
     .slice(0, TOP_MODULES);
 
 /** The "Leaky interfaces" section: a table of the first leaky modules, or the sentence that there are none, and a closing blank line. */
 export const leakySection = (
-  report: Report,
+  report: Analysis,
   style: Style,
 ): ReadonlyArray<string> => {
   const leaky = leakyModules(report);

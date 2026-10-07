@@ -3,7 +3,7 @@
 import { findUbiquitous } from "../contracts/ubiquitous.js";
 import type { History } from "../history/history.js";
 import { withoutPaths } from "../history/without-paths.js";
-import type { UbiquitousFile } from "../report/contract-file.js";
+import type { UbiquitousFile } from "../model/contract-file.js";
 import type { WindowHistories } from "./windows.js";
 
 const without = (

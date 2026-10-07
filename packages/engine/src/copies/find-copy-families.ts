@@ -2,8 +2,8 @@
 import { Effect, FileSystem, Path } from "effect";
 
 import type { History } from "../history/history.js";
-import type { CopyFamily } from "../report/copy-family.js";
-import type { Coupling } from "../report/report.js";
+import type { Coupling } from "../model/analysis.js";
+import type { CopyFamily } from "../model/copy-family.js";
 import { familiesOf } from "./families.js";
 import { jaccard, shinglesOf } from "./similarity.js";
 import { tokenize } from "./tokenize.js";

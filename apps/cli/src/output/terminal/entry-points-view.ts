@@ -1,12 +1,12 @@
 // Owns the terminal's answer to "where do I start": the ranked entry points
 // with their verdict, their numbers in plain words, and the design move.
-import type { Report } from "@codeheat/engine";
+import type { Analysis } from "@codeheat/engine";
 
 import { escapeForTerminal } from "../escape.js";
 import { percent } from "./format.js";
 import type { Style } from "./style.js";
 
-type EntryPoint = Report["entryPoints"][number];
+type EntryPoint = Analysis["entryPoints"][number];
 type Finding = EntryPoint["findings"][number];
 
 const KIND_LABELS: Readonly<Record<EntryPoint["kind"], string>> = {
@@ -95,7 +95,7 @@ const evidenceLine = ({
  * points. A trailing blank line closes the section.
  */
 export const entryPointLines = (
-  { entryPoints, territories }: Pick<Report, "entryPoints" | "territories">,
+  { entryPoints, territories }: Pick<Analysis, "entryPoints" | "territories">,
   style: Style,
 ): ReadonlyArray<string> => {
   if (entryPoints.length === 0) {

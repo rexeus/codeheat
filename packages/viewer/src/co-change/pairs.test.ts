@@ -1,4 +1,4 @@
-import type { Report } from "@codeheat/engine";
+import type { Analysis } from "@codeheat/engine";
 import { describe, expect, it } from "vitest";
 
 import { indexTerritories } from "../territories/territory-index.js";
@@ -6,7 +6,7 @@ import { reportWithParts } from "../testing/design-fit.js";
 import { reportOf } from "../testing/reports.js";
 import { coChangeOf } from "./pairs.js";
 
-const coChange = (report: Report) =>
+const coChange = (report: Analysis) =>
   coChangeOf(report, indexTerritories(report.territories));
 
 const parts = reportWithParts([
@@ -22,7 +22,7 @@ const pair = (
   b: string,
   sharedChanges: number,
   hiddenPairs = 0,
-): Report["territoryCoupling"][number] => ({
+): Analysis["territoryCoupling"][number] => ({
   a,
   b,
   sharedChanges,

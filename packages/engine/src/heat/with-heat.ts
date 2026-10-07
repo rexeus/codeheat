@@ -1,5 +1,5 @@
 // Owns setting the heat of the files of a report.
-import type { FileStats } from "../report/report.js";
+import type { FileStats } from "../model/analysis.js";
 import { heatOf } from "./classify-heat.js";
 import type { HeatWindow } from "./classify-heat.js";
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import type { Coupling } from "../report/report.js";
+import type { Coupling } from "../model/analysis.js";
 import { changeHistory } from "../testing/change-history.js";
 import { territoryRecord } from "../testing/territory-record.js";
 import type { Level } from "./levels.js";

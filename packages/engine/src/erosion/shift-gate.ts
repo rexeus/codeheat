@@ -1,6 +1,6 @@
 // Owns deciding whether a share moved over the series by more than chance
 // explains, so that a flat design is not reported as eroding or improving.
-import type { TrendLine } from "../report/erosion.js";
+import type { TrendLine } from "../model/erosion.js";
 import { fitLine } from "./trend-line.js";
 import type { WindowValue } from "./trend-line.js";
 

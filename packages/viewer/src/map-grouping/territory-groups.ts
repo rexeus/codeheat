@@ -1,5 +1,5 @@
 // Owns which territory holds each file at a detail, for grouping the map.
-import type { FileStats, Report } from "@codeheat/engine";
+import type { FileStats, Analysis } from "@codeheat/engine";
 
 import {
   isRealTerritory,
@@ -7,7 +7,7 @@ import {
 } from "../territories/territory-index.js";
 import type { Territory } from "../territories/territory-index.js";
 
-type Territories = Report["territories"];
+type Territories = Analysis["territories"];
 
 /** A territory visible at a detail with the files it holds, the report's own files only. */
 export type Group = {

@@ -1,7 +1,7 @@
 // Owns reading the territories of a report as partitions: which territories
 // are visible at a detail, which one holds each file there, and the detail at
 // which each territory is measured.
-import type { Territories, Territory } from "../report/territory.js";
+import type { Territories, Territory } from "../model/territory.js";
 
 /** The territories visible at one detail and where every file lies among them. */
 export type Level = {

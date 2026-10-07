@@ -2,9 +2,9 @@
 import { Order } from "effect";
 
 import { isDistantCoupling } from "../distant/distant-couplings.js";
-import type { InspectResult } from "../report/inspect-result.js";
-import { roundReported } from "../report/precision.js";
-import type { Coupling } from "../report/report.js";
+import type { Coupling } from "../model/analysis.js";
+import type { InspectResult } from "../model/inspect-result.js";
+import { roundReported } from "../model/precision.js";
 
 /** A file that changes together with another. */
 export type Partner = InspectResult["matches"][number]["partners"][number];

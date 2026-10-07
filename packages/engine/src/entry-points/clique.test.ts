@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import type { Clique } from "../report/clique.js";
-import type { Territory } from "../report/territory.js";
+import type { Clique } from "../model/clique.js";
+import type { Territory } from "../model/territory.js";
 import { DEFAULT_THRESHOLDS } from "../testing/report-defaults.js";
 import { territoryRecord } from "../testing/territory-record.js";
 import { cliqueEntries as cliqueEntriesWith } from "./clique.js";

@@ -1,6 +1,6 @@
 // Owns the report fields that answer whether the design holds up to the way
 // the code changes: how far a change spreads, and how that moved over time.
-// They are a group of their own so that `Report` stays within its size.
+// They are a group of their own so that `Analysis` stays within its size.
 // Additive fields keep schemaVersion 1; renaming or removing a field bumps it.
 import { Schema } from "effect";
 
@@ -13,7 +13,7 @@ import { TerritoryClique, TerritoryCoupling } from "./territory-coupling.js";
 import { Territories } from "./territory.js";
 import { Verdict } from "./verdict.js";
 
-/** Fields of `Report`; each is documented here, where it is defined. */
+/** Fields of `Analysis`; each is documented here, where it is defined. */
 export const DesignFitFields = {
   /**
    * Whether the design holds up to the way the code changes, for the whole

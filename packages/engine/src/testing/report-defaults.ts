@@ -1,8 +1,8 @@
 // Tests only: the thresholds of an analysis with default limits, for tests that
-// build a whole Report by hand.
-import type { Report } from "../report/report.js";
+// build a whole Analysis by hand.
+import type { Analysis } from "../model/analysis.js";
 
-export const DEFAULT_THRESHOLDS: Report["thresholds"] = {
+export const DEFAULT_THRESHOLDS: Analysis["thresholds"] = {
   maxCommitFiles: 50,
   hubMinBreadth: 10,
   hubMinRevisions: 5,
@@ -79,4 +79,4 @@ export const NO_DESIGN_FINDINGS = {
   territoryCoupling: [],
   territoryCliques: [],
   entryPoints: [],
-} satisfies Partial<Report>;
+} satisfies Partial<Analysis>;

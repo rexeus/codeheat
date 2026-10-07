@@ -1,9 +1,9 @@
 // Owns how much of a territory's heat is the long-lived kind: chronic hotspots
 // among its files, and the acute ones.
-import { roundReported } from "../report/precision.js";
-import type { FileStats } from "../report/report.js";
-import type { TerritoryFit } from "../report/territory-fit.js";
-import type { Territory } from "../report/territory.js";
+import type { FileStats } from "../model/analysis.js";
+import { roundReported } from "../model/precision.js";
+import type { TerritoryFit } from "../model/territory-fit.js";
+import type { Territory } from "../model/territory.js";
 
 /** What the files of one territory say about its chronic and acute heat. */
 export type ChronicHeat = Pick<

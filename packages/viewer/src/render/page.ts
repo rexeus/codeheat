@@ -1,4 +1,4 @@
-import type { Report } from "@codeheat/engine";
+import type { Analysis } from "@codeheat/engine";
 
 import { createPathMatcher } from "../selection/filter.js";
 import type { PathMatcher } from "../selection/filter.js";
@@ -24,7 +24,7 @@ export const findPage = () => ({
 export type Page = ReturnType<typeof findPage>;
 
 /** The heading, the legend and the color-mode switch. */
-export const mountChrome = (report: Report, page: Page): void => {
+export const mountChrome = (report: Analysis, page: Page): void => {
   renderHeader(report, {
     title: byId("repository", HTMLElement),
     summary: byId("summary", HTMLElement),

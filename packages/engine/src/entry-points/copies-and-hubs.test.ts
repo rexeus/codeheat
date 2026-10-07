@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import type { CopyFamily } from "../report/copy-family.js";
-import type { UnstableInterface } from "../report/unstable-interface.js";
+import type { CopyFamily } from "../model/copy-family.js";
+import type { UnstableInterface } from "../model/unstable-interface.js";
 import { DEFAULT_THRESHOLDS } from "../testing/report-defaults.js";
 import { TENTH_EACH } from "../testing/tenth-heat.js";
 import { copiesEntries } from "./copies.js";

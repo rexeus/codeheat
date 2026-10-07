@@ -57,7 +57,7 @@ export const Verdict = Schema.Struct({
   eroding: Schema.Boolean,
   /**
    * Whether the `judged` territories keep more or less of their changes
-   * inside over `Report.series`. Per window, their stays: of the counted
+   * inside over `Analysis.series`. Per window, their stays: of the counted
    * changes of the window that touched a judged territory, each counted once,
    * the share that touched no other territory, at the recommended detail. A
    * window counts with at least `Thresholds.minWindowChanges` counted changes

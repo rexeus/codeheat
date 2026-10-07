@@ -1,4 +1,4 @@
-import type { Report } from "@codeheat/engine";
+import type { Analysis } from "@codeheat/engine";
 import { describe, expect, it } from "vitest";
 
 import { parseReport } from "../document/embedded-report.js";
@@ -10,9 +10,9 @@ import { describeVerdict } from "./describe-verdict.js";
 
 /** A report whose engine judged `verdict`; a window with real commits unless `window` says otherwise. */
 const judged = (
-  verdict: Partial<Report["verdict"]>,
-  window: Partial<Report["window"]> = {},
-): Report => {
+  verdict: Partial<Analysis["verdict"]>,
+  window: Partial<Analysis["window"]> = {},
+): Analysis => {
   const report = reportOf([]);
   return {
     ...report,

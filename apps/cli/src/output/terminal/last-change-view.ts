@@ -1,6 +1,6 @@
 // Owns the terminal's one line on the newest commit of the repository, for a window
 // that has no counted changes to show.
-import type { Report } from "@codeheat/engine";
+import type { Analysis } from "@codeheat/engine";
 
 import { day } from "./format.js";
 
@@ -13,7 +13,7 @@ import { day } from "./format.js";
  */
 export const lastChangeLines = ({
   window,
-}: Pick<Report, "window">): ReadonlyArray<string> =>
+}: Pick<Analysis, "window">): ReadonlyArray<string> =>
   window.realCommits === 0 && window.lastCommitAt !== null
     ? [
         `No counted changes in this window; the newest commit of the repository was on ${day(window.lastCommitAt)}.`,

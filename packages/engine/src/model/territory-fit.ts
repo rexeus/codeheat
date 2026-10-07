@@ -20,8 +20,8 @@ const TerritoryPartner = Schema.Struct({
 /**
  * What the changes of the window say about one territory, measured with the
  * same rules as the modules' numbers (`Module.cohesion`, `Module.radius`,
- * `Module.erosion`, `Module.fixDensity`, `Report.cliques`,
- * `Report.distantCouplings`) over the territories visible at `detail`, so
+ * `Module.erosion`, `Module.fixDensity`, `Analysis.cliques`,
+ * `Analysis.distantCouplings`) over the territories visible at `detail`, so
  * that every territory is measured once and every detail refers to the
  * result. A change touches a territory when it touched any of its files; test
  * code counts for the territory it belongs to, `tests` territories take no
@@ -59,7 +59,7 @@ export const TerritoryFit = Schema.Struct({
    */
   partner: Schema.NullOr(TerritoryPartner),
   /**
-   * Coupled pairs of files (`Report.couplings`) of which one file is in this
+   * Coupled pairs of files (`Analysis.couplings`) of which one file is in this
    * territory and the other in another territory of `detail`, neither
    * test code, not two contract files: changes that cross the boundary
    * file by file.
@@ -74,7 +74,7 @@ export const TerritoryFit = Schema.Struct({
    */
   cliques: Count,
   /**
-   * How the territory's containment moved over `Report.series` (see
+   * How the territory's containment moved over `Analysis.series` (see
    * `ModuleErosion`, which reads `containment` where it says cohesion); null
    * for a `tests` territory and without evidence in enough windows.
    */
@@ -90,7 +90,7 @@ export const TerritoryFit = Schema.Struct({
    * here is the long-lived, not the passing kind.
    */
   chronicShare: UnitInterval,
-  /** The fixes among the counted changes that touched the territory (see `FixDensity`); null unless `Report.fixDensity` is `known`, and where none touched it. */
+  /** The fixes among the counted changes that touched the territory (see `FixDensity`); null unless `Analysis.fixDensity` is `known`, and where none touched it. */
   fixDensity: Schema.NullOr(ModuleFixes),
 });
 export type TerritoryFit = typeof TerritoryFit.Type;

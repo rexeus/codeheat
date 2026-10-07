@@ -5,7 +5,7 @@ import { TestClock } from "effect/testing";
 import { parseSync } from "oxc-parser";
 
 import { typescriptAdapter } from "../code/typescript-adapter.js";
-import type { Report } from "../report/report.js";
+import type { Analysis } from "../model/analysis.js";
 import { analyzeOptionsFor } from "../testing/analyze-options.js";
 import { makeTempRepository } from "../testing/temp-repository.js";
 import type { TempRepository } from "../testing/temp-repository.js";
@@ -72,7 +72,7 @@ const analyzeFixture = (
 
 /** The `imports` of each pair, in the order given. */
 const relationsOf = (
-  report: Report,
+  report: Analysis,
   pairs: ReadonlyArray<readonly [string, string]>,
 ) =>
   pairs.map(

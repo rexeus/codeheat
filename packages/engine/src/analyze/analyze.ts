@@ -1,6 +1,6 @@
-// Owns the one entry point that turns a repository into a Report.
+// Owns the one entry point that turns a repository into an Analysis.
 // It composes inventory, history, and metrics; callers never see git or parsers.
-// New signals join here as new Report fields, not as new entry points.
+// New signals join here as new Analysis fields, not as new entry points.
 import { Effect } from "effect";
 import type { FileSystem, Path } from "effect";
 import type { ChildProcessSpawner } from "effect/process";
@@ -17,8 +17,8 @@ import {
   repositoryScope,
 } from "../git/repository.js";
 import type { HistoryOptions } from "../history/history.js";
+import type { Analysis } from "../model/analysis.js";
 import { withDepths } from "../modules/depth.js";
-import type { Report } from "../report/report.js";
 import { judgeVerdict } from "../verdict/judge-verdict.js";
 import type { InvalidCompare, InvalidSince } from "./analysis-window.js";
 import { measureLinked } from "./measure-linked.js";
@@ -68,7 +68,7 @@ export type AnalyzeOptions = {
    * has no `depth`.
    */
   readonly adapters: ReadonlyArray<LanguageAdapter>;
-  /** Written to `Report.tool.version`. */
+  /** Written to `Analysis.tool.version`. */
   readonly toolVersion: string;
 };
 
@@ -97,7 +97,7 @@ const totalsOf = ({
   contracts,
   couplings,
   modules,
-}: Pick<Report, "files" | "contracts" | "couplings" | "modules">) => ({
+}: Pick<Analysis, "files" | "contracts" | "couplings" | "modules">) => ({
   files: files.length,
   contracts: contracts.length,
   couplings: couplings.length,
@@ -109,7 +109,7 @@ const totalsOf = ({
  * are the territories each counted change of each series window touched.
  */
 const verdictOf = (
-  { territories, thresholds }: Pick<Report, "territories" | "thresholds">,
+  { territories, thresholds }: Pick<Analysis, "territories" | "thresholds">,
   windows: ReadonlyArray<ReadonlyArray<ReadonlySet<string>>>,
   realCommits: number,
 ) => judgeVerdict({ territories, windows, realCommits, limits: thresholds });
@@ -189,7 +189,7 @@ const analyzeRepository = (
       ...measured,
       ubiquitousFiles,
       modules: withDepths(measured.modules, depths),
-    } satisfies Report;
+    } satisfies Analysis;
   });
 
 /**
@@ -201,7 +201,7 @@ const analyzeRepository = (
 export const analyze = (
   options: AnalyzeOptions,
 ): Effect.Effect<
-  Report,
+  Analysis,
   AnalyzeError,
   ChildProcessSpawner.ChildProcessSpawner | FileSystem.FileSystem | Path.Path
 > =>

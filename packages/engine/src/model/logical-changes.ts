@@ -6,7 +6,7 @@ import { Schema } from "effect";
 import { Count } from "./scalars.js";
 
 /**
- * How the real commits (not `Report.mechanicalCommits`) of the window were
+ * How the real commits (not `Analysis.mechanicalCommits`) of the window were
  * grouped into logical changes, the unit that coupling, module cohesion, and
  * interface churn count (`FileStats.revisions` stays per commit). Commits
  * belong to one change when they share a pull request (a squash-merge subject

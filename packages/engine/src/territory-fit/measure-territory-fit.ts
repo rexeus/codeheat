@@ -1,9 +1,9 @@
 // Owns the design fit of the territories: every territory measured once, at
 // the detail closest to the recommended one, and the cliques the recommended
 // detail shows.
-import type { Clique } from "../report/clique.js";
-import type { FileStats } from "../report/report.js";
-import type { Territories } from "../report/territory.js";
+import type { FileStats } from "../model/analysis.js";
+import type { Clique } from "../model/clique.js";
+import type { Territories } from "../model/territory.js";
 import { chronicHeat } from "./chronic-heat.js";
 import { NO_CROSSINGS } from "./crossing-pairs.js";
 import type { AreaCrossings } from "./crossing-pairs.js";

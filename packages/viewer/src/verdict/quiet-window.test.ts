@@ -1,10 +1,10 @@
-import type { Report } from "@codeheat/engine";
+import type { Analysis } from "@codeheat/engine";
 import { describe, expect, it } from "vitest";
 
 import { reportWithParts } from "../testing/design-fit.js";
 import { quietWindowOf } from "./quiet-window.js";
 
-type Window = Report["series"][number];
+type Window = Analysis["series"][number];
 
 const quarter = (since: string, until: string, changes: number): Window => ({
   since,

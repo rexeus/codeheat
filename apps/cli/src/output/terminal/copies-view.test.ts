@@ -1,11 +1,11 @@
-import type { Report } from "@codeheat/engine";
+import type { Analysis } from "@codeheat/engine";
 import { describe, expect, it } from "vitest";
 
 import { sampleReport } from "../../testing/sample-report.js";
 import { copyFamilyLine, copyLines } from "./copies-view.js";
 import { makeStyle } from "./style.js";
 
-type Family = Report["copyFamilies"][number];
+type Family = Analysis["copyFamilies"][number];
 
 const family = (overrides: Partial<Family> = {}): Family => ({
   files: ["a.ts", "b.ts"],
@@ -16,7 +16,7 @@ const family = (overrides: Partial<Family> = {}): Family => ({
   ...overrides,
 });
 
-const linesOf = (families: Report["copyFamilies"]): ReadonlyArray<string> =>
+const linesOf = (families: Analysis["copyFamilies"]): ReadonlyArray<string> =>
   copyLines({ ...sampleReport(), copyFamilies: families }, makeStyle(false));
 
 describe("copyLines", () => {

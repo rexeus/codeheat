@@ -4,8 +4,8 @@
 import { Order } from "effect";
 
 import type { History } from "../history/history.js";
-import type { Module } from "../report/module.js";
-import { roundReported } from "../report/precision.js";
+import type { Module } from "../model/module.js";
+import { roundReported } from "../model/precision.js";
 import type { ModuleRef } from "./detect.js";
 import { isLeakyInterface, NO_INTERFACE } from "./interface-churn.js";
 import type { InterfaceChurn } from "./interface-churn.js";
@@ -142,7 +142,7 @@ const toModule = (
  * `measureInterfaces`; a module missing there has none).
  *
  * A module's cohesion is the share of its commits that touched no other
- * module. The order is the one documented on `Report.modules`; a module is
+ * module. The order is the one documented on `Analysis.modules`; a module is
  * ranked when it has at least `minModuleCommits` commits and is not test-only.
  */
 export const measureModules = (

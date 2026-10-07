@@ -1,6 +1,6 @@
 // Owns the terminal view of where change crosses the design: file pairs that
 // change together far apart, and modules that change together as a group.
-import type { Coupling, FileStats, Report } from "@codeheat/engine";
+import type { Coupling, FileStats, Analysis } from "@codeheat/engine";
 
 import { escapeForTerminal } from "../escape.js";
 import { coupledPath, isContractPair } from "./contract-view.js";
@@ -13,7 +13,7 @@ const TOP_DISTANT = 5;
 const TOP_CLIQUES = 3;
 const TOP_COUPLINGS = 5;
 
-const distantTable = (report: Report, style: Style): ReadonlyArray<string> =>
+const distantTable = (report: Analysis, style: Style): ReadonlyArray<string> =>
   renderTable(
     [
       { header: "score", align: "right" },
@@ -37,12 +37,12 @@ const distantTable = (report: Report, style: Style): ReadonlyArray<string> =>
 /**
  * The "Distant coupling" section, with its heading and a closing blank line: a
  * table of the five best ranked distant couplings (see
- * `Report.distantCouplings`), hidden couplings marked as such. The heading says
+ * `Analysis.distantCouplings`), hidden couplings marked as such. The heading says
  * what distant means: other modules, or `thresholds.minLocalDistance`
  * directories apart within one. None when the report has no distant coupling.
  */
 export const distantSection = (
-  report: Report,
+  report: Analysis,
   style: Style,
 ): ReadonlyArray<string> =>
   report.distantCouplings.length === 0
@@ -57,13 +57,13 @@ export const distantSection = (
 
 /**
  * The "Change together" section, with its heading and a closing blank line:
- * one line per clique (see `Report.cliques`), at most three, the members
+ * one line per clique (see `Analysis.cliques`), at most three, the members
  * joined by `+` and followed by the clique's reason, and a note counting the
  * cliques left out, and a note when the search for cliques was cut short
- * (`Report.cliquesPartial`). None when the report has neither.
+ * (`Analysis.cliquesPartial`). None when the report has neither.
  */
 export const cliqueSection = (
-  report: Report,
+  report: Analysis,
   style: Style,
 ): ReadonlyArray<string> => {
   if (report.cliques.length === 0 && !report.cliquesPartial) {
@@ -93,7 +93,7 @@ export const cliqueSection = (
 export const couplingLines = (
   couplings: ReadonlyArray<Coupling>,
   files: ReadonlyArray<FileStats>,
-  contracts: Report["contracts"],
+  contracts: Analysis["contracts"],
   style: Style,
 ): ReadonlyArray<string> => {
   const changes = new Map(

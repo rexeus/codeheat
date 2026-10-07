@@ -1,4 +1,4 @@
-import { InspectResult, Report } from "@codeheat/engine";
+import { InspectResult, Analysis } from "@codeheat/engine";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Schema } from "effect";
 
@@ -19,7 +19,7 @@ describe("codeheat couples contract files with code", () => {
         });
 
         expect(result.exitCode).toBe(0);
-        const report = yield* Schema.decodeUnknownEffect(Report)(
+        const report = yield* Schema.decodeUnknownEffect(Analysis)(
           JSON.parse(result.stdout),
         );
         expect(report.files.map(({ path }) => path)).toStrictEqual([
@@ -83,7 +83,7 @@ describe("codeheat shows contract partners and honors exclude", () => {
         cwd: repo.root,
       });
 
-      const report = yield* Schema.decodeUnknownEffect(Report)(
+      const report = yield* Schema.decodeUnknownEffect(Analysis)(
         JSON.parse(result.stdout),
       );
       expect(report.contracts).toStrictEqual([]);

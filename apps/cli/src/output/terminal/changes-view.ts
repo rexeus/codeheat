@@ -1,6 +1,6 @@
 // Owns the "Biggest changes" part of the terminal view: what warmed up and which
 // modules moved in cohesion between the previous window and the latest one.
-import type { FileStats, Report } from "@codeheat/engine";
+import type { FileStats, Analysis } from "@codeheat/engine";
 
 import { escapeForTerminal } from "../escape.js";
 import { day, percent } from "./format.js";
@@ -47,7 +47,7 @@ const newlyActiveFiles = (files: ReadonlyArray<FileStats>) =>
     .slice(0, TOP_NEWLY_ACTIVE);
 
 /** The modules whose cohesion moved most in either direction, among the ranked ones (enough commits, not test-only). */
-const movingModules = (report: Report) =>
+const movingModules = (report: Analysis) =>
   report.modules
     .flatMap((module) =>
       module.trend !== null &&
@@ -101,7 +101,7 @@ const newlyActiveLines = (files: ReadonlyArray<FileStats>, style: Style) => {
       );
 };
 
-const moduleLines = (report: Report, style: Style) => {
+const moduleLines = (report: Analysis, style: Style) => {
   const moving = movingModules(report);
   return moving.length === 0
     ? ["No module changed in cohesion."]
@@ -130,7 +130,7 @@ const emptyWindow = (commits: number): string =>
   commits === 0 ? "has no commits" : "has only mechanical commits";
 
 /** Why there is nothing to compare, or `undefined` when both windows have real changes. */
-const noDataReason = ({ comparison, window }: Report): string | undefined => {
+const noDataReason = ({ comparison, window }: Analysis): string | undefined => {
   if (comparison?.previousRealCommits === 0) {
     return `No comparison data: the previous window ${emptyWindow(comparison.previousCommits)}.`;
   }
@@ -148,7 +148,7 @@ const noDataReason = ({ comparison, window }: Report): string | undefined => {
  * start of the history carries a note. Empty without `report.comparison`.
  */
 export const changeLines = (
-  report: Report,
+  report: Analysis,
   style: Style,
 ): ReadonlyArray<string> => {
   const { comparison } = report;

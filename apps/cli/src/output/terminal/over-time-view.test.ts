@@ -1,19 +1,19 @@
-import type { Module, Report } from "@codeheat/engine";
+import type { Module, Analysis } from "@codeheat/engine";
 import { describe, expect, it } from "vitest";
 
 import { sampleReport } from "../../testing/sample-report.js";
 import { heatLines, overTimeSection } from "./over-time-view.js";
 import { makeStyle } from "./style.js";
 
-const plainSection = (report: Report): ReadonlyArray<string> =>
+const plainSection = (report: Analysis): ReadonlyArray<string> =>
   overTimeSection(report, makeStyle(false));
 
 /** The sample report with the modules' erosion replaced. */
 const withErosion = (
-  verdict: NonNullable<Report["erosion"]>["verdict"],
+  verdict: NonNullable<Analysis["erosion"]>["verdict"],
   windows = 6,
   inactiveSince: string | null = null,
-): Report => {
+): Analysis => {
   const report = sampleReport();
   return {
     ...report,
@@ -29,9 +29,9 @@ const withErosion = (
 
 /** The sample report with the verdict's trend replaced. */
 const withTrend = (
-  trend: Report["verdict"]["trend"],
+  trend: Analysis["verdict"]["trend"],
   judged?: ReadonlyArray<string>,
-): Report => {
+): Analysis => {
   const report = sampleReport();
   return {
     ...report,

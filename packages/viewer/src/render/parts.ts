@@ -1,4 +1,4 @@
-import type { Report } from "@codeheat/engine";
+import type { Analysis } from "@codeheat/engine";
 
 import { makeHeatScale } from "../color/heat-scale.js";
 import type { LeafNode } from "../layout/hierarchy.js";
@@ -10,7 +10,7 @@ import { createTreemapView } from "./treemap-view.js";
 
 /** Builds the tooltip, panel and treemap; every selection change goes to `select`. */
 export const createParts = (
-  report: Report,
+  report: Analysis,
   modules: ModuleIndex,
   page: Page,
   select: (path: string | null) => void,

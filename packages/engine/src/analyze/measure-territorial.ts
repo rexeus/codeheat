@@ -9,14 +9,14 @@ import type { EntryLimits } from "../entry-points/limits.js";
 import { rankEntryPoints } from "../entry-points/rank-entry-points.js";
 import type { GitError } from "../git/git-errors.js";
 import type { Git } from "../git/git.js";
-import type { CopyFamily } from "../report/copy-family.js";
-import type { EntryPoint } from "../report/entry-point.js";
-import type { Coupling, FileStats } from "../report/report.js";
+import type { Coupling, FileStats } from "../model/analysis.js";
+import type { CopyFamily } from "../model/copy-family.js";
+import type { EntryPoint } from "../model/entry-point.js";
 import type {
   TerritoryClique,
   TerritoryCoupling,
-} from "../report/territory-coupling.js";
-import type { UnstableInterface } from "../report/unstable-interface.js";
+} from "../model/territory-coupling.js";
+import type { UnstableInterface } from "../model/unstable-interface.js";
 import { territoryCliques } from "../territory-coupling/territory-cliques.js";
 import { territoryPairs } from "../territory-coupling/territory-pairs.js";
 import { measureTerritoryFit } from "../territory-fit/measure-territory-fit.js";

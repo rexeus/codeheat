@@ -2,7 +2,7 @@ import { NodeServices } from "@effect/platform-node";
 import { assert, layer } from "@effect/vitest";
 import { Effect, FileSystem, Path, Schema } from "effect";
 
-import { Report } from "./report.js";
+import { Analysis } from "./analysis.js";
 
 const readSample = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
@@ -14,9 +14,9 @@ const readSample = Effect.gen(function* () {
   return json;
 });
 
-const decode = Schema.decodeUnknownSync(Report);
+const decode = Schema.decodeUnknownSync(Analysis);
 
-layer(NodeServices.layer)("Report", (it) => {
+layer(NodeServices.layer)("Analysis", (it) => {
   it.effect(
     "decodes the committed sample report in fixtures/report.sample.json",
     () =>

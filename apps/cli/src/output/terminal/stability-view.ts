@@ -1,6 +1,6 @@
 // Owns the terminal view of the scaling signals: files many others import that
 // keep changing, and imports that point from stable modules to volatile ones.
-import type { Report } from "@codeheat/engine";
+import type { Analysis } from "@codeheat/engine";
 
 import { escapeForTerminal } from "../escape.js";
 import type { Style } from "./style.js";
@@ -13,7 +13,7 @@ const TOP_INTERFACES = 5;
 const TOP_DIRECTIONS = 3;
 
 const interfaceTable = (
-  report: Report,
+  report: Analysis,
   style: Style,
 ): ReadonlyArray<string> => [
   ...renderTable(
@@ -40,12 +40,12 @@ const interfaceTable = (
 
 /**
  * The "Unstable interfaces" section, with its heading and a closing blank
- * line: a table of the five files (see `Report.unstableInterfaces`) that the
+ * line: a table of the five files (see `Analysis.unstableInterfaces`) that the
  * most dependents changed along with, and a note on the columns. None when the
  * report has none.
  */
 const interfaceSection = (
-  report: Report,
+  report: Analysis,
   style: Style,
 ): ReadonlyArray<string> =>
   report.unstableInterfaces.length === 0
@@ -60,12 +60,12 @@ const interfaceSection = (
 
 /**
  * The "Dependency direction" section, with its heading and a closing blank
- * line: a line for each of the three edges (see `Report.dependencyDirection`)
+ * line: a line for each of the three edges (see `Analysis.dependencyDirection`)
  * with the most importing files, and a note counting the others. None when the
  * report has none.
  */
 const directionSection = (
-  report: Report,
+  report: Analysis,
   style: Style,
 ): ReadonlyArray<string> => {
   if (report.dependencyDirection.length === 0) {
@@ -90,7 +90,7 @@ const directionSection = (
 
 /** The scaling sections one after the other: unstable interfaces, then dependency direction; none for what the report lacks. */
 export const stabilitySections = (
-  report: Report,
+  report: Analysis,
   style: Style,
 ): ReadonlyArray<string> => [
   ...interfaceSection(report, style),

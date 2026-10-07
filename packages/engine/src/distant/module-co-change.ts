@@ -3,9 +3,9 @@
 import { Order } from "effect";
 
 import { MIN_SHARED_COMMITS } from "../coupling/coupling.js";
-import type { ModuleCoupling } from "../report/module-coupling.js";
-import type { Module } from "../report/module.js";
-import { roundReported } from "../report/precision.js";
+import type { ModuleCoupling } from "../model/module-coupling.js";
+import type { Module } from "../model/module.js";
+import { roundReported } from "../model/precision.js";
 
 /** The report keeps this many module couplings, those with the largest share first. */
 const MAX_MODULE_COUPLINGS = 200;

@@ -1,10 +1,10 @@
 // Owns the repository verdict: whether the design holds up to the way the
 // code changes, judged from the territories at the recommended detail and how
 // much of their changes they kept inside over the series.
-import { roundReported } from "../report/precision.js";
-import type { Report } from "../report/report.js";
-import type { Territories, Territory } from "../report/territory.js";
-import type { Verdict } from "../report/verdict.js";
+import type { Analysis } from "../model/analysis.js";
+import { roundReported } from "../model/precision.js";
+import type { Territories, Territory } from "../model/territory.js";
+import type { Verdict } from "../model/verdict.js";
 import { judgeAreaTrend } from "./area-trend.js";
 
 /** Share of all the heat the judged territories must hold for the verdict to rest on evidence. */
@@ -16,7 +16,7 @@ export const MIN_STRAINED_LEAK_SHARE = 0.5;
 
 /** The limits the verdict reads, as the report states them. */
 type VerdictLimits = Pick<
-  Report["thresholds"],
+  Analysis["thresholds"],
   | "minModuleCommits"
   | "maxEntryContainment"
   | "minVerdictCoverage"

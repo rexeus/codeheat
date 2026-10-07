@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import type { Territories } from "../report/territory.js";
+import type { Territories } from "../model/territory.js";
 import { territoryRecord } from "../testing/territory-record.js";
 import { homeDetails, levelAt } from "./levels.js";
 

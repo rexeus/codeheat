@@ -1,4 +1,4 @@
-import type { Report } from "@codeheat/engine";
+import type { Analysis } from "@codeheat/engine";
 
 import { mountAnswers } from "../answers/mount-answers.js";
 import { layoutTreemap } from "../layout/treemap.js";
@@ -62,7 +62,7 @@ const wirePage = (
  * Renders `report` into the skeleton the page template provides and wires
  * hover, selection, the filter and resizing. Every path reaches the DOM as text.
  */
-export const mountViewer = (report: Report): void => {
+export const mountViewer = (report: Analysis): void => {
   const page = findPage();
   const partnerIndex = indexPartners(report.couplings);
   const grouping = mountMapGrouping(

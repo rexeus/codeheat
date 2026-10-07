@@ -1,7 +1,7 @@
 // Owns the repository-level verdict: whether the changes of the series stay
 // inside one module as often as they used to.
-import type { Erosion } from "../report/erosion.js";
-import type { SeriesWindow } from "../report/series.js";
+import type { Erosion } from "../model/erosion.js";
+import type { SeriesWindow } from "../model/series.js";
 import { judgeRobustShift } from "./shift-gate.js";
 import type { WindowShare } from "./shift-gate.js";
 import { fitLine } from "./trend-line.js";

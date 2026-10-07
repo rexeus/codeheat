@@ -1,4 +1,4 @@
-import { Report } from "@codeheat/engine";
+import { Analysis } from "@codeheat/engine";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Schema } from "effect";
 
@@ -13,12 +13,12 @@ import {
 } from "../testing/projects.js";
 
 const decode = (stdout: string) =>
-  Schema.decodeUnknownEffect(Report)(JSON.parse(stdout));
+  Schema.decodeUnknownEffect(Analysis)(JSON.parse(stdout));
 
 // Real clock: the analysis window is resolved against now, and the commits are dated relative to it.
 describe("codeheat analyze against a git repository", () => {
   it.live(
-    "prints one JSON document to stdout that decodes with the Report schema",
+    "prints one JSON document to stdout that decodes with the Analysis schema",
     () =>
       Effect.gen(function* () {
         const repo = yield* makeCoupledProject;
@@ -29,7 +29,7 @@ describe("codeheat analyze against a git repository", () => {
         });
 
         expect(result.exitCode).toBe(0);
-        const report = yield* Schema.decodeUnknownEffect(Report)(
+        const report = yield* Schema.decodeUnknownEffect(Analysis)(
           JSON.parse(result.stdout),
         );
         expect(report.files.map(({ path }) => path)).toStrictEqual([
@@ -62,7 +62,7 @@ describe("codeheat analyze against a git repository", () => {
           cwd: repo.root,
         });
 
-        const report = yield* Schema.decodeUnknownEffect(Report)(
+        const report = yield* Schema.decodeUnknownEffect(Analysis)(
           JSON.parse(result.stdout),
         );
         expect(report.files.map(({ path }) => path)).toStrictEqual([
@@ -148,7 +148,7 @@ describe("codeheat analyze paths", () => {
       });
 
       expect(result.exitCode).toBe(0);
-      const report = yield* Schema.decodeUnknownEffect(Report)(
+      const report = yield* Schema.decodeUnknownEffect(Analysis)(
         JSON.parse(result.stdout),
       );
       expect(report.repository.scope).toBe(".");
@@ -166,7 +166,7 @@ describe("codeheat analyze paths", () => {
       });
 
       expect(result.exitCode).toBe(0);
-      const report = yield* Schema.decodeUnknownEffect(Report)(
+      const report = yield* Schema.decodeUnknownEffect(Analysis)(
         JSON.parse(result.stdout),
       );
       expect(report.repository.scope).toBe("src/a.ts");
@@ -209,7 +209,7 @@ describe("codeheat analyze --compare", () => {
       });
 
       expect(result.exitCode).toBe(0);
-      const report = yield* Schema.decodeUnknownEffect(Report)(
+      const report = yield* Schema.decodeUnknownEffect(Analysis)(
         JSON.parse(result.stdout),
       );
       expect(report.comparison?.previousUntil).toBe(report.window.since);
@@ -259,7 +259,7 @@ describe("codeheat analyze --compare beyond the history", () => {
           "No comparison data: the previous window has no commits.",
         );
         expect(terminal.stdout).toContain("Note: the previous window reaches");
-        const report = yield* Schema.decodeUnknownEffect(Report)(
+        const report = yield* Schema.decodeUnknownEffect(Analysis)(
           JSON.parse(json.stdout),
         );
         expect(report.comparison).toMatchObject({
@@ -288,7 +288,7 @@ describe("codeheat analyze a shallow clone", () => {
         expect(result.stderr).toBe(
           "codeheat: shallow clone: history before its oldest fetched commit is missing; run git fetch --unshallow for full results",
         );
-        const report = yield* Schema.decodeUnknownEffect(Report)(
+        const report = yield* Schema.decodeUnknownEffect(Analysis)(
           JSON.parse(result.stdout),
         );
         expect(report.repository.shallow).toBe(true);
@@ -312,7 +312,7 @@ describe("codeheat analyze a shallow clone", () => {
           "codeheat: shallow clone: history before its oldest fetched commit is missing; run git fetch --unshallow for full results",
           "codeheat: shallow clone: the previous window reaches past the oldest fetched commit, so the comparison is incomplete",
         ]);
-        const report = yield* Schema.decodeUnknownEffect(Report)(
+        const report = yield* Schema.decodeUnknownEffect(Analysis)(
           JSON.parse(result.stdout),
         );
         expect(report.comparison?.previousTruncated).toBe(true);

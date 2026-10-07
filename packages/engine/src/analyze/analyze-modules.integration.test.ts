@@ -3,7 +3,7 @@ import { assert, layer } from "@effect/vitest";
 import { Effect } from "effect";
 import { TestClock } from "effect/testing";
 
-import type { Report } from "../report/report.js";
+import type { Analysis } from "../model/analysis.js";
 import { analyzeOptionsFor } from "../testing/analyze-options.js";
 import { makeTempRepository } from "../testing/temp-repository.js";
 import type { TempRepository } from "../testing/temp-repository.js";
@@ -78,7 +78,7 @@ const unmeasured = {
 } as const;
 
 // a is the only module with the 5 commits that rank it, so it leads; then b, c (least cohesive first); d has no commits
-const expectedModules: Report["modules"] = [
+const expectedModules: Analysis["modules"] = [
   {
     path: "packages/a",
     ...unmeasured,
@@ -274,7 +274,7 @@ const buildSinglePackageHistory = (repo: TempRepository) =>
   });
 
 const expectedSplitModules: ReadonlyArray<{
-  readonly kind: Report["modules"][number]["kind"];
+  readonly kind: Analysis["modules"][number]["kind"];
   readonly [key: string]: unknown;
 }> = [
   {

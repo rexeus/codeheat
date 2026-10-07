@@ -1,10 +1,10 @@
-import type { Report } from "@codeheat/engine";
+import type { Analysis } from "@codeheat/engine";
 import { describe, expect, it } from "vitest";
 
 import { entryPointLines, fileEntryPointLines } from "./entry-points-view.js";
 import { makeStyle } from "./style.js";
 
-type EntryPoint = Report["entryPoints"][number];
+type EntryPoint = Analysis["entryPoints"][number];
 
 const finding = (
   verdict: string,
