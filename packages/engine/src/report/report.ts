@@ -36,11 +36,14 @@ export const FileStats = Schema.Struct({
    */
   revisions: Count,
   /**
-   * Logical changes of the window (see `Report.logicalChanges`) that touched
-   * the file, large ones included: at most `revisions`, and equal to it
-   * when no commits were joined. The unit of `Coupling.degree`,
+   * Counted changes of the window (logical changes of at most
+   * `Thresholds.maxCommitFiles` files, see `Report.logicalChanges`) that
+   * touched the file: at most `revisions`, and equal to it when no commits
+   * were joined and none was too large. The unit of the file's heat
+   * (`changes × (loc + complexity.total)`), `Coupling.degree`,
    * `Partner.probability`, and `Thresholds.hubMinRevisions`, which compare
-   * shared changes with a file's own.
+   * shared changes with a file's own; a change too large to count adds to
+   * none of them.
    */
   changes: Count,
   linesAdded: Count,

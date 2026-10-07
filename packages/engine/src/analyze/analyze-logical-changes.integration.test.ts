@@ -85,6 +85,62 @@ layer(NodeServices.layer)("analyze logical changes without a signal", (it) => {
   );
 });
 
+layer(NodeServices.layer)("analyze logical changes too large", (it) => {
+  it.effect(
+    "adds neither changes nor heat to the files of a change of 51 files",
+    () =>
+      Effect.gen(function* () {
+        yield* setNow;
+        const repo = yield* makeTempRepository;
+        const bulk = Array.from(
+          { length: 50 },
+          (_, index) => `bulk/b${index}.ts`,
+        );
+        yield* repo.commit(
+          "2025-01-01T12:00:00Z",
+          Object.fromEntries(
+            ["src/a.ts", ...bulk].map((path) => [path, lines(3, path)]),
+          ),
+        );
+        yield* repo.commit("2026-03-01T12:00:00Z", {
+          "src/a.ts": lines(4, "a"),
+        });
+        yield* repo.commit(
+          "2026-03-02T12:00:00Z",
+          Object.fromEntries(
+            ["src/a.ts", ...bulk].map((path) => [path, lines(5, path)]),
+          ),
+        );
+
+        const report = yield* analyze(analyzeOptionsFor(repo));
+
+        assert.deepStrictEqual(
+          report.files
+            .filter(({ path }) => path === "src/a.ts" || path === "bulk/b0.ts")
+            .map(({ path, revisions, changes }) => [path, revisions, changes]),
+          [
+            ["src/a.ts", 2, 1],
+            ["bulk/b0.ts", 1, 0],
+          ],
+        );
+        assert.deepStrictEqual(
+          Object.fromEntries(
+            report.territories.nodes
+              .filter(({ path }) => path === "src" || path === "bulk")
+              .map(({ path, changes, heatShare }) => [
+                path,
+                { changes, heatShare },
+              ]),
+          ),
+          {
+            bulk: { changes: 0, heatShare: 0 },
+            src: { changes: 1, heatShare: 1 },
+          },
+        );
+      }),
+  );
+});
+
 layer(NodeServices.layer)("analyze logical changes without history", (it) => {
   it.effect("reports no changes for a repository without commits", () =>
     Effect.gen(function* () {

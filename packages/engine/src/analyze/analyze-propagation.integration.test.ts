@@ -103,11 +103,9 @@ layer(NodeServices.layer)("analyze propagation cost nodes", (it) => {
 
         const report = yield* analyze(analyzeOptionsFor(repo));
 
-        // v has three changes, one of them over 50 files: only two count, so v is no node
-        assert.strictEqual(
-          report.files.find(({ path }) => path === "v.ts")?.changes,
-          3,
-        );
+        // v has three revisions, one of them over 50 files: only two changes count, so v is no node
+        const v = report.files.find(({ path }) => path === "v.ts");
+        assert.deepStrictEqual([v?.revisions, v?.changes], [3, 2]);
         assert.deepStrictEqual(report.propagationCost, {
           cost: 1,
           files: 3,

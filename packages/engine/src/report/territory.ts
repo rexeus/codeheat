@@ -53,8 +53,9 @@ export const Territory = Schema.Struct({
   changes: Count,
   /**
    * Share of all the heat in this territory, rounded to 4 decimals: the heat
-   * of a file is `FileStats.changes × (loc + complexity.total)`. Test code
-   * counts for the territory of the code it tests.
+   * of a file is `FileStats.changes × (loc + complexity.total)`, over the same
+   * counted changes as `changes`. Test code counts for the territory of the
+   * code it tests.
    */
   heatShare: UnitInterval,
   /**
