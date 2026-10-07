@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { windowsStaying } from "../testing/area-windows.js";
+import { randomFrom } from "../testing/seeded-random.js";
 import { judgeAreaTrend } from "./area-trend.js";
 
 const LIMITS = { minWindowChanges: 10, minVerdictWindows: 5 };
@@ -50,12 +51,41 @@ describe("judgeAreaTrend", () => {
     expect(judge(unjudged)).toBe("unknown");
   });
 
-  it("pools the judged areas, so one area's fall is weighed by its touches", () => {
+  it("weighs the judged areas by their changes, so one area's fall in a few changes holds", () => {
     const steady = Array.from({ length: 90 }, () => new Set(["t2"]));
     const windows = windowsStaying([0.9, 0.8, 0.7, 0.6, 0.5, 0.4], {
       changes: 10,
     }).map((touched) => touched.concat(steady));
 
     expect(judge(windows, ["t1", "t2"])).toBe("holding");
+  });
+});
+
+const JUDGED = ["t1", "t2", "t3"];
+
+/**
+ * One change of a flat design: with probability `stay` it touches one judged
+ * area alone; otherwise it leaves, touching every judged area and one
+ * elsewhere, so that a change that leaves touches several judged areas.
+ */
+const flatChange = (random: () => number, stay: number): ReadonlySet<string> =>
+  random() < stay
+    ? new Set([JUDGED[Math.floor(random() * JUDGED.length)] ?? "t1"])
+    : new Set([...JUDGED, "elsewhere"]);
+
+describe("judgeAreaTrend over a flat design", () => {
+  it("holds in at least 95 % of simulated series whose share only wobbles", () => {
+    const seeds = 1000;
+    const verdicts = Array.from({ length: seeds }, (_, seed) => {
+      const random = randomFrom(seed + 1);
+      const windows = Array.from({ length: 8 }, () =>
+        Array.from({ length: 12 }, () => flatChange(random, 0.8)),
+      );
+      return judge(windows, JUDGED);
+    });
+
+    expect(
+      verdicts.filter((verdict) => verdict === "holding").length / seeds,
+    ).toBeGreaterThanOrEqual(0.95);
   });
 });
