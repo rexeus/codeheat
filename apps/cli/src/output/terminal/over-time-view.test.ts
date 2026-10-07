@@ -8,8 +8,8 @@ import { makeStyle } from "./style.js";
 const plainSection = (report: Report): ReadonlyArray<string> =>
   overTimeSection(report, makeStyle(false));
 
-/** The sample report with its verdict replaced. */
-const withVerdict = (
+/** The sample report with the modules' erosion replaced. */
+const withErosion = (
   verdict: NonNullable<Report["erosion"]>["verdict"],
   windows = 6,
   inactiveSince: string | null = null,
@@ -27,11 +27,28 @@ const withVerdict = (
   };
 };
 
+/** The sample report with the verdict's trend replaced. */
+const withTrend = (
+  trend: Report["verdict"]["trend"],
+  judged?: ReadonlyArray<string>,
+): Report => {
+  const report = sampleReport();
+  return {
+    ...report,
+    verdict: {
+      ...report.verdict,
+      trend,
+      judged: judged ?? report.verdict.judged,
+    },
+  };
+};
+
 describe("overTimeSection", () => {
-  it("states the verdict with the numbers behind it, the modules losing cohesion, the hotspots by age, and the fixes", () => {
+  it("states the verdict's trend, the modules' erosion, the modules losing cohesion, the hotspots by age, and the fixes", () => {
     expect(plainSection(sampleReport())).toStrictEqual([
       "Over time (since 2025-03)",
-      "Eroding: changes that stay in one module fell from 88% to 53% over the active period of 6 quarters.",
+      "Eroding: the territories the verdict judges keep less and less of their changes inside over 6 quarters.",
+      "Modules: changes that stay in one module fell from 88% to 53% over the active period of 6 quarters.",
       "  packages/billing: cohesion 84% to 32% over 6 quarters",
       "Hotspots by age: 2 chronic files (hot in at least half of its windows, so a design problem) and 1 acute file (hot only lately, so current work).",
       "  #1 packages/billing/src/invoice.ts: hot in 5 of 6 windows",
@@ -41,36 +58,43 @@ describe("overTimeSection", () => {
     ]);
   });
 
-  it("says improving or holding in the same terms", () => {
-    expect(plainSection(withVerdict("improving"))[1]).toBe(
-      "Improving: changes that stay in one module rose from 88% to 53% over the active period of 6 quarters.",
+  it("states the verdict's trend, not the modules' erosion, when the two differ", () => {
+    const report = {
+      ...withErosion("holding"),
+      verdict: withTrend("improving").verdict,
+    };
+
+    expect(plainSection(report).slice(1, 3)).toStrictEqual([
+      "Improving: the territories the verdict judges keep more and more of their changes inside over 6 quarters.",
+      "Modules: no lasting change in the share of changes that stay in one module (88% to 53%) over the active period of 6 quarters.",
+    ]);
+    expect(plainSection(withTrend("holding"))[1]).toBe(
+      "Holding: no lasting change in how much of their changes the territories the verdict judges keep inside over 6 quarters.",
     );
-    expect(plainSection(withVerdict("holding"))[1]).toBe(
-      "Holding: no lasting change in the share of changes that stay in one module (88% to 53%) over the active period of 6 quarters.",
+    expect(plainSection(withErosion("improving"))[2]).toBe(
+      "Modules: changes that stay in one module rose from 88% to 53% over the active period of 6 quarters.",
     );
   });
 
-  it("judges the active period of a repository that has gone quiet, and says since when", () => {
-    const [, verdict] = plainSection(
-      withVerdict("eroding", 6, "2026-04-02T00:00:00.000Z"),
+  it("says since when a repository that has gone quiet has been quiet", () => {
+    const [, trend] = plainSection(
+      withErosion("eroding", 6, "2026-04-02T00:00:00.000Z"),
     );
 
-    expect(verdict).toBe(
-      "Eroding: changes that stay in one module fell from 88% to 53% over the active period of 6 quarters (quiet since 2026-04: fewer than 10 changes a window).",
+    expect(trend).toBe(
+      "Eroding: the territories the verdict judges keep less and less of their changes inside over 6 quarters (quiet since 2026-04: fewer than 10 changes a window).",
     );
   });
 
-  it("says why there is no verdict yet", () => {
-    expect(plainSection(withVerdict("unknown", 2))[1]).toBe(
-      "No verdict yet: 2 windows have at least 10 changes, and a trend needs 3.",
+  it("says why there is no trend yet", () => {
+    expect(plainSection(withTrend("unknown"))[1]).toBe(
+      "No trend yet: it needs 5 windows with at least 10 changes.",
     );
-    expect(plainSection(withVerdict("unknown", 1))[1]).toBe(
-      "No verdict yet: 1 window has at least 10 changes, and a trend needs 3.",
+    expect(plainSection(withTrend("unknown", []))[1]).toBe(
+      "No trend yet: no territory has enough changes to judge.",
     );
-    expect(
-      plainSection(withVerdict("unknown", 0, "2025-09-29T12:00:00.000Z"))[1],
-    ).toBe(
-      "No verdict yet: 0 windows have at least 10 changes, and a trend needs 3 (quiet since 2025-09: fewer than 10 changes a window).",
+    expect(plainSection(withErosion("unknown", 1))[2]).toBe(
+      "Modules: no trend yet, 1 window has at least 10 changes, and a trend needs 3.",
     );
   });
 });
@@ -89,7 +113,7 @@ describe("overTimeSection parts", () => {
       ),
     };
 
-    expect(plainSection(longer)[1]).toContain("of 6 18-month windows");
+    expect(plainSection(longer)[2]).toContain("of 6 18-month windows");
   });
 
   it("lists a module only when it is still changing and its cohesion fell by more than chance explains", () => {
