@@ -1,16 +1,9 @@
 // Owns the heat share of a set of files: how much of all the production
 // code's heat they hold.
+import { heatOfFile } from "../heat/file-heat.js";
 import type { FileStats } from "../model/analysis.js";
 import type { Territory } from "../model/territory.js";
 import { chainsOf } from "./ancestry.js";
-
-/** The heat of a file: `changes × (loc + complexity.total)`, as `Territory.heatShare` counts it. */
-const heatOf = ({
-  changes,
-  loc,
-  complexity,
-}: Pick<FileStats, "changes" | "loc" | "complexity">): number =>
-  changes * (loc + complexity.total);
 
 /** What the entry points ask of the files' heat. */
 export type FileHeat = {
@@ -40,7 +33,7 @@ export const fileHeatOf = (
   >,
 ): FileHeat => {
   const heat = new Map(
-    files.map((file) => [file.path, file.test ? 0 : heatOf(file)]),
+    files.map((file) => [file.path, file.test ? 0 : heatOfFile(file)]),
   );
   const changes = new Map(files.map(({ path, changes: own }) => [path, own]));
   const total = [...heat.values()].reduce((sum, own) => sum + own, 0);
@@ -80,7 +73,7 @@ export const codeHeatShares = (
     if (file.test) {
       continue;
     }
-    const own = heatOf(file);
+    const own = heatOfFile(file);
     total += own;
     for (const id of chainOf(file.territory)) {
       heat.set(id, (heat.get(id) ?? 0) + own);

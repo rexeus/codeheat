@@ -21,15 +21,16 @@ const thresholdsOf = (
 });
 
 /**
- * The basis of `analysis`: the limits, and as left out, the mechanical
- * commits of every kind, the logical changes over `maxCommitFiles` files, and
- * the files the universe leaves out as generated.
+ * The basis of `analysis` with `rest`, the areas the report does not list:
+ * mechanical commits of every kind, the logical changes over
+ * `maxCommitFiles` files, and the files the universe leaves out as generated.
  */
 export const basisOf = (
   analysis: Pick<
     Analysis,
     "thresholds" | "mechanicalCommits" | "logicalChanges" | "window" | "totals"
   >,
+  rest: Basis["rest"],
 ): Basis => ({
   thresholds: thresholdsOf(analysis.thresholds),
   excluded: {
@@ -41,4 +42,5 @@ export const basisOf = (
       analysis.logicalChanges.count - analysis.window.couplingCommits,
     generated: analysis.totals.generated,
   },
+  rest,
 });

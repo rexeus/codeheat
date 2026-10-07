@@ -1,5 +1,5 @@
-// Owns the basis of report v2: the limits behind the answer and what the
-// counts leave out.
+// Owns the basis of report v2: the limits behind the answer, what the counts
+// leave out, and what the listed areas do not show.
 import { Schema } from "effect";
 
 import { Count, Percent, Share } from "./scalars.js";
@@ -38,9 +38,20 @@ const Excluded = Schema.Struct({
   generated: Count,
 });
 
-/** The limits behind the answer and what the counts leave out. */
+/** What the listed areas do not show. */
+const Rest = Schema.Struct({
+  /** Areas that are not listed: not judged, under 1 percent of the heat, and named nowhere. */
+  areas: Count,
+  /** Their production code files, with those of folders too small to be areas, loose files, and test code of no area. */
+  files: Count,
+  /** Percent of all the heat in them; with `areas[].heat`, it adds up to 100. */
+  heat: Percent,
+});
+
+/** The limits behind the answer, what the counts leave out, and the rest. */
 export const Basis = Schema.Struct({
   thresholds: Thresholds,
   excluded: Excluded,
+  rest: Rest,
 });
 export type Basis = typeof Basis.Type;

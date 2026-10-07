@@ -8,7 +8,7 @@ import { Percent } from "./scalars.js";
  * The answer to "does the design hold up to the way the code changes?". An
  * area is judged when it has at least `basis.thresholds.judgedFromChanges`
  * changes and either keeps more than `leaksAtStays` of them inside or leaks
- * into a partner.
+ * into a partner (`areas[].stays`, `areas[].leaksInto`).
  */
 export const Answer = Schema.Struct({
   /**
