@@ -8,7 +8,7 @@ import type { Complexity } from "../metrics/complexity.js";
 import { isContractFile } from "./contract-files.js";
 import { matchesAny } from "./globs.js";
 import { isSourceLanguage } from "./languages.js";
-import { measureSourceFile } from "./source-file.js";
+import { readSourceFile } from "./source-file.js";
 import { listTrackedFiles, withoutGeneratedFiles } from "./tracked-files.js";
 
 export type InventoryOptions = {
@@ -38,8 +38,10 @@ export type Inventory = {
    * Tracked files named like code or a contract (and not removed by
    * `exclude`) that the universe leaves out as generated: below a generated
    * or vendored directory (`dist`, `vendor`, …), minified by name (`.min.`),
-   * marked `linguist-generated` or `linguist-vendored`, or not readable as
-   * unminified text (binary, minified, or too large).
+   * marked `linguist-generated` or `linguist-vendored`, or whose content is
+   * binary, minified, or too large (see `readSourceFile`). A file that is
+   * missing from the work tree or holds only whitespace is left out without
+   * counting here.
    */
   readonly generated: number;
 };
@@ -102,25 +104,32 @@ export const inventory = (
     const tracked = yield* listTrackedFiles(options.scope);
     const likeCode = namedLikeCode(options);
     const named = tracked.filter((path) => likeCode(path));
-    const candidates = yield* withoutGeneratedFiles(
-      named.filter((path) => !namedAsGenerated(path)),
-    );
-    const measured = yield* Effect.forEach(
+    const unnamed = named.filter((path) => !namedAsGenerated(path));
+    const candidates = yield* withoutGeneratedFiles(unnamed);
+    const readings = yield* Effect.forEach(
       candidates,
       (path) =>
-        Effect.map(measureSourceFile(options.root, path), (complexity) =>
-          complexity === undefined ? undefined : { path, complexity },
-        ),
+        Effect.map(readSourceFile(options.root, path), (reading) => ({
+          path,
+          reading,
+        })),
       { concurrency: READ_CONCURRENCY },
     );
-    const readable = measured
-      .filter((file) => file !== undefined)
+    const readable = readings
+      .flatMap(({ path, reading }) =>
+        reading.kind === "text"
+          ? [{ path, complexity: reading.complexity }]
+          : [],
+      )
       .toSorted((a, b) => Order.String(a.path, b.path));
+    const generatedContent = readings.filter(
+      ({ reading }) => reading.kind === "generated",
+    ).length;
     return {
       files: readable.filter(({ path }) => !isContractFile(path)),
       contracts: readable
         .filter(({ path }) => isContractFile(path))
         .map(({ path }) => path),
-      generated: named.length - readable.length,
+      generated: named.length - candidates.length + generatedContent,
     };
   });

@@ -158,8 +158,9 @@ export const Report = Schema.Struct({
      * generated or vendored directory (`dist`, `build`, `vendor`,
      * `node_modules`, `generated`, `__generated__`, `tsp-output`), minified by
      * name (`.min.`), marked `linguist-generated` or `linguist-vendored`, or
-     * not readable as unminified text (binary, minified, or larger than
-     * `Thresholds.maxFileBytes`).
+     * whose content is binary, minified, or larger than
+     * `Thresholds.maxFileBytes`. A file missing from the work tree or holding
+     * only whitespace is left out without counting here.
      */
     generated: Count,
   }),

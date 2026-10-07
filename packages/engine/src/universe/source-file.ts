@@ -18,32 +18,43 @@ const exceedsLimit = (size: ByteSize.ByteSize): boolean =>
   size > BigInt(MAX_FILE_BYTES);
 
 /**
- * The complexity of `<root>/<file>`, or undefined when the file cannot be
- * analyzed: unreadable (missing) or not a regular file (a directory, a device), binary, or minified.
+ * What reading a candidate file found. `text`: analyzable, with its
+ * complexity. `generated`: content that is no hand-written source: binary,
+ * larger than `MAX_FILE_BYTES`, or minified. `unreadable`: missing, not a
+ * regular file (a directory, a device), or nothing but whitespace.
  */
-export const measureSourceFile = (
+export type SourceReading =
+  | { readonly kind: "text"; readonly complexity: Complexity }
+  | { readonly kind: "generated" }
+  | { readonly kind: "unreadable" };
+
+const GENERATED: SourceReading = { kind: "generated" };
+const UNREADABLE: SourceReading = { kind: "unreadable" };
+
+/** Reads `<root>/<file>` and says whether it is analyzable text (see `SourceReading`). */
+export const readSourceFile = (
   root: string,
   file: string,
-): Effect.Effect<
-  Complexity | undefined,
-  never,
-  FileSystem.FileSystem | Path.Path
-> =>
+): Effect.Effect<SourceReading, never, FileSystem.FileSystem | Path.Path> =>
   Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
     const location = path.join(root, file);
     const info = yield* fs.stat(location);
-    if (info.type !== "File" || exceedsLimit(info.size)) {
-      return undefined;
+    if (info.type !== "File") {
+      return UNREADABLE;
+    }
+    if (exceedsLimit(info.size)) {
+      return GENERATED;
     }
     const bytes = yield* fs.readFile(location);
     if (isBinary(bytes)) {
-      return undefined;
+      return GENERATED;
     }
     const text = new TextDecoder().decode(bytes);
     const complexity = measureComplexity(text);
-    return text.length > MAX_MEAN_LINE_LENGTH * complexity.loc
-      ? undefined
-      : complexity;
-  }).pipe(Effect.orElseSucceed(() => undefined));
+    if (text.length <= MAX_MEAN_LINE_LENGTH * complexity.loc) {
+      return { kind: "text", complexity } satisfies SourceReading;
+    }
+    return complexity.loc === 0 ? UNREADABLE : GENERATED;
+  }).pipe(Effect.orElseSucceed(() => UNREADABLE));
