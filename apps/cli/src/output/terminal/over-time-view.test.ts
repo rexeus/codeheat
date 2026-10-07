@@ -88,10 +88,10 @@ describe("overTimeSection", () => {
 
   it("says why there is no trend yet", () => {
     expect(plainSection(withTrend("unknown"))[1]).toBe(
-      "No trend yet: it needs 5 windows with at least 10 changes.",
+      "No trend yet: it needs 5 windows with at least 10 changes, and as many touching a judged territory.",
     );
     expect(plainSection(withTrend("unknown", []))[1]).toBe(
-      "No trend yet: no territory has enough changes to judge.",
+      "No trend yet: no territory the verdict can judge.",
     );
     expect(plainSection(withErosion("unknown", 1))[2]).toBe(
       "Modules: no trend yet, 1 window has at least 10 changes, and a trend needs 3.",

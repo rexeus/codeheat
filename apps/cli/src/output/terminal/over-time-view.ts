@@ -51,8 +51,8 @@ const trendLine = (report: Report, quiet: string): string => {
     return `${TREND_WORDS[verdict.trend]} over ${windowNoun(series, series.length)}${quiet}.`;
   }
   return verdict.judged.length === 0
-    ? `No trend yet: no territory has enough changes to judge${quiet}.`
-    : `No trend yet: it needs ${thresholds.minVerdictWindows} windows with at least ${thresholds.minWindowChanges} changes${quiet}.`;
+    ? `No trend yet: no territory the verdict can judge${quiet}.`
+    : `No trend yet: it needs ${thresholds.minVerdictWindows} windows with at least ${thresholds.minWindowChanges} changes, and as many touching a judged territory${quiet}.`;
 };
 
 /** The modules' erosion as context, one sentence with the numbers behind it. */
