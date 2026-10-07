@@ -34,6 +34,14 @@ export type Inventory = {
   readonly files: ReadonlyArray<InventoryFile>;
   /** Repository-relative paths of the contract files (see `isContractFile`), sorted. */
   readonly contracts: ReadonlyArray<string>;
+  /**
+   * Tracked files named like code or a contract (and not removed by
+   * `exclude`) that the universe leaves out as generated: below a generated
+   * or vendored directory (`dist`, `vendor`, …), minified by name (`.min.`),
+   * marked `linguist-generated` or `linguist-vendored`, or not readable as
+   * unminified text (binary, minified, or too large).
+   */
+  readonly generated: number;
 };
 
 /** Files read at once; bounds open file handles. */
@@ -56,8 +64,8 @@ const inExcludedDirectory = (path: string): boolean =>
     .slice(0, -1)
     .some((directory) => EXCLUDED_DIRECTORIES.has(directory));
 
-/** Name-based rules for code and contract files; they need no file access, so they run first. */
-const namedAsUniverse = (
+/** Whether a path is named like a code or contract file the options ask for: the allow-list and the contract list, or `include` instead of both, then `exclude`. */
+const namedLikeCode = (
   options: InventoryOptions,
 ): ((path: string) => boolean) => {
   const included =
@@ -65,12 +73,12 @@ const namedAsUniverse = (
       ? (path: string) => isSourceLanguage(path) || isContractFile(path)
       : matchesAny(options.include);
   const excluded = matchesAny(options.exclude);
-  return (path) =>
-    !inExcludedDirectory(path) &&
-    !MINIFIED_NAME.test(path) &&
-    included(path) &&
-    !excluded(path);
+  return (path) => included(path) && !excluded(path);
 };
+
+/** Whether a path's name says it is generated, vendored, or minified; needs no file access, so it runs first. */
+const namedAsGenerated = (path: string): boolean =>
+  inExcludedDirectory(path) || MINIFIED_NAME.test(path);
 
 /**
  * Builds the universe: tracked, not ignored, not `linguist-generated` or
@@ -78,7 +86,8 @@ const namedAsUniverse = (
  * allow-list and the contract list, or `include` instead of both, then
  * `exclude`), and readable as unminified text. A file that names a contract
  * (`isContractFile`) is a contract whatever the allow-list says; contracts get
- * no complexity. Both lists come back sorted by path.
+ * no complexity. Both lists come back sorted by path, with the count of the
+ * files named like code that were left out as generated.
  *
  * Git must run in `options.root`.
  */
@@ -91,9 +100,10 @@ export const inventory = (
 > =>
   Effect.gen(function* () {
     const tracked = yield* listTrackedFiles(options.scope);
-    const counts = namedAsUniverse(options);
+    const likeCode = namedLikeCode(options);
+    const named = tracked.filter((path) => likeCode(path));
     const candidates = yield* withoutGeneratedFiles(
-      tracked.filter((path) => counts(path)),
+      named.filter((path) => !namedAsGenerated(path)),
     );
     const measured = yield* Effect.forEach(
       candidates,
@@ -111,5 +121,6 @@ export const inventory = (
       contracts: readable
         .filter(({ path }) => isContractFile(path))
         .map(({ path }) => path),
+      generated: named.length - readable.length,
     };
   });

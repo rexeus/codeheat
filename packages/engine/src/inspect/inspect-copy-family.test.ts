@@ -57,7 +57,7 @@ const reportOf = (copyFamilies: Report["copyFamilies"]): Report => ({
   logicalChanges: { by: "commit", count: 0, largest: 0 },
   comparison: null,
   thresholds: DEFAULT_THRESHOLDS,
-  totals: { files: 3, contracts: 0, couplings: 0, modules: 0 },
+  totals: { files: 3, contracts: 0, couplings: 0, modules: 0, generated: 0 },
   files: [stats("src/a.ts", 1), stats("src/b.ts", 2), stats("lib/c.ts", 3)],
   contracts: [],
   ubiquitousFiles: [],

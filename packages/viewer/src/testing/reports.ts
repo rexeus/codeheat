@@ -242,6 +242,7 @@ export const reportOf = (
     contracts: 0,
     couplings: couplings.length,
     modules: modules.length,
+    generated: 0,
   },
   files,
   contracts: [],

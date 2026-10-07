@@ -94,7 +94,8 @@
     "files": 36,
     "contracts": 2,
     "couplings": 9,
-    "modules": 5
+    "modules": 5,
+    "generated": 4
   },
   "files": [
     {

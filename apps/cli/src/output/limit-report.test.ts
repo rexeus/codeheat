@@ -97,6 +97,7 @@ describe("limitReport totals", () => {
       contracts: 2,
       couplings: 9,
       modules: 5,
+      generated: 4,
     });
   });
 

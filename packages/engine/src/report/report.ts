@@ -151,6 +151,16 @@ export const Report = Schema.Struct({
     contracts: Count,
     couplings: Count,
     modules: Count,
+    /**
+     * Tracked files named like code or a contract (and not removed by
+     * `--exclude`) that the universe leaves out as generated: below a
+     * generated or vendored directory (`dist`, `build`, `vendor`,
+     * `node_modules`, `generated`, `__generated__`, `tsp-output`), minified by
+     * name (`.min.`), marked `linguist-generated` or `linguist-vendored`, or
+     * not readable as unminified text (binary, minified, or larger than
+     * `Thresholds.maxFileBytes`).
+     */
+    generated: Count,
   }),
   /** The hotspots: every code file, sorted by rank. Contract files are never listed here. */
   files: Schema.Array(FileStats),

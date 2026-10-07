@@ -142,7 +142,7 @@ const analyzeRepository = (
       root,
       scope,
     );
-    const { depths, ...universe } = yield* readUniverse({
+    const { depths, generated, ...universe } = yield* readUniverse({
       ...options,
       root,
       scope,
@@ -185,7 +185,7 @@ const analyzeRepository = (
       comparison: comparisonOf(windows, histories, timeline.oldestCommit),
       verdict: verdictOf({ ...measured, thresholds }, areaWindows, realCommits),
       thresholds,
-      totals: totalsOf(measured),
+      totals: { ...totalsOf(measured), generated },
       ...measured,
       ubiquitousFiles,
       modules: withDepths(measured.modules, depths),
