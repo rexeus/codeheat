@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
 
 import { territoryNode } from "../testing/reports.js";
-import { indexTerritories, territoryName } from "./territory-index.js";
+import {
+  indexTerritories,
+  territoryName,
+  territoryNameParts,
+} from "./territory-index.js";
 
 // root > core > (core/src, core/rest); the recommended detail shows core/src, core/rest, and docs.
 const nodes = [
@@ -59,23 +63,43 @@ describe("indexTerritories", () => {
   });
 });
 
+/** The name parts of a group territory at `path`. */
+const partsOf = (path: string) =>
+  territoryNameParts(territoryNode("a", path, { kind: "group" }));
+
 describe("territoryName", () => {
   it("is the path of a package, folder, or group", () => {
     expect(
       territoryName(territoryNode("a", "packages/core", { kind: "package" })),
     ).toBe("packages/core");
     expect(
-      territoryName(territoryNode("b", "a/x + b/y", { kind: "group" })),
-    ).toBe("a/x + b/y");
+      territoryName(territoryNode("b", "p/{a/src,b}", { kind: "group" })),
+    ).toBe("p/{a/src,b}");
     expect(territoryName(territoryNode("c", "src"))).toBe("src");
   });
 
-  it("names the folder a group shares once", () => {
+  it("splits a group's name into the folder it shares and its brace glob", () => {
     expect(
-      territoryName(
-        territoryNode("a", "p/x/a + p/x/b + p/x/c", { kind: "group" }),
-      ),
-    ).toBe("p/x/a + b + c");
+      territoryNameParts(territoryNode("a", "p/x/{a,b,c}", { kind: "group" })),
+    ).toStrictEqual({ dir: "p/x/", base: "{a,b,c}" });
+    expect(
+      territoryNameParts(territoryNode("b", "{apps,lib}", { kind: "group" })),
+    ).toStrictEqual({ dir: "", base: "{apps,lib}" });
+  });
+
+  it("splits at the brace that balances the end, past escaped characters and braces in the folder", () => {
+    expect(partsOf(String.raw`a/{x\,y,z}`)).toStrictEqual({
+      dir: "a/",
+      base: String.raw`{x\,y,z}`,
+    });
+    expect(partsOf("{{cookiecutter.slug}}/{api,web}")).toStrictEqual({
+      dir: "{{cookiecutter.slug}}/",
+      base: "{api,web}",
+    });
+    expect(partsOf(String.raw`a/{\{b\},c}`)).toStrictEqual({
+      dir: "a/",
+      base: String.raw`{\{b\},c}`,
+    });
   });
 
   it("says what test code and a bucket are", () => {

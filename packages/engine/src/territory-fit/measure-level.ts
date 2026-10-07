@@ -74,6 +74,12 @@ export type MeasuredLevel = {
   readonly cliques: ReadonlyArray<Clique>;
   readonly coChange: ModuleCoChange;
   readonly crossings: AreaCrossings;
+  /**
+   * Per window of the series, oldest first, the areas each of its counted
+   * changes touched (see `touchedAreas`; test-only areas count for nothing):
+   * what the trends of the areas are read from.
+   */
+  readonly windows: ReadonlyArray<ReadonlyArray<ReadonlySet<string>>>;
 };
 
 type Area = {
@@ -113,6 +119,7 @@ const overTime = (
     areas,
   );
   return {
+    windows,
     erosions: new Map(
       withModuleErosion(areas, windows).map((area) => [
         area.path,
@@ -141,7 +148,7 @@ export const measureLevel = (
   const radii = new Map(
     measureRadius(touched, areas).modules.map((area) => [area.path, area]),
   );
-  const { erosions, fixes } = overTime(level, areas, input, touched);
+  const { windows, erosions, fixes } = overTime(level, areas, input, touched);
   const coChange = moduleCoChange(touched, areas, input.minChanges);
   const { cliques } = findCliques(coChange, touched);
   const partners = strongestPartners(coChange);
@@ -169,5 +176,5 @@ export const measureLevel = (
       ];
     }),
   );
-  return { fits, cliques, coChange, crossings };
+  return { fits, cliques, coChange, crossings, windows };
 };

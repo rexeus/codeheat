@@ -35,31 +35,61 @@ const windowNoun = (series: Report["series"], count: number): string => {
 const share = (value: number): string =>
   percent(Math.min(1, Math.max(0, value)));
 
-/** The verdict on the whole repository as one sentence with the numbers behind it. */
-const verdictLine = (report: Report): string | undefined => {
-  const { erosion, series, thresholds } = report;
-  if (erosion === null) {
-    return undefined;
+const TREND_WORDS = {
+  eroding:
+    "Eroding: the territories the verdict judges keep less and less of their changes inside",
+  improving:
+    "Improving: the territories the verdict judges keep more and more of their changes inside",
+  holding:
+    "Holding: no lasting change in how much of their changes the territories the verdict judges keep inside",
+} as const;
+
+/** The verdict's trend (`verdict.trend`, the one that lowers its level) as one sentence; `quiet` says since when the series has been quiet. */
+const trendLine = (report: Report, quiet: string): string => {
+  const { verdict, series, thresholds } = report;
+  if (verdict.trend !== "unknown") {
+    return `${TREND_WORDS[verdict.trend]} over ${windowNoun(series, series.length)}${quiet}.`;
   }
-  const active = windowNoun(series, erosion.windows);
+  return verdict.judged.length === 0
+    ? `No trend yet: no territory the verdict can judge${quiet}.`
+    : `No trend yet: it needs ${thresholds.minVerdictWindows} windows with at least ${thresholds.minWindowChanges} changes, and as many touching a judged territory${quiet}.`;
+};
+
+/** The modules' erosion as context, one sentence with the numbers behind it. */
+const moduleLine = (
+  erosion: NonNullable<Report["erosion"]>,
+  { series, thresholds }: Report,
+): ReadonlyArray<string> => {
+  if (erosion.verdict === "unknown") {
+    return [
+      `Modules: no trend yet, ${plural(erosion.windows, "window has", "windows have")} at least ${thresholds.minWindowChanges} changes, and a trend needs ${thresholds.minTrendWindows}.`,
+    ];
+  }
   const line = erosion.locality;
-  const period = `the active period of ${active}`;
+  if (line === null) {
+    return [];
+  }
+  const moved = {
+    eroding: `changes that stay in one module fell from ${share(line.from)} to ${share(line.to)}`,
+    improving: `changes that stay in one module rose from ${share(line.from)} to ${share(line.to)}`,
+    holding: `no lasting change in the share of changes that stay in one module (${share(line.from)} to ${share(line.to)})`,
+  }[erosion.verdict];
+  return [
+    `Modules: ${moved} over the active period of ${windowNoun(series, erosion.windows)}.`,
+  ];
+};
+
+/** The verdict's trend, then the modules' erosion as context; nothing without a series. */
+const verdictLines = (report: Report): ReadonlyArray<string> => {
+  const { erosion, thresholds } = report;
+  if (erosion === null) {
+    return [];
+  }
   const quiet =
     erosion.inactiveSince === null
       ? ""
       : ` (quiet since ${month(erosion.inactiveSince)}: fewer than ${thresholds.minWindowChanges} changes a window)`;
-  if (erosion.verdict === "unknown") {
-    return `No verdict yet: ${plural(erosion.windows, "window has", "windows have")} at least ${thresholds.minWindowChanges} changes, and a trend needs ${thresholds.minTrendWindows}${quiet}.`;
-  }
-  if (line === null) {
-    return undefined;
-  }
-  const verdict = {
-    eroding: `Eroding: changes that stay in one module fell from ${share(line.from)} to ${share(line.to)} over ${period}`,
-    improving: `Improving: changes that stay in one module rose from ${share(line.from)} to ${share(line.to)} over ${period}`,
-    holding: `Holding: no lasting change in the share of changes that stay in one module (${share(line.from)} to ${share(line.to)}) over ${period}`,
-  }[erosion.verdict];
-  return `${verdict}${quiet}.`;
+  return [trendLine(report, quiet), ...moduleLine(erosion, report)];
 };
 
 /** Modules still changing whose cohesion fell by more than chance explains (their `verdict` is `eroding`), most eroded first. */
@@ -150,7 +180,7 @@ const fixLines = ({
 
 /**
  * The "Over time" section, headed with where the series starts (it can start
- * before the analysis window: see `Report.seriesSince`): whether the design is holding or eroding, the
+ * before the analysis window: see `Report.seriesSince`): whether the design is holding or eroding (the verdict's trend, with the modules' erosion as context), the
  * three modules whose cohesion fell most while still changing, how many
  * hotspots are chronic or acute, and how many changes are fixes. Parts the
  * report has no data for are left out, and so is the whole section when none
@@ -161,7 +191,7 @@ export const overTimeSection = (
   style: Style,
 ): ReadonlyArray<string> => {
   const lines = [
-    verdictLine(report) ?? [],
+    verdictLines(report),
     erodingLines(report),
     hotspotLines(report),
     fixLines(report),

@@ -12,8 +12,8 @@ import { UnitInterval } from "./scalars.js";
  * `Territories.recommended` that are real parts of the design (`package`,
  * `folder`, `group`). A territory is judged when it has at least
  * `Thresholds.minModuleCommits` counted changes and a `fit.containment`
- * (one with heat but no counted change, because every change touching it was
- * larger than `Thresholds.maxCommitFiles` files, is not). It leaks when at
+ * (heat rests on the same counted changes, so a territory without one has
+ * no heat either). It leaks when at
  * most `Thresholds.maxEntryContainment` of its changes stay inside and another
  * territory shares changes with it (`fit.partner`); one that keeps little
  * inside but has no partner says nothing about where it leaks and is not
@@ -53,7 +53,23 @@ export const Verdict = Schema.Struct({
   judged: Schema.Array(Schema.String),
   /** Of those, the leaking ones, the most heat first. */
   leaking: Schema.Array(Schema.String),
-  /** `erosion.verdict` is `eroding`, which lowers a known level by one. */
+  /** `trend` is `eroding`, which lowers a known level by one. */
   eroding: Schema.Boolean,
+  /**
+   * Whether the `judged` territories keep more or less of their changes
+   * inside over `Report.series`. Per window, their stays: of the counted
+   * changes of the window that touched a judged territory, each counted once,
+   * the share that touched no other territory, at the recommended detail. A
+   * window counts with at least `Thresholds.minWindowChanges` counted changes
+   * and as many that touched a judged territory.
+   * A robust line through those windows is judged with the gate of
+   * `Erosion.verdict`: `eroding` or `improving` only when it moved by at least
+   * `Thresholds.minErosionShift` and `Thresholds.minErosionSigmas` standard
+   * errors of the shift, also without its first and last window; otherwise
+   * `holding`. `unknown` with fewer than `Thresholds.minVerdictWindows`
+   * windows. Unlike `erosion.verdict`, which reads modules, it reads the
+   * territories the verdict judges.
+   */
+  trend: Schema.Literals(["eroding", "improving", "holding", "unknown"]),
 });
 export type Verdict = typeof Verdict.Type;

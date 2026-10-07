@@ -83,6 +83,7 @@ layer(NodeServices.layer)("analyze contract files", (it) => {
           contracts: 1,
           couplings: 1,
           modules: 2,
+          generated: 0,
         });
       }),
   );

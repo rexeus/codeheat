@@ -16,9 +16,8 @@ const unjudged = (reason: string): Standing => ({ kind: "unjudged", reason });
 
 /**
  * Why the engine did not judge `territory`. Test code and leftover files are
- * not judged. A territory with no counted change either saw no change at all
- * or changed only in changes of more than `maxCommitFiles` files, which the
- * engine does not count for spread; one with fewer than `minModuleCommits`
+ * not judged. A territory with no counted change has no heat either (heat
+ * rests on the counted changes); one with fewer than `minModuleCommits`
  * counted changes has too few for its share to mean anything. One without a
  * partner keeps little inside but shares changes with no other territory,
  * which says nothing about where it leaks. A report from before the verdict
@@ -26,16 +25,13 @@ const unjudged = (reason: string): Standing => ({ kind: "unjudged", reason });
  */
 const whyUnjudged = (
   territory: Territory,
-  { maxCommitFiles, minModuleCommits }: Report["thresholds"],
+  { minModuleCommits }: Report["thresholds"],
 ): Standing => {
   if (territory.kind === "tests") {
     return unjudged("test code");
   }
   if (territory.kind === "other") {
     return unjudged("leftover files");
-  }
-  if (territory.changes === 0 && territory.heatShare > 0) {
-    return unjudged(`only in changes of over ${maxCommitFiles} files`);
   }
   if ((territory.fit?.containment ?? null) === null) {
     return unjudged("no counted changes");

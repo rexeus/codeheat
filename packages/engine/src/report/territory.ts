@@ -10,7 +10,8 @@ import { TerritoryFit } from "./territory-fit.js";
  * What a territory is. `package`: a directory with its own manifest
  * (`package.json`, `go.mod`, `Cargo.toml`, …). `folder`: any other directory.
  * `group`: sibling folders that keep changing in the same changes and stay
- * together, `path` joins their directories with ` + `. `other`: files that
+ * together, `path` names their directories with one brace glob over the
+ * directory they share (`packages/a/{x,y}`). `other`: files that
  * belong to no territory of their own, either the loose files of a directory
  * or a bucket of smaller folders that wait for a finer detail; never a real
  * territory. `tests`: test code shown apart from the code: test code that
@@ -31,8 +32,12 @@ export const Territory = Schema.Struct({
   /** Identifies the node within this report (`t1`, `t2`, …, in tree order); it carries no meaning across reports. */
   id: Schema.String,
   /**
-   * Repository-relative POSIX directory; "." for the whole repository (the root of the tree), or the package that holds every file. A `group` joins its
-   * directories with ` + `. An `other` node of loose files names the directory
+   * Repository-relative POSIX directory; "." for the whole repository (the root of the tree), or the package that holds every file. A `group` names its
+   * directories with a brace glob over the directory they share
+   * (`packages/a/{x,y}`, `{apps,lib}` at the root, `packages/{a/src,b}` when
+   * one branches deeper; `\`, `,`, `{`, and `}` in a member's name are
+   * escaped with a backslash, and the glob is the braces that close the
+   * path). An `other` node of loose files names the directory
    * they are in, a bucket the directory its folders are in; its `parent` and `kind` tell it
    * from the territory of that directory.
    */
@@ -53,8 +58,9 @@ export const Territory = Schema.Struct({
   changes: Count,
   /**
    * Share of all the heat in this territory, rounded to 4 decimals: the heat
-   * of a file is `FileStats.changes × (loc + complexity.total)`. Test code
-   * counts for the territory of the code it tests.
+   * of a file is `FileStats.changes × (loc + complexity.total)`, over the same
+   * counted changes as `changes`. Test code counts for the territory of the
+   * code it tests.
    */
   heatShare: UnitInterval,
   /**

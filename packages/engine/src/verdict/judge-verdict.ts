@@ -1,11 +1,11 @@
 // Owns the repository verdict: whether the design holds up to the way the
-// code changes, judged from the territories at the recommended detail and the
-// erosion of the series.
-import type { Erosion } from "../report/erosion.js";
+// code changes, judged from the territories at the recommended detail and how
+// much of their changes they kept inside over the series.
 import { roundReported } from "../report/precision.js";
 import type { Report } from "../report/report.js";
 import type { Territories, Territory } from "../report/territory.js";
 import type { Verdict } from "../report/verdict.js";
+import { judgeAreaTrend } from "./area-trend.js";
 
 /** Share of all the heat the judged territories must hold for the verdict to rest on evidence. */
 export const MIN_VERDICT_COVERAGE = 0.5;
@@ -22,6 +22,8 @@ type VerdictLimits = Pick<
   | "minVerdictCoverage"
   | "minMixedLeakShare"
   | "minStrainedLeakShare"
+  | "minWindowChanges"
+  | "minVerdictWindows"
 >;
 
 type Level = Verdict["level"];
@@ -30,22 +32,17 @@ const isRealTerritory = ({ kind }: Territory): boolean =>
   kind === "package" || kind === "folder" || kind === "group";
 
 /**
- * Whether a real territory leaks, holds, or cannot be judged. One with heat
- * but no counted change changed only in changes too large to count; one
- * below `minModuleCommits` has too few changes for its share to mean
- * anything; one that keeps little inside but has no partner says nothing
- * about where it leaks.
+ * Whether a real territory leaks, holds, or cannot be judged. One below
+ * `minModuleCommits` has too few changes for its share to mean anything;
+ * one that keeps little inside but has no partner says nothing about where
+ * it leaks.
  */
 const standingOf = (
   territory: Territory,
   limits: VerdictLimits,
 ): "leaks" | "holds" | "unjudged" => {
   const containment = territory.fit?.containment ?? null;
-  if (
-    (territory.changes === 0 && territory.heatShare > 0) ||
-    containment === null ||
-    territory.changes < limits.minModuleCommits
-  ) {
+  if (containment === null || territory.changes < limits.minModuleCommits) {
     return "unjudged";
   }
   if (containment > limits.maxEntryContainment) {
@@ -105,10 +102,13 @@ const reasonOf = (
  * territories, rounded as the report carries them, and the level is decided
  * on those rounded shares, so that the report never contradicts itself (a
  * `leakShare` of 0.2 is never `holds`); `realCommits` is `window.realCommits`.
+ * `windows` holds, per window of the series, oldest first, the territories
+ * at the recommended detail that each counted change touched, from which the
+ * `trend` of the judged ones is read (see `judgeAreaTrend`).
  */
 export const judgeVerdict = (input: {
   readonly territories: Territories;
-  readonly erosion: Erosion | null;
+  readonly windows: ReadonlyArray<ReadonlyArray<ReadonlySet<string>>>;
   readonly realCommits: number;
   readonly limits: VerdictLimits;
 }): Verdict => {
@@ -125,7 +125,12 @@ export const judgeVerdict = (input: {
   const leaking = judged.filter(({ standing }) => standing === "leaks");
   const leakShare = reportedShare(leaking.map(({ territory }) => territory));
   const coverage = reportedShare(judged.map(({ territory }) => territory));
-  const eroding = input.erosion?.verdict === "eroding";
+  const trend = judgeAreaTrend(
+    new Set(judged.map(({ territory }) => territory.id)),
+    input.windows,
+    limits,
+  );
+  const eroding = trend === "eroding";
   const base =
     judged.length > 0 && coverage >= limits.minVerdictCoverage
       ? baseLevel(leakShare, limits)
@@ -140,5 +145,6 @@ export const judgeVerdict = (input: {
     judged: judged.map(({ territory }) => territory.id),
     leaking: leaking.map(({ territory }) => territory.id),
     eroding,
+    trend,
   };
 };

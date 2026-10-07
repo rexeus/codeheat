@@ -14,9 +14,14 @@ import { listPackageDirectories } from "../modules/package-directories.js";
 import { inventory } from "../universe/inventory.js";
 import type { Universe } from "./measure.js";
 
-/** The universe, and the depth of the modules that have one (see `measureDepths`). */
+/**
+ * The universe, the depth of the modules that have one (see
+ * `measureDepths`), and how many files it leaves out as generated (see
+ * `Inventory.generated`).
+ */
 export type UniverseReading = Universe & {
   readonly depths: Effect.Success<ReturnType<typeof measureDepths>>;
+  readonly generated: number;
 };
 
 /**
@@ -39,7 +44,7 @@ export const readUniverse = (options: {
 > =>
   Effect.gen(function* () {
     const { root, scope } = options;
-    const { files, contracts } = yield* inventory({
+    const { files, contracts, generated } = yield* inventory({
       root,
       scope,
       include: options.include,
@@ -70,5 +75,6 @@ export const readUniverse = (options: {
       entryPoints,
       packages: packageDirectories,
       depths,
+      generated,
     };
   });

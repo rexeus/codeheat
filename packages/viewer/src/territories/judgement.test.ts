@@ -60,7 +60,6 @@ describe("standingOf", () => {
     ["test code", { kind: "tests" }],
     ["leftover files", { kind: "other" }],
     ["too few changes", { changes: 4 }],
-    ["only in changes of over 50 files", { changes: 0, heatShare: 0.1 }],
   ] as const)("says why it does not judge %s", (reason, overrides) => {
     expect(standingOf(territory(0.5, overrides), judgedAs([]))).toEqual({
       kind: "unjudged",

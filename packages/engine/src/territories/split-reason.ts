@@ -1,6 +1,7 @@
 // Owns the one line that says why a territory splits: what changed in the
 // evidence, in words for someone who has never seen the repository.
 
+import { groupPath } from "./group-path.js";
 import { TOO_BIG_SHARE } from "./part.js";
 
 /** What the decision to split looked at. */
@@ -73,13 +74,11 @@ const mainReason = (why: Why): string => {
     : sizeReason(why);
 };
 
-/** The reason a territory splits, with the folders that stay together named at the end. */
+/** The reason a territory splits, with the folders that stay together named at the end, each group as the brace glob its territory is named by. */
 export const reasonOf = (why: Why): string => {
   const together = why.together
     .slice(0, 2)
-    .map((folders) =>
-      folders.map((path) => shortName(why.base, path)).join(" and "),
-    );
+    .map((folders) => shortName(why.base, groupPath(folders)));
   return together.length === 0
     ? mainReason(why)
     : `${mainReason(why)}; ${together.join(", ")} stay together`;

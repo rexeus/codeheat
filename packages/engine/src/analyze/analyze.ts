@@ -1,13 +1,14 @@
 // Owns the one entry point that turns a repository into a Report.
 // It composes inventory, history, and metrics; callers never see git or parsers.
 // New signals join here as new Report fields, not as new entry points.
-import { Effect, Path } from "effect";
-import type { FileSystem } from "effect";
+import { Effect } from "effect";
+import type { FileSystem, Path } from "effect";
 import type { ChildProcessSpawner } from "effect/process";
 
 import type { LanguageAdapter } from "../code/language-adapter.js";
 import type { GitError } from "../git/git-errors.js";
 import { Git } from "../git/git.js";
+import { readRepositoryName } from "../git/repository-name.js";
 import {
   readHead,
   readOldestCommitTime,
@@ -103,15 +104,32 @@ const totalsOf = ({
   modules: modules.length,
 });
 
-/** The report's `verdict`, judged from what the analysis measured. */
+/**
+ * The report's `verdict`, judged from what the analysis measured; `windows`
+ * are the territories each counted change of each series window touched.
+ */
 const verdictOf = (
-  {
-    territories,
-    erosion,
-    thresholds,
-  }: Pick<Report, "territories" | "erosion" | "thresholds">,
+  { territories, thresholds }: Pick<Report, "territories" | "thresholds">,
+  windows: ReadonlyArray<ReadonlyArray<ReadonlySet<string>>>,
   realCommits: number,
-) => judgeVerdict({ territories, erosion, realCommits, limits: thresholds });
+) => judgeVerdict({ territories, windows, realCommits, limits: thresholds });
+
+/** The report's `repository`, with the `HEAD` and the shallow boundary it is read from. */
+const readRepository = (root: string, scope: string) =>
+  Effect.gen(function* () {
+    const head = yield* readHead;
+    const shallowBoundary = yield* readShallowBoundary(root);
+    return {
+      head,
+      shallowBoundary,
+      repository: {
+        name: yield* readRepositoryName(root),
+        head: head?.commit ?? null,
+        scope,
+        shallow: shallowBoundary !== undefined,
+      },
+    };
+  });
 
 const analyzeRepository = (
   options: AnalyzeOptions,
@@ -120,10 +138,11 @@ const analyzeRepository = (
   windows: Windows,
 ) =>
   Effect.gen(function* () {
-    const path = yield* Path.Path;
-    const head = yield* readHead;
-    const shallowBoundary = yield* readShallowBoundary(root);
-    const { depths, ...universe } = yield* readUniverse({
+    const { head, shallowBoundary, repository } = yield* readRepository(
+      root,
+      scope,
+    );
+    const { depths, generated, ...universe } = yield* readUniverse({
       ...options,
       root,
       scope,
@@ -140,32 +159,33 @@ const analyzeRepository = (
       timeline.histories,
       new Set(universe.contracts.keys()),
     );
-    const { commits, realCommits, couplingCommits, thresholds, ...measured } =
-      yield* measureLinked(
-        options.adapters,
-        { root, scope },
-        universe,
-        histories,
-      );
+    const {
+      commits,
+      realCommits,
+      couplingCommits,
+      thresholds,
+      areaWindows,
+      ...measured
+    } = yield* measureLinked(
+      options.adapters,
+      { root, scope },
+      universe,
+      histories,
+    );
     return {
       schemaVersion: 1,
       tool: { name: "codeheat", version: options.toolVersion },
       generatedAt: windows.current.until,
-      repository: {
-        name: path.basename(root),
-        head: head?.commit ?? null,
-        scope,
-        shallow: shallowBoundary !== undefined,
-      },
+      repository,
       window: reportWindow(
         windows.current,
         { commits, realCommits, couplingCommits },
         head,
       ),
       comparison: comparisonOf(windows, histories, timeline.oldestCommit),
-      verdict: verdictOf({ ...measured, thresholds }, realCommits),
+      verdict: verdictOf({ ...measured, thresholds }, areaWindows, realCommits),
       thresholds,
-      totals: totalsOf(measured),
+      totals: { ...totalsOf(measured), generated },
       ...measured,
       ubiquitousFiles,
       modules: withDepths(measured.modules, depths),

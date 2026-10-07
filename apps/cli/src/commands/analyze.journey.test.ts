@@ -73,6 +73,7 @@ describe("codeheat analyze against a git repository", () => {
           contracts: 0,
           couplings: 1,
           modules: 1,
+          generated: 0,
         });
       }).pipe(Effect.scoped),
   );

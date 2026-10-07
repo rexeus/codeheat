@@ -11,7 +11,7 @@ type PartKind = "folder" | "group" | "more" | "other" | "tests";
 
 export type Part = {
   readonly kind: PartKind;
-  /** The directory of a folder or of loose files, "" for the repository root; the member directories joined by " + " for a group. */
+  /** The directory of a folder or of loose files, "" for the repository root; the brace glob of the member directories for a group (see `groupPath`). */
   readonly path: string;
   /**
    * The directory a folder or a tests part was cut out as, before `path` was

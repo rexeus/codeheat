@@ -6,6 +6,7 @@ import { Effect } from "effect";
 import { groupChanges } from "../changes/group.js";
 import type { GroupedBy } from "../changes/group.js";
 import type { LogicalChange } from "../changes/logical-change.js";
+import { countedChanges } from "../coupling/coupling.js";
 import type { GitError } from "../git/git-errors.js";
 import type { Git } from "../git/git.js";
 import { readEvidence } from "../mechanical/evidence.js";
@@ -22,9 +23,10 @@ type FileHistory = {
   /** Commits that touched the file. */
   readonly revisions: number;
   /**
-   * Logical changes that touched the file, of any size: the unit a coupling's
-   * shared count is measured in, so ratios of shared counts use this and not
-   * `revisions`.
+   * Counted changes that touched the file (see `countedChanges`): the unit a
+   * coupling's shared count and a file's heat are measured in, so ratios of
+   * shared counts use this and not `revisions`. A change too large to count
+   * adds none.
    */
   readonly changes: number;
   readonly linesAdded: number;
@@ -94,12 +96,15 @@ const addActivity = (
   }
 };
 
-/** Credits each logical change to the files it touched. */
+/**
+ * Credits each counted change (see `countedChanges`) to the files it touched:
+ * a change too large to tell what changes together heats no file either.
+ */
 const countChanges = (
   fileHistories: Map<number, FileHistory>,
   changes: ReadonlyArray<LogicalChange>,
 ): void => {
-  for (const { files } of changes) {
+  for (const { files } of countedChanges(changes)) {
     for (const id of files) {
       const before = fileHistories.get(id);
       if (before !== undefined) {

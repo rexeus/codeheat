@@ -42,6 +42,7 @@ describe("embedded report", () => {
         judged: [],
         leaking: [],
         eroding: false,
+        trend: "unknown",
       },
       territories: { recommended: 0, details: [], nodes: [] },
       entryPoints: [],

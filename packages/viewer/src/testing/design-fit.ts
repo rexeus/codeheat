@@ -51,6 +51,7 @@ const verdictOfParts = (
     judged: judged.map(({ id }) => id),
     leaking: leaking.map(({ id }) => id),
     eroding: false,
+    trend: "unknown",
     ...verdict,
   };
 };
@@ -144,15 +145,3 @@ export const boundaryOn = (
       },
     ],
   });
-
-/** An erosion of the given verdict over `windows` quarters, whose locality falls from 80 % to 60 %. */
-export const erosionOf = (
-  verdict: "eroding" | "improving" | "holding" | "unknown",
-  windows = 8,
-): NonNullable<Report["erosion"]> => ({
-  verdict,
-  inactiveSince: null,
-  windows,
-  locality: { from: 0.8, to: 0.6, slope: -0.02 },
-  propagationCost: null,
-});

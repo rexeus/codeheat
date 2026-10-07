@@ -39,6 +39,7 @@ const DESIGN_FIT_DEFAULTS = {
     judged: [],
     leaking: [],
     eroding: false,
+    trend: "unknown",
   },
   territories: { recommended: 0, details: [], nodes: [] },
   territoryCoupling: [],

@@ -36,11 +36,14 @@ export const FileStats = Schema.Struct({
    */
   revisions: Count,
   /**
-   * Logical changes of the window (see `Report.logicalChanges`) that touched
-   * the file, large ones included: at most `revisions`, and equal to it
-   * when no commits were joined. The unit of `Coupling.degree`,
+   * Counted changes of the window (logical changes of at most
+   * `Thresholds.maxCommitFiles` files, see `Report.logicalChanges`) that
+   * touched the file: at most `revisions`, and equal to it when no commits
+   * were joined and none was too large. The unit of the file's heat
+   * (`changes × (loc + complexity.total)`), `Coupling.degree`,
    * `Partner.probability`, and `Thresholds.hubMinRevisions`, which compare
-   * shared changes with a file's own.
+   * shared changes with a file's own; a change too large to count adds to
+   * none of them.
    */
   changes: Count,
   linesAdded: Count,
@@ -120,7 +123,14 @@ export const Report = Schema.Struct({
   }),
   generatedAt: Schema.String,
   repository: Schema.Struct({
-    /** Basename of the repository root. */
+    /**
+     * The repository's name: the folder of its work tree, except in a linked
+     * work tree (`git worktree add`) of a repository whose common directory
+     * names it: the folder that holds its `.git`, or a bare repository's name
+     * without `.git` (the folder that holds it, for a hidden one such as
+     * `proj/.bare`). A repository whose git directory lies elsewhere
+     * (`--separate-git-dir`) names none, so its work trees keep their folders.
+     */
     name: Schema.String,
     /** HEAD commit, or null for a repository without commits. */
     head: Schema.NullOr(Schema.String),
@@ -144,6 +154,17 @@ export const Report = Schema.Struct({
     contracts: Count,
     couplings: Count,
     modules: Count,
+    /**
+     * Tracked files named like code or a contract (and not removed by
+     * `--exclude`) that the universe leaves out as generated: below a
+     * generated or vendored directory (`dist`, `build`, `vendor`,
+     * `node_modules`, `generated`, `__generated__`, `tsp-output`), minified by
+     * name (`.min.`), marked `linguist-generated` or `linguist-vendored`, or
+     * whose content is binary, minified, or larger than
+     * `Thresholds.maxFileBytes`. A file missing from the work tree or holding
+     * only whitespace is left out without counting here.
+     */
+    generated: Count,
   }),
   /** The hotspots: every code file, sorted by rank. Contract files are never listed here. */
   files: Schema.Array(FileStats),

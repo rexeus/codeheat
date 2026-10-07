@@ -31,7 +31,7 @@ const subject = (
     entry.files.length > 0
       ? entry.files
       : entry.territories.map((id) => pathOf.get(id) ?? id);
-  // a group territory's path already joins its folders with " + "
+  // a group territory's path is already one brace glob over its folders
   return names
     .map((name) => escapeForTerminal(name))
     .join(entry.kind === "coupling" ? " <-> " : ", ");

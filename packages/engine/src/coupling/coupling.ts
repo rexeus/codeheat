@@ -104,8 +104,8 @@ export type Couplings = {
 
 /**
  * Finds the coupled pairs among `changes`, each listing the distinct ids of
- * the files one change touched; an id is an index into `paths`. `changesPerFile` counts every
- * logical change per path, including the ones ignored here for being too large.
+ * the files one change touched; an id is an index into `paths`. `changesPerFile` counts the
+ * counted changes per path (see `countedChanges`), the same changes the pairs share.
  *
  * Every coupling comes back with `imports: null`; the import graph fills it in.
  * `couplingCommits` is the number of changes small enough to count. Pairs

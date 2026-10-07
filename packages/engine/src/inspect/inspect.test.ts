@@ -119,6 +119,7 @@ const reportOf = (
     contracts: 0,
     couplings: couplings.length,
     modules: 2,
+    generated: 0,
   },
   files,
   contracts: [],

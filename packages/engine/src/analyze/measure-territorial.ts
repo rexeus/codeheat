@@ -29,6 +29,12 @@ export type MeasuredTerritorial = MeasuredTerritories & {
   readonly entryPoints: ReadonlyArray<EntryPoint>;
   readonly territoryCoupling: ReadonlyArray<TerritoryCoupling>;
   readonly territoryCliques: ReadonlyArray<TerritoryClique>;
+  /**
+   * Per window of the series, the territories at the recommended detail that
+   * each counted change touched (see `MeasuredLevel.windows`); none without
+   * territories. Not part of the report: the verdict's trend is read from it.
+   */
+  readonly areaWindows: ReadonlyArray<ReadonlyArray<ReadonlySet<string>>>;
 };
 
 /**
@@ -72,6 +78,7 @@ export const measureTerritorial = (options: {
     return {
       territories: fitted.territories,
       files: built.files,
+      areaWindows: recommended?.measured.windows ?? [],
       territoryCoupling:
         recommended === null
           ? []

@@ -45,7 +45,8 @@
     "coverage": 1,
     "judged": ["t2", "t3", "t4", "t5", "t6"],
     "leaking": ["t2", "t3", "t4", "t5", "t6"],
-    "eroding": true
+    "eroding": true,
+    "trend": "eroding"
   },
   "thresholds": {
     "maxCommitFiles": 50,
@@ -93,7 +94,8 @@
     "files": 36,
     "contracts": 2,
     "couplings": 9,
-    "modules": 5
+    "modules": 5,
+    "generated": 4
   },
   "files": [
     {

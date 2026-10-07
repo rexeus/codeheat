@@ -98,16 +98,16 @@ describe("splitting by independence", () => {
     expect(pathsAt(tree, 1)).toStrictEqual(["app", "lib", "tools"]);
     expect(pathsAt(tree, 2)).toStrictEqual([
       "app/w",
-      "app/x + app/y",
       "app/z",
+      "app/{x,y}",
       "lib",
       "tools",
     ]);
     const app = tree.nodes.find((node) => node.path === "app");
     expect(app?.splitReason).toBe(
-      "w and z change independently: 80% of the 30 changes touching it stay inside one part; x and y stay together",
+      "w and z change independently: 80% of the 30 changes touching it stay inside one part; {x,y} stay together",
     );
-    expect(tree.nodes.find((node) => node.path === "app/x + app/y")?.kind).toBe(
+    expect(tree.nodes.find((node) => node.path === "app/{x,y}")?.kind).toBe(
       "group",
     );
   });

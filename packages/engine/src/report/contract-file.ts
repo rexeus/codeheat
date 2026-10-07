@@ -31,7 +31,7 @@ export const ContractFile = Schema.Struct({
   module: Schema.String,
   /** Commits of the window that touched the file, large ones included. */
   revisions: Count,
-  /** Logical changes of the window that touched the file, large ones included (see `FileStats.changes`). */
+  /** Counted changes of the window that touched the file, large ones left out (see `FileStats.changes`). */
   changes: Count,
   linesAdded: Count,
   linesDeleted: Count,
