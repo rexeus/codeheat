@@ -53,7 +53,23 @@ export const Verdict = Schema.Struct({
   judged: Schema.Array(Schema.String),
   /** Of those, the leaking ones, the most heat first. */
   leaking: Schema.Array(Schema.String),
-  /** `erosion.verdict` is `eroding`, which lowers a known level by one. */
+  /** `trend` is `eroding`, which lowers a known level by one. */
   eroding: Schema.Boolean,
+  /**
+   * Whether the `judged` territories keep more or less of their changes
+   * inside over `Report.series`. Per window, their pooled stays: of the
+   * touches of a judged territory by a counted change of the window (a change
+   * that touched two of them touched each), the share by a change that touched
+   * no other territory, at the recommended detail. A window counts with at
+   * least `Thresholds.minWindowChanges` counted changes and as many touches.
+   * A robust line through those windows is judged with the gate of
+   * `Erosion.verdict`: `eroding` or `improving` only when it moved by at least
+   * `Thresholds.minErosionShift` and `Thresholds.minErosionSigmas` standard
+   * errors of the shift, also without its first and last window; otherwise
+   * `holding`. `unknown` with fewer than `Thresholds.minVerdictWindows`
+   * windows. Unlike `erosion.verdict`, which reads modules, it reads the
+   * territories the verdict judges.
+   */
+  trend: Schema.Literals(["eroding", "improving", "holding", "unknown"]),
 });
 export type Verdict = typeof Verdict.Type;

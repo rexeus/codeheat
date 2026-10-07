@@ -182,6 +182,7 @@ const NO_FINDINGS = {
     judged: [],
     leaking: [],
     eroding: false,
+    trend: "unknown",
   },
   changeRadius: null,
   propagationCost: null,

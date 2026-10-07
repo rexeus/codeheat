@@ -94,12 +94,14 @@ The files of a repository are grouped into modules: workspace packages (a direct
     "coverage": 0.8805,
     "judged": ["t2", "t3", "t5"],
     "leaking": ["t3"],
-    "eroding": false
+    "eroding": false,
+    "trend": "holding"
   }
 }
 ```
 
-- `level` is `holds` (less than `thresholds.minMixedLeakShare`, 20 %, of all the heat sits in territories that leak), `mixed` (less than `thresholds.minStrainedLeakShare`, 50 %), `strained`, or `unknown`. `eroding: true` means `erosion.verdict` is `eroding`, which makes a known level one worse (`strained` stays `strained`).
+- `level` is `holds` (less than `thresholds.minMixedLeakShare`, 20 %, of all the heat sits in territories that leak), `mixed` (less than `thresholds.minStrainedLeakShare`, 50 %), `strained`, or `unknown`. `eroding: true` means `trend` is `eroding`, which makes a known level one worse (`strained` stays `strained`).
+- `trend` says whether the judged territories keep more or less of their changes inside over the quarters of `series`: per window, of the touches of a judged territory by a counted change (a change that touched two judged territories touched each), the share by changes that touched no other territory at the recommended detail, in windows with at least `thresholds.minWindowChanges` counted changes and as many touches. A robust line through those windows with the gate of `erosion.verdict` gives `eroding`, `improving`, or `holding`; with fewer than `thresholds.minVerdictWindows` (5) such windows it is `unknown`. Unlike `erosion.verdict`, which follows modules, it follows the territories the level is judged on.
 - The judged territories are the real ones (`package`, `folder`, `group`) at the recommended detail with at least `thresholds.minModuleCommits` counted changes. One leaks when at most `thresholds.maxEntryContainment` of its changes stay inside (`fit.containment`) and it has a `fit.partner` to leak to; one without a partner is not judged. `judged` and `leaking` are their ids, the most heat first: read the `leaking` ones before you change code there.
 - `leakShare` and `coverage` are the shares of all the heat (`heatShare` summed, test code included) in the leaking and in all judged territories, rounded to 4 decimals; the level is decided on these reported numbers, so a `leakShare` of 0.2 is never `holds`. Below `thresholds.minVerdictCoverage` (half) of the heat in judged territories the level is `unknown`, and `reason` says why: `no-territories` (no files), `quiet-window` (`window.realCommits` is 0: see `window.lastCommitAt` and `series` for when the history last changed, and try a longer `--since`), or `too-little-evidence`.
 

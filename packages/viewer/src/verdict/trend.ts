@@ -16,17 +16,13 @@ const TRENDS = {
 } as const satisfies Record<string, Trend>;
 
 /**
- * How the share of changes that stay in one module moved over the last
- * quarters (`erosion.verdict`). The engine calls a trend only from
- * `thresholds.minVerdictWindows` quarters on; with fewer it says so.
+ * How much of their changes the territories the verdict judges kept inside
+ * over the last quarters (`verdict.trend`), the trend that lowers the
+ * verdict's level when it erodes. The engine calls a trend only from
+ * `thresholds.minVerdictWindows` quarters with enough changes on; with judged
+ * territories but fewer quarters it says so.
  */
-export const trendOf = ({ erosion, thresholds }: Report): Trend => {
-  const verdict = erosion?.verdict ?? "unknown";
-  if (
-    verdict !== "unknown" &&
-    (erosion?.windows ?? 0) < thresholds.minVerdictWindows
-  ) {
-    return { direction: "none", label: "Too few quarters to call a trend" };
-  }
-  return TRENDS[verdict];
-};
+export const trendOf = ({ verdict }: Report): Trend =>
+  verdict.trend === "unknown" && verdict.judged.length > 0
+    ? { direction: "none", label: "Too few quarters to call a trend" }
+    : TRENDS[verdict.trend];

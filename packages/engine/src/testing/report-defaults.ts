@@ -55,6 +55,7 @@ export const NO_DESIGN_FINDINGS = {
     judged: [],
     leaking: [],
     eroding: false,
+    trend: "unknown",
   },
   changeRadius: null,
   propagationCost: null,

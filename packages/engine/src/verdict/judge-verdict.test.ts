@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import type { Erosion } from "../report/erosion.js";
 import type { Territories, Territory } from "../report/territory.js";
+import { windowsStaying } from "../testing/area-windows.js";
 import { DEFAULT_THRESHOLDS } from "../testing/report-defaults.js";
 import { fitRecord, territoryRecord } from "../testing/territory-record.js";
 import { judgeVerdict } from "./judge-verdict.js";
@@ -41,25 +41,21 @@ const territoriesOf = (parts: ReadonlyArray<PartSpec>): Territories => ({
   ],
 });
 
-const erosionOf = (verdict: Erosion["verdict"]): Erosion => ({
-  verdict,
-  inactiveSince: null,
-  windows: 8,
-  locality: { from: 0.8, to: 0.6, slope: -0.02 },
-  propagationCost: null,
-});
+/** Six windows in which `t1` keeps ever less of its changes inside, and six in which it keeps ever more. */
+const FALLING = windowsStaying([0.9, 0.8, 0.7, 0.6, 0.5, 0.4]);
+const RISING = windowsStaying([0.4, 0.5, 0.6, 0.7, 0.8, 0.9]);
 
 const judge = (
   parts: ReadonlyArray<PartSpec>,
   options: {
-    readonly erosion?: Erosion | null;
+    readonly windows?: ReadonlyArray<ReadonlyArray<ReadonlySet<string>>>;
     readonly realCommits?: number;
     readonly maxEntryContainment?: number;
   } = {},
 ) =>
   judgeVerdict({
     territories: territoriesOf(parts),
-    erosion: options.erosion ?? null,
+    windows: options.windows ?? [],
     realCommits: options.realCommits ?? 40,
     limits: {
       ...DEFAULT_THRESHOLDS,
@@ -174,6 +170,7 @@ describe("judgeVerdict coverage", () => {
       judged: ["t1", "t2"],
       leaking: ["t1"],
       eroding: false,
+      trend: "unknown",
     });
   });
 
@@ -224,7 +221,7 @@ describe("judgeVerdict reason", () => {
   it("says plainly that a report without territories cannot be judged", () => {
     const verdict = judgeVerdict({
       territories: { recommended: 0, details: [], nodes: [] },
-      erosion: null,
+      windows: [],
       realCommits: 0,
       limits: DEFAULT_THRESHOLDS,
     });
@@ -237,6 +234,7 @@ describe("judgeVerdict reason", () => {
       judged: [],
       leaking: [],
       eroding: false,
+      trend: "unknown",
     });
   });
 
@@ -250,28 +248,42 @@ describe("judgeVerdict reason", () => {
 });
 
 describe("judgeVerdict trend", () => {
-  it("judges an eroding design one level worse", () => {
-    const verdict = judge(twoParts(0.1, 0.9), {
-      erosion: erosionOf("eroding"),
-    });
+  it("judges a design whose judged territories keep ever less inside one level worse", () => {
+    const verdict = judge(twoParts(0.1, 0.9), { windows: FALLING });
 
-    expect(verdict).toMatchObject({ level: "mixed", eroding: true });
+    expect(verdict).toMatchObject({
+      level: "mixed",
+      eroding: true,
+      trend: "eroding",
+    });
   });
 
   it("does not go below strained for an eroding design", () => {
-    const verdict = judge(twoParts(0.6, 0.4), {
-      erosion: erosionOf("eroding"),
-    });
+    const verdict = judge(twoParts(0.6, 0.4), { windows: FALLING });
 
     expect(verdict.level).toBe("strained");
   });
 
   it("does not judge an improving design better", () => {
-    const verdict = judge(twoParts(0.3, 0.7), {
-      erosion: erosionOf("improving"),
+    const verdict = judge(twoParts(0.3, 0.7), { windows: RISING });
+
+    expect(verdict).toMatchObject({
+      level: "mixed",
+      eroding: false,
+      trend: "improving",
+    });
+  });
+
+  it("reads the trend of the judged territories only", () => {
+    const verdict = judge(twoParts(0.1, 0.9), {
+      windows: windowsStaying([0.9, 0.8, 0.7, 0.6, 0.5, 0.4], { area: "t9" }),
     });
 
-    expect(verdict).toMatchObject({ level: "mixed", eroding: false });
+    expect(verdict).toMatchObject({
+      level: "holds",
+      eroding: false,
+      trend: "unknown",
+    });
   });
 });
 
