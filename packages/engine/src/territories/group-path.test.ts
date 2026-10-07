@@ -20,4 +20,17 @@ describe("groupPath", () => {
       "packages/{a/src,b}",
     );
   });
+
+  it("escapes the characters of a brace glob in the members' names", () => {
+    expect(groupPath(["a/x,y", "a/z"])).toBe(String.raw`a/{x\,y,z}`);
+    expect(groupPath(["a/{b}", String.raw`a/c\d`])).toBe(
+      String.raw`a/{\{b\},c\\d}`,
+    );
+  });
+
+  it("writes the shared directory as it is", () => {
+    expect(
+      groupPath(["{{cookiecutter.slug}}/api", "{{cookiecutter.slug}}/web"]),
+    ).toBe("{{cookiecutter.slug}}/{api,web}");
+  });
 });

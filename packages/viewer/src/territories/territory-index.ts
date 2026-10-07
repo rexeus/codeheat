@@ -65,20 +65,43 @@ const splitParts = (path: string): NameParts => {
   return { dir, base: path.slice(dir.length) };
 };
 
-/** Where the brace glob of a group opens: at the start or right after a `/`. */
-const BRACE = /(?:^|\/)\{/u;
+/** Whether the character at `index` follows an odd number of backslashes, which escape it. */
+const isEscaped = (path: string, index: number): boolean => {
+  let backslashes = 0;
+  while (path[index - backslashes - 1] === "\\") {
+    backslashes += 1;
+  }
+  return backslashes % 2 === 1;
+};
+
+/** Where the brace that balances the final `}` of `path` opens, scanning from the end; -1 when the name does not end in a brace glob. */
+const openingBrace = (path: string): number => {
+  let depth = 0;
+  for (let index = path.length - 1; index >= 0; index -= 1) {
+    const char = path[index];
+    if ((char === "{" || char === "}") && !isEscaped(path, index)) {
+      depth += char === "}" ? 1 : -1;
+      if (depth === 0) {
+        return index;
+      }
+    }
+    if (depth === 0) {
+      return -1;
+    }
+  }
+  return -1;
+};
 
 /**
  * A group is one brace glob over the folder its members share, which is
- * named once: `packages/a/{x,y}` is `{x,y}` in `packages/a/`.
+ * named once: `packages/a/{x,y}` is `{x,y}` in `packages/a/`. The glob is the
+ * braces that close the name, so a shared folder may hold braces of its own.
  */
 const groupParts = (path: string): NameParts => {
-  const match = BRACE.exec(path);
-  if (match === null) {
-    return splitParts(path);
-  }
-  const open = match.index + match[0].length - 1;
-  return { dir: path.slice(0, open), base: path.slice(open) };
+  const open = openingBrace(path);
+  return open === -1
+    ? splitParts(path)
+    : { dir: path.slice(0, open), base: path.slice(open) };
 };
 
 const PARTS: Record<Territory["kind"], (territory: Territory) => NameParts> = {

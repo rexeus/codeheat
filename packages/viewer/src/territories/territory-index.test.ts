@@ -63,6 +63,10 @@ describe("indexTerritories", () => {
   });
 });
 
+/** The name parts of a group territory at `path`. */
+const partsOf = (path: string) =>
+  territoryNameParts(territoryNode("a", path, { kind: "group" }));
+
 describe("territoryName", () => {
   it("is the path of a package, folder, or group", () => {
     expect(
@@ -81,6 +85,21 @@ describe("territoryName", () => {
     expect(
       territoryNameParts(territoryNode("b", "{apps,lib}", { kind: "group" })),
     ).toStrictEqual({ dir: "", base: "{apps,lib}" });
+  });
+
+  it("splits at the brace that balances the end, past escaped characters and braces in the folder", () => {
+    expect(partsOf(String.raw`a/{x\,y,z}`)).toStrictEqual({
+      dir: "a/",
+      base: String.raw`{x\,y,z}`,
+    });
+    expect(partsOf("{{cookiecutter.slug}}/{api,web}")).toStrictEqual({
+      dir: "{{cookiecutter.slug}}/",
+      base: "{api,web}",
+    });
+    expect(partsOf(String.raw`a/{\{b\},c}`)).toStrictEqual({
+      dir: "a/",
+      base: String.raw`{\{b\},c}`,
+    });
   });
 
   it("says what test code and a bucket are", () => {

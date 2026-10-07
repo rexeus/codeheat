@@ -35,7 +35,9 @@ export const Territory = Schema.Struct({
    * Repository-relative POSIX directory; "." for the whole repository (the root of the tree), or the package that holds every file. A `group` names its
    * directories with a brace glob over the directory they share
    * (`packages/a/{x,y}`, `{apps,lib}` at the root, `packages/{a/src,b}` when
-   * one branches deeper). An `other` node of loose files names the directory
+   * one branches deeper; `\`, `,`, `{`, and `}` in a member's name are
+   * escaped with a backslash, and the glob is the braces that close the
+   * path). An `other` node of loose files names the directory
    * they are in, a bucket the directory its folders are in; its `parent` and `kind` tell it
    * from the territory of that directory.
    */
