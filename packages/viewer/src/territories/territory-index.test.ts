@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
 
 import { territoryNode } from "../testing/reports.js";
-import { indexTerritories, territoryName } from "./territory-index.js";
+import {
+  indexTerritories,
+  territoryName,
+  territoryNameParts,
+} from "./territory-index.js";
 
 // root > core > (core/src, core/rest); the recommended detail shows core/src, core/rest, and docs.
 const nodes = [
@@ -65,17 +69,18 @@ describe("territoryName", () => {
       territoryName(territoryNode("a", "packages/core", { kind: "package" })),
     ).toBe("packages/core");
     expect(
-      territoryName(territoryNode("b", "a/x + b/y", { kind: "group" })),
-    ).toBe("a/x + b/y");
+      territoryName(territoryNode("b", "p/{a/src,b}", { kind: "group" })),
+    ).toBe("p/{a/src,b}");
     expect(territoryName(territoryNode("c", "src"))).toBe("src");
   });
 
-  it("names the folder a group shares once", () => {
+  it("splits a group's name into the folder it shares and its brace glob", () => {
     expect(
-      territoryName(
-        territoryNode("a", "p/x/a + p/x/b + p/x/c", { kind: "group" }),
-      ),
-    ).toBe("p/x/a + b + c");
+      territoryNameParts(territoryNode("a", "p/x/{a,b,c}", { kind: "group" })),
+    ).toStrictEqual({ dir: "p/x/", base: "{a,b,c}" });
+    expect(
+      territoryNameParts(territoryNode("b", "{apps,lib}", { kind: "group" })),
+    ).toStrictEqual({ dir: "", base: "{apps,lib}" });
   });
 
   it("says what test code and a bucket are", () => {

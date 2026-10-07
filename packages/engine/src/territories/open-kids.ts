@@ -2,6 +2,7 @@
 // and what waits: a bucket of smaller folders, or the loose files.
 import { folderPart } from "./folders.js";
 import type { FolderCut } from "./folders.js";
+import { groupPath } from "./group-path.js";
 import type { Together } from "./keep-together.js";
 import type { Part } from "./part.js";
 
@@ -30,7 +31,7 @@ const groupPart = (paths: ReadonlyArray<string>, context: Cut): Part => {
   const members = foldersOf(paths, context);
   return {
     kind: "group",
-    path: members.map((member) => member.path).join(" + "),
+    path: groupPath(members.map((member) => member.path)),
     files: members.flatMap((member) => member.files),
     members,
     base: context.cut.base,

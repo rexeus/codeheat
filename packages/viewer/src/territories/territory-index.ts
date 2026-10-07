@@ -60,26 +60,25 @@ export type NameParts = { readonly dir: string; readonly base: string };
 const parentOf = (path: string): string =>
   path.slice(0, path.lastIndexOf("/") + 1);
 
-/**
- * A group joins paths with ` + `. When they all sit in one folder, that
- * folder is named once: `packages/a/x + packages/a/y` is `x + y` in `packages/a/`.
- */
-const groupParts = (path: string): NameParts => {
-  const paths = path.split(" + ");
-  const [first] = paths;
-  const dir = first === undefined ? "" : parentOf(first);
-  if (dir === "" || !paths.every((member) => parentOf(member) === dir)) {
-    return { dir: "", base: path };
-  }
-  return {
-    dir,
-    base: paths.map((member) => member.slice(dir.length)).join(" + "),
-  };
-};
-
 const splitParts = (path: string): NameParts => {
   const dir = parentOf(path);
   return { dir, base: path.slice(dir.length) };
+};
+
+/** Where the brace glob of a group opens: at the start or right after a `/`. */
+const BRACE = /(?:^|\/)\{/u;
+
+/**
+ * A group is one brace glob over the folder its members share, which is
+ * named once: `packages/a/{x,y}` is `{x,y}` in `packages/a/`.
+ */
+const groupParts = (path: string): NameParts => {
+  const match = BRACE.exec(path);
+  if (match === null) {
+    return splitParts(path);
+  }
+  const open = match.index + match[0].length - 1;
+  return { dir: path.slice(0, open), base: path.slice(open) };
 };
 
 const PARTS: Record<Territory["kind"], (territory: Territory) => NameParts> = {
