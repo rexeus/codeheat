@@ -101,6 +101,74 @@ layer(NodeServices.layer)(
   },
 );
 
+layer(NodeServices.layer)(
+  "readRepositoryName of a linked work tree in other layouts",
+  (it) => {
+    it.effect(
+      "names a work tree of a hidden bare repository after the folder that holds it",
+      () =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const repo = yield* makeTempRepository;
+          yield* repo.commit("2026-03-01T12:00:00Z", { "a.ts": "a\n" });
+          const project = path.join(
+            yield* fs.makeTempDirectoryScoped(),
+            "proj",
+          );
+          const bare = path.join(project, ".bare");
+          yield* repo.git("clone", "--quiet", "--bare", repo.directory, bare);
+          yield* repo.git(
+            "--git-dir",
+            bare,
+            "worktree",
+            "add",
+            "--quiet",
+            path.join(project, "main"),
+          );
+
+          const name = yield* nameIn(path.join(project, "main"));
+
+          assert.strictEqual(name, "proj");
+        }),
+    );
+
+    it.effect(
+      "keeps the folder of a linked work tree whose repository keeps its git directory elsewhere",
+      () =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const repo = yield* makeTempRepository;
+          const elsewhere = yield* fs.makeTempDirectoryScoped();
+          const work = path.join(elsewhere, "sep");
+          const linked = path.join(elsewhere, "feature");
+          const store = path.join(elsewhere, "sepgit");
+          yield* repo.git("init", "--quiet", "--separate-git-dir", store, work);
+          yield* repo.git(
+            "-C",
+            work,
+            "-c",
+            "user.name=Codeheat Test",
+            "-c",
+            "user.email=test@codeheat.invalid",
+            "commit",
+            "--quiet",
+            "--allow-empty",
+            "-m",
+            "start",
+          );
+          yield* repo.git("-C", work, "worktree", "add", "--quiet", linked);
+
+          const name = yield* nameIn(linked);
+
+          // git itself lists the store as the main work tree: nothing names "sep"
+          assert.strictEqual(name, "feature");
+        }),
+    );
+  },
+);
+
 layer(NodeServices.layer)("readRepositoryName fallback", (it) => {
   const linked = "/r/.git/worktrees/w\n";
   const cases: ReadonlyArray<{
