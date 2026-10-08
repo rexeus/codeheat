@@ -9,9 +9,10 @@ const isTerritory = (kind: string): boolean =>
   kind === "package" || kind === "folder" || kind === "group";
 
 /**
- * One line naming the territories at the recommended detail: how many (buckets
- * of smaller folders, loose files, and test-only code are not counted), and
- * which detail of how many that is. Nothing when the report has no territories.
+ * One line naming the areas, the territories at the recommended detail: how
+ * many (buckets of smaller folders, loose files, and test-only code are not
+ * counted), and which detail of how many that is. Nothing when the report has
+ * no territories.
  */
 export const territoryLines = ({
   territories,
@@ -27,7 +28,7 @@ export const territoryLines = ({
     isTerritory(kinds.get(id) ?? ""),
   ).length;
   return [
-    `Territories: ${count} at the recommended detail (${territories.recommended} of ${territories.details.length}); --json has every detail.`,
+    `Areas: ${count} at the recommended detail (${territories.recommended} of ${territories.details.length}); --json has every detail.`,
   ];
 };
 

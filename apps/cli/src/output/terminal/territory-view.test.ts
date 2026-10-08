@@ -42,7 +42,7 @@ describe("territoryLines", () => {
     };
 
     expect(territoryLines({ territories })).toStrictEqual([
-      "Territories: 3 at the recommended detail (2 of 3); --json has every detail.",
+      "Areas: 3 at the recommended detail (2 of 3); --json has every detail.",
     ]);
   });
 

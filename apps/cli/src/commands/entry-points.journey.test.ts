@@ -18,7 +18,7 @@ describe("codeheat says where to start", () => {
         expect(result.exitCode).toBe(0);
         const lines = result.stdout.split("\n");
         const start = lines.indexOf("Where to start");
-        expect(lines[start - 2]).toMatch(/^Territories: /u);
+        expect(lines[start - 2]).toMatch(/^Areas: /u);
         expect(lines.slice(start + 1, start + 5)).toStrictEqual([
           "1. boundary  billing, web",
           "   The boundary between billing and web does not hold: changes in one keep reaching into the other.",
