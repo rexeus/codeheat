@@ -32,24 +32,31 @@ const isRealTerritory = ({ kind }: Territory): boolean =>
   kind === "package" || kind === "folder" || kind === "group";
 
 /**
- * Whether a real territory leaks, holds, or cannot be judged. One below
- * `minModuleCommits` has too few changes for its share to mean anything;
- * one that keeps little inside but has no partner says nothing about where
- * it leaks.
+ * Whether a real territory leaks or holds, or why it cannot be judged.
+ * `few-changes`: below `minModuleCommits`, or without a containment, its
+ * share means nothing. `no-partner`: it keeps little inside, but no partner
+ * says where it leaks.
  */
-const standingOf = (
-  territory: Territory,
-  limits: VerdictLimits,
-): "leaks" | "holds" | "unjudged" => {
+export type Standing = "leaks" | "holds" | "few-changes" | "no-partner";
+
+/** The standing of a real territory at the recommended detail (see `Standing`). */
+export const standingOf = (
+  territory: Pick<Territory, "changes" | "fit">,
+  limits: Pick<VerdictLimits, "minModuleCommits" | "maxEntryContainment">,
+): Standing => {
   const containment = territory.fit?.containment ?? null;
   if (containment === null || territory.changes < limits.minModuleCommits) {
-    return "unjudged";
+    return "few-changes";
   }
   if (containment > limits.maxEntryContainment) {
     return "holds";
   }
-  return (territory.fit?.partner ?? null) === null ? "unjudged" : "leaks";
+  return (territory.fit?.partner ?? null) === null ? "no-partner" : "leaks";
 };
+
+/** Whether a standing is a judgement: the territory leaks or holds. */
+export const isJudged = (standing: Standing): boolean =>
+  standing === "leaks" || standing === "holds";
 
 /** The territories listed at the recommended detail, in the report's order. */
 const recommendedOf = ({
@@ -117,7 +124,7 @@ export const judgeVerdict = (input: {
     .filter((territory) => isRealTerritory(territory))
     .flatMap((territory) => {
       const standing = standingOf(territory, limits);
-      return standing === "unjudged" ? [] : [{ territory, standing }];
+      return isJudged(standing) ? [{ territory, standing }] : [];
     })
     .toSorted(
       (one, other) => other.territory.heatShare - one.territory.heatShare,

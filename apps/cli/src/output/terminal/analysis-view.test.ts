@@ -16,8 +16,8 @@ const section = (view: string, heading: string): ReadonlyArray<string> => {
 };
 
 describe("renderAnalysis", () => {
-  it("summarizes the repository, window and universe size", () => {
-    expect(plainView().split("\n")[0]).toBe(
+  it("summarizes the repository, window and universe size below the answer", () => {
+    expect(plainView().split("\n")[2]).toBe(
       "acme-shop  2025-09-29 to 2026-09-29  212 commits, 36 files, 2 contract files",
     );
   });

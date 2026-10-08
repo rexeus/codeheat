@@ -4,6 +4,8 @@ export { analyze } from "./analyze/analyze.js";
 export type { AnalyzeError } from "./analyze/analyze.js";
 export { inspectFrom } from "./inspect/inspect-from.js";
 export { InspectResult } from "./model/inspect-result.js";
+export { reportOf } from "./projection/report-of.js";
+export type { Report } from "./report/report.js";
 export { Analysis } from "./model/analysis.js";
 export type { Module } from "./model/module.js";
 export type { Coupling, FileStats } from "./model/analysis.js";
