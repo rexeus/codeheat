@@ -1,6 +1,6 @@
 // Owns the answer to "what changes together?": the pairs of territories that
-// keep changing in the same changes (`Report.territoryCoupling`).
-import type { Report } from "@codeheat/engine";
+// keep changing in the same changes (`Analysis.territoryCoupling`).
+import type { Analysis } from "@codeheat/engine";
 
 import { distinctNameParts } from "../territories/distinct-names.js";
 import type {
@@ -56,7 +56,10 @@ const byStrength = (one: TerritoryPair, other: TerritoryPair): number =>
  * plainly when the report has no territories or no pair shares enough changes
  * (`thresholds.minSharedCommits`).
  */
-export const coChangeOf = (report: Report, index: TerritoryIndex): CoChange => {
+export const coChangeOf = (
+  report: Analysis,
+  index: TerritoryIndex,
+): CoChange => {
   if (index.recommended.length === 0) {
     return { kind: "none", note: NO_TERRITORIES };
   }

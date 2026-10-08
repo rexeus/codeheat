@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import type { Module } from "../report/module.js";
+import type { Module } from "../model/module.js";
 import type { ModuleRef } from "./detect.js";
 import {
   isLeakyInterface,

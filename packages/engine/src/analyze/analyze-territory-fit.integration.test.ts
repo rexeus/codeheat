@@ -3,7 +3,7 @@ import { assert, layer } from "@effect/vitest";
 import { Effect } from "effect";
 import { TestClock } from "effect/testing";
 
-import type { Report } from "../report/report.js";
+import type { Analysis } from "../model/analysis.js";
 import { analyzeOptionsFor } from "../testing/analyze-options.js";
 import { lines } from "../testing/logical-changes.js";
 import { makeTempRepository } from "../testing/temp-repository.js";
@@ -54,7 +54,7 @@ const buildHistory = (repo: TempRepository) =>
     }
   });
 
-const summarize = (territories: Report["territories"]) =>
+const summarize = (territories: Analysis["territories"]) =>
   Object.fromEntries(
     territories.nodes.map(({ path, fit }) => [
       path,

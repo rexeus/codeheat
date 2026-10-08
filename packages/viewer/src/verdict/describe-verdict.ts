@@ -1,12 +1,12 @@
 // Owns the words of the repository-level answer to "does the design hold up
-// to the way the code changes?": the engine judges it (`Report.verdict`),
+// to the way the code changes?": the engine judges it (`Analysis.verdict`),
 // this names the level and says why there is none.
-import type { Report } from "@codeheat/engine";
+import type { Analysis } from "@codeheat/engine";
 
 import { quietWindowOf } from "./quiet-window.js";
 
 /** `holds`: territories that contain their changes hold most of the work. `unknown`: nothing to judge. */
-export type VerdictLevel = Report["verdict"]["level"];
+export type VerdictLevel = Analysis["verdict"]["level"];
 
 export type Verdict = {
   readonly level: VerdictLevel;
@@ -46,8 +46,8 @@ const TOO_LITTLE: Words = { reason: TOO_LITTLE_EVIDENCE, note: "" };
  * for a report from before the verdict: it has none.
  */
 const WORDS: Record<
-  NonNullable<Report["verdict"]["reason"]>,
-  (report: Report) => Words
+  NonNullable<Analysis["verdict"]["reason"]>,
+  (report: Analysis) => Words
 > = {
   "no-territories": (report) => ({
     reason: report.territories.nodes.length === 0 ? NO_TERRITORIES : NO_VERDICT,
@@ -64,10 +64,10 @@ const WORDS: Record<
 
 /**
  * Whether the design holds up to the way the code changes, for the whole
- * repository, in words: the level the engine judged (`Report.verdict`), its
+ * repository, in words: the level the engine judged (`Analysis.verdict`), its
  * name, and for a report with no verdict why not and what to try.
  */
-export const describeVerdict = (report: Report): Verdict => {
+export const describeVerdict = (report: Analysis): Verdict => {
   const { level, reason } = report.verdict;
   return {
     level,

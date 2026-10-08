@@ -1,4 +1,4 @@
-import { InspectResult, Report } from "@codeheat/engine";
+import { InspectResult, Analysis } from "@codeheat/engine";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Schema } from "effect";
 
@@ -18,7 +18,7 @@ describe("codeheat finds hidden coupling", () => {
       });
 
       expect(result.exitCode).toBe(0);
-      const report = yield* Schema.decodeUnknownEffect(Report)(
+      const report = yield* Schema.decodeUnknownEffect(Analysis)(
         JSON.parse(result.stdout),
       );
       expect(
@@ -98,7 +98,7 @@ describe("codeheat without a parser", () => {
         expect(result.stderr).toBe(
           "codeheat: the code parser is unavailable (Cannot find native binding); import relations and module depth are not reported",
         );
-        const report = yield* Schema.decodeUnknownEffect(Report)(
+        const report = yield* Schema.decodeUnknownEffect(Analysis)(
           JSON.parse(result.stdout),
         );
         expect(report.couplings).toHaveLength(3);

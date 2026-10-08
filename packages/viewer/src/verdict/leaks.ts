@@ -1,4 +1,4 @@
-import type { Report } from "@codeheat/engine";
+import type { Analysis } from "@codeheat/engine";
 
 import type {
   Territory,
@@ -22,14 +22,14 @@ export type Leaks = {
 };
 
 /**
- * The territories the engine judged for the verdict (`Report.verdict`:
+ * The territories the engine judged for the verdict (`Analysis.verdict`:
  * `judged` and `leaking`, hottest first), each with how much of its changes
  * stay inside. A territory's `heatShare` is already its part of all the heat,
  * so the shares are of the repository, not of the judged territories alone.
  * `null` without a judged territory.
  */
 export const leaksOf = (
-  { verdict }: Report,
+  { verdict }: Analysis,
   territories: TerritoryIndex,
 ): Leaks | null => {
   const leaking = new Set(verdict.leaking);

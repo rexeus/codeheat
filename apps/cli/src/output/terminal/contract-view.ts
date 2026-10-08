@@ -1,6 +1,6 @@
 // Owns how the terminal says that part of the universe is contract files:
 // interface definitions and schemas, which couple with code but are no hotspots.
-import type { Coupling, Report } from "@codeheat/engine";
+import type { Coupling, Analysis } from "@codeheat/engine";
 
 import { escapeForTerminal } from "../escape.js";
 import { percent } from "./format.js";
@@ -8,7 +8,7 @@ import { percent } from "./format.js";
 const SHOWN_UBIQUITOUS = 3;
 
 /** How many contract files the analysis also read, to append to the universe size; nothing without any. */
-export const contractNote = (report: Report): string => {
+export const contractNote = (report: Analysis): string => {
   const { contracts } = report.totals;
   return contracts === 0
     ? ""
@@ -42,7 +42,7 @@ export const partnerName = (partner: {
  * The contract files that were left out of coupling for changing in most
  * changes, with their share; no lines when there are none.
  */
-export const ubiquitousLines = (report: Report): ReadonlyArray<string> => {
+export const ubiquitousLines = (report: Analysis): ReadonlyArray<string> => {
   const { ubiquitousFiles, thresholds } = report;
   if (ubiquitousFiles.length === 0) {
     return [];

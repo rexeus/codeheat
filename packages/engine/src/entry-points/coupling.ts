@@ -1,7 +1,7 @@
 // Owns the entry points of kind `coupling`: files in different territories that
 // keep changing together although no import links them.
 import { isJudgeablePair } from "../distant/distant-couplings.js";
-import type { Coupling } from "../report/report.js";
+import type { Coupling } from "../model/analysis.js";
 import { evidenceOf } from "./candidate.js";
 import type { Candidate } from "./candidate.js";
 import type { FileHeat } from "./file-heat.js";

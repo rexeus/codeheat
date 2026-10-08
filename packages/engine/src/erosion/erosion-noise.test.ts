@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import type { SeriesWindow } from "../report/series.js";
+import type { SeriesWindow } from "../model/series.js";
 import { randomFrom } from "../testing/seeded-random.js";
 import { judgeErosion } from "./repository-erosion.js";
 

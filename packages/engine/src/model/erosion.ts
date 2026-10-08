@@ -1,5 +1,5 @@
 // Owns the erosion part of the report contract: whether the design keeps
-// containing change over the windows of `Report.series`, for the repository
+// containing change over the windows of `Analysis.series`, for the repository
 // and for each module.
 // Additive fields keep schemaVersion 1; renaming or removing a field bumps it.
 import { Schema } from "effect";
@@ -24,7 +24,7 @@ export const TrendLine = Schema.Struct({
 export type TrendLine = typeof TrendLine.Type;
 
 /**
- * How a module's cohesion moved over `Report.series`: the windows in which it
+ * How a module's cohesion moved over `Analysis.series`: the windows in which it
  * had at least as many counted changes as a window of that size needs to rank
  * a module (`Thresholds.minModuleCommits`, derived from the window's own
  * counted changes) and at least `Thresholds.minWindowChanges` carry evidence,
@@ -45,7 +45,7 @@ export const ModuleErosion = Schema.Struct({
   /** Windows with evidence the line is fitted through. */
   windows: Count,
   /**
-   * The module's cohesion in each window of `Report.series`, in its order,
+   * The module's cohesion in each window of `Analysis.series`, in its order,
    * rounded to 4 decimals; null where the module has no evidence.
    */
   cohesion: Schema.Array(Schema.NullOr(UnitInterval)),

@@ -1,4 +1,4 @@
-import type { Report } from "@codeheat/engine";
+import type { Analysis } from "@codeheat/engine";
 
 /** The `id` of the JSON script element that carries the report. */
 export const REPORT_ELEMENT_ID = "report";
@@ -10,10 +10,10 @@ const LESS_THAN_ESCAPE = "\\u003c";
  * sign is escaped, so no file name can close the element or open a comment.
  * `JSON.parse` restores the original text.
  */
-export const serializeReport = (report: Report): string =>
+export const serializeReport = (report: Analysis): string =>
   JSON.stringify(report).replaceAll("<", LESS_THAN_ESCAPE);
 
-const isReport = (value: unknown): value is Report =>
+const isReport = (value: unknown): value is Analysis =>
   typeof value === "object" &&
   value !== null &&
   "schemaVersion" in value &&
@@ -48,11 +48,11 @@ const DESIGN_FIT_DEFAULTS = {
   changeRadius: null,
   propagationCost: null,
   erosion: null,
-} satisfies Partial<Report>;
+} satisfies Partial<Analysis>;
 
 /** The limits a report from before the territory matrix lacks. */
 const OLDER_THRESHOLDS = { maxCoupledTerritories: 24 } satisfies Partial<
-  Report["thresholds"]
+  Analysis["thresholds"]
 >;
 
 /**
@@ -61,7 +61,7 @@ const OLDER_THRESHOLDS = { maxCoupledTerritories: 24 } satisfies Partial<
  * schema version instead of rendering garbage. A report from an older codeheat
  * gets empty design-fit fields and the limits it lacks.
  */
-export const parseReport = (json: string): Report => {
+export const parseReport = (json: string): Analysis => {
   const value: unknown = JSON.parse(json);
   if (!isReport(value)) {
     throw new TypeError(

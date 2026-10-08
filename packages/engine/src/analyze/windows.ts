@@ -11,7 +11,7 @@ import type {
   SeriesSlice,
 } from "../history/history.js";
 import { countKinds } from "../mechanical/kinds.js";
-import type { Report } from "../report/report.js";
+import type { Analysis } from "../model/analysis.js";
 import { SERIES_MIN_MONTHS } from "../series/slice-ranges.js";
 import {
   resolveComparisonRanges,
@@ -131,7 +131,7 @@ export const comparisonOf = (
   { previous }: Windows,
   histories: WindowHistories,
   oldestCommit: number | null,
-): Report["comparison"] =>
+): Analysis["comparison"] =>
   previous === null || histories.previous === null
     ? null
     : {
@@ -152,9 +152,12 @@ export const comparisonOf = (
  */
 export const reportWindow = (
   current: TimeRange,
-  counts: Pick<Report["window"], "commits" | "realCommits" | "couplingCommits">,
+  counts: Pick<
+    Analysis["window"],
+    "commits" | "realCommits" | "couplingCommits"
+  >,
   head: Pick<Head, "committedAt"> | null,
-): Report["window"] => ({
+): Analysis["window"] => ({
   ...current,
   ...counts,
   lastCommitAt:

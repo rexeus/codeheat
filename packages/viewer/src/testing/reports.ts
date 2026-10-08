@@ -1,8 +1,8 @@
-import type { Coupling, FileStats, Module, Report } from "@codeheat/engine";
+import type { Coupling, FileStats, Module, Analysis } from "@codeheat/engine";
 
-type Territory = Report["territories"]["nodes"][number];
+type Territory = Analysis["territories"]["nodes"][number];
 type TerritoryFit = NonNullable<Territory["fit"]>;
-type EntryPoint = Report["entryPoints"][number];
+type EntryPoint = Analysis["entryPoints"][number];
 
 /** A file with the given path; every metric can be overridden. */
 export const fileStats = (
@@ -129,7 +129,7 @@ export const entryPointOf = (
   ...overrides,
 });
 
-const THRESHOLDS: Report["thresholds"] = {
+const THRESHOLDS: Analysis["thresholds"] = {
   maxCommitFiles: 50,
   hubMinBreadth: 10,
   hubMinRevisions: 5,
@@ -206,15 +206,15 @@ const NO_FINDINGS = {
   territoryCoupling: [],
   territoryCliques: [],
   entryPoints: [],
-} satisfies Partial<Report>;
+} satisfies Partial<Analysis>;
 
 /** A minimal valid report around the given files, couplings, and modules; `overrides` replace any other field (`comparison` is null by default). */
 export const reportOf = (
   files: readonly FileStats[],
   couplings: readonly Coupling[] = [],
   modules: readonly Module[] = [],
-  overrides: Partial<Report> = {},
-): Report => ({
+  overrides: Partial<Analysis> = {},
+): Analysis => ({
   schemaVersion: 1,
   tool: { name: "codeheat", version: "0.0.0" },
   generatedAt: "2026-09-29T12:00:00.000Z",

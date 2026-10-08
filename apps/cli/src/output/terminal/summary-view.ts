@@ -1,6 +1,6 @@
 // Owns the first lines of the terminal's `analyze` view: the summary of the
 // repository, window, and universe, and what the window says about change.
-import type { Report } from "@codeheat/engine";
+import type { Analysis } from "@codeheat/engine";
 
 import { escapeForTerminal } from "../escape.js";
 import { contractNote } from "./contract-view.js";
@@ -16,7 +16,7 @@ import type { Style } from "./style.js";
  * (see `spreadLines`). The repository name is made safe to print.
  */
 export const summaryLines = (
-  report: Report,
+  report: Analysis,
   style: Style,
 ): ReadonlyArray<string> => [
   style.bold(

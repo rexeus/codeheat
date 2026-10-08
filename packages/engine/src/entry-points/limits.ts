@@ -1,10 +1,10 @@
-// Owns the limits of the entry points, reported under `Report.thresholds` so
+// Owns the limits of the entry points, reported under `Analysis.thresholds` so
 // consumers see which gates a finding had to pass.
-import type { Report } from "../report/report.js";
+import type { Analysis } from "../model/analysis.js";
 
 /** The limits the entry points read; a subset of `Thresholds`. */
 export type EntryLimits = Pick<
-  Report["thresholds"],
+  Analysis["thresholds"],
   | "minEntryHeatShare"
   | "maxEntryContainment"
   | "minEntryChronicShare"

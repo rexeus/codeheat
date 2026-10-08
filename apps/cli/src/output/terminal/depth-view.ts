@@ -1,5 +1,5 @@
 // Owns the terminal view of module depth: the modules with the least implementation behind each export.
-import type { Module, Report } from "@codeheat/engine";
+import type { Module, Analysis } from "@codeheat/engine";
 import { Order } from "effect";
 
 import { escapeForTerminal } from "../escape.js";
@@ -20,9 +20,9 @@ const byShallowness = (a: Measured, b: Measured): number =>
 
 /**
  * The five shallowest ranked modules (enough counted commits, not test-only;
- * see `Report.modules`) whose depth is known.
+ * see `Analysis.modules`) whose depth is known.
  */
-const shallowestModules = (report: Report): ReadonlyArray<Measured> =>
+const shallowestModules = (report: Analysis): ReadonlyArray<Measured> =>
   report.modules
     .filter(
       (module) =>
@@ -43,7 +43,7 @@ export const describeDepth = (depth: Depth): string =>
  * entry points, or without the parser, has nothing to rank).
  */
 export const shallowestLines = (
-  report: Report,
+  report: Analysis,
   style: Style,
 ): ReadonlyArray<string> => {
   const modules = shallowestModules(report);

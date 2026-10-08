@@ -4,8 +4,8 @@ import { Order } from "effect";
 
 import { MIN_SHARED_COMMITS } from "../coupling/coupling.js";
 import type { ModuleCoChange } from "../distant/module-co-change.js";
-import type { TerritoryCoupling } from "../report/territory-coupling.js";
-import type { Territory } from "../report/territory.js";
+import type { TerritoryCoupling } from "../model/territory-coupling.js";
+import type { Territory } from "../model/territory.js";
 import { isTerritoryKind } from "../territories/recommend.js";
 import type { AreaCrossings } from "../territory-fit/crossing-pairs.js";
 

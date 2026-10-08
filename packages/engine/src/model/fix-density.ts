@@ -7,7 +7,7 @@ import { Schema } from "effect";
 import { Count, UnitInterval } from "./scalars.js";
 
 /**
- * Which counted changes of the window (see `Report.logicalChanges`) are fixes,
+ * Which counted changes of the window (see `Analysis.logicalChanges`) are fixes,
  * read from the subjects of their commits: `fix`, `hotfix`, `bugfix`, or
  * `revert` as the type of a Conventional Commit (`fix(scope)!: …`), a subject
  * that starts with `Revert "`, or one whose first word is `fix`, `fixes`,
@@ -40,7 +40,7 @@ export type FixDensity = typeof FixDensity.Type;
 
 /**
  * The fixes among the counted changes that touched a module, when
- * `Report.fixDensity` is `known`.
+ * `Analysis.fixDensity` is `known`.
  */
 export const ModuleFixes = Schema.Struct({
   /** Counted fixes that touched the module. */

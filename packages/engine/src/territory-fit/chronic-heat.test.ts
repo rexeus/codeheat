@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import type { Heat } from "../report/heat.js";
+import type { Heat } from "../model/heat.js";
 import { chronicHeat } from "./chronic-heat.js";
 
 const NODES = [

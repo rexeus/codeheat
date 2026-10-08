@@ -1,4 +1,4 @@
-// Owns the versioned `analyze` report that agents, the CLI, and the viewer read.
+// Owns the analysis model `analyze` returns and `--json` prints as schemaVersion 1.
 // Every consumer decodes with these schemas; nothing else defines the shape.
 // Additive fields keep schemaVersion 1; renaming or removing a field bumps it.
 import { Schema } from "effect";
@@ -31,13 +31,13 @@ export const FileStats = Schema.Struct({
   score: UnitInterval,
   /**
    * Real commits that touched the file in the window, mechanical commits
-   * excluded (see `Report.mechanicalCommits`): the hotspot measure. See
+   * excluded (see `Analysis.mechanicalCommits`): the hotspot measure. See
    * `changes` for the logical changes they make up.
    */
   revisions: Count,
   /**
    * Counted changes of the window (logical changes of at most
-   * `Thresholds.maxCommitFiles` files, see `Report.logicalChanges`) that
+   * `Thresholds.maxCommitFiles` files, see `Analysis.logicalChanges`) that
    * touched the file: at most `revisions`, and equal to it when no commits
    * were joined and none was too large. The unit of the file's heat
    * (`changes × (loc + complexity.total)`), `Coupling.degree`,
@@ -84,7 +84,7 @@ export const FileStats = Schema.Struct({
   reasons: Schema.Array(Schema.String),
   /** Null without `--compare`, and when either window has no real (non-mechanical) commit touching the universe. */
   trend: Schema.NullOr(FileTrend),
-  /** How long the file has been among the hottest; null for a file that is neither a chronic nor an acute hotspot, for test code, and without `Report.series` (see `Heat`). */
+  /** How long the file has been among the hottest; null for a file that is neither a chronic nor an acute hotspot, for test code, and without `Analysis.series` (see `Heat`). */
   heat: Schema.NullOr(Heat),
 });
 export type FileStats = typeof FileStats.Type;
@@ -93,7 +93,7 @@ export type FileStats = typeof FileStats.Type;
 export const Coupling = Schema.Struct({
   a: Schema.String,
   b: Schema.String,
-  /** Counted changes (see `Report.logicalChanges`) that touched both files. */
+  /** Counted changes (see `Analysis.logicalChanges`) that touched both files. */
   sharedCommits: Count,
   /** `sharedCommits / mean(changes(a), changes(b))` (see `FileStats.changes`), rounded to 4 decimals. */
   degree: UnitInterval,
@@ -104,7 +104,7 @@ export const Coupling = Schema.Struct({
   /**
    * What each file is. A coupling with a contract side joins a contract to the
    * code that changes with it (or to another contract); the contract is listed
-   * in `Report.contracts`, not in `files`.
+   * in `Analysis.contracts`, not in `files`.
    */
   kinds: Schema.Struct({ a: FileKind, b: FileKind }),
   /** The files belong to different modules. Neutral: an app legitimately changes with the library it uses. */
@@ -115,7 +115,7 @@ export const Coupling = Schema.Struct({
 export type Coupling = typeof Coupling.Type;
 
 /** The full result of `analyze`. */
-export const Report = Schema.Struct({
+export const Analysis = Schema.Struct({
   schemaVersion: Schema.Literal(1),
   tool: Schema.Struct({
     name: Schema.Literal("codeheat"),
@@ -247,4 +247,4 @@ export const Report = Schema.Struct({
    */
   dependencyDirection: Schema.Array(DependencyDirection),
 });
-export type Report = typeof Report.Type;
+export type Analysis = typeof Analysis.Type;

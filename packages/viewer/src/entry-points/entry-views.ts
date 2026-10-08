@@ -1,7 +1,7 @@
 // Owns what a place to start says on the page: the engine's entry points
 // (rank, kind, verdict, design move, evidence) turned into a short name, the
 // change effort at stake, and the numbers to show in plain words.
-import type { FileStats, Report } from "@codeheat/engine";
+import type { FileStats, Analysis } from "@codeheat/engine";
 
 import { distinctNameParts } from "../territories/distinct-names.js";
 import { territoryName } from "../territories/territory-index.js";
@@ -13,7 +13,7 @@ import { statsOf } from "./evidence.js";
 import type { EntryKind, EntryStat } from "./evidence.js";
 import { subjectOf } from "./subject.js";
 
-type EntryPoint = Report["entryPoints"][number];
+type EntryPoint = Analysis["entryPoints"][number];
 
 const KIND_LABELS: Record<EntryKind, string> = {
   boundary: "Boundary",
@@ -129,7 +129,7 @@ const viewOf = (
 
 /** The report's entry points, best first, as the page shows them. Empty when the report has none. */
 export const entryViewsOf = (
-  report: Report,
+  report: Analysis,
   index: TerritoryIndex,
 ): EntryView[] => {
   const parts = distinctNameParts(index.recommended);
@@ -145,7 +145,7 @@ export const entryViewsOf = (
  * territories that hold them); `null` without entry points, 0 without heat.
  */
 export const topEntriesCodeHeat = (
-  report: Report,
+  report: Analysis,
   index: TerritoryIndex,
 ): number | null => {
   const top = report.entryPoints.slice(0, TOP_ENTRY_POINTS);
@@ -172,7 +172,7 @@ export const topEntriesCodeHeat = (
  * report that predates territories, a window without counted changes, or a
  * repository that was judged and where nothing stands out.
  */
-export const noEntriesNote = ({ territories, window }: Report): string => {
+export const noEntriesNote = ({ territories, window }: Analysis): string => {
   if (territories.nodes.length === 0) {
     return "This report has no territories or entry points; analyze again with a current codeheat to see where to start.";
   }

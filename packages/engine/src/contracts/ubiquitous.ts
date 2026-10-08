@@ -5,8 +5,8 @@ import { Order } from "effect";
 
 import { countedChanges } from "../coupling/coupling.js";
 import type { History } from "../history/history.js";
-import type { UbiquitousFile } from "../report/contract-file.js";
-import { roundReported } from "../report/precision.js";
+import type { UbiquitousFile } from "../model/contract-file.js";
+import { roundReported } from "../model/precision.js";
 
 /** A contract file that changes in more than this share of the counted commits is ubiquitous. */
 export const UBIQUITOUS_SHARE = 0.3;

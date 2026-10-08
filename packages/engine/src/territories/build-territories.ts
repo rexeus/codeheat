@@ -1,8 +1,8 @@
 // Owns turning the files, the counted changes, and the packages of a
 // repository into its territories: a tree of non-overlapping areas of the
 // code, the nodes visible at each detail, and the detail to read first.
-import { roundReported } from "../report/precision.js";
-import type { Territories, Territory } from "../report/territory.js";
+import { roundReported } from "../model/precision.js";
+import type { Territories, Territory } from "../model/territory.js";
 import { attachTests } from "./attach-tests.js";
 import { evidenceOf } from "./evidence.js";
 import type { EvidenceInput } from "./evidence.js";

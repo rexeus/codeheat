@@ -1,5 +1,5 @@
 // Owns the entry points of kind `hub`: unstable interfaces many files depend on.
-import type { UnstableInterface } from "../report/unstable-interface.js";
+import type { UnstableInterface } from "../model/unstable-interface.js";
 import { evidenceOf } from "./candidate.js";
 import type { Candidate } from "./candidate.js";
 import type { FileHeat } from "./file-heat.js";

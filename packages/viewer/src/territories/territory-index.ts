@@ -1,6 +1,6 @@
-import type { Report } from "@codeheat/engine";
+import type { Analysis } from "@codeheat/engine";
 
-type Territories = Report["territories"];
+type Territories = Analysis["territories"];
 
 /** One area of the code, a node of the report's territory tree. */
 export type Territory = Territories["nodes"][number];

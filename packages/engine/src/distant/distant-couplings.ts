@@ -3,11 +3,11 @@
 import { Order } from "effect";
 
 import { directoryDistance } from "../coupling/pair.js";
+import type { Coupling } from "../model/analysis.js";
+import type { DistantCoupling } from "../model/distant-coupling.js";
+import { roundReported } from "../model/precision.js";
 import type { ModuleRef } from "../modules/detect.js";
 import { isTestPath } from "../modules/test-path.js";
-import type { DistantCoupling } from "../report/distant-coupling.js";
-import { roundReported } from "../report/precision.js";
-import type { Coupling } from "../report/report.js";
 
 /** The report keeps this many distant couplings, best first; `--limit` cuts further. */
 const MAX_DISTANT_COUPLINGS = 50;

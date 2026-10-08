@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import type { Clique } from "../report/clique.js";
+import type { Clique } from "../model/clique.js";
 import { territoryRecord } from "../testing/territory-record.js";
 import { territoryCliques } from "./territory-cliques.js";
 

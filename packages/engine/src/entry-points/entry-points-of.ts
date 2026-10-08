@@ -1,7 +1,7 @@
 // Owns which entry points a file belongs to.
-import type { EntryPoint } from "../report/entry-point.js";
-import type { FileStats } from "../report/report.js";
-import type { Territory } from "../report/territory.js";
+import type { FileStats } from "../model/analysis.js";
+import type { EntryPoint } from "../model/entry-point.js";
+import type { Territory } from "../model/territory.js";
 import { chainsOf } from "./ancestry.js";
 
 /** The territories an entry concerns: its own, and those of its findings (a clique that a boundary between two territories took in has a member the entry's `territories` do not name). */

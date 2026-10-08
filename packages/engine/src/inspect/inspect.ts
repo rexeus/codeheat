@@ -1,14 +1,14 @@
 // Owns focus: answering questions about some files within an unchanged universe.
-// Pure over a finished Report, so agents' per-file questions cost no second analysis.
+// Pure over a finished Analysis, so agents' per-file questions cost no second analysis.
 // Patterns are repository-relative picomatch globs or exact paths.
 import { Order } from "effect";
 
 import { groupByPath, partnersOf } from "../coupling/partners.js";
 import { entryPointsOfFiles } from "../entry-points/entry-points-of.js";
-import type { CopyFamily } from "../report/copy-family.js";
-import type { EntryPoint } from "../report/entry-point.js";
-import type { InspectResult } from "../report/inspect-result.js";
-import type { Coupling, FileStats, Report } from "../report/report.js";
+import type { Coupling, FileStats, Analysis } from "../model/analysis.js";
+import type { CopyFamily } from "../model/copy-family.js";
+import type { EntryPoint } from "../model/entry-point.js";
+import type { InspectResult } from "../model/inspect-result.js";
 import { matchesAny } from "../universe/globs.js";
 
 const MAX_PARTNERS = 10;
@@ -39,7 +39,7 @@ const toEntry = (
   entryPoints,
 });
 
-type Nodes = Report["territories"]["nodes"];
+type Nodes = Analysis["territories"]["nodes"];
 
 /** The ancestors of the `tests` territory `id`, up to and including the nearest one with a fit; none for another kind of territory. */
 const ancestorsOfTests = (
@@ -99,7 +99,7 @@ const namedByEntryPoints = (
  * would drop matches and partners.
  */
 export const inspect = (
-  report: Report,
+  report: Analysis,
   patterns: ReadonlyArray<string>,
 ): InspectResult => {
   const focused = new Set<string>();

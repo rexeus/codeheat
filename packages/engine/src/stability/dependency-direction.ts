@@ -6,10 +6,10 @@ import { Order } from "effect";
 import { countedChanges } from "../coupling/coupling.js";
 import type { History } from "../history/history.js";
 import type { Dependencies } from "../imports/dependencies.js";
+import type { DependencyDirection } from "../model/dependency-direction.js";
+import type { Module } from "../model/module.js";
+import { roundReported } from "../model/precision.js";
 import type { ModuleRef } from "../modules/detect.js";
-import type { DependencyDirection } from "../report/dependency-direction.js";
-import type { Module } from "../report/module.js";
-import { roundReported } from "../report/precision.js";
 
 /**
  * How many times as many counted changes as the importing module the imported

@@ -1,4 +1,4 @@
-import type { Report } from "@codeheat/engine";
+import type { Analysis } from "@codeheat/engine";
 import { describe, expect, it } from "vitest";
 
 import type { DirectoryNode, TreeNode } from "../layout/hierarchy.js";
@@ -13,7 +13,7 @@ import {
 } from "./map-view.js";
 
 // root > core > (core/src, core/lib), root > web; level 1 shows core and web, level 2 shows core/src, core/lib, and web.
-const territories: Report["territories"] = {
+const territories: Analysis["territories"] = {
   recommended: 1,
   details: [
     { level: 1, ids: ["t2", "t3"] },
@@ -168,7 +168,7 @@ describe("zoomedTo", () => {
   });
 
   it("moves to the coarsest detail that shows a territory neither the current nor the recommended detail does", () => {
-    const wide: Report["territories"] = {
+    const wide: Analysis["territories"] = {
       ...territories,
       recommended: 2,
       details: [

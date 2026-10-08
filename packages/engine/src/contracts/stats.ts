@@ -3,8 +3,8 @@
 import { Order } from "effect";
 
 import type { History } from "../history/history.js";
+import type { ContractFile } from "../model/contract-file.js";
 import type { ModuleRef } from "../modules/detect.js";
-import type { ContractFile } from "../report/contract-file.js";
 
 /**
  * Every contract file with its window activity, most revised first, ties by

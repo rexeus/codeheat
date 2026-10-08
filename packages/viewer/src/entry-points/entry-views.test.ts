@@ -1,4 +1,4 @@
-import type { Report } from "@codeheat/engine";
+import type { Analysis } from "@codeheat/engine";
 import { describe, expect, it } from "vitest";
 
 import { indexTerritories } from "../territories/territory-index.js";
@@ -11,12 +11,12 @@ import {
 } from "./entry-views.js";
 import { statsOf } from "./evidence.js";
 
-type EntryPoint = Report["entryPoints"][number];
+type EntryPoint = Analysis["entryPoints"][number];
 
-const viewsOf = (report: Report) =>
+const viewsOf = (report: Analysis) =>
   entryViewsOf(report, indexTerritories(report.territories));
 
-const topOf = (report: Report) =>
+const topOf = (report: Analysis) =>
   topEntriesCodeHeat(report, indexTerritories(report.territories));
 
 const base = reportWithParts([
@@ -26,7 +26,7 @@ const base = reportWithParts([
   { id: "t4", path: "apps/docs", heat: 0.05, containment: 0.9 },
 ]);
 
-const withEntries = (...entryPoints: EntryPoint[]): Report => ({
+const withEntries = (...entryPoints: EntryPoint[]): Analysis => ({
   ...base,
   entryPoints,
 });
@@ -161,7 +161,7 @@ describe("entryViewsOf entries about files", () => {
 const COMPLEXITY = { total: 50, mean: 1, max: 2 };
 
 /** One code file per territory with the heat `changes × (50 + 50)`, and a hot test file in t1. */
-const withHeat = (report: Report): Report => ({
+const withHeat = (report: Analysis): Analysis => ({
   ...report,
   files: [
     fileStats("packages/core/a.ts", {

@@ -1,5 +1,5 @@
 // Tests only: a territory record with every field at its neutral value.
-import type { Territory } from "../report/territory.js";
+import type { Territory } from "../model/territory.js";
 
 /** A territory `id` of `kind` below `parent` (null for the root) that splits into `children`; everything else is neutral. */
 export const territoryRecord = (

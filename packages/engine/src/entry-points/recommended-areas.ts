@@ -1,5 +1,5 @@
 // Owns where each file lies among the real territories of the recommended detail.
-import type { Territories } from "../report/territory.js";
+import type { Territories } from "../model/territory.js";
 import { isTerritoryKind } from "../territories/recommend.js";
 import { levelAt } from "../territory-fit/levels.js";
 

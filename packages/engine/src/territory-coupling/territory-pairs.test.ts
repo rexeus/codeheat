@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import type { Coupling } from "../report/report.js";
-import type { Territory } from "../report/territory.js";
+import type { Coupling } from "../model/analysis.js";
+import type { Territory } from "../model/territory.js";
 import type { Level } from "../territory-fit/levels.js";
 import { measureLevel } from "../territory-fit/measure-level.js";
 import { changeHistory } from "../testing/change-history.js";

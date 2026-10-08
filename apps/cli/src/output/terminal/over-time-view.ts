@@ -1,6 +1,6 @@
 // Owns the terminal view of how the design moved over the analysis window:
 // the verdict, the modules losing cohesion, the hotspots by age, and the fixes.
-import type { FileStats, Module, Report } from "@codeheat/engine";
+import type { FileStats, Module, Analysis } from "@codeheat/engine";
 
 import { escapeForTerminal } from "../escape.js";
 import { month, percent } from "./format.js";
@@ -16,7 +16,7 @@ const plural = (count: number, one: string, many: string): string =>
   `${count} ${count === 1 ? one : many}`;
 
 /** What to call `count` windows of the series: quarters when they are about that long, else by their length. */
-const windowNoun = (series: Report["series"], count: number): string => {
+const windowNoun = (series: Analysis["series"], count: number): string => {
   const [first] = series;
   const months =
     first === undefined
@@ -45,7 +45,7 @@ const TREND_WORDS = {
 } as const;
 
 /** The verdict's trend (`verdict.trend`, the one that lowers its level) as one sentence; `quiet` says since when the series has been quiet. */
-const trendLine = (report: Report, quiet: string): string => {
+const trendLine = (report: Analysis, quiet: string): string => {
   const { verdict, series, thresholds } = report;
   if (verdict.trend !== "unknown") {
     return `${TREND_WORDS[verdict.trend]} over ${windowNoun(series, series.length)}${quiet}.`;
@@ -57,8 +57,8 @@ const trendLine = (report: Report, quiet: string): string => {
 
 /** The modules' erosion as context, one sentence with the numbers behind it. */
 const moduleLine = (
-  erosion: NonNullable<Report["erosion"]>,
-  { series, thresholds }: Report,
+  erosion: NonNullable<Analysis["erosion"]>,
+  { series, thresholds }: Analysis,
 ): ReadonlyArray<string> => {
   if (erosion.verdict === "unknown") {
     return [
@@ -80,7 +80,7 @@ const moduleLine = (
 };
 
 /** The verdict's trend, then the modules' erosion as context; nothing without a series. */
-const verdictLines = (report: Report): ReadonlyArray<string> => {
+const verdictLines = (report: Analysis): ReadonlyArray<string> => {
   const { erosion, thresholds } = report;
   if (erosion === null) {
     return [];
@@ -95,7 +95,7 @@ const verdictLines = (report: Report): ReadonlyArray<string> => {
 /** Modules still changing whose cohesion fell by more than chance explains (their `verdict` is `eroding`), most eroded first. */
 const erodingModules = ({
   modules,
-}: Report): ReadonlyArray<
+}: Analysis): ReadonlyArray<
   Module & { erosion: NonNullable<Module["erosion"]> }
 > =>
   modules
@@ -113,7 +113,7 @@ const erodingModules = ({
     )
     .slice(0, TOP_ERODING_MODULES);
 
-const erodingLines = (report: Report): ReadonlyArray<string> =>
+const erodingLines = (report: Analysis): ReadonlyArray<string> =>
   erodingModules(report).map(
     ({ path, erosion }) =>
       `  ${escapeForTerminal(path)}: cohesion ${share(erosion.from)} to ${share(erosion.to)} over ${windowNoun(report.series, erosion.windows)}`,
@@ -124,7 +124,7 @@ const filesWithHeat = (
   kind: "chronic" | "acute",
 ) => files.filter((file) => file.heat?.kind === kind);
 
-const hotspotLines = (report: Report): ReadonlyArray<string> => {
+const hotspotLines = (report: Analysis): ReadonlyArray<string> => {
   const chronic = filesWithHeat(report.files, "chronic");
   const acute = filesWithHeat(report.files, "acute");
   if (chronic.length + acute.length === 0) {
@@ -146,7 +146,7 @@ const fixLines = ({
   fixDensity,
   modules,
   thresholds,
-}: Report): ReadonlyArray<string> => {
+}: Analysis): ReadonlyArray<string> => {
   if (fixDensity.changes === 0) {
     return [];
   }
@@ -180,14 +180,14 @@ const fixLines = ({
 
 /**
  * The "Over time" section, headed with where the series starts (it can start
- * before the analysis window: see `Report.seriesSince`): whether the design is holding or eroding (the verdict's trend, with the modules' erosion as context), the
+ * before the analysis window: see `Analysis.seriesSince`): whether the design is holding or eroding (the verdict's trend, with the modules' erosion as context), the
  * three modules whose cohesion fell most while still changing, how many
  * hotspots are chronic or acute, and how many changes are fixes. Parts the
  * report has no data for are left out, and so is the whole section when none
  * has. Ends with an empty line when it is not empty.
  */
 export const overTimeSection = (
-  report: Report,
+  report: Analysis,
   style: Style,
 ): ReadonlyArray<string> => {
   const lines = [

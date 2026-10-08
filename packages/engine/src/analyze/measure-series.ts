@@ -3,11 +3,11 @@
 import type { HeatWindow } from "../heat/classify-heat.js";
 import { heatWindow } from "../heat/heat-window.js";
 import type { SeriesSlice } from "../history/history.js";
+import type { FileStats } from "../model/analysis.js";
+import type { ContractFile } from "../model/contract-file.js";
+import type { Module } from "../model/module.js";
+import type { SeriesWindow } from "../model/series.js";
 import { touchedModules } from "../modules/touched-modules.js";
-import type { ContractFile } from "../report/contract-file.js";
-import type { Module } from "../report/module.js";
-import type { FileStats } from "../report/report.js";
-import type { SeriesWindow } from "../report/series.js";
 import { MIN_WINDOW_CHANGES } from "../series/active-window.js";
 import { measureSpread } from "../spread/measure-spread.js";
 import { coupleHistory } from "./measure.js";

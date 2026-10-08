@@ -1,7 +1,7 @@
 // Owns what the map shows: how its files are grouped, at which detail of the
 // territories, and which territory fills it. Every change is a function from
 // one view to the next, so the rules of what can be zoomed are in one place.
-import type { FileStats, Report } from "@codeheat/engine";
+import type { FileStats, Analysis } from "@codeheat/engine";
 
 import { buildTree } from "../layout/hierarchy.js";
 import type { DirectoryNode } from "../layout/hierarchy.js";
@@ -9,7 +9,7 @@ import { buildGroupedTree, buildZoomTree } from "./grouped-tree.js";
 import { groupFilesAt, visibleAt } from "./territory-groups.js";
 import type { Group } from "./territory-groups.js";
 
-type Territories = Report["territories"];
+type Territories = Analysis["territories"];
 
 export type Grouping = "territories" | "folders";
 

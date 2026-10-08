@@ -1,9 +1,9 @@
-import type { Report } from "@codeheat/engine";
+import type { Analysis } from "@codeheat/engine";
 import { describe, expect, it } from "vitest";
 
 import { fileTerritoryLine, territoryLines } from "./territory-view.js";
 
-type Territories = Report["territories"];
+type Territories = Analysis["territories"];
 
 const node = (id: string, kind: Territories["nodes"][number]["kind"]) => ({
   id,

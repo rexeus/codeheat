@@ -5,8 +5,8 @@ import type { ChildProcessSpawner } from "effect/process";
 
 import type { GitError } from "../git/git-errors.js";
 import { repositoryRoot, repositoryScope } from "../git/repository.js";
-import type { InspectResult } from "../report/inspect-result.js";
-import type { Report } from "../report/report.js";
+import type { Analysis } from "../model/analysis.js";
+import type { InspectResult } from "../model/inspect-result.js";
 import { isGlob } from "../universe/globs.js";
 import { inspect } from "./inspect.js";
 
@@ -69,7 +69,7 @@ export const inspectFrom = (options: {
   /** A directory inside the repository that `report` describes. */
   readonly cwd: string;
   /** An unlimited report, as `analyze` returns it. */
-  readonly report: Report;
+  readonly report: Analysis;
   readonly patterns: ReadonlyArray<string>;
 }): Effect.Effect<
   InspectResult,

@@ -2,11 +2,11 @@
 // cohesion moved. Both windows are measured over the same universe (the files
 // that exist now) and with the same fixed limits, such as `maxCommitFiles`;
 // the module floor `minModuleCommits` is the latest window's.
-import type { Module } from "../report/module.js";
-import { roundReported } from "../report/precision.js";
-import type { FileStats } from "../report/report.js";
+import type { FileStats } from "../model/analysis.js";
+import type { Module } from "../model/module.js";
+import { roundReported } from "../model/precision.js";
 
-/** What one window's measurement says; a `Report`'s files and modules, plus its commit count. */
+/** What one window's measurement says; an `Analysis`'s files and modules, plus its commit count. */
 type WindowMeasure = {
   /** Real changes in the window (`window.realCommits`): a window of mechanical commits only has nothing to compare. */
   readonly realCommits: number;

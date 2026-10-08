@@ -1,6 +1,6 @@
 // Owns what every kind of entry point produces before the list is ranked.
-import type { EntryPoint } from "../report/entry-point.js";
-import { roundReported } from "../report/precision.js";
+import type { EntryPoint } from "../model/entry-point.js";
+import { roundReported } from "../model/precision.js";
 
 /** One finding about an entry point (see `EntryPoint.findings`). */
 export type Finding = EntryPoint["findings"][number];

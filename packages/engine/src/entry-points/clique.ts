@@ -1,7 +1,7 @@
 // Owns the entry points of kind `clique`: territories that change as one unit
 // across their boundaries.
-import type { Clique } from "../report/clique.js";
-import type { Territory } from "../report/territory.js";
+import type { Clique } from "../model/clique.js";
+import type { Territory } from "../model/territory.js";
 import { evidenceOf } from "./candidate.js";
 import type { Candidate } from "./candidate.js";
 import type { EntryLimits } from "./limits.js";

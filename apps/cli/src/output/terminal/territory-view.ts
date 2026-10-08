@@ -1,6 +1,6 @@
 // Owns the terminal's one line about territories: how many there are at the
 // detail the report recommends.
-import type { InspectResult, Report } from "@codeheat/engine";
+import type { InspectResult, Analysis } from "@codeheat/engine";
 
 import { escapeForTerminal } from "../escape.js";
 import { percent } from "./format.js";
@@ -15,7 +15,7 @@ const isTerritory = (kind: string): boolean =>
  */
 export const territoryLines = ({
   territories,
-}: Pick<Report, "territories">): ReadonlyArray<string> => {
+}: Pick<Analysis, "territories">): ReadonlyArray<string> => {
   const detail = territories.details.find(
     ({ level }) => level === territories.recommended,
   );

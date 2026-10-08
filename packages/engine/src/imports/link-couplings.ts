@@ -1,6 +1,6 @@
 // Owns telling hidden coupling from visible: for each coupled pair, whether a
 // static import connects the two files, and whether we can tell.
-import type { Coupling } from "../report/report.js";
+import type { Coupling } from "../model/analysis.js";
 import type { ImportGraph } from "./import-graph.js";
 
 const relation = (

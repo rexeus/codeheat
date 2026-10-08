@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import type { Territories, Territory } from "../report/territory.js";
+import type { Territories, Territory } from "../model/territory.js";
 import { windowsStaying } from "../testing/area-windows.js";
 import { DEFAULT_THRESHOLDS } from "../testing/report-defaults.js";
 import { fitRecord, territoryRecord } from "../testing/territory-record.js";

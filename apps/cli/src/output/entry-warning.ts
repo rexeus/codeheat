@@ -1,5 +1,5 @@
 // Owns the one diagnostic for `--entry` globs that select nothing.
-import type { Report } from "@codeheat/engine";
+import type { Analysis } from "@codeheat/engine";
 import { Console, Effect } from "effect";
 
 /**
@@ -9,7 +9,7 @@ import { Console, Effect } from "effect";
  * could hold the match.
  */
 export const warnIfEntryMatchedNothing = (
-  report: Report,
+  report: Analysis,
   entry: ReadonlyArray<string>,
 ): Effect.Effect<void> =>
   entry.length > 0 && report.modules.every((m) => m.entryPoints.length === 0)

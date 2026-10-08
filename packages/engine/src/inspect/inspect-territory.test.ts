@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import type { EntryPoint } from "../report/entry-point.js";
-import type { Report } from "../report/report.js";
+import type { Analysis } from "../model/analysis.js";
+import type { EntryPoint } from "../model/entry-point.js";
 import { fileRecord } from "../testing/file-record.js";
 import {
   DEFAULT_THRESHOLDS,
@@ -36,7 +36,7 @@ const boundary: EntryPoint = {
   findings: [],
 };
 
-const reportOf = (): Report => ({
+const reportOf = (): Analysis => ({
   schemaVersion: 1,
   tool: { name: "codeheat", version: "0.0.0-test" },
   generatedAt: "2026-06-01T12:00:00.000Z",
@@ -132,7 +132,7 @@ describe("inspect territories", () => {
 describe("inspect territories of test code", () => {
   it("lists the territory that holds the tests territory of a matched file, which has no fit of its own", () => {
     const report = reportOf();
-    const withTests: Report = {
+    const withTests: Analysis = {
       ...report,
       files: [...report.files, fileRecord("a/x.test.ts", "t5", { rank: 4 })],
       territories: {
@@ -155,7 +155,7 @@ describe("inspect territories of test code", () => {
 
   it("lists the ancestors of a tests territory up to the nearest one with a fit", () => {
     const report = reportOf();
-    const withTests: Report = {
+    const withTests: Analysis = {
       ...report,
       files: [...report.files, fileRecord("a/x.test.ts", "t6", { rank: 4 })],
       territories: {

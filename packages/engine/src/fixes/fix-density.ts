@@ -1,9 +1,9 @@
 // Owns how much of the change is fixing: the share of the counted changes
 // whose subject marks a fix, for the repository and for each module.
 import type { LogicalChange } from "../changes/logical-change.js";
-import type { FixDensity } from "../report/fix-density.js";
-import type { Module } from "../report/module.js";
-import { roundReported } from "../report/precision.js";
+import type { FixDensity } from "../model/fix-density.js";
+import type { Module } from "../model/module.js";
+import { roundReported } from "../model/precision.js";
 
 /**
  * The least share of the changes that must follow a commit convention for

@@ -1,4 +1,4 @@
-import { Report } from "@codeheat/engine";
+import { Analysis } from "@codeheat/engine";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Schema } from "effect";
 
@@ -38,7 +38,7 @@ describe("codeheat finds unstable interfaces", () => {
         cwd: repo.root,
       });
 
-      const report = yield* Schema.decodeUnknownEffect(Report)(
+      const report = yield* Schema.decodeUnknownEffect(Analysis)(
         JSON.parse(analyzed.stdout),
       );
       expect(report.unstableInterfaces).toHaveLength(1);

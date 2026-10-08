@@ -1,4 +1,4 @@
-import type { Report } from "@codeheat/engine";
+import type { Analysis } from "@codeheat/engine";
 import { describe, expect, it } from "vitest";
 
 import { reportOf, territoryFit, territoryNode } from "../testing/reports.js";
@@ -10,7 +10,7 @@ const PARTNER = { territory: "t9", sharedChanges: 4, share: 0.2 };
 const judgedAs = (
   judged: readonly string[],
   leaking: readonly string[] = [],
-): Pick<Report, "verdict" | "thresholds"> => {
+): Pick<Analysis, "verdict" | "thresholds"> => {
   const report = reportOf([]);
   return {
     thresholds: report.thresholds,

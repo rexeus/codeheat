@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import type { EntryPoint } from "../report/entry-point.js";
+import type { EntryPoint } from "../model/entry-point.js";
 import { entryPointsOfFiles } from "./entry-points-of.js";
 
 const NODES = [

@@ -1,4 +1,4 @@
-import type { Coupling, Module, Report } from "@codeheat/engine";
+import type { Coupling, Module, Analysis } from "@codeheat/engine";
 import { describe, expect, it } from "vitest";
 
 import { sampleReport } from "../../testing/sample-report.js";
@@ -201,10 +201,10 @@ describe("renderAnalysis module ranking", () => {
 });
 
 const withLeaky = (
-  report: Report,
+  report: Analysis,
   leaky: ReadonlyArray<string>,
   change: Partial<Module> = {},
-): Report => ({
+): Analysis => ({
   ...report,
   modules: report.modules.map((module) =>
     leaky.includes(module.path)
@@ -342,7 +342,7 @@ describe("renderAnalysis contract files", () => {
           Object.assign({}, contract, { path }),
         ),
       );
-    const crowded: Report = {
+    const crowded: Analysis = {
       ...report,
       contracts: [...report.contracts, ...extraContracts],
       couplings: [...siblings, ...report.couplings],

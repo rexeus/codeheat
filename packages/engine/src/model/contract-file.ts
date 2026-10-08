@@ -25,7 +25,7 @@ export const ContractFile = Schema.Struct({
    * repository, not for every contract that no other module encloses. A
    * contract outside every module, such as a `spec/` folder beside two
    * packages, lives in the highest directory above it that holds no code (its
-   * own directory when every one does), which is no entry of `Report.modules`.
+   * own directory when every one does), which is no entry of `Analysis.modules`.
    * It counts for the module's cohesion and partners, never for its size.
    */
   module: Schema.String,

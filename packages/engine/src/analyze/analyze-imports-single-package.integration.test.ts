@@ -5,7 +5,7 @@ import { TestClock } from "effect/testing";
 import { parseSync } from "oxc-parser";
 
 import { typescriptAdapter } from "../code/typescript-adapter.js";
-import type { Report } from "../report/report.js";
+import type { Analysis } from "../model/analysis.js";
 import { analyzeOptionsFor } from "../testing/analyze-options.js";
 import { makeTempRepository } from "../testing/temp-repository.js";
 import type { TempRepository } from "../testing/temp-repository.js";
@@ -53,7 +53,7 @@ const buildHistory = (repo: TempRepository) =>
     }
   });
 
-const importsOf = (report: Report, a: string, b: string) =>
+const importsOf = (report: Analysis, a: string, b: string) =>
   report.couplings.find((coupling) => coupling.a === a && coupling.b === b)
     ?.imports;
 

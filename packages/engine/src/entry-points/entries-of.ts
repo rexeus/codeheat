@@ -1,6 +1,6 @@
 // Owns making one entry point of a territory's findings: a territory that is
 // both a boundary and a hotspot is one place to start, not two.
-import { roundReported } from "../report/precision.js";
+import { roundReported } from "../model/precision.js";
 import { findingOf } from "./candidate.js";
 import type { Candidate, Entry } from "./candidate.js";
 

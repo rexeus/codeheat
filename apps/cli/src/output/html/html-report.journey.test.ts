@@ -1,7 +1,7 @@
 import { chmodSync, existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
-import { Report } from "@codeheat/engine";
+import { Analysis } from "@codeheat/engine";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Schema } from "effect";
 
@@ -13,7 +13,7 @@ const EMBEDDED_REPORT =
   /<script type="application\/json" id="report">(?<json>.*?)<\/script>/su;
 
 const embeddedReport = (html: string) =>
-  Schema.decodeUnknownEffect(Report)(
+  Schema.decodeUnknownEffect(Analysis)(
     JSON.parse(EMBEDDED_REPORT.exec(html)?.groups?.["json"] ?? "null"),
   );
 
@@ -41,7 +41,7 @@ describe("codeheat analyze --html", () => {
 
         expect(result.exitCode).toBe(0);
         expect(result.stderr).toBe(`codeheat: wrote ${out}`);
-        const printed = yield* Schema.decodeUnknownEffect(Report)(
+        const printed = yield* Schema.decodeUnknownEffect(Analysis)(
           JSON.parse(result.stdout),
         );
         expect(printed.files).toHaveLength(1);

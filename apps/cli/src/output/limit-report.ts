@@ -1,4 +1,4 @@
-import type { Report } from "@codeheat/engine";
+import type { Analysis } from "@codeheat/engine";
 
 /**
  * Applies `--limit` to a report: `files`, `contracts`, `couplings`,
@@ -8,7 +8,7 @@ import type { Report } from "@codeheat/engine";
  * some of its nodes would not hold together. `territoryCoupling` (at most 276 pairs) and `territoryCliques` stay whole as well: they are the
  * data of one picture and name territories the tree holds.
  */
-export const limitReport = (report: Report, limit: number): Report =>
+export const limitReport = (report: Analysis, limit: number): Analysis =>
   limit === 0
     ? report
     : {

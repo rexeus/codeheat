@@ -1,5 +1,5 @@
 // Owns the diagnostics for history a shallow clone does not have.
-import type { Report } from "@codeheat/engine";
+import type { Analysis } from "@codeheat/engine";
 import { Console, Effect } from "effect";
 
 /**
@@ -7,7 +7,7 @@ import { Console, Effect } from "effect";
  * clone, and a second one when a comparison's previous window reaches past the
  * oldest fetched commit, since that comparison is incomplete.
  */
-export const warnIfShallow = (report: Report): Effect.Effect<void> =>
+export const warnIfShallow = (report: Analysis): Effect.Effect<void> =>
   Effect.gen(function* () {
     if (!report.repository.shallow) {
       return;

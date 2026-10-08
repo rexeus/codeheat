@@ -3,7 +3,7 @@ import { assert, layer } from "@effect/vitest";
 import { Effect, Schema } from "effect";
 import { TestClock } from "effect/testing";
 
-import { Report } from "../report/report.js";
+import { Analysis } from "../model/analysis.js";
 import { analyzeOptionsFor } from "../testing/analyze-options.js";
 import { makeTempRepository } from "../testing/temp-repository.js";
 import { analyze } from "./analyze.js";
@@ -129,7 +129,7 @@ const DEFAULT_LIMITS = {
 
 layer(NodeServices.layer)("analyze report", (it) => {
   it.effect(
-    "describes the repository and tool and satisfies the Report schema",
+    "describes the repository and tool and satisfies the Analysis schema",
     () =>
       Effect.gen(function* () {
         yield* setNow;
@@ -140,7 +140,7 @@ layer(NodeServices.layer)("analyze report", (it) => {
         const report = yield* analyze(analyzeOptionsFor(repo));
 
         assert.deepStrictEqual(
-          yield* Schema.decodeEffect(Report)(report),
+          yield* Schema.decodeEffect(Analysis)(report),
           report,
         );
         assert.deepStrictEqual(report.tool, {

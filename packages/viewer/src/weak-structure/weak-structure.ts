@@ -1,7 +1,7 @@
 // Owns the answer to "where is the structure weak?": the territories whose
 // boundaries leak, by the same rule as the verdict and the engine's
 // boundary entries.
-import type { Report } from "@codeheat/engine";
+import type { Analysis } from "@codeheat/engine";
 
 import { distinctNameParts } from "../territories/distinct-names.js";
 import {
@@ -51,7 +51,7 @@ const NO_TERRITORIES =
  * report has no territories, no real one, or none that can be judged.
  */
 export const weakStructureOf = (
-  report: Report,
+  report: Analysis,
   index: TerritoryIndex,
 ): WeakStructure => {
   if (index.recommended.length === 0) {

@@ -3,13 +3,13 @@
 import { judgeRobustShift } from "../erosion/shift-gate.js";
 import type { WindowShare } from "../erosion/shift-gate.js";
 import { fitLine } from "../erosion/trend-line.js";
-import type { Report } from "../report/report.js";
-import type { Verdict } from "../report/verdict.js";
+import type { Analysis } from "../model/analysis.js";
+import type { Verdict } from "../model/verdict.js";
 import { windowStays } from "./window-stays.js";
 
 /** The limits the trend reads, as the report states them. */
 type TrendLimits = Pick<
-  Report["thresholds"],
+  Analysis["thresholds"],
   "minWindowChanges" | "minVerdictWindows"
 >;
 

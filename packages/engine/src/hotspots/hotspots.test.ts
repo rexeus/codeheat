@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import type { Coupling } from "../report/report.js";
+import type { Coupling } from "../model/analysis.js";
 import { rankFiles } from "./hotspots.js";
 import type { FileMeasure } from "./hotspots.js";
 

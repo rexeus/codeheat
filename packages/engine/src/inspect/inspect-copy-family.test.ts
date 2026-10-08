@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import type { FileStats, Report } from "../report/report.js";
+import type { FileStats, Analysis } from "../model/analysis.js";
 import {
   DEFAULT_THRESHOLDS,
   NO_DESIGN_FINDINGS,
@@ -34,7 +34,7 @@ const family = {
   changesToAll: 3,
 };
 
-const reportOf = (copyFamilies: Report["copyFamilies"]): Report => ({
+const reportOf = (copyFamilies: Analysis["copyFamilies"]): Analysis => ({
   schemaVersion: 1,
   tool: { name: "codeheat", version: "0.0.0-test" },
   generatedAt: "2026-06-01T12:00:00.000Z",

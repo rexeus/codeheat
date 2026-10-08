@@ -1,6 +1,6 @@
 // Owns the detail to read first: the finest with few enough territories whose
 // buckets hide no folder hotter than a territory opened beside them.
-import type { Territory } from "../report/territory.js";
+import type { Territory } from "../model/territory.js";
 import type { FlatNode } from "./flatten-tree.js";
 import { MIN_VISIBLE_HEAT, directoriesOf, heatOf } from "./part.js";
 import type { Evidence, Part } from "./part.js";

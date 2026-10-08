@@ -3,7 +3,7 @@ import { assert, layer } from "@effect/vitest";
 import { Effect } from "effect";
 import { TestClock } from "effect/testing";
 
-import type { Report } from "../report/report.js";
+import type { Analysis } from "../model/analysis.js";
 import { analyzeOptionsFor } from "../testing/analyze-options.js";
 import { makeTempRepository } from "../testing/temp-repository.js";
 import type { TempRepository } from "../testing/temp-repository.js";
@@ -63,7 +63,7 @@ const moved = (
   previousRevisions: number,
 ) => ({ previousScore, previousRevisions, scoreDelta, newlyActive: false });
 
-const withoutTrends = (report: Report): Report => ({
+const withoutTrends = (report: Analysis): Analysis => ({
   ...report,
   comparison: null,
   files: report.files.map((file) => Object.assign({}, file, { trend: null })),

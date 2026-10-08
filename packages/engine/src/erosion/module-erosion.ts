@@ -1,8 +1,8 @@
 // Owns how each module's cohesion moved over the windows of the series.
+import type { ModuleErosion } from "../model/erosion.js";
+import type { Module } from "../model/module.js";
+import { roundReported } from "../model/precision.js";
 import { minModuleCommitsFor } from "../modules/cohesion.js";
-import type { ModuleErosion } from "../report/erosion.js";
-import type { Module } from "../report/module.js";
-import { roundReported } from "../report/precision.js";
 import { MIN_WINDOW_CHANGES } from "../series/active-window.js";
 import { judgeRobustShift } from "./shift-gate.js";
 import type { WindowShare } from "./shift-gate.js";

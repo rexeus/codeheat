@@ -1,10 +1,10 @@
 // Owns the territory cliques of the report: the cliques among the territories
 // at the recommended detail, with the heat they hold.
 import { cliqueHeat } from "../entry-points/clique.js";
-import type { Clique } from "../report/clique.js";
-import { roundReported } from "../report/precision.js";
-import type { TerritoryClique } from "../report/territory-coupling.js";
-import type { Territory } from "../report/territory.js";
+import type { Clique } from "../model/clique.js";
+import { roundReported } from "../model/precision.js";
+import type { TerritoryClique } from "../model/territory-coupling.js";
+import type { Territory } from "../model/territory.js";
 
 /**
  * The cliques of territories (see `Clique`; the members are territory ids) as

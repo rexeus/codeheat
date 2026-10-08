@@ -2,10 +2,10 @@
 // modules and the propagation cost over the co-change graph of the files.
 import { countedChanges } from "../coupling/coupling.js";
 import type { History } from "../history/history.js";
-import type { ChangeRadius, PropagationCost } from "../report/change-radius.js";
-import type { ContractFile } from "../report/contract-file.js";
-import type { Module } from "../report/module.js";
-import type { Coupling, FileStats } from "../report/report.js";
+import type { Coupling, FileStats } from "../model/analysis.js";
+import type { ChangeRadius, PropagationCost } from "../model/change-radius.js";
+import type { ContractFile } from "../model/contract-file.js";
+import type { Module } from "../model/module.js";
 import { measureRadius } from "./change-radius.js";
 import { propagationCost } from "./propagation-cost.js";
 

@@ -1,4 +1,4 @@
-import type { Report } from "@codeheat/engine";
+import type { Analysis } from "@codeheat/engine";
 import { describe, expect, it } from "vitest";
 
 import { indexTerritories } from "../territories/territory-index.js";
@@ -6,7 +6,7 @@ import { reportWithParts } from "../testing/design-fit.js";
 import { reportOf } from "../testing/reports.js";
 import { weakStructureOf } from "./weak-structure.js";
 
-const weakStructure = (report: Report) =>
+const weakStructure = (report: Analysis) =>
   weakStructureOf(report, indexTerritories(report.territories));
 
 describe("weakStructureOf", () => {

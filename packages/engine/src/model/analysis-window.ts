@@ -15,15 +15,15 @@ export const AnalysisWindow = Schema.Struct({
   commits: Count,
   /**
    * The commits among `commits` that are not mechanical (see
-   * `Report.mechanicalCommits`). 0 means the window has no real change: with
+   * `Analysis.mechanicalCommits`). 0 means the window has no real change: with
    * `--compare`, there is nothing to compare, even when `commits` is not 0.
    */
   realCommits: Count,
   /**
    * Logical changes that count for coupling, cohesion, and interface churn
-   * (see `Report.logicalChanges`; one per commit unless commits were
+   * (see `Analysis.logicalChanges`; one per commit unless commits were
    * grouped): made of real commits (not mechanical, see
-   * `Report.mechanicalCommits`) and not too large (see
+   * `Analysis.mechanicalCommits`) and not too large (see
    * `Thresholds.maxCommitFiles`).
    */
   couplingCommits: Count,

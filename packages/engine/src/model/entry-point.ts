@@ -84,7 +84,7 @@ export const EntryPoint = Schema.Struct({
   /**
    * The files it concerns: the chronic hotspots of a `hotspot`, the hottest
    * first, the members of `copies` (sorted), the file of `hub`, the two files of
-   * `coupling`. They may be missing from `Report.files` when `--limit` cut it. Empty
+   * `coupling`. They may be missing from `Analysis.files` when `--limit` cut it. Empty
    * for `boundary` and `clique`, which concern whole territories, and for a
    * territory that is both a boundary and a hotspot (its hotspot files are
    * in the finding).

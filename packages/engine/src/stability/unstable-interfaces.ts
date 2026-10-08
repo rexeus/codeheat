@@ -4,9 +4,9 @@ import { Order } from "effect";
 
 import { countedChanges } from "../coupling/coupling.js";
 import type { History } from "../history/history.js";
+import type { UnstableInterface } from "../model/unstable-interface.js";
 import type { ModuleRef } from "../modules/detect.js";
 import { isTestPath } from "../modules/test-path.js";
-import type { UnstableInterface } from "../report/unstable-interface.js";
 
 /** Fewest dependents (see `UnstableInterface.fanIn`) that make a file an interface many rely on. */
 export const MIN_FAN_IN = 5;

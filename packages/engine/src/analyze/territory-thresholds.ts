@@ -1,5 +1,5 @@
 // Owns the limits of the territory-level findings, reported under
-// `Report.thresholds`: the entry point gates, the size of the territory
+// `Analysis.thresholds`: the entry point gates, the size of the territory
 // matrix, and the cut points of the verdict.
 import { ENTRY_THRESHOLDS } from "../entry-points/limits.js";
 import { MAX_COUPLED_TERRITORIES } from "../territory-coupling/territory-pairs.js";

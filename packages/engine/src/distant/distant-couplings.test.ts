@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
+import type { Coupling } from "../model/analysis.js";
 import type { ModuleRef } from "../modules/detect.js";
-import type { Coupling } from "../report/report.js";
 import { distantCouplings } from "./distant-couplings.js";
 
 const MODULES: ReadonlyMap<string, ModuleRef> = new Map(

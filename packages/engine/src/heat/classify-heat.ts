@@ -1,7 +1,7 @@
 // Owns telling chronic hotspots from acute ones: how many windows of the
 // series a file was among the hottest in.
 import { MIN_TREND_WINDOWS } from "../erosion/trend-line.js";
-import type { Heat } from "../report/heat.js";
+import type { Heat } from "../model/heat.js";
 
 /** What one window of the series says about the files. */
 export type HeatWindow = {

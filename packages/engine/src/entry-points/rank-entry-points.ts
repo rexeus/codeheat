@@ -2,8 +2,8 @@
 // the at most ten places to start.
 import { Order } from "effect";
 
-import type { EntryPoint } from "../report/entry-point.js";
-import { roundReported } from "../report/precision.js";
+import type { EntryPoint } from "../model/entry-point.js";
+import { roundReported } from "../model/precision.js";
 import type { Entry } from "./candidate.js";
 import { entriesOf } from "./entries-of.js";
 import { foldsOf } from "./fold-boundaries-and-cliques.js";

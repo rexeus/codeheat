@@ -2,8 +2,8 @@
 // that there is nothing to judge, when the history last changed, and what to
 // do about it. "When" is the day of the newest commit of the repository
 // (`window.lastCommitAt`); a report without it falls back to the span of the
-// latest window of `Report.series` that has counted changes.
-import type { Report } from "@codeheat/engine";
+// latest window of `Analysis.series` that has counted changes.
+import type { Analysis } from "@codeheat/engine";
 
 import { formatDay } from "../render/format.js";
 
@@ -25,7 +25,7 @@ const mechanicalNote = (lastCommitAt: string): string =>
   `The commits of this window are mechanical and do not count; the newest commit of the repository was on ${formatDay(lastCommitAt)}.`;
 
 /** Where the history last changed, as far as the series says, and the flag that reaches it. */
-const seriesNote = ({ series, seriesSince }: Report): string => {
+const seriesNote = ({ series, seriesSince }: Analysis): string => {
   const last = series.findLast(({ changes }) => changes > 0);
   if (last !== undefined) {
     return `The last counted changes fall between ${formatDay(last.since)} and ${formatDay(last.until)}. A longer window, set with --since, would include them.`;
@@ -43,7 +43,7 @@ const seriesNote = ({ series, seriesSince }: Report): string => {
  * scoped analysis), so the series says where the analysed code last changed.
  * A report without the date falls back to the series too.
  */
-const noteOf = (report: Report): string => {
+const noteOf = (report: Analysis): string => {
   const { lastCommitAt, since, commits } = report.window;
   if (lastCommitAt === null) {
     return seriesNote(report);
@@ -55,7 +55,7 @@ const noteOf = (report: Report): string => {
 };
 
 /** What to say about a window without a real change; `null` when the window has one. */
-export const quietWindowOf = (report: Report): QuietWindow | null =>
+export const quietWindowOf = (report: Analysis): QuietWindow | null =>
   report.window.realCommits === 0
     ? { sentence: SENTENCE, note: noteOf(report) }
     : null;

@@ -18,12 +18,12 @@ import {
   HUB_TOP_SHARE,
   MIN_HIDDEN_PROBABILITY,
 } from "../hotspots/reasons.js";
+import type { Analysis } from "../model/analysis.js";
 import { minModuleCommitsFor } from "../modules/cohesion.js";
 import {
   MIN_IMPLEMENTATION_COMMITS,
   MIN_LEAKAGE,
 } from "../modules/interface-churn.js";
-import type { Report } from "../report/report.js";
 import { PROPAGATION_DEPTH } from "../spread/propagation-cost.js";
 import { MIN_VOLATILITY_RATIO } from "../stability/dependency-direction.js";
 import {
@@ -64,4 +64,4 @@ export const thresholdsFor = (couplingCommits: number) =>
     ...TERRITORY_THRESHOLDS,
     maxMeanLineLength: MAX_MEAN_LINE_LENGTH,
     maxFileBytes: MAX_FILE_BYTES,
-  }) satisfies Report["thresholds"];
+  }) satisfies Analysis["thresholds"];

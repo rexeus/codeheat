@@ -1,4 +1,4 @@
-import type { FileStats, Report } from "@codeheat/engine";
+import type { FileStats, Analysis } from "@codeheat/engine";
 
 import type { DirectoryNode } from "../layout/hierarchy.js";
 import { byId, h } from "../render/dom.js";
@@ -120,7 +120,7 @@ const showView = (
  * report without territories is grouped by folder and shows no controls.
  */
 export const mountMapGrouping = (
-  report: Report,
+  report: Analysis,
   keep: ReadonlySet<string>,
   onChange: () => void,
 ): MapGrouping => {

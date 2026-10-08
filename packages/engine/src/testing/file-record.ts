@@ -1,5 +1,5 @@
 // Tests only: a report file with every field at its neutral value.
-import type { FileStats } from "../report/report.js";
+import type { FileStats } from "../model/analysis.js";
 
 /** The file `path` of territory `territory`; override what a test is about. */
 export const fileRecord = (

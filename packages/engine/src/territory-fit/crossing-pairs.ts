@@ -2,7 +2,7 @@
 import { Order } from "effect";
 
 import { isJudgeablePair } from "../distant/distant-couplings.js";
-import type { Coupling } from "../report/report.js";
+import type { Coupling } from "../model/analysis.js";
 
 /** The pairs that leave one territory for another. */
 export type Crossings = {

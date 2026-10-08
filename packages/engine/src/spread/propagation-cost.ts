@@ -1,9 +1,9 @@
 // Owns the propagation cost: how much of the code a change to one file drags
 // along, read from the co-change graph of the files.
 import { MIN_SHARED_COMMITS } from "../coupling/coupling.js";
-import type { PropagationCost } from "../report/change-radius.js";
-import { roundReported } from "../report/precision.js";
-import type { Coupling } from "../report/report.js";
+import type { Coupling } from "../model/analysis.js";
+import type { PropagationCost } from "../model/change-radius.js";
+import { roundReported } from "../model/precision.js";
 
 /** Longest chain of couplings a change is followed along: a full closure saturates on dense graphs and says nothing. */
 export const PROPAGATION_DEPTH = 3;

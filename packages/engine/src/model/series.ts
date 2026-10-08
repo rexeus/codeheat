@@ -7,14 +7,14 @@ import { ChangeRadius, PropagationCost } from "./change-radius.js";
 import { Count } from "./scalars.js";
 
 /**
- * One window of `Report.series`: the change radius and the propagation cost
- * of the counted changes (see `Report.logicalChanges`) that landed in it, over
+ * One window of `Analysis.series`: the change radius and the propagation cost
+ * of the counted changes (see `Analysis.logicalChanges`) that landed in it, over
  * the modules and files of the report. The windows are measured like the
  * analysis window, so the numbers follow the same definitions, but each
  * window groups, couples, and counts only its own commits: a pull request
  * that spans two windows is split between them. The windows are classified
  * (which commits are mechanical) and their pull requests read over the whole
- * series span, not over `Report.window`.
+ * series span, not over `Analysis.window`.
  */
 export const SeriesWindow = Schema.Struct({
   since: Schema.String,
@@ -28,9 +28,9 @@ export const SeriesWindow = Schema.Struct({
    * verdict, trend, or classification rests on them.
    */
   active: Schema.Boolean,
-  /** See `Report.changeRadius`; null when no counted change touched a module. */
+  /** See `Analysis.changeRadius`; null when no counted change touched a module. */
   changeRadius: Schema.NullOr(ChangeRadius),
-  /** See `Report.propagationCost`; null without two files to couple. */
+  /** See `Analysis.propagationCost`; null without two files to couple. */
   propagationCost: Schema.NullOr(PropagationCost),
 });
 export type SeriesWindow = typeof SeriesWindow.Type;
