@@ -95,8 +95,9 @@ const areaOf = (
  * the report names elsewhere), so that every area name the report uses is
  * listed. The rest holds every other territory of the detail, buckets of
  * smaller folders, loose files, and test-only code included; its `areas`
- * counts the real ones. The heat of the listed areas and of the rest adds up
- * to the percent of all the heat the detail holds (see `percentsOf`).
+ * counts the real ones. The detail splits all the heat, so the heat of the
+ * listed areas and of the rest adds up to exactly 100, or is 0 without any
+ * heat (see `percentsOf`).
  */
 export const areasOf = (
   analysis: Pick<Analysis, "territories"> & { readonly thresholds: Limits },

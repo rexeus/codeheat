@@ -108,7 +108,7 @@ describe("areasOf area", () => {
     const [area] = areasFor([
       {
         id: "a",
-        heat: 0.5,
+        heat: 1,
         files: 9,
         testFiles: 4,
         fit: { containment: 0.8333 },
@@ -120,7 +120,7 @@ describe("areasOf area", () => {
       description: "a",
       files: 5,
       changes: 20,
-      heat: 50,
+      heat: 100,
       stays: 0.83,
     });
   });

@@ -109,9 +109,12 @@ const danglingNames = (report: Report): ReadonlyArray<string> => {
   ].filter((name) => !listed.has(name));
 };
 
-const heatSum = (report: Report): number =>
-  report.areas.reduce((sum, { heat }) => sum + heat, 0) +
-  report.basis.rest.heat;
+/** The heat of the listed areas and the rest in tenths of a percent, counted exactly. */
+const heatTenths = (report: Report): number =>
+  [...report.areas.map(({ heat }) => heat), report.basis.rest.heat].reduce(
+    (sum, heat) => sum + Math.round(heat * 10),
+    0,
+  );
 
 /** Areas whose `note` does not say exactly that their `stays` is null. */
 const notesAmiss = (report: Report): ReadonlyArray<string> =>
@@ -165,8 +168,8 @@ describe("reportOf invariants on areas of every standing", () => {
     expect(danglingNames(report)).toEqual([]);
   });
 
-  it("adds the heat of the listed areas and the rest up to 100 ± 0.2", () => {
-    expect(Math.abs(heatSum(report) - 100)).toBeLessThanOrEqual(0.2);
+  it("adds the heat of the listed areas and the rest up to exactly 100.0", () => {
+    expect(heatTenths(report)).toBe(1000);
   });
 
   it("gives a note exactly to the areas whose stays is null", () => {
@@ -187,7 +190,7 @@ describe("reportOf invariants on fixtures/report.sample.json", () => {
 
         expect(report.areas).toHaveLength(5);
         expect(danglingNames(report)).toEqual([]);
-        expect(Math.abs(heatSum(report) - 100)).toBeLessThanOrEqual(0.2);
+        expect(heatTenths(report)).toBe(1000);
         expect(notesAmiss(report)).toEqual([]);
       }).pipe(Effect.provide(NodeServices.layer)),
   );

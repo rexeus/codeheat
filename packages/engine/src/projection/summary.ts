@@ -2,6 +2,7 @@
 // and agents share for the verdict, its trend, and why its evidence is thin.
 import type { Analysis } from "../model/analysis.js";
 import type { ThinEvidence } from "../verdict/evidence.js";
+import { percentDownOf } from "./units.js";
 
 type Verdict = Analysis["verdict"];
 
@@ -43,8 +44,8 @@ const THIN_WORDS: Record<
 
 /**
  * The verdict of `analysis` in one sentence of plain words: the level, the
- * trend when there is one, the percent of the change effort in leaking
- * areas, and why the evidence is thin (`thin`, see `thinEvidenceOf`); for an
+ * trend when there is one, the whole percent of the change effort in leaking
+ * areas (rounded down, as the level is decided below each cut point), and why the evidence is thin (`thin`, see `thinEvidenceOf`); for an
  * `unknown` level, why there is none.
  */
 export const summaryOf = (
@@ -63,5 +64,5 @@ export const summaryOf = (
     thin === null || thin === "no-level"
       ? ""
       : `, ${THIN_WORDS[thin](analysis)}`;
-  return `${lead}: ${Math.round(leakShare * 100)}% of the change effort sits in areas that leak${tail}.`;
+  return `${lead}: ${Math.floor(percentDownOf(leakShare))}% of the change effort sits in areas that leak${tail}.`;
 };
