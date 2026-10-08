@@ -75,6 +75,22 @@ describe("answerOf at the cut points", () => {
 });
 
 describe("answerOf without a level", () => {
+  it("says no-files for an analysis without territories", () => {
+    const answer = answerOf(
+      analysisOf({
+        level: "unknown",
+        reason: "no-territories",
+        trend: "unknown",
+      }),
+      0,
+    );
+
+    expect([answer.reason, answer.summary]).toEqual([
+      "no-files",
+      "Not enough evidence: the repository has no files to judge.",
+    ]);
+  });
+
   it("gives the reason and no leaking heat for an unknown level, on thin evidence", () => {
     const answer = answerOf(
       analysisOf({

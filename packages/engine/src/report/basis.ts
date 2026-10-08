@@ -42,7 +42,7 @@ const Excluded = Schema.Struct({
 const Rest = Schema.Struct({
   /** Areas that are not listed: not judged, under 1 percent of the heat, and named nowhere. */
   areas: Count,
-  /** Their production code files, with those of folders too small to be areas, loose files, and test code of no area. */
+  /** Their production code files, with those of folders too small to be areas and loose files. */
   files: Count,
   /** Percent of all the heat in them; with `areas[].heat`, it adds up to exactly 100 (0 without any heat). */
   heat: Percent,

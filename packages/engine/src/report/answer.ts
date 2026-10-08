@@ -44,13 +44,15 @@ export const Answer = Schema.Struct({
    */
   evidence: Schema.Literals(["strong", "thin"]),
   /**
-   * Why the level is `unknown`, present only then. `no-territories`: the
-   * analysis has no files. `quiet-window`: the window has no counted change.
-   * `too-little-evidence`: too little of the heat sits in areas with enough
-   * changes to judge.
+   * Why the level is `unknown`, present only then. `no-files`: there are no
+   * files to judge. `quiet-window`: the window has no real commit, only
+   * mechanical ones or none. `too-little-evidence`: the judged areas hold
+   * less than `basis.thresholds.judgedHeatNeeded` percent of the heat; the
+   * rest sits in areas too quiet to judge, or in loose files and other parts
+   * that are no areas (see `basis.rest`).
    */
   reason: Schema.optionalKey(
-    Schema.Literals(["no-territories", "quiet-window", "too-little-evidence"]),
+    Schema.Literals(["no-files", "quiet-window", "too-little-evidence"]),
   ),
 });
 export type Answer = typeof Answer.Type;
