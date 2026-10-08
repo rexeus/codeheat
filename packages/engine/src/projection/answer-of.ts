@@ -5,15 +5,19 @@ import { thinEvidenceOf } from "../verdict/evidence.js";
 import { summaryOf } from "./summary.js";
 import { percentDownOf } from "./units.js";
 
-/** The answer of `analysis`: its verdict, in one sentence, with how strong the evidence is. */
+/**
+ * The answer of `analysis`: its verdict, in one sentence, with how strong the
+ * evidence is; `restHeat` is the percent of all the heat in no listed area.
+ */
 export const answerOf = (
   analysis: Pick<Analysis, "verdict" | "window" | "repository" | "thresholds">,
+  restHeat: number,
 ): Answer => {
   const { verdict } = analysis;
   const thin = thinEvidenceOf(analysis);
   const answer: Answer = {
     level: verdict.level,
-    summary: summaryOf(analysis, thin),
+    summary: summaryOf(analysis, thin, restHeat),
     leakingHeat:
       verdict.level === "unknown" ? null : percentDownOf(verdict.leakShare),
     trend: verdict.trend,

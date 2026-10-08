@@ -9,7 +9,7 @@ import type { Basis } from "../report/basis.js";
 import { isTerritoryKind } from "../territories/recommend.js";
 import { isJudged, standingOf } from "../verdict/judge-verdict.js";
 import type { Standing } from "../verdict/judge-verdict.js";
-import { percentsOf, shareOf } from "./units.js";
+import { percentOf, percentsOf, shareOf } from "./units.js";
 
 /** An area that is neither judged nor named elsewhere is listed from this share of all the heat on. */
 const MIN_LISTED_HEAT = 0.01;
@@ -53,6 +53,20 @@ const staysOf = (territory: Territory, standing: Standing): number | null => {
   return isJudged(standing) && containment !== null
     ? shareOf(containment)
     : null;
+};
+
+/** The unlisted territory with the most heat, at most `restHeat`; null when there is none. */
+const largestOf = (
+  rest: ReadonlyArray<Territory>,
+  restHeat: number,
+): Basis["rest"]["largest"] => {
+  const [largest] = rest.toSorted(byHeat);
+  return largest === undefined
+    ? null
+    : {
+        path: largest.path,
+        heat: Math.min(percentOf(largest.heatShare), restHeat),
+      };
 };
 
 /** What report v2 says about one listed area with `heat`; `pathOf` names another territory by its id. */
@@ -142,6 +156,7 @@ export const areasOf = (
         0,
       ),
       heat: heats[listed.length] ?? 0,
+      largest: largestOf(rest, heats[listed.length] ?? 0),
     },
   };
 };

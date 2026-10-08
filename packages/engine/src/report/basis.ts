@@ -46,6 +46,13 @@ const Rest = Schema.Struct({
   files: Count,
   /** Percent of all the heat in them; with `areas[].heat`, it adds up to exactly 100 (0 without any heat). */
   heat: Percent,
+  /**
+   * The unlisted part with the most heat, ties by path: the loose files of a
+   * directory (`path` is the directory), a bucket of smaller folders (the
+   * directory they are in), test code of no area, or an area; null when
+   * every part is listed. Its `heat` is at most `rest.heat`.
+   */
+  largest: Schema.NullOr(Schema.Struct({ path: Schema.String, heat: Percent })),
 });
 
 /** The limits behind the answer, what the counts leave out, and the rest. */

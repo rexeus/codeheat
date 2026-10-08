@@ -74,7 +74,12 @@ describe("areasOf listing", () => {
       "src/edge",
       "src/cold-judged",
     ]);
-    expect(rest).toEqual({ areas: 1, files: 10, heat: 68.5 });
+    expect(rest).toEqual({
+      areas: 1,
+      files: 10,
+      heat: 68.5,
+      largest: { path: "src/bucket", heat: 67.6 },
+    });
   });
 
   it("lists an area the report names elsewhere, and one a listed area leaks into, however cold", () => {
@@ -93,13 +98,14 @@ describe("areasOf listing", () => {
     expect(rest.areas).toBe(1);
   });
 
-  it("breaks a tie in heat by path", () => {
-    const { areas } = areasFor([
+  it("breaks a tie in heat by path, and names no largest rest when it lists every part", () => {
+    const { areas, rest } = areasFor([
       { id: "b", heat: 0.5, changes: 2 },
       { id: "a", heat: 0.5, changes: 2 },
     ]);
 
     expect(areas.map(({ path }) => path)).toEqual(["src/a", "src/b"]);
+    expect(rest.largest).toBeNull();
   });
 });
 

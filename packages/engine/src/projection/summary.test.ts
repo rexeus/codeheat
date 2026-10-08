@@ -25,7 +25,7 @@ const partsOf = (
 describe("summaryOf", () => {
   it("names the level and the percent of the change effort in leaking areas", () => {
     expect(
-      summaryOf(partsOf({ level: "strained", leakShare: 0.6524 }), null),
+      summaryOf(partsOf({ level: "strained", leakShare: 0.6524 }), null, 0),
     ).toBe("Under strain: 65% of the change effort sits in areas that leak.");
   });
 
@@ -35,7 +35,7 @@ describe("summaryOf", () => {
     ["improving", "Holds up, getting better"],
   ] as const)("names a %s trend after the level", (trend, lead) => {
     expect(
-      summaryOf(partsOf({ level: "holds", leakShare: 0.1, trend }), null),
+      summaryOf(partsOf({ level: "holds", leakShare: 0.1, trend }), null, 0),
     ).toBe(`${lead}: 10% of the change effort sits in areas that leak.`);
   });
 });
@@ -55,6 +55,7 @@ describe("summaryOf on thin evidence", () => {
             changes,
           ),
           thin,
+          0,
         ),
       ).toBe(
         `Holds in parts: 30% of the change effort sits in areas that leak, ${words}.`,
@@ -67,6 +68,7 @@ describe("summaryOf on thin evidence", () => {
       summaryOf(
         partsOf({ level: "holds", leakShare: 0, judged: ["t1"] }),
         "few-areas",
+        0,
       ),
     ).toBe(
       "Holds up: 0% of the change effort sits in areas that leak, judged on only 1 area.",
@@ -81,11 +83,11 @@ describe("summaryOf on thin evidence", () => {
     ],
     [
       "too-little-evidence",
-      "too little of the change effort sits in areas with enough changes to judge.",
+      "too little of the change effort sits in areas codeheat can judge; 53.7% is in loose files and other unlisted areas (see basis.rest).",
     ],
   ] as const)("says why there is no level (%s)", (reason, why) => {
-    expect(summaryOf(partsOf({ level: "unknown", reason }), "no-level")).toBe(
-      `Not enough evidence: ${why}`,
-    );
+    expect(
+      summaryOf(partsOf({ level: "unknown", reason }), "no-level", 53.7),
+    ).toBe(`Not enough evidence: ${why}`);
   });
 });

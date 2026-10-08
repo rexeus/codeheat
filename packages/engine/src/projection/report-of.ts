@@ -39,7 +39,7 @@ export const reportOf = (analysis: Analysis): Report => {
       analyzedAt: analysis.generatedAt,
     },
     window: windowOf(analysis),
-    answer: answerOf(analysis),
+    answer: answerOf(analysis, rest.heat),
     areas,
     hotspots: hotspotsOf(hottest, (id) => paths.get(id) ?? id),
     basis: basisOf(analysis, rest),

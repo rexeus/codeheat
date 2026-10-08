@@ -24,6 +24,7 @@ describe("answerOf", () => {
         judged: ["t1", "t2", "t3"],
         trend: "holding",
       }),
+      0,
     );
 
     expect(answer).toEqual({
@@ -62,6 +63,7 @@ describe("answerOf at the cut points", () => {
           judged: ["t1", "t2", "t3"],
           trend: "unknown",
         }),
+        0,
       );
 
       expect([answer.leakingHeat, answer.summary]).toEqual([
@@ -80,6 +82,7 @@ describe("answerOf without a level", () => {
         reason: "quiet-window",
         trend: "unknown",
       }),
+      0,
     );
 
     expect(answer).toEqual({

@@ -157,7 +157,12 @@ describe("reportOf", () => {
         ["src/loose.ts", null],
       ],
     );
-    expect(report.basis.rest).toEqual({ areas: 1, files: 2, heat: 20.1 });
+    expect(report.basis.rest).toEqual({
+      areas: 1,
+      files: 2,
+      heat: 20.1,
+      largest: { path: "src", heat: 17.9 },
+    });
   });
 });
 

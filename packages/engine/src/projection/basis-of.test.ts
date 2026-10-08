@@ -9,6 +9,7 @@ describe("basisOf", () => {
       areas: 0,
       files: 0,
       heat: 0,
+      largest: null,
     });
 
     expect(thresholds).toEqual({
@@ -27,7 +28,12 @@ describe("basisOf", () => {
 
   it("counts the mechanical commits of every kind, the changes too large to count, and the generated files", () => {
     const base = analysisRecord();
-    const rest = { areas: 2, files: 9, heat: 4.5 };
+    const rest = {
+      areas: 2,
+      files: 9,
+      heat: 4.5,
+      largest: { path: "src", heat: 3 },
+    };
     const basis = basisOf(
       {
         ...base,
