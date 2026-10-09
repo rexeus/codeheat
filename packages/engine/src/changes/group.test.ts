@@ -232,7 +232,6 @@ describe("groupChanges without commits", () => {
   it("reports no change and no largest", () => {
     expect(groupChanges([], new Map())).toStrictEqual({
       changes: [],
-      members: [],
       by: "commit",
       largest: 0,
     });

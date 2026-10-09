@@ -24,8 +24,7 @@ const TerritoryPartner = Schema.Struct({
  * `Analysis.distantCouplings`) over the territories visible at `detail`, so
  * that every territory is measured once and every detail refers to the
  * result. A change touches a territory when it touched any of its files;
- * contract files, which belong to no territory, are ignored, and test code is
- * part of no change.
+ * contract files, which belong to no territory, are ignored.
  */
 export const TerritoryFit = Schema.Struct({
   /**

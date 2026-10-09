@@ -19,7 +19,7 @@ export type Part = {
    * bucket, and loose files have none.
    */
   readonly cut?: string;
-  /** The files that shape the tree: the code files, test code left out. */
+  /** The files that shape the tree: the code files. */
   readonly files: ReadonlyArray<string>;
   /** The folders a group or a bucket is made of. */
   readonly members: ReadonlyArray<Part>;

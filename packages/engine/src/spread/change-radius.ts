@@ -32,9 +32,7 @@ const radiusOf = (counts: ReadonlyArray<number>): ChangeRadius | null => {
 /**
  * Measures how far the counted changes spread, over `touched` (the modules
  * each counted change touched, see `touchedModules`) and the partition of
- * `modules`. Test-only modules are left out of every change: the test of a
- * change is no spread, and a change that touched nothing else is not
- * measured. The repository's `changeRadius` is null when no change is
+ * `modules`. A change that touched no module is not measured. The repository's `changeRadius` is null when no change is
  * measured; a module's `radius` is the median number of modules, itself
  * included, touched by the measured changes that touched it, null without
  * any. Medians are lower medians (see `ChangeRadius.median`).

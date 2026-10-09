@@ -113,7 +113,7 @@ const byRipple = (a: UnstableInterface, b: UnstableInterface): number =>
 /**
  * The unstable interfaces among the files that others depend on:
  * `dependents` maps a file to the files that depend on it (see
- * `dependentsByFile`), test code left out by the caller. A file is one when at
+ * `dependentsByFile`). A file is one when at
  * least `MIN_FAN_IN` files depend on it, it has at least
  * `MIN_INTERFACE_CHANGES` logical changes (`FileStats.changes`: the churn of an
  * interface is how often it was changed as a whole, not how many changes it

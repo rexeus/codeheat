@@ -4,10 +4,12 @@ import { Effect, FileSystem, Path } from "effect";
 import type { ChildProcessSpawner } from "effect/process";
 
 import type { GitError } from "../git/git-errors.js";
+import { Git } from "../git/git.js";
 import { repositoryRoot, repositoryScope } from "../git/repository.js";
 import type { Analysis } from "../model/analysis.js";
 import type { InspectResult } from "../model/inspect-result.js";
 import { isGlob } from "../universe/globs.js";
+import { listTrackedFiles } from "../universe/tracked-files.js";
 import { inspect } from "./inspect.js";
 
 type Request = { readonly original: string; readonly resolved: string };
@@ -93,9 +95,13 @@ export const inspectFrom = (options: {
         (resolved): Request => ({ original, resolved }),
       ),
     );
+    const tracked = yield* listTrackedFiles(".").pipe(
+      Effect.provide(Git.layer(root)),
+    );
     const result = inspect(
       report,
       requests.map((request) => request.resolved),
+      tracked,
     );
     return { ...result, unmatched: originalsOf(requests, result.unmatched) };
   });

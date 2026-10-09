@@ -52,8 +52,8 @@ const sumOf = (shares: readonly number[]): number =>
 /**
  * The real territories (packages, folders, groups) at the recommended
  * detail, hottest first, and the share of all the heat the three hottest
- * hold. Test code and leftover files are change effort too, but no part of
- * the design: they count in the total, not as a territory. Says so plainly
+ * hold. Leftover files are change effort too, but no part of the design:
+ * they count in the total, not as a territory. Says so plainly
  * when the report has no territories, no real one, or no change effort.
  */
 export const concentrationOf = (

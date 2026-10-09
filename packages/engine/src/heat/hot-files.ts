@@ -7,7 +7,7 @@ export const HOT_TOP_SHARE = 0.1;
 
 /**
  * The paths among `measures` (the files of one window that have revisions
- * there; test code is left to the caller) whose score is among the best
+ * there) whose score is among the best
  * `HOT_TOP_SHARE` of them, rounded up, ties at the cut-off included. A score
  * of 0 is never hot.
  */

@@ -7,7 +7,7 @@ import { hotFiles } from "./hot-files.js";
 /**
  * The files `history` (one window) touched and, for an active window, which of
  * them are hot. `files` are the code files of the universe with their
- * complexity (test code is none of them).
+ * complexity.
  */
 export const heatWindow = (
   files: ReadonlyArray<{

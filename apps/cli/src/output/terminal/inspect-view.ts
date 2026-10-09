@@ -124,17 +124,20 @@ const entryLines = (
   ...partnerLines(entry, style),
 ];
 
-const testCodeLines = (
-  { path, changes }: InspectResult["testCode"][number],
+const excludedLines = (
+  { path, pattern, source }: InspectResult["excluded"][number],
   style: Style,
 ): ReadonlyArray<string> => [
   style.bold(escapeForTerminal(path)),
-  `test code, not judged; ${changes} ${changes === 1 ? "change" : "changes"}`,
+  source === "default"
+    ? `left out by the default pattern ${escapeForTerminal(pattern)}`
+    : `left out by --exclude ${escapeForTerminal(pattern)}`,
 ];
 
 /**
  * Renders the terminal view of an `inspect` result: one block per matched
- * file, sorted as given, then one per matched test file. Unmatched patterns
+ * file, sorted as given, then one per matched excluded file with the pattern
+ * that left it out. Unmatched patterns
  * are not part of this view; the caller reports them as diagnostics. The
  * result has no trailing newline.
  */
@@ -145,5 +148,5 @@ export const renderInspect = (result: InspectResult, style: Style): string =>
       "",
       ...entryLines(entry, result, style),
     ]),
-    ...result.testCode.flatMap((file) => ["", ...testCodeLines(file, style)]),
+    ...result.excluded.flatMap((file) => ["", ...excludedLines(file, style)]),
   ].join("\n");

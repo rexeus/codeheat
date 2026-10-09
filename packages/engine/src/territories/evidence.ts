@@ -11,7 +11,7 @@ const MAX_SIZE_BOUND = 150;
 
 /** What the evidence is made from. */
 export type EvidenceInput = {
-  /** The code files of the universe, test code left out. */
+  /** The code files of the universe. */
   readonly files: ReadonlyArray<TerritoryFile>;
   /** The counted changes, each as the paths of the files it touched (contract files included). */
   readonly changes: ReadonlyArray<ReadonlyArray<string>>;

@@ -125,8 +125,7 @@ const idsAt = (visible: ReadonlyArray<TerritoryDraft>): ReadonlyArray<string> =>
     .map(({ id }) => id);
 
 /**
- * Builds the territories, grown over the code files (test code is none of
- * them). The recommended detail is the finest one with at most 25
+ * Builds the territories, grown over the code files. The recommended detail is the finest one with at most 25
  * territories, buckets not counted.
  */
 export const buildTerritories = (input: TerritoryInput): TerritoryTree => {

@@ -4,6 +4,7 @@ import { Effect, FileSystem, Path } from "effect";
 
 import { Git } from "../git/git.js";
 import { makeTempRepository } from "../testing/temp-repository.js";
+import { activeExcludes } from "./excludes.js";
 import { inventory } from "./inventory.js";
 
 const DATE = "2026-03-01T12:00:00Z";
@@ -16,7 +17,7 @@ const generatedIn = (directory: string) =>
 
 layer(NodeServices.layer)("inventory generated files", (it) => {
   it.effect(
-    "counts the files named like code that it leaves out as generated",
+    "counts the files named like code that say they are generated, not those a pattern leaves out",
     () =>
       Effect.gen(function* () {
         const repo = yield* makeTempRepository;
@@ -34,12 +35,12 @@ layer(NodeServices.layer)("inventory generated files", (it) => {
           root: repo.directory,
           scope: ".",
           include: [],
-          exclude: ["src/skipped.ts"],
+          exclude: activeExcludes(["src/skipped.ts"], true),
         }).pipe(Effect.provide(Git.layer(repo.directory)));
 
         assert.deepStrictEqual(
           { files: files.map(({ path }) => path), generated },
-          { files: ["src/a.ts"], generated: 3 },
+          { files: ["src/a.ts"], generated: 1 },
         );
       }),
   );

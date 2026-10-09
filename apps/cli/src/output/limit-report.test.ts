@@ -4,11 +4,10 @@ import { sampleReport } from "../testing/sample-report.js";
 import { limitReport } from "./limit-report.js";
 
 describe("limitReport", () => {
-  it("cuts files, test code, and couplings separately to the limit and keeps their order", () => {
+  it("cuts files and couplings separately to the limit and keeps their order", () => {
     const limited = limitReport(sampleReport(), 3);
 
     expect(limited.files.map((file) => file.rank)).toEqual([1, 2, 3]);
-    expect(limited.testCode).toHaveLength(3);
     expect(limited.couplings.map((coupling) => coupling.degree)).toEqual([
       0.75, 0.608, 0.5789,
     ]);
@@ -95,11 +94,10 @@ describe("limitReport totals", () => {
   it("keeps the totals of the untruncated report", () => {
     expect(limitReport(sampleReport(), 3).totals).toEqual({
       files: 32,
-      testCode: 4,
       contracts: 2,
       couplings: 6,
       modules: 5,
-      generated: 4,
+      generated: 1,
     });
   });
 

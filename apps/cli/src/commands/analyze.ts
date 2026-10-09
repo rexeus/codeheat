@@ -102,6 +102,7 @@ export const analyzeCommand = Command.make(
       compare: Option.getOrUndefined(compare),
       include,
       exclude,
+      defaultExcludes: true,
       entry,
       adapters: yield* loadLanguageAdapters,
       toolVersion: version,

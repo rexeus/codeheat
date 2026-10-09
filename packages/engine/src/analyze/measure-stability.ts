@@ -12,9 +12,8 @@ import type { Universe } from "./measure.js";
 import type { WindowHistories } from "./windows.js";
 
 /**
- * The unstable interfaces and the dependency directions of the latest window. Test code is no dependent: a
- * test depending on code is expected, and a test's changes say nothing about
- * the design. Files the graph already read in full are not read again.
+ * The unstable interfaces and the dependency directions of the latest window.
+ * Files the graph already read in full are not read again.
  */
 export const measureStability = (
   graph: ImportGraph,

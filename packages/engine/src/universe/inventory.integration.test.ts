@@ -5,6 +5,7 @@ import { Effect, FileSystem, Path } from "effect";
 import { Git } from "../git/git.js";
 import { makeTempRepository } from "../testing/temp-repository.js";
 import type { TempRepository } from "../testing/temp-repository.js";
+import { activeExcludes } from "./excludes.js";
 import { inventory } from "./inventory.js";
 import type { InventoryOptions } from "./inventory.js";
 
@@ -107,28 +108,48 @@ layer(NodeServices.layer)("inventory links", (it) => {
   );
 });
 
-layer(NodeServices.layer)("inventory name rules", (it) => {
+layer(NodeServices.layer)("inventory exclude patterns", (it) => {
   it.effect(
-    "drops vendored, dependency, build output, and generated directories and minified names",
+    "leaves out what the default patterns match and counts each file for the first pattern that matches it",
     () =>
       Effect.gen(function* () {
         const repo = yield* makeTempRepository;
         yield* repo.commit(DATE, {
           "src/app.ts": "a\n",
-          "vendor/lib.js": "a\n",
-          "web/node_modules/pkg/index.js": "a\n",
+          "src/build.ts": "a\n",
+          "src/app.test.ts": "a\n",
+          "test/app.test.ts": "a\n",
+          "test/helpers.ts": "a\n",
           "dist/out.js": "a\n",
           "packages/x/build/out.js": "a\n",
-          "packages/contracts/generated/spec.js": "a\n",
-          "src/__generated__/schema.ts": "a\n",
           "src/app.min.js": "a\n",
-          "src/build.ts": "a\n",
+          "test/notes.md": "# notes\n",
         });
 
-        assert.deepStrictEqual(yield* pathsOf(repo), [
-          "src/app.ts",
-          "src/build.ts",
-        ]);
+        const inventoried = yield* inventory({
+          root: repo.directory,
+          scope: ".",
+          include: [],
+          exclude: activeExcludes(["src/build.ts"], true),
+        }).pipe(Effect.provide(Git.layer(repo.directory)));
+
+        assert.deepStrictEqual(
+          inventoried.files.map(({ path }) => path),
+          ["src/app.ts"],
+        );
+        assert.deepStrictEqual(
+          inventoried.excluded
+            .filter(({ files }) => files > 0)
+            .map(({ pattern, source, files }) => [pattern, source, files]),
+          [
+            ["**/*.test.*", "default", 2],
+            ["**/test/**", "default", 1],
+            ["**/*.min.*", "default", 1],
+            ["**/dist/**", "default", 1],
+            ["**/build/**", "default", 1],
+            ["src/build.ts", "user", 1],
+          ],
+        );
       }),
   );
 });
@@ -162,7 +183,10 @@ layer(NodeServices.layer)("inventory globs", (it) => {
         });
 
         const paths = yield* pathsOf(repo, {
-          exclude: ["src/gen/**", ".config/**", "src/[id].ts"],
+          exclude: activeExcludes(
+            ["src/gen/**", ".config/**", "src/[id].ts"],
+            false,
+          ),
         });
 
         assert.deepStrictEqual(paths, ["src/a.ts"]);
@@ -288,7 +312,7 @@ layer(NodeServices.layer)("inventory contract files", (it) => {
       }),
   );
 
-  it.effect("leaves out the output generated from a contract", () =>
+  it.effect("leaves out the output generated from a contract by default", () =>
     Effect.gen(function* () {
       const repo = yield* makeTempRepository;
       yield* repo.commit(DATE, {
@@ -299,9 +323,11 @@ layer(NodeServices.layer)("inventory contract files", (it) => {
         "dist/schema.graphql": "type A\n",
       });
 
-      assert.deepStrictEqual((yield* contractsOf(repo)).contracts, [
-        "api/main.tsp",
-      ]);
+      assert.deepStrictEqual(
+        (yield* contractsOf(repo, { exclude: activeExcludes([], true) }))
+          .contracts,
+        ["api/main.tsp"],
+      );
     }),
   );
 });
@@ -320,7 +346,9 @@ layer(NodeServices.layer)("inventory contract file options", (it) => {
         });
 
         assert.deepStrictEqual(
-          yield* contractsOf(repo, { exclude: ["api/internal.tsp"] }),
+          yield* contractsOf(repo, {
+            exclude: activeExcludes(["api/internal.tsp"], false),
+          }),
           { files: ["src/app.ts"], contracts: ["api/main.tsp"] },
         );
         assert.deepStrictEqual(

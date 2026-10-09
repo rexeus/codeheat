@@ -36,6 +36,7 @@ export const inspectCommand = Command.make(
       since,
       include: [],
       exclude: [],
+      defaultExcludes: true,
       entry,
       adapters: yield* loadLanguageAdapters,
       toolVersion: version,
@@ -43,7 +44,7 @@ export const inspectCommand = Command.make(
     yield* warnIfShallow(report);
     yield* warnIfEntryMatchedNothing(report, entry);
     const result = yield* inspectFrom({ cwd, report, patterns });
-    if (result.matches.length === 0 && result.testCode.length === 0) {
+    if (result.matches.length === 0 && result.excluded.length === 0) {
       return yield* new NothingMatched({
         patterns: result.unmatched,
         contracts: result.contractFiles,

@@ -62,7 +62,7 @@ export const Module = Schema.Struct({
   path: Schema.String,
   /** `package`: the directory has its own manifest (`package.json`, `go.mod`, …); `directory`: fallback grouping, also of a lone package or other module that held most of the files and was split by directory. */
   kind: Schema.Literals(["package", "directory"]),
-  /** Universe files in the module (test code is in no module). */
+  /** Universe files in the module. */
   files: Count,
   /** Counted changes (logical changes of at most `Thresholds.maxCommitFiles` files, see `Analysis.logicalChanges`) that touched the module. */
   commits: Count,

@@ -57,8 +57,8 @@ describe("codeheat inspect against a git repository", () => {
   );
 });
 
-describe("codeheat inspect on test code", () => {
-  it.live("says a test file is not judged and how often it changed", () =>
+describe("codeheat inspect on an excluded file", () => {
+  it.live("names the default pattern that left a test file out", () =>
     Effect.gen(function* () {
       const repo = yield* makeGitRepository;
       for (const day of [20, 10, 5]) {
@@ -77,7 +77,7 @@ describe("codeheat inspect on test code", () => {
       expect(result.stdout.split("\n").slice(1)).toStrictEqual([
         "",
         "src/a.test.ts",
-        "test code, not judged; 3 changes",
+        "left out by the default pattern **/*.test.*",
       ]);
     }).pipe(Effect.scoped),
   );
