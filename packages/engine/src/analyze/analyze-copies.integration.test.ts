@@ -150,27 +150,6 @@ layer(NodeServices.layer)("analyze copy family exclusions", (it) => {
       }),
   );
 
-  it.effect("does not call a file and its own test a family", () =>
-    Effect.gen(function* () {
-      yield* setNow;
-      const repo = yield* makeTempRepository;
-      for (let revision = 1; revision <= 4; revision += 1) {
-        yield* repo.commit(day(revision), {
-          "src/handler.ts": handler("orders", revision),
-          "src/handler.test.ts": handler("orders", revision),
-        });
-      }
-
-      const report = yield* analyze(analyzeOptionsFor(repo));
-
-      assert.deepStrictEqual(
-        report.couplings.map(({ testPair }) => testPair),
-        [true],
-      );
-      assert.deepStrictEqual(report.copyFamilies, []);
-    }),
-  );
-
   it.effect("leaves out a file too small to compare", () =>
     Effect.gen(function* () {
       yield* setNow;

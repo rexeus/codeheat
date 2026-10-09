@@ -18,7 +18,7 @@ const section = (view: string, heading: string): ReadonlyArray<string> => {
 describe("renderAnalysis", () => {
   it("summarizes the repository, window and universe size below the answer", () => {
     expect(plainView().split("\n")[2]).toBe(
-      "acme-shop  2025-09-29 to 2026-09-29  212 commits, 36 files, 2 contract files",
+      "acme-shop  2025-09-29 to 2026-09-29  212 commits, 32 files, 2 contract files",
     );
   });
 
@@ -33,7 +33,7 @@ describe("renderAnalysis", () => {
       "  #1  ██████████ 0.97         48        1900  packages/billing/src/invoice.ts",
     );
     expect(hotspots[10]).toBe(
-      " #10  ████░░░░░░ 0.43         12         160  packages/web/src/hooks/use-session.ts",
+      " #10  ████░░░░░░ 0.41          7         417  apps/cli/src/commands/inspect.ts",
     );
   });
 

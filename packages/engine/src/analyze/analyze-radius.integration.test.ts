@@ -17,10 +17,10 @@ const day = (number: number): string =>
 const manifest = (name: string): string => `{ "name": "${name}" }\n`;
 
 /**
- * Four packages, one of them test-only (a package of test code alone). The
- * counted changes, with the modules they touched:
+ * Four packages, one of them test code alone, which is no module. The counted
+ * changes, with the modules they touched:
  *
- * 1: a    2: a    3: a and e2e (the test of the change)    4: b
+ * 1: a    2: a    3: a (and the test of the change)    4: b
  * 5: a and b    6: pull request #7, one commit in a and one in c: a and c
  */
 const buildHistory = (repo: TempRepository) =>
@@ -55,7 +55,7 @@ const buildHistory = (repo: TempRepository) =>
 
 layer(NodeServices.layer)("analyze change radius", (it) => {
   it.effect(
-    "measures the modules a logical change touched, leaving test-only modules out",
+    "measures the modules a logical change touched, leaving test code out",
     () =>
       Effect.gen(function* () {
         yield* setNow;
@@ -79,7 +79,6 @@ layer(NodeServices.layer)("analyze change radius", (it) => {
             "packages/a": 1,
             "packages/b": 1,
             "packages/c": 2,
-            "packages/e2e": null,
           },
         );
       }),

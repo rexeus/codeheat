@@ -130,10 +130,19 @@ const entryLines = (
   ...partnerLines(entry, style),
 ];
 
+const testCodeLines = (
+  { path, changes }: InspectResult["testCode"][number],
+  style: Style,
+): ReadonlyArray<string> => [
+  style.bold(escapeForTerminal(path)),
+  `test code, not judged; ${changes} ${changes === 1 ? "change" : "changes"}`,
+];
+
 /**
  * Renders the terminal view of an `inspect` result: one block per matched
- * file, sorted as given. Unmatched patterns are not part of this view; the
- * caller reports them as diagnostics. The result has no trailing newline.
+ * file, sorted as given, then one per matched test file. Unmatched patterns
+ * are not part of this view; the caller reports them as diagnostics. The
+ * result has no trailing newline.
  */
 export const renderInspect = (result: InspectResult, style: Style): string =>
   [
@@ -142,4 +151,5 @@ export const renderInspect = (result: InspectResult, style: Style): string =>
       "",
       ...entryLines(entry, result, style),
     ]),
+    ...result.testCode.flatMap((file) => ["", ...testCodeLines(file, style)]),
   ].join("\n");

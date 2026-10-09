@@ -11,6 +11,7 @@ import { measureDepths } from "../modules/depth.js";
 import { detectModules } from "../modules/detect.js";
 import { findEntryPoints } from "../modules/entry-points.js";
 import { listPackageDirectories } from "../modules/package-directories.js";
+import { isTestPath } from "../modules/test-path.js";
 import { inventory } from "../universe/inventory.js";
 import type { Universe } from "./measure.js";
 
@@ -26,9 +27,10 @@ export type UniverseReading = Universe & {
 
 /**
  * Reads the universe under `root` limited to `scope`: the files `include` and
- * `exclude` leave, the modules and entry points of its code files (`entry`
- * replaces detection), where its contract files live, and the module depths
- * `adapters` can measure.
+ * `exclude` leave, with the test code among them set apart (see
+ * `isTestPath`), the modules and entry points of its other code files
+ * (`entry` replaces detection), where its contract files live, and the module
+ * depths `adapters` can measure.
  */
 export const readUniverse = (options: {
   readonly root: string;
@@ -44,12 +46,14 @@ export const readUniverse = (options: {
 > =>
   Effect.gen(function* () {
     const { root, scope } = options;
-    const { files, contracts, generated } = yield* inventory({
+    const inventoried = yield* inventory({
       root,
       scope,
       include: options.include,
       exclude: options.exclude,
     });
+    const { contracts, generated } = inventoried;
+    const files = inventoried.files.filter(({ path }) => !isTestPath(path));
     const packageDirectories = yield* listPackageDirectories(scope);
     const modules = detectModules(
       files.map((file) => file.path),
@@ -70,6 +74,9 @@ export const readUniverse = (options: {
     });
     return {
       files,
+      testCode: inventoried.files
+        .filter(({ path }) => isTestPath(path))
+        .map(({ path }) => path),
       modules,
       contracts: contractHomes(contracts, modules),
       entryPoints,
@@ -78,3 +85,11 @@ export const readUniverse = (options: {
       generated,
     };
   });
+
+/** Every path of the universe: code, test code, and contract files. */
+export const pathsOf = ({
+  files,
+  testCode,
+  contracts,
+}: Pick<Universe, "files" | "testCode" | "contracts">): ReadonlySet<string> =>
+  new Set([...files.map(({ path }) => path), ...testCode, ...contracts.keys()]);

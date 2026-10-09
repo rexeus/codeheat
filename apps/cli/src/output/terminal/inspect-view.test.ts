@@ -100,6 +100,7 @@ const result = (
   modules,
   territories,
   contractFiles: [],
+  testCode: [],
   unmatched: [],
 });
 

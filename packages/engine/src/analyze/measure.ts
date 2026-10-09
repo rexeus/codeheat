@@ -49,8 +49,10 @@ const measureFiles = (
 
 /** The universe with its modules and their entry points: what every window is measured over. */
 export type Universe = {
-  /** The code files; the only ones that are scored and counted in modules. */
+  /** The code files that are no test code; the only ones that are scored and counted in modules. */
   readonly files: ReadonlyArray<InventoryFile>;
+  /** The code files that are test code (see `isTestPath`), sorted: no design measure counts them. */
+  readonly testCode: ReadonlyArray<string>;
   /** The module of every code file. */
   readonly modules: ReadonlyMap<string, ModuleRef>;
   /** The module every contract file lives in. */
@@ -79,7 +81,7 @@ export const coupleHistory = (
 
 /** Scores the files and measures the modules around the couplings; the pure part of an analysis. */
 const measure = (
-  { files, modules, contracts, entryPoints }: Universe,
+  { files, testCode, modules, contracts, entryPoints }: Universe,
   history: History,
   { couplingCommits, couplings, breadth }: Couplings,
 ) => {
@@ -116,6 +118,10 @@ const measure = (
     ),
     couplings,
     contracts: measureContracts(contracts, history),
+    testCode: testCode.map((path) => ({
+      path,
+      changes: history.files.get(path)?.changes ?? 0,
+    })),
     modules: measuredModules,
   };
 };

@@ -15,8 +15,10 @@ export const AnalysisWindow = Schema.Struct({
   commits: Count,
   /**
    * The commits among `commits` that are not mechanical (see
-   * `Analysis.mechanicalCommits`). 0 means the window has no real change: with
-   * `--compare`, there is nothing to compare, even when `commits` is not 0.
+   * `Analysis.mechanicalCommits`) and touched code other than test code: the
+   * commits the changes are made of. 0 means the window has no real change:
+   * with `--compare`, there is nothing to compare, even when `commits` is not
+   * 0.
    */
   realCommits: Count,
   /**

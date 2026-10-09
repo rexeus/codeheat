@@ -2,6 +2,7 @@ import { InspectResult } from "@codeheat/engine";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Schema } from "effect";
 
+import { makeGitRepository } from "../testing/git-repository.js";
 import { journey } from "../testing/journey-harness.js";
 import { makeCoupledProject } from "../testing/projects.js";
 
@@ -52,6 +53,32 @@ describe("codeheat inspect against a git repository", () => {
       expect(inspected.matches.map(({ path, of }) => [path, of])).toStrictEqual(
         [["src/a.ts", 3]],
       );
+    }).pipe(Effect.scoped),
+  );
+});
+
+describe("codeheat inspect on test code", () => {
+  it.live("says a test file is not judged and how often it changed", () =>
+    Effect.gen(function* () {
+      const repo = yield* makeGitRepository;
+      for (const day of [20, 10, 5]) {
+        repo.commit(day, {
+          "src/a.ts": `run(${day});\n`,
+          "src/a.test.ts": `test(${day});\n`,
+        });
+      }
+
+      const result = yield* journey({
+        args: ["inspect", "src/a.test.ts"],
+        cwd: repo.root,
+      });
+
+      expect(result.exitCode).toBe(0);
+      expect(result.stdout.split("\n").slice(1)).toStrictEqual([
+        "",
+        "src/a.test.ts",
+        "test code, not judged; 3 changes",
+      ]);
     }).pipe(Effect.scoped),
   );
 });

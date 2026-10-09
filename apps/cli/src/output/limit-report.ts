@@ -1,7 +1,7 @@
 import type { Analysis } from "@codeheat/engine";
 
 /**
- * Applies `--limit` to a report: `files`, `contracts`, `couplings`,
+ * Applies `--limit` to a report: `files`, `testCode`, `contracts`, `couplings`,
  * `modules`, `copyFamilies`, and `distantCouplings`, `moduleCoupling`, `cliques`, `unstableInterfaces`, and `dependencyDirection` are each cut to their first `limit` entries,
  * `0` keeps everything, and `totals` still
  * describe the untruncated sizes. `entryPoints` is never cut (it has ten at most) and neither is `territories`: a tree without
@@ -14,6 +14,7 @@ export const limitReport = (report: Analysis, limit: number): Analysis =>
     : {
         ...report,
         files: report.files.slice(0, limit),
+        testCode: report.testCode.slice(0, limit),
         contracts: report.contracts.slice(0, limit),
         couplings: report.couplings.slice(0, limit),
         modules: report.modules.slice(0, limit),

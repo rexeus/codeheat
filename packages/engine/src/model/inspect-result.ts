@@ -88,7 +88,15 @@ export const InspectResult = Schema.Struct({
    * the contract among its partners.
    */
   contractFiles: Schema.Array(Schema.String),
-  /** Requested paths or globs that matched no universe file; one that matched only contract files is not listed here. */
+  /**
+   * Test code the patterns matched (see `Analysis.testCode`), sorted by path,
+   * with the counted changes that touched each. Test code is not judged: it
+   * has no rank, heat, partners, or territory, and no entry in `matches`.
+   */
+  testCode: Schema.Array(
+    Schema.Struct({ path: Schema.String, changes: Count }),
+  ),
+  /** Requested paths or globs that matched no universe file; one that matched only contract files or test code is not listed here. */
   unmatched: Schema.Array(Schema.String),
 });
 export type InspectResult = typeof InspectResult.Type;

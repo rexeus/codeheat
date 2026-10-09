@@ -9,7 +9,7 @@ const sampleUrl = new URL(
   import.meta.url,
 );
 
-/** `fixtures/report.sample.json`: 36 files, 8 couplings, 3 of them test pairs. */
+/** `fixtures/report.sample.json`: 32 files, 4 of test code, and 6 couplings. */
 export const sampleReport = (): Analysis =>
   Schema.decodeUnknownSync(Analysis)(
     JSON.parse(readFileSync(sampleUrl, "utf8")),

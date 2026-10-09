@@ -147,27 +147,12 @@ export const Analysis = Schema.Struct({
   comparison: Schema.NullOr(Comparison),
   thresholds: Thresholds,
   /** Sizes before any output limit, so truncated reports keep their context. */
-  totals: Schema.Struct({
-    /** Code files, the ones in `files`. */
-    files: Count,
-    /** Contract files, the ones in `contracts`. */
-    contracts: Count,
-    couplings: Count,
-    modules: Count,
-    /**
-     * Tracked files named like code or a contract (and not removed by
-     * `--exclude`) that the universe leaves out as generated: below a
-     * generated or vendored directory (`dist`, `build`, `vendor`,
-     * `node_modules`, `generated`, `__generated__`, `tsp-output`), minified by
-     * name (`.min.`), marked `linguist-generated` or `linguist-vendored`, or
-     * whose content is binary, minified, or larger than
-     * `Thresholds.maxFileBytes`. A file missing from the work tree or holding
-     * only whitespace is left out without counting here.
-     */
-    generated: Count,
-  }),
-  /** The hotspots: every code file, sorted by rank. Contract files are never listed here. */
+  /** The hotspots: every code file that is no test code, sorted by rank. Contract files are never listed here. */
   files: Schema.Array(FileStats),
+  /** The test code (see `FileStats.test`) by path, with the counted changes whose commits touched it; no design measure counts it. */
+  testCode: Schema.Array(
+    Schema.Struct({ path: Schema.String, changes: Count }),
+  ),
   /**
    * Every contract file of the universe, most revised first, ties by path.
    * They have no score; they appear in `couplings` with `kinds`.

@@ -80,6 +80,7 @@ layer(NodeServices.layer)("analyze contract files", (it) => {
         ]);
         assert.deepStrictEqual(report.totals, {
           files: 3,
+          testCode: 0,
           contracts: 1,
           couplings: 1,
           modules: 2,
