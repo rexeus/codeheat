@@ -13,8 +13,8 @@ export type ExcludePattern = {
 
 /**
  * The patterns an analysis leaves out unless told otherwise: test code, mocks,
- * generated and minified files, build output, coverage, and vendored or
- * installed dependencies. They are names, not proof: a production folder
+ * test fixtures and snapshots, generated and minified files, build output,
+ * coverage, and vendored or installed dependencies. They are names, not proof: a production folder
  * named `build` is left out too, which `--no-default-excludes` undoes.
  */
 const DEFAULT_EXCLUDES: ReadonlyArray<string> = [
@@ -25,6 +25,9 @@ const DEFAULT_EXCLUDES: ReadonlyArray<string> = [
   "**/test/**",
   "**/tests/**",
   "**/e2e/**",
+  "**/fixtures/**",
+  "**/__fixtures__/**",
+  "**/__snapshots__/**",
   "**/*.gen.*",
   "**/*.generated.*",
   "**/*.min.*",

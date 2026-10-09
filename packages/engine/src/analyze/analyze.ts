@@ -57,9 +57,9 @@ export type AnalyzeOptions = {
   /** Globs removed from the universe after `include`, besides the default ones. */
   readonly exclude: ReadonlyArray<string>;
   /**
-   * Whether the default exclude patterns (test code, generated and minified
-   * files, build output, dependencies) leave files out before `exclude`;
-   * false leaves only `exclude`.
+   * Whether the default exclude patterns (test code, fixtures, snapshots,
+   * generated and minified files, build output, dependencies) leave files out
+   * before `exclude`; false leaves only `exclude`.
    */
   readonly defaultExcludes: boolean;
   /**

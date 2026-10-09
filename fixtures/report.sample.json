@@ -129,6 +129,21 @@
       "files": 0
     },
     {
+      "pattern": "**/fixtures/**",
+      "source": "default",
+      "files": 0
+    },
+    {
+      "pattern": "**/__fixtures__/**",
+      "source": "default",
+      "files": 0
+    },
+    {
+      "pattern": "**/__snapshots__/**",
+      "source": "default",
+      "files": 0
+    },
+    {
       "pattern": "**/*.gen.*",
       "source": "default",
       "files": 0

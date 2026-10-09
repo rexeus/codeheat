@@ -11,7 +11,7 @@ const patternOf = (
 };
 
 describe("the default exclude patterns", () => {
-  it("leave out test code, mocks, generated and minified files, build output, coverage, and dependencies", () => {
+  it("leave out test code, mocks, fixtures, snapshots, generated and minified files, build output, coverage, and dependencies", () => {
     expect(
       patternOf(
         [
@@ -22,6 +22,9 @@ describe("the default exclude patterns", () => {
           "test/setup.ts",
           "packages/core/tests/a.ts",
           "apps/web/e2e/flow.ts",
+          "test-data/fixtures/order.ts",
+          "src/__fixtures__/user.ts",
+          "src/__snapshots__/view.ts",
           "src/types.gen.ts",
           "src/api.generated.ts",
           "public/jquery.min.js",
@@ -44,6 +47,9 @@ describe("the default exclude patterns", () => {
       ["test/setup.ts", "**/test/**"],
       ["packages/core/tests/a.ts", "**/tests/**"],
       ["apps/web/e2e/flow.ts", "**/e2e/**"],
+      ["test-data/fixtures/order.ts", "**/fixtures/**"],
+      ["src/__fixtures__/user.ts", "**/__fixtures__/**"],
+      ["src/__snapshots__/view.ts", "**/__snapshots__/**"],
       ["src/types.gen.ts", "**/*.gen.*"],
       ["src/api.generated.ts", "**/*.generated.*"],
       ["public/jquery.min.js", "**/*.min.*"],

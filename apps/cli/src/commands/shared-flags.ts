@@ -39,7 +39,7 @@ export const universeFlags = {
   ),
   defaultExcludes: Flag.Boolean("default-excludes").pipe(
     Flag.withDescription(
-      "Leave out test code, mocks, generated and minified files, build output, coverage, and dependencies by the default glob patterns (README, Excluded files); --no-default-excludes leaves out only what --exclude names",
+      "Leave out test code, mocks, fixtures, snapshots, generated and minified files, build output, coverage, and dependencies by the default glob patterns (README, Excluded files); --no-default-excludes leaves out only what --exclude names",
     ),
     Flag.withDefault(true),
   ),
