@@ -12,7 +12,7 @@ import { TerritoryFit } from "./territory-fit.js";
  * `group`: sibling folders that keep changing in the same changes and stay
  * together, `path` names their directories with one brace glob over the
  * directory they share (`packages/a/{x,y}`). `files`: the loose files of a
- * directory, those directly in it and in folders too small to be territories,
+ * directory, named `<dir>/*`, those directly in it and in folders too small to be territories,
  * when its folders are territories of their own; judged like any other.
  * `other`: a bucket of smaller folders that wait for a finer detail; never a
  * real territory. Test code is in no territory.
@@ -35,9 +35,10 @@ export const Territory = Schema.Struct({
    * (`packages/a/{x,y}`, `{apps,lib}` at the root, `packages/{a/src,b}` when
    * one branches deeper; `\`, `,`, `{`, and `}` in a member's name are
    * escaped with a backslash, and the glob is the braces that close the
-   * path). A `files` node names the directory its loose files are in, a
-   * bucket (`other`) the directory its folders are in; its `parent` and `kind`
-   * tell it from the territory of that directory.
+   * path). A `files` node is the glob of the loose files of its directory
+   * (`packages/core/*`, `*` at the root), a bucket (`other`) names the
+   * directory its folders are in; its `parent` and `kind` tell it from the
+   * territory of that directory. No two nodes of one detail share a path.
    */
   path: Schema.String,
   kind: TerritoryKind,

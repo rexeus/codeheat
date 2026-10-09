@@ -283,3 +283,26 @@ describe("a package that holds every file", () => {
     ]);
   });
 });
+
+describe("names within a detail", () => {
+  it("names the loose files of a crowded directory apart from the bucket of its smaller folders", () => {
+    const folders = Array.from({ length: 10 }, (_, index) => `lib/f${index}`);
+    const tree = build(
+      [
+        ...folders.flatMap((folder) => filesIn(folder, 3)),
+        "lib/x.ts",
+        "lib/y.ts",
+        ...filesIn("app", 3),
+      ],
+      [],
+    );
+
+    const kinds = tree.nodes.map(({ path, kind }) => `${kind} ${path}`);
+    expect(kinds).toContain("other lib");
+    expect(kinds).toContain("files lib/*");
+    for (const { ids } of tree.details) {
+      const paths = ids.map((id) => nodeOf(tree, id).path);
+      expect(new Set(paths).size).toBe(paths.length);
+    }
+  });
+});

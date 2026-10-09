@@ -46,6 +46,19 @@ const NOTHING: TerritoryTree = {
 const roleOf = ({ kind }: Pick<Territory, "kind">): number =>
   isTerritoryKind(kind) ? 0 : 1;
 
+/**
+ * What a node is called: its directory ("." for the repository root), and
+ * for loose files the glob of what they hold (`packages/core/*`, `*` at the
+ * root), so that no two nodes of a detail share a name.
+ */
+const pathOf = ({ node, kind }: FlatNode): string => {
+  const { path } = node.part;
+  if (kind === "files") {
+    return path === "" ? "*" : `${path}/*`;
+  }
+  return path === "" ? "." : path;
+};
+
 const leadOf = ({ node, kind }: FlatNode): string | undefined => {
   const where = node.part.path === "" ? "the repository root" : node.part.path;
   if (node.part.kind === "more") {
@@ -84,7 +97,7 @@ const draftsOf = (
     const { node } = entry;
     return {
       id: entry.id,
-      path: node.part.path === "" ? "." : node.part.path,
+      path: pathOf(entry),
       kind: entry.kind,
       parent: entry.parent === null ? null : (flat[entry.parent]?.id ?? null),
       children: node.children.flatMap((child) => idOf.get(child) ?? []),

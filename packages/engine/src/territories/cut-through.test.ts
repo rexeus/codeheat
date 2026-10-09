@@ -52,7 +52,7 @@ describe("a package with a source folder and files beside it", () => {
         ),
       ).toStrictEqual([
         ["lib", "folder", 14],
-        ["pkg", "files", loose],
+        ["pkg/*", "files", loose],
         ["pkg/src/a", "folder", 3],
         ["pkg/src/b", "folder", 3],
         ["tools", "folder", 14],

@@ -52,7 +52,7 @@ describe("a folder of fewer than three files", () => {
     expect(kindsAt(treeWith([49, 50]))).toStrictEqual([
       ["a", "folder"],
       ["b", "folder"],
-      [".", "files"],
+      ["*", "files"],
     ]);
   });
 });

@@ -14,10 +14,12 @@ export const Area = Schema.Struct({
    * Repository-relative POSIX directory; "." for the whole repository. Sibling
    * folders that change together are one brace glob over the directory they
    * share (`packages/a/{x,y}`, `{apps,lib}` at the root). The loose files of
-   * a directory are named after it (`packages/core/src` for the files
-   * directly in it, "." for those at the repository root), and their
-   * `description` starts with `files in`. Every area name the report uses
-   * elsewhere is the `path` of a listed area.
+   * a directory are the glob of what they hold (`packages/core/src/*`, `*` at
+   * the repository root: the files directly in it and those of folders too
+   * small to be areas), and their `description` starts with `files in`. No
+   * two areas, and no area and the largest part of `basis.rest`, share a
+   * path. Every area name the report uses elsewhere is the `path` of a listed
+   * area.
    */
   path: Schema.String,
   /**

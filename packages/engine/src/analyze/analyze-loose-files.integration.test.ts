@@ -23,7 +23,7 @@ const filesIn = (folder: string, version: number) =>
 
 layer(NodeServices.layer)("analyze loose files", (it) => {
   it.effect(
-    "judges the loose files of a directory whose folders are areas as one area named after the directory",
+    "judges the loose files of a directory whose folders are areas as one area named by their glob",
     () =>
       Effect.gen(function* () {
         yield* setNow;
@@ -55,10 +55,10 @@ layer(NodeServices.layer)("analyze loose files", (it) => {
         // the first commit touched every area, the six that changed src/a.ts alone stayed inside
         assert.deepStrictEqual(
           [loose?.path, loose?.files, loose?.changes],
-          ["src", 3, 7],
+          ["src/*", 3, 7],
         );
         assert.include(analysis.verdict.judged, loose?.id);
-        const area = report.areas.find(({ path }) => path === "src");
+        const area = report.areas.find(({ path }) => path === "src/*");
         assert.deepStrictEqual(
           [area?.description, area?.files, area?.changes, area?.stays],
           ["files in src; main files: a, b, c", 3, 7, 0.86],

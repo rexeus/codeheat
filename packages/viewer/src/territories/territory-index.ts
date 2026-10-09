@@ -65,6 +65,15 @@ const splitParts = (path: string): NameParts => {
   return { dir, base: path.slice(dir.length) };
 };
 
+/** Loose files are the glob of their directory (`packages/a/src/*`): its parent is dimmed, `src/*` tells them apart. */
+const looseParts = (path: string): NameParts => {
+  const directory = path.slice(0, -"/*".length);
+  const dir = parentOf(directory);
+  return path === "*"
+    ? { dir: "", base: "*" }
+    : { dir, base: path.slice(dir.length) };
+};
+
 /** Whether the character at `index` follows an odd number of backslashes, which escape it. */
 const isEscaped = (path: string, index: number): boolean => {
   let backslashes = 0;
@@ -108,7 +117,7 @@ const PARTS: Record<Territory["kind"], (territory: Territory) => NameParts> = {
   package: ({ path }) => splitParts(path),
   folder: ({ path }) => splitParts(path),
   group: ({ path }) => groupParts(path),
-  files: ({ path }) => splitParts(path),
+  files: ({ path }) => looseParts(path),
   other: ({ description }) => ({ dir: "", base: bucketName(description) }),
 };
 
