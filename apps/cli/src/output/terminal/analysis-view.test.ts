@@ -331,9 +331,7 @@ describe("renderAnalysis contract files", () => {
 
     const view = plainView(crowded);
 
-    expect(view).toContain(
-      "Change coupling (test pairs and contract pairs excluded)",
-    );
+    expect(view).toContain("Change coupling (contract pairs excluded)");
     expect(view).not.toContain("api/a.tsp");
     expect(section(view, "Change coupling")).toEqual(
       section(plainView(), "Change coupling"),

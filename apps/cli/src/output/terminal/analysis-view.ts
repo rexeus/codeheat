@@ -99,18 +99,16 @@ const rankedModules = (report: Analysis): ReadonlyArray<Module> =>
  * part is left out when the report has no data for it),
  * the five best ranked distant couplings and a line per clique of modules
  * that change together (each section is left out when there is none),
- * the five strongest couplings that are neither test pairs nor pairs of two
- * contract files, each with the co-change probability in both directions
+ * the five strongest couplings that are no pair of two contract files, each with the co-change probability in both directions
  * (`shared / changes(side)`) and a contract file marked `(contract)`, the
- * five copy families with production code and the most changes touching every
- * copy (the section is left out when there is none), the five least cohesive
+ * five copy families with the most changes touching every copy (the section is left out when there is none), the five least cohesive
  * modules, the first five modules with a leaky interface,
  * the five shallowest ranked modules (fewest implementation lines per exported
  * name; the section is left out when none has a depth), the five most
  * unstable interfaces and the three imports that point from a stable module
  * to a volatile one (left out when there are none), and, when the report
  * compares two windows, the biggest changes. The report
- * must not be cut to `--limit`: test pairs could crowd out every other
+ * must not be cut to `--limit`: contract pairs could crowd out every other
  * coupling, and every coupled file must appear in `files` or `contracts`:
  * rendering throws otherwise.
  * The result has no trailing newline.
@@ -140,7 +138,7 @@ export const renderAnalysis = (report: Analysis, style: Style): string => {
     ...overTimeSection(report, style),
     ...distantSection(report, style),
     ...cliqueSection(report, style),
-    style.bold("Change coupling (test pairs and contract pairs excluded)"),
+    style.bold("Change coupling (contract pairs excluded)"),
     ...(couplings.length > 1
       ? couplings
       : ["No change coupling above the thresholds."]),

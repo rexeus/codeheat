@@ -31,9 +31,8 @@ const outlineClass = (partner: Partner): string =>
 
 /**
  * Outline rectangles for the selected file and its partners, drawn above the
- * tiles. A partner's stroke grows with its coupling degree, and a test pair is
- * dashed. A partner in another module is dotted, so cross-module coupling
- * reads at a glance; a test pair that also crosses a module stays dotted. A
+ * tiles. A partner's stroke grows with its coupling degree. A partner in
+ * another module is dotted, so cross-module coupling reads at a glance. A
  * partner that no import links to the selected file (hidden coupling) takes
  * its own color, whatever its line style.
  * Returns nothing without a selection.
