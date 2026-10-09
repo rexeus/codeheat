@@ -14,7 +14,15 @@ describe("summaryLines", () => {
     ]);
   });
 
-  it("follows the summary with when the code last changed for a window without counted changes", () => {
+  it("follows the summary with the files the exclude patterns left out", () => {
+    const lines = summaryLines(sampleReport(), makeStyle(false));
+
+    expect(lines[3]).toBe(
+      "Left out: 7 files by 3 default patterns (most: **/*.test.* 4). --no-default-excludes keeps them.",
+    );
+  });
+
+  it("follows that with when the code last changed for a window without counted changes", () => {
     const report = sampleReport();
     const empty = {
       ...report,
@@ -31,7 +39,7 @@ describe("summaryLines", () => {
     expect(lines[2]).toBe(
       "acme-shop  2025-09-29 to 2026-09-29  0 commits, 32 files, 2 contract files",
     );
-    expect(lines[3]).toBe(
+    expect(lines[4]).toBe(
       "No counted changes in this window; the newest commit of the repository was on 2025-03-14.",
     );
   });
@@ -39,6 +47,6 @@ describe("summaryLines", () => {
   it("goes on with how far a change spreads for a window with changes", () => {
     const lines = summaryLines(sampleReport(), makeStyle(false));
 
-    expect(lines[3]).toMatch(/^Across \d+ changes?, /u);
+    expect(lines[4]).toMatch(/^Across \d+ changes?, /u);
   });
 });

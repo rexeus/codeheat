@@ -23,5 +23,27 @@ export const entryFlag = Flag.String("entry").pipe(
 );
 export const sinceFlag = since.pipe(Flag.withDefault(DEFAULT_SINCE));
 
+/** `--include`, `--exclude`, and `--default-excludes`: which files the analysis counts. */
+export const universeFlags = {
+  include: Flag.String("include").pipe(
+    Flag.withDescription(
+      "Glob of files to analyze instead of the language list; repeatable",
+    ),
+    Flag.atLeast(0),
+  ),
+  exclude: Flag.String("exclude").pipe(
+    Flag.withDescription(
+      "Glob of files to leave out, besides the default patterns; repeatable",
+    ),
+    Flag.atLeast(0),
+  ),
+  defaultExcludes: Flag.Boolean("default-excludes").pipe(
+    Flag.withDescription(
+      "Leave out test code, mocks, generated and minified files, build output, coverage, and dependencies by the default glob patterns (README, Excluded files); --no-default-excludes leaves out only what --exclude names",
+    ),
+    Flag.withDefault(true),
+  ),
+};
+
 /** `--since` without a default, for commands that must tell whether it was given. */
 export const explicitSinceFlag = since.pipe(Flag.optional);

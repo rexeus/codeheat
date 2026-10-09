@@ -77,7 +77,7 @@ describe("codeheat inspect on an excluded file", () => {
       expect(result.stdout.split("\n").slice(1)).toStrictEqual([
         "",
         "src/a.test.ts",
-        "left out by the default pattern **/*.test.*",
+        "left out by the default pattern **/*.test.*; --no-default-excludes analyzes it",
       ]);
     }).pipe(Effect.scoped),
   );

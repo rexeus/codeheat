@@ -322,7 +322,7 @@ describe("renderInspect contract-only partners", () => {
 });
 
 describe("renderInspect excluded files", () => {
-  it("names the pattern that left an excluded file out", () => {
+  it("names the pattern that left an excluded file out, and how to keep it", () => {
     const view = renderInspect(
       {
         ...result([]),
@@ -337,7 +337,7 @@ describe("renderInspect excluded files", () => {
     expect(view.split("\n").slice(1)).toStrictEqual([
       "",
       "src/a.test.ts",
-      "left out by the default pattern **/*.test.*",
+      "left out by the default pattern **/*.test.*; --no-default-excludes analyzes it",
       "",
       "gen/b.ts",
       "left out by --exclude gen/**",
