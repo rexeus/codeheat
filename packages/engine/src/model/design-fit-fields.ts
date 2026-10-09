@@ -68,8 +68,8 @@ export const DesignFitFields = {
    * Where to start: at most `thresholds.maxEntries` places where the design
    * fails to hold up to the way the code changes, each with the evidence, a
    * verdict, and a design move (see `EntryPoint`). Territories are judged at
-   * the recommended detail; buckets of smaller folders, loose files, and
-   * test-only code never qualify. At most `thresholds.maxEntriesPerKind`
+   * the recommended detail; buckets of smaller folders and loose files never
+   * qualify. At most `thresholds.maxEntriesPerKind`
    * entries per kind, every one scoring at least `thresholds.minEntryScore`
    * except the best of each kind, which is always listed (see GLOSSARY.md,
    * "Entry point (of a report)"), so the list shows every kind of weakness the

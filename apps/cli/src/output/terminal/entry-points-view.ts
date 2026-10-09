@@ -65,12 +65,12 @@ const EVIDENCE_LINES: Readonly<
 > = {
   boundary: (at, evidence) =>
     evidence["sharedChanges"] === undefined
-      ? `${percent(at("codeHeatShare"))} of the code's heat; ${percent(at("containment"))} of its ${counted(at("changes"), "change")} stay inside${evidence["partnerShare"] === undefined ? "" : `, ${percent(at("partnerShare"))} also touch its closest partner`}`
-      : `${percent(at("codeHeatShare"))} of the code's heat; ${percent(at("containment"))} of their ${counted(at("changes"), "change")} stay inside one of the two, ${counted(at("sharedChanges"), "change")} touched both`,
+      ? `${percent(at("heatShare"))} of the code's heat; ${percent(at("containment"))} of its ${counted(at("changes"), "change")} stay inside${evidence["partnerShare"] === undefined ? "" : `, ${percent(at("partnerShare"))} also touch its closest partner`}`
+      : `${percent(at("heatShare"))} of the code's heat; ${percent(at("containment"))} of their ${counted(at("changes"), "change")} stay inside one of the two, ${counted(at("sharedChanges"), "change")} touched both`,
   hotspot: (at) =>
     `${percent(at("chronicHeatShare"))} of the code's heat sits in ${counted(at("chronicFiles"), "chronic hotspot")}`,
   clique: (at) =>
-    `${percent(at("codeHeatShare"))} of the code's heat; ${counted(at("sharedChanges"), "change")} touched all ${at("territories")}, every pair shares at least ${percent(at("weakestShare"))}`,
+    `${percent(at("heatShare"))} of the code's heat; ${counted(at("sharedChanges"), "change")} touched all ${at("territories")}, every pair shares at least ${percent(at("weakestShare"))}`,
   copies: (at) =>
     `${counted(at("files"), "file")}, at least ${percent(at("similarity"))} alike; ${counted(at("changesToAll"), "change")} touched every copy`,
   coupling: (at) =>

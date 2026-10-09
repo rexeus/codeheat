@@ -38,14 +38,14 @@ describe("renderAnalysis shallowest modules", () => {
     ]);
   });
 
-  it("leaves out modules below the commit floor and test-only modules, however shallow", () => {
-    const report = withModules(sampleReport(), ({ path }) => ({
-      ...(path === "packages/shared" ? { commits: 2 } : {}),
-      ...(path === "packages/auth" ? { testOnly: true } : {}),
-    }));
+  it("leaves out modules below the commit floor, however shallow", () => {
+    const report = withModules(sampleReport(), ({ path }) =>
+      path === "packages/shared" ? { commits: 2 } : {},
+    );
 
     expect(shallowest(report)).toEqual([
       "lines/export  exports  lines  module",
+      "      114.33        9   1029  packages/auth",
       "       517.5        6   3105  packages/billing",
     ]);
   });

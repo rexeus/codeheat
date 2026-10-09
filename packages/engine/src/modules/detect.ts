@@ -1,7 +1,6 @@
 // Owns which module each universe file belongs to.
 import { splitByDirectory } from "./directory-split.js";
 import { packageOf } from "./package-directories.js";
-import { isTestPath } from "./test-path.js";
 
 /** The module a file belongs to. */
 export type ModuleRef = {
@@ -75,8 +74,7 @@ const filesByModule = (
  * files and more than the dominant share of all. A package is spared when
  * another package with code exists, because manifests are boundaries someone
  * declared, and a package that merely is the largest of several is not a module
- * to dissolve. A package of test code alone (a fixture's manifest) declares no
- * such boundary.
+ * to dissolve.
  */
 const dominantModule = (
   assigned: ReadonlyMap<string, ModuleRef>,
@@ -88,10 +86,7 @@ const dominantModule = (
       100 * files.length > DOMINANT_MODULE_PERCENT * assigned.size,
   );
   const hasOtherPackage = modules.some(
-    ({ ref, files }) =>
-      ref.path !== dominant?.ref.path &&
-      ref.kind === "package" &&
-      !files.every((file) => isTestPath(file)),
+    ({ ref }) => ref.path !== dominant?.ref.path && ref.kind === "package",
   );
   return dominant?.ref.kind === "package" && hasOtherPackage
     ? undefined

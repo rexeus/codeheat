@@ -9,7 +9,6 @@ import { inspect } from "./inspect.js";
 
 const stats = (path: string, rank: number, revisions: number): FileStats => ({
   path,
-  test: false,
   territory: "t1",
   module: path.startsWith("lib/") ? "lib" : "src",
   rank,
@@ -30,14 +29,13 @@ const coupling = (
   a: string,
   b: string,
   sharedCommits: number,
-  flags: Partial<Pick<Coupling, "testPair" | "crossesModule" | "kinds">> = {},
+  flags: Partial<Pick<Coupling, "crossesModule" | "kinds">> = {},
 ): Coupling => ({
   a,
   b,
   sharedCommits,
   degree: 0.5,
   distance: 0,
-  testPair: false,
   kinds: { a: "code", b: "code" },
   crossesModule: false,
   imports: null,
@@ -49,7 +47,6 @@ const modules: Analysis["modules"] = [
   {
     path: "lib",
     kind: "directory",
-    testOnly: false,
     files: 1,
     commits: 4,
     localCommits: 1,
@@ -69,7 +66,6 @@ const modules: Analysis["modules"] = [
   {
     path: "src",
     kind: "package",
-    testOnly: false,
     files: 3,
     commits: 20,
     localCommits: 17,
@@ -213,7 +209,6 @@ describe("inspect partners", () => {
       sharedCommits: 14,
       probability: 0.7,
       kind: "code",
-      testPair: false,
       crossesModule: false,
       distant: false,
       imports: null,
@@ -248,7 +243,6 @@ describe("inspect partner marks", () => {
         sharedCommits: 4,
         probability: 0.4,
         kind: "code",
-        testPair: false,
         crossesModule: false,
         distant: false,
         imports: null,
@@ -260,25 +254,11 @@ describe("inspect partner marks", () => {
         sharedCommits: 4,
         probability: 1,
         kind: "code",
-        testPair: false,
         crossesModule: false,
         distant: false,
         imports: null,
       },
     ]);
-  });
-
-  it("marks a partner that is the file's test as a test pair", () => {
-    const report = reportOf(
-      [stats("src/a.ts", 1, 10)],
-      [coupling("src/a.test.ts", "src/a.ts", 5, { testPair: true })],
-    );
-
-    const [entry] = inspect(report, ["src/a.ts"]).matches;
-
-    expect(
-      entry?.partners.map(({ path, testPair }) => [path, testPair]),
-    ).toStrictEqual([["src/a.test.ts", true]]);
   });
 
   it("marks a partner in another module", () => {

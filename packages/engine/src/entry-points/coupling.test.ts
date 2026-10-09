@@ -32,7 +32,6 @@ const coupling = (
   sharedCommits: 10,
   degree: 0.6,
   distance: 2,
-  testPair: false,
   kinds: { a: "code", b: "code" },
   crossesModule: true,
   imports: "none",
@@ -78,14 +77,13 @@ describe("couplingEntries", () => {
     );
   });
 
-  it("leaves out pairs inside one territory, with an import or an unknown relation, with few shared changes, or with a test", () => {
+  it("leaves out pairs inside one territory, with an import or an unknown relation, or with few shared changes", () => {
     expect(
       entries([
         coupling("a/x.ts", "a/y.ts"),
         coupling("a/x.ts", "b/x.ts", { imports: "a→b" }),
         coupling("a/x.ts", "b/y.ts", { imports: null }),
         coupling("a/y.ts", "b/x.ts", { sharedCommits: 4 }),
-        coupling("a/y.ts", "b/z.test.ts"),
       ]),
     ).toStrictEqual([]);
   });

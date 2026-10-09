@@ -15,7 +15,6 @@ const MODULES = [
   moduleRecord("compiler", 20),
   moduleRecord("cli", 5),
   moduleRecord("tiny", 2),
-  moduleRecord("tests", 12, true),
 ];
 
 describe("moduleCouplings", () => {
@@ -41,10 +40,9 @@ describe("moduleCouplings", () => {
     expect(moduleCouplings(moduleCoChange(touched, MODULES, 5))).toEqual([]);
   });
 
-  it("leaves out modules below the commit floor, test-only modules, and places that are no module", () => {
+  it("leaves out modules below the commit floor and places that are no module", () => {
     const touched = [
       ...commitsOf(5, "tiny", "core"),
-      ...commitsOf(5, "tests", "core"),
       ...commitsOf(5, "spec-only-place", "core"),
     ];
 

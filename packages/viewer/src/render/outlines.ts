@@ -23,12 +23,8 @@ const outline = (
     "stroke-width": strokeWidth,
   });
 
-const lineStyle = ({ crossesModule, testPair }: Partner): string => {
-  if (crossesModule) {
-    return " cross-module";
-  }
-  return testPair ? " test-pair" : "";
-};
+const lineStyle = ({ crossesModule }: Partner): string =>
+  crossesModule ? " cross-module" : "";
 
 const outlineClass = (partner: Partner): string =>
   `outline partner${lineStyle(partner)}${partner.hidden ? " hidden-coupling" : ""}`;

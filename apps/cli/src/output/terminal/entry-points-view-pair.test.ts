@@ -24,7 +24,7 @@ const BETWEEN = finding(
   "The boundary between billing and web does not hold.",
   "Move.",
   ["t2", "t3"],
-  { codeHeatShare: 0.4, containment: 0.43, changes: 48, sharedChanges: 12 },
+  { heatShare: 0.4, containment: 0.43, changes: 48, sharedChanges: 12 },
 );
 
 /** The boundary between `billing` and `web`, with the boundary of each as a finding. */
@@ -40,7 +40,7 @@ const between: EntryPoint = {
   findings: [
     BETWEEN,
     finding("Leaks.", "Move billing.", ["t2"], {
-      codeHeatShare: 0.3,
+      heatShare: 0.3,
       containment: 0.4,
       changes: 40,
     }),
@@ -68,7 +68,6 @@ const lines = (): ReadonlyArray<string> =>
             parent: null,
             children: [],
             files: 1,
-            testFiles: 0,
             changes: 1,
             heatShare: 0,
             description: path,

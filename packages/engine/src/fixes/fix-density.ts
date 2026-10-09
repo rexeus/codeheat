@@ -20,14 +20,13 @@ const countChange = (
   tallies: Map<string, Tally>,
   touched: ReadonlySet<string>,
   fix: boolean,
-  testOnly: ReadonlySet<string>,
 ): void => {
-  const spans = [...touched].filter((path) => !testOnly.has(path)).length > 1;
+  const spans = touched.size > 1;
   for (const path of touched) {
     const tally = tallies.get(path) ?? { changes: 0, fixes: 0, spanning: 0 };
     tally.changes += 1;
     tally.fixes += fix ? 1 : 0;
-    tally.spanning += fix && spans && !testOnly.has(path) ? 1 : 0;
+    tally.spanning += fix && spans ? 1 : 0;
     tallies.set(path, tally);
   }
 };
@@ -37,11 +36,10 @@ const countChange = (
  * module. `changes` are the counted changes of the window and `touched` the
  * distinct modules each touched, in the same order (see `touchedModules`).
  * Nothing is reported per module while the repository's is not `known` (see
- * `FixDensity`); a test-only module or one no change touched has none either.
- * Any area with a `path` and a `testOnly` flag can stand in for a module, as
- * long as `touched` names the same paths.
+ * `FixDensity`); a module no change touched has none either. Any area with a
+ * `path` can stand in for a module, as long as `touched` names the same paths.
  */
-export const measureFixes = <Area extends Pick<Module, "path" | "testOnly">>(
+export const measureFixes = <Area extends Pick<Module, "path">>(
   changes: ReadonlyArray<LogicalChange>,
   touched: ReadonlyArray<ReadonlySet<string>>,
   modules: ReadonlyArray<Area>,
@@ -56,9 +54,6 @@ export const measureFixes = <Area extends Pick<Module, "path" | "testOnly">>(
   const known =
     changes.length > 0 &&
     conventional.length / changes.length >= MIN_CONVENTION_SHARE;
-  const testOnly = new Set(
-    modules.filter((module) => module.testOnly).map(({ path }) => path),
-  );
   const tallies = new Map<string, Tally>();
   if (known) {
     for (const [index, change] of changes.entries()) {
@@ -66,7 +61,6 @@ export const measureFixes = <Area extends Pick<Module, "path" | "testOnly">>(
         tallies,
         touched[index] ?? new Set(),
         change.subjectKind === "fix",
-        testOnly,
       );
     }
   }
@@ -86,7 +80,7 @@ export const measureFixes = <Area extends Pick<Module, "path" | "testOnly">>(
       return {
         ...module,
         fixDensity:
-          tally === undefined || module.testOnly
+          tally === undefined
             ? null
             : {
                 fixes: tally.fixes,

@@ -9,7 +9,6 @@ import { roundReported } from "../model/precision.js";
 import type { ModuleRef } from "./detect.js";
 import { isLeakyInterface, NO_INTERFACE } from "./interface-churn.js";
 import type { InterfaceChurn } from "./interface-churn.js";
-import { isTestPath } from "./test-path.js";
 import { touchedModules } from "./touched-modules.js";
 import type { ModuleHomes } from "./touched-modules.js";
 
@@ -30,7 +29,6 @@ export const minModuleCommitsFor = (couplingCommits: number): number =>
 type Tally = {
   readonly kind: ModuleRef["kind"];
   files: number;
-  testFiles: number;
   commits: number;
   localCommits: number;
   /** Shared commits per other module path. */
@@ -42,7 +40,7 @@ const groupOf = (module: Module, minModuleCommits: number): number => {
   if (module.cohesion === null) {
     return 2;
   }
-  return module.commits >= minModuleCommits && !module.testOnly ? 0 : 1;
+  return module.commits >= minModuleCommits ? 0 : 1;
 };
 
 const byCohesion = (a: Module, b: Module): number =>
@@ -59,17 +57,15 @@ const tallyFiles = (
   refs: ReadonlyMap<string, ModuleRef>,
 ): ReadonlyMap<string, Tally> => {
   const tallies = new Map<string, Tally>();
-  for (const [file, { path, kind }] of refs) {
+  for (const { path, kind } of refs.values()) {
     const tally = tallies.get(path) ?? {
       kind,
       files: 0,
-      testFiles: 0,
       commits: 0,
       localCommits: 0,
       shared: new Map(),
     };
     tally.files += 1;
-    tally.testFiles += isTestPath(file) ? 1 : 0;
     tallies.set(path, tally);
   }
   return tallies;
@@ -102,36 +98,32 @@ const toModule = (
   tally: Tally,
   churn: InterfaceChurn,
   modulePaths: ReadonlySet<string>,
-): Module => {
-  const testOnly = tally.testFiles === tally.files;
-  return {
-    path,
-    kind: tally.kind,
-    files: tally.files,
-    testOnly,
-    commits: tally.commits,
-    localCommits: tally.localCommits,
-    cohesion:
-      tally.commits === 0
-        ? null
-        : roundReported(tally.localCommits / tally.commits),
-    radius: null,
-    partners: [...tally.shared]
-      .map(([partner, sharedCommits]) => ({
-        path: partner,
-        sharedCommits,
-        contractsOnly: !modulePaths.has(partner),
-      }))
-      .toSorted(byPartnerStrength)
-      .slice(0, MAX_PARTNERS),
-    ...churn,
-    leakyInterface: isLeakyInterface(churn, testOnly),
-    depth: null,
-    trend: null,
-    erosion: null,
-    fixDensity: null,
-  };
-};
+): Module => ({
+  path,
+  kind: tally.kind,
+  files: tally.files,
+  commits: tally.commits,
+  localCommits: tally.localCommits,
+  cohesion:
+    tally.commits === 0
+      ? null
+      : roundReported(tally.localCommits / tally.commits),
+  radius: null,
+  partners: [...tally.shared]
+    .map(([partner, sharedCommits]) => ({
+      path: partner,
+      sharedCommits,
+      contractsOnly: !modulePaths.has(partner),
+    }))
+    .toSorted(byPartnerStrength)
+    .slice(0, MAX_PARTNERS),
+  ...churn,
+  leakyInterface: isLeakyInterface(churn),
+  depth: null,
+  trend: null,
+  erosion: null,
+  fixDensity: null,
+});
 
 /**
  * Measures every module over the counted commits (see `countedChanges`) of
@@ -143,7 +135,7 @@ const toModule = (
  *
  * A module's cohesion is the share of its commits that touched no other
  * module. The order is the one documented on `Analysis.modules`; a module is
- * ranked when it has at least `minModuleCommits` commits and is not test-only.
+ * ranked when it has at least `minModuleCommits` commits.
  */
 export const measureModules = (
   history: Pick<History, "changes" | "paths">,

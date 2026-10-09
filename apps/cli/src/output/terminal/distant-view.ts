@@ -119,7 +119,7 @@ export const couplingLines = (
       { header: "files", align: "left" },
     ],
     couplings
-      .filter((coupling) => !coupling.testPair && !isContractPair(coupling))
+      .filter((coupling) => !isContractPair(coupling))
       .slice(0, TOP_COUPLINGS)
       .map((coupling) => [
         plain(percent(coupling.degree)),

@@ -9,21 +9,18 @@ import type { Territory } from "../model/territory.js";
 /**
  * The cliques of territories (see `Clique`; the members are territory ids) as
  * the report lists them, in the order they were found, with the evidence an
- * entry point of kind `clique` is scored on: `byId` finds a territory,
- * `codeHeat` gives each one's share of the production code's heat.
+ * entry point of kind `clique` is scored on: `byId` finds a territory.
  */
 export const territoryCliques = (
   cliques: ReadonlyArray<Clique>,
   byId: ReadonlyMap<string, Territory>,
-  codeHeat: ReadonlyMap<string, number>,
 ): ReadonlyArray<TerritoryClique> =>
   cliques.map((clique) => {
-    const { heatShare, codeHeatShare } = cliqueHeat(clique, byId, codeHeat);
+    const { heatShare } = cliqueHeat(clique, byId);
     return {
       territories: clique.modules,
       sharedChanges: clique.sharedCommits,
       weakestShare: clique.weakestShare,
       heatShare: roundReported(Math.min(1, heatShare)),
-      codeHeatShare: roundReported(Math.min(1, codeHeatShare)),
     };
   });

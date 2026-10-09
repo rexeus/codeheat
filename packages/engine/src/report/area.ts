@@ -22,12 +22,12 @@ export const Area = Schema.Struct({
    * `main files: a, b, c`.
    */
   description: Schema.String,
-  /** Production code files in the area; test code is left out. */
+  /** Code files in the area (test code is in no area). */
   files: Count,
-  /** Changes (`window.changes`) that touched any file of the area, its test code included. */
+  /** Changes (`window.changes`) that touched any file of the area. */
   changes: Count,
   /**
-   * Percent of all the heat that sits in the area, its test code included.
+   * Percent of all the heat that sits in the area.
    * The heat of a file is its changes × (lines + complexity).
    */
   heat: Percent,

@@ -58,3 +58,21 @@ describe("isTestPath", () => {
     );
   });
 });
+
+describe("isTestPath by name", () => {
+  it.each([
+    "src/a.test.ts",
+    "src/a.spec.tsx",
+    "lib/a_test.py",
+    "src/a_spec.ts",
+  ])("recognizes %s", (path) => {
+    expect(isTestPath(path)).toBe(true);
+  });
+
+  it.each(["src/a.ts", "src/test", "src/attest.ts", "src/a-test.ts"])(
+    "does not take %s for a test",
+    (path) => {
+      expect(isTestPath(path)).toBe(false);
+    },
+  );
+});

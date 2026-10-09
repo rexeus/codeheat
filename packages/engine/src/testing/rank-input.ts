@@ -10,7 +10,7 @@ import { fitRecord, territoryRecord } from "./territory-record.js";
 
 const IDS = ["a", "b", "c", "d", "e", "f"];
 
-/** Six packages, `a` the leakiest and `f` the least; each reaches into the next and `f` into `a`, so no two are each other's partner. */
+/** Six packages that hold a sixth of the heat each (see `CODE_FILES`), `a` the leakiest and `f` the least; each reaches into the next and `f` into `a`, so no two are each other's partner. */
 export const territories = (
   kinds: ReadonlyArray<"package" | "other"> = [],
 ): Territories => ({
@@ -20,7 +20,7 @@ export const territories = (
     territoryRecord("r", "folder", null, IDS),
     ...IDS.map((id, index) =>
       Object.assign(territoryRecord(id, kinds[index] ?? "package", "r"), {
-        heatShare: 0.1,
+        heatShare: 1 / IDS.length,
         changes: 40,
         fit: fitRecord({
           containment: 0.1 + index / 10,
@@ -42,7 +42,6 @@ export const hidden = (a: string, b: string): Coupling => ({
   sharedCommits: 8,
   degree: 0.5,
   distance: 2,
-  testPair: false,
   kinds: { a: "code", b: "code" },
   crossesModule: true,
   imports: "none",
@@ -68,7 +67,6 @@ export const COPY_FILES = [
 export const copies = (): CopyFamily => ({
   files: ["a/x.ts", "b/x.ts"],
   similarity: { min: 0.8, max: 0.9 },
-  testOnly: false,
   sharedChanges: 5,
   changesToAll: 5,
 });

@@ -17,15 +17,12 @@ import { fileTerritoryLine } from "./territory-view.js";
 type Entry = InspectResult["matches"][number];
 
 /**
- * What to know about a partner at a glance: a contract, a test, or its place
- * in the design (in another module, a distant coupling, or both).
+ * What to know about a partner at a glance: a contract, or its place in the
+ * design (in another module, a distant coupling, or both).
  */
 const partnerMarker = (partner: Entry["partners"][number]): string => {
   if (partner.kind === "contract") {
     return " (contract)";
-  }
-  if (partner.testPair) {
-    return " (test)";
   }
   const places = [
     ...(partner.crossesModule ? ["other module"] : []),
@@ -45,20 +42,17 @@ const IMPORT_LABELS: Readonly<Record<PartnerImports, string>> = {
 
 /**
  * What the inspected file does with its partner. No import at all is hidden
- * coupling, which stands out; for the file's test it is just "none", since a
- * test is expected to be coupled.
+ * coupling, which stands out.
  */
 const importsCell = (
-  { imports, testPair }: Entry["partners"][number],
+  { imports }: Entry["partners"][number],
   style: Style,
 ): Cell => {
   if (imports === null) {
     return plain("-");
   }
   if (imports === "none") {
-    return testPair
-      ? plain("none")
-      : { text: IMPORT_LABELS[imports], paint: style.bold };
+    return { text: IMPORT_LABELS[imports], paint: style.bold };
   }
   return plain(IMPORT_LABELS[imports]);
 };

@@ -9,8 +9,8 @@ import { Count, UnitInterval } from "./scalars.js";
 /**
  * A coupled pair of code or contract files that lie far apart in the design:
  * in different modules, or in directories at least `Thresholds.minLocalDistance`
- * hops apart within one module. Pairs with a test-code file and pairs of two
- * contract files are never listed. A modularity violation in the sense of Mo,
+ * hops apart within one module. Pairs of two contract files are never
+ * listed. A modularity violation in the sense of Mo,
  * Cai, and Kazman: structurally distant files that change together.
  */
 export const DistantCoupling = Schema.Struct({

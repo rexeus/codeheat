@@ -8,7 +8,6 @@ const code = (path: string) => ({
   loc: 10,
   complexity: { total: 5 },
   changes: 1,
-  test: false,
 });
 
 const filesIn = (folder: string, count: number): ReadonlyArray<string> =>

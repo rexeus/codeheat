@@ -84,7 +84,6 @@ export type MeasuredLevel = {
 
 type Area = {
   readonly path: string;
-  readonly testOnly: boolean;
   readonly commits: number;
 };
 
@@ -95,7 +94,6 @@ const areasOf = (
 ): ReadonlyArray<Area> =>
   level.areas.map(({ id, kind }) => ({
     path: id,
-    testOnly: false,
     commits: kind === "other" ? 0 : (tallies.get(id)?.commits ?? 0),
   }));
 

@@ -21,13 +21,12 @@ type Tally = {
 /**
  * For every territory, the chronic and acute hotspots among the files it holds
  * (below it included) and the share of its code's heat the chronic ones carry.
- * `nodes` is the tree; each file names its finest territory. Test code is
- * left out: it has no heat kind, and tests are no design.
+ * `nodes` is the tree; each file names its finest territory.
  */
 export const chronicHeat = (
   nodes: ReadonlyArray<Pick<Territory, "id" | "parent">>,
   files: ReadonlyArray<
-    Pick<FileStats, "territory" | "test" | "heat" | "changes" | "loc"> & {
+    Pick<FileStats, "territory" | "heat" | "changes" | "loc"> & {
       readonly complexity: Pick<FileStats["complexity"], "total">;
     }
   >,
@@ -35,9 +34,6 @@ export const chronicHeat = (
   const parents = new Map(nodes.map(({ id, parent }) => [id, parent]));
   const tallies = new Map<string, Tally>();
   for (const file of files) {
-    if (file.test) {
-      continue;
-    }
     const heat = file.changes * (file.loc + file.complexity.total);
     for (
       let id: string | null | undefined = file.territory;

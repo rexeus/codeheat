@@ -53,7 +53,6 @@ export const partnersOf = (
       sharedCommits: coupling.sharedCommits,
       probability: roundReported(coupling.sharedCommits / changes),
       kind: coupling.a === path ? coupling.kinds.b : coupling.kinds.a,
-      testPair: coupling.testPair,
       crossesModule: coupling.crossesModule,
       distant: isDistantCoupling(coupling),
       imports: importsFrom(path, coupling),

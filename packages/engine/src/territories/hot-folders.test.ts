@@ -11,7 +11,6 @@ const heated = (path: string, heat: number) => ({
   loc: heat - 5,
   complexity: { total: 5 },
   changes: 1,
-  test: false,
 });
 
 /**

@@ -83,31 +83,6 @@ describe("measureModules order", () => {
   });
 });
 
-describe("measureModules testOnly", () => {
-  it("flags modules made of test files or living in a test directory", () => {
-    const moduleOf = {
-      "units/a.test.ts": "units",
-      "mixed/b.ts": "mixed",
-      "mixed/b.test.ts": "mixed",
-      "packages/app/e2e/flow.ts": "packages/app/e2e",
-      "src/__tests__/x.ts": "src/__tests__",
-      "src/contest/y.ts": "src/contest",
-    };
-
-    const modules = measure(moduleOf, [], 5);
-
-    expect(
-      Object.fromEntries(modules.map(({ path, testOnly }) => [path, testOnly])),
-    ).toStrictEqual({
-      units: true,
-      mixed: false,
-      "packages/app/e2e": true,
-      "src/__tests__": true,
-      "src/contest": false,
-    });
-  });
-});
-
 describe("measureModules partners", () => {
   it("keeps the five strongest partners, ties by path", () => {
     const moduleOf = {

@@ -14,19 +14,11 @@ const change = (
   touched: new Set(modules),
 });
 
-const measure = (
-  changes: ReadonlyArray<ReturnType<typeof change>>,
-  testOnly: ReadonlyArray<string> = [],
-) =>
+const measure = (changes: ReadonlyArray<ReturnType<typeof change>>) =>
   measureFixes(
     changes.map((entry) => entry.change),
     changes.map((entry) => entry.touched),
-    [
-      moduleRecord("a", 0),
-      moduleRecord("b", 0),
-      moduleRecord("idle", 0),
-      ...testOnly.map((path) => moduleRecord(path, 0, true)),
-    ],
+    [moduleRecord("a", 0), moduleRecord("b", 0), moduleRecord("idle", 0)],
   );
 
 describe("measureFixes of the repository", () => {
@@ -121,24 +113,6 @@ describe("measureFixes of the modules", () => {
       a: { fixes: 2, share: 0.6667, spanning: 1 },
       b: { fixes: 1, share: 0.3333, spanning: 1 },
       idle: null,
-    });
-  });
-
-  it("does not take a test-only module for a boundary a fix crossed", () => {
-    const { modules } = measure(
-      [change("fix", "a", "e2e"), change("convention", "a")],
-      ["e2e"],
-    );
-
-    expect(
-      Object.fromEntries(
-        modules.map(({ path, fixDensity }) => [path, fixDensity]),
-      ),
-    ).toStrictEqual({
-      a: { fixes: 1, share: 0.5, spanning: 0 },
-      b: null,
-      idle: null,
-      e2e: null,
     });
   });
 

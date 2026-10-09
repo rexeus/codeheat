@@ -145,25 +145,6 @@ describe("renderAnalysis modules", () => {
 });
 
 describe("renderAnalysis module ranking", () => {
-  it("leaves out test-only modules", () => {
-    const report = sampleReport();
-    const tests = report.modules.slice(0, 1).map((module) =>
-      Object.assign({}, module, {
-        path: "e2e",
-        testOnly: true,
-        cohesion: 0,
-      }),
-    );
-
-    const modules = section(
-      plainView({ ...report, modules: [...tests, ...report.modules] }),
-      "Least cohesive modules",
-    );
-
-    expect(modules.filter((line) => line.includes("e2e"))).toEqual([]);
-    expect(modules).toHaveLength(6);
-  });
-
   it("keeps the order of the report instead of sorting again", () => {
     const report = sampleReport();
     const reversed = report.modules.toReversed();

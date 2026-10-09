@@ -63,10 +63,9 @@ export const EntryPoint = Schema.Struct({
   /** The kind of the primary finding, the stronger one when a territory has two. */
   kind: EntryPointKind,
   /**
-   * What put it on the list: the share of all the production code's heat (the
-   * heat of a file is `FileStats.changes × (loc + complexity.total)`; test
-   * files hold none, in the total too, since tests are change effort but not
-   * design) at stake, times how strong the weakness is, in the unit of every
+   * What put it on the list: the share of all the heat (the heat of a file is
+   * `FileStats.changes × (loc + complexity.total)`; test code holds none) at
+   * stake, times how strong the weakness is, in the unit of every
    * kind, so that scores of different kinds compare as the share of change
    * effort at stake (see GLOSSARY.md, "Entry point (of a report)"
    * for each kind's rule). Rounded to 4 decimals. The score of the primary

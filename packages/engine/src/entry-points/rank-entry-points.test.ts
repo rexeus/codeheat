@@ -45,19 +45,6 @@ describe("rankEntryPoints", () => {
     ]);
   });
 
-  it("does not rank a territory made of test code, whatever heat share it has", () => {
-    const ranked = rankEntryPoints(
-      input({
-        files: [
-          ...CODE_FILES.filter(({ territory }) => territory !== "a"),
-          fileRecord("a/main.test.ts", "a", { test: true }),
-        ],
-      }),
-    );
-
-    expect(ranked.flatMap(({ territories: ids }) => ids)).not.toContain("a");
-  });
-
   it("lists at most the limit of a kind, but always the best of every kind", () => {
     const ranked = rankEntryPoints(
       input({
@@ -97,7 +84,7 @@ const floored = () =>
 describe("rankEntryPoints floor", () => {
   it("leaves out an entry below the least score", () => {
     expect(floored().map(({ score }) => score)).toStrictEqual([
-      0.153, 0.136, 0.1155, 0.099, 0.0099,
+      0.15, 0.1333, 0.1167, 0.1, 0.0099,
     ]);
   });
 
@@ -188,6 +175,7 @@ describe("rankEntryPoints of one territory", () => {
           nodes: both.nodes.map((node) =>
             node.id === "a"
               ? Object.assign({}, node, {
+                  heatShare: 1 / 3,
                   fit: fitRecord({
                     containment: 0.1,
                     chronicShare: 0.6,

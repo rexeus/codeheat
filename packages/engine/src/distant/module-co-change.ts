@@ -21,20 +21,17 @@ export type ModuleCoChange = {
 /**
  * Counts, over `touched` (the modules each counted change touched, see
  * `touchedModules`), the changes every pair of ranked modules shares. A module
- * is ranked when it has at least `minModuleCommits` counted changes and is not
- * test-only; the others stay out, since a handful of changes makes any share
- * meaningless and tests would couple to everything.
+ * is ranked when it has at least `minModuleCommits` counted changes; the
+ * others stay out, since a handful of changes makes any share meaningless.
  */
 export const moduleCoChange = (
   touched: ReadonlyArray<ReadonlySet<string>>,
-  modules: ReadonlyArray<Pick<Module, "path" | "commits" | "testOnly">>,
+  modules: ReadonlyArray<Pick<Module, "path" | "commits">>,
   minModuleCommits: number,
 ): ModuleCoChange => {
   const commits = new Map(
     modules
-      .filter(
-        (module) => module.commits >= minModuleCommits && !module.testOnly,
-      )
+      .filter((module) => module.commits >= minModuleCommits)
       .map((module) => [module.path, module.commits]),
   );
   const shared = new Map<string, Map<string, number>>();

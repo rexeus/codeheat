@@ -18,8 +18,7 @@ const file = (
   territory: string,
   changes: number,
   heat: Heat | null = null,
-  test = false,
-) => ({ territory, test, heat, changes, loc: 10, complexity: { total: 0 } });
+) => ({ territory, heat, changes, loc: 10, complexity: { total: 0 } });
 
 describe("chronicHeat", () => {
   it("counts chronic and acute files and their share of the heat, below a territory included", () => {
@@ -49,19 +48,6 @@ describe("chronicHeat", () => {
       chronicFiles: 0,
       acuteFiles: 0,
       chronicShare: 0,
-    });
-  });
-
-  it("leaves test code out of both counts", () => {
-    const result = chronicHeat(NODES, [
-      file("b", 2, chronic),
-      file("b", 50, chronic, true),
-    ]);
-
-    expect(result.get("b")).toStrictEqual({
-      chronicFiles: 1,
-      acuteFiles: 0,
-      chronicShare: 1,
     });
   });
 

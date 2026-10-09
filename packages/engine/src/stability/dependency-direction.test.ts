@@ -29,7 +29,6 @@ const MODULES = [
   moduleRecord("stable", 4),
   moduleRecord("volatile", 20),
   moduleRecord("steady", 8),
-  moduleRecord("tests", 30, true),
   moduleRecord("quiet", 0),
   moduleRecord("few", 3),
 ];
@@ -124,12 +123,9 @@ describe("dependencyDirection exclusions", () => {
     expect(edgesOf(dependencies)).toEqual(["quiet -> volatile (1)"]);
   });
 
-  it("ignores imports within a module and from or to a test-only module", () => {
+  it("ignores imports within a module", () => {
     const dependencies = loads({
       "stable/a.ts": ["stable/b.ts"],
-      "tests/t.ts": ["stable/a.ts"],
-      "volatile/x.ts": ["tests/t.ts"],
-      "stable/b.ts": ["tests/t.ts"],
     });
 
     expect(edgesOf(dependencies)).toEqual([]);

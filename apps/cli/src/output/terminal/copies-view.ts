@@ -54,29 +54,17 @@ const familyRows = (
 ];
 
 /**
- * The lines of the "Copies" section: a table of the five families with
- * production code that had the most changes touching every copy, with a note
- * on what its counts mean, and a note counting the families of test code only,
- * which the table leaves out (they stay in `--json`). None when the report has
- * no family.
+ * The lines of the "Copies" section: a table of the five families that had
+ * the most changes touching every copy, with a note on what its counts mean.
+ * None when the report has no family.
  */
 export const copyLines = (
   report: Analysis,
   style: Style,
-): ReadonlyArray<string> => {
-  const production = report.copyFamilies.filter(({ testOnly }) => !testOnly);
-  const leftOut = report.copyFamilies.length - production.length;
-  return [
-    ...(production.length === 0 ? [] : familyRows(production, style)),
-    ...(leftOut === 0
-      ? []
-      : [
-          style.dim(
-            `${leftOut === 1 ? "1 family" : `${leftOut} families`} of test code only left out; see copyFamilies in --json`,
-          ),
-        ]),
-  ];
-};
+): ReadonlyArray<string> =>
+  report.copyFamilies.length === 0
+    ? []
+    : familyRows(report.copyFamilies, style);
 
 /**
  * The one-line note of an inspected file's copy family: how many copies it has

@@ -6,7 +6,7 @@ import type { Coupling } from "../model/analysis.js";
 import type { FileKind } from "../model/contract-file.js";
 import { roundReported } from "../model/precision.js";
 import type { ModuleRef } from "../modules/detect.js";
-import { directoryDistance, isTestPair } from "./pair.js";
+import { directoryDistance } from "./pair.js";
 
 /** Commits touching more files than this say nothing about coupling. */
 export const MAX_COMMIT_FILES = 50;
@@ -149,7 +149,6 @@ export const findCouplings = (
           sharedCommits,
           degree: roundReported(degree),
           distance: directoryDistance(a, b),
-          testPair: isTestPair(a, b),
           kinds: { a: kindOf(a, contracts), b: kindOf(b, contracts) },
           crossesModule: modules.get(a)?.path !== modules.get(b)?.path,
           imports: null,

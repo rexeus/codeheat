@@ -48,23 +48,18 @@ describe("measureRadius over the repository", () => {
     ).toStrictEqual({ changes: 3, median: 1, p90: 1, local: 1 });
   });
 
-  it("does not count test-only modules as spread, nor a change that touched nothing else", () => {
-    const modules = [moduleRecord("a", 10), moduleRecord("t", 10, true)];
-    const touched = touching(["a", "t"], ["t"], ["a"], ["a", "t"]);
+  it("does not count a change that touched no module", () => {
+    const touched = touching(["a"], [], ["a"]);
 
-    expect(measureRadius(touched, modules).changeRadius).toStrictEqual({
-      changes: 3,
-      median: 1,
-      p90: 1,
-      local: 1,
-    });
+    expect(
+      measureRadius(touched, modulesNamed("a")).changeRadius,
+    ).toStrictEqual({ changes: 2, median: 1, p90: 1, local: 1 });
   });
 
   it("is null when no counted change touched a module", () => {
     expect(measureRadius([], modulesNamed("a")).changeRadius).toBeNull();
     expect(
-      measureRadius(touching([], ["t"]), [moduleRecord("t", 1, true)])
-        .changeRadius,
+      measureRadius(touching([]), modulesNamed("a")).changeRadius,
     ).toBeNull();
   });
 });
@@ -89,21 +84,6 @@ describe("measureRadius per module", () => {
       ["b", 2],
       ["c", 3],
       ["d", null],
-    ]);
-  });
-
-  it("leaves a test-only module without a radius and ignores it in the others", () => {
-    const modules = [moduleRecord("a", 10), moduleRecord("t", 10, true)];
-    const touched = touching(["a", "t"], ["a", "t"], ["a"]);
-
-    expect(
-      measureRadius(touched, modules).modules.map(({ path, radius }) => [
-        path,
-        radius,
-      ]),
-    ).toStrictEqual([
-      ["a", 1],
-      ["t", null],
     ]);
   });
 

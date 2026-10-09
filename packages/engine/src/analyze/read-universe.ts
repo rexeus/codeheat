@@ -11,8 +11,8 @@ import { measureDepths } from "../modules/depth.js";
 import { detectModules } from "../modules/detect.js";
 import { findEntryPoints } from "../modules/entry-points.js";
 import { listPackageDirectories } from "../modules/package-directories.js";
-import { isTestPath } from "../modules/test-path.js";
 import { inventory } from "../universe/inventory.js";
+import { isTestPath } from "../universe/test-path.js";
 import type { Universe } from "./measure.js";
 
 /**

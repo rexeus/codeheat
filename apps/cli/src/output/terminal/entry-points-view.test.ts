@@ -46,7 +46,6 @@ const territories = (
       parent: null,
       children: [],
       files: 1,
-      testFiles: 0,
       changes: 1,
       heatShare: 0,
       description: path,
@@ -75,7 +74,7 @@ describe("entryPointLines", () => {
       lines([
         entry({
           evidence: {
-            codeHeatShare: 0.31,
+            heatShare: 0.31,
             containment: 0.36,
             changes: 278,
             partnerShare: 0.49,
@@ -108,7 +107,7 @@ describe("entryPointLines subjects", () => {
         kind: "clique",
         territories: ["t2", "t3", "t4"],
         evidence: {
-          codeHeatShare: 0.5,
+          heatShare: 0.5,
           sharedChanges: 1,
           territories: 3,
           weakestShare: 0.3,
@@ -153,7 +152,7 @@ describe("entryPointLines words", () => {
           kind: "clique",
           territories: ["t2", "t3", "t4"],
           evidence: {
-            codeHeatShare: 0.5,
+            heatShare: 0.5,
             sharedChanges: 1,
             territories: 3,
             weakestShare: 0.3,
@@ -223,7 +222,7 @@ describe("entryPointLines layout", () => {
 describe("entries with two findings", () => {
   const both = entry({
     evidence: {
-      codeHeatShare: 0.4,
+      heatShare: 0.4,
       containment: 0.5,
       changes: 30,
       chronicShare: 0.6,
@@ -234,7 +233,7 @@ describe("entries with two findings", () => {
         kind: "boundary",
         verdict: "Leaks.",
         designMove: "Move it.",
-        evidence: { codeHeatShare: 0.4, containment: 0.5, changes: 30 },
+        evidence: { heatShare: 0.4, containment: 0.5, changes: 30 },
         files: [],
         territories: ["t2"],
       },

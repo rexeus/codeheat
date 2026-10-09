@@ -10,7 +10,6 @@ export const fileStats = (
   overrides: Partial<FileStats> = {},
 ): FileStats => ({
   path,
-  test: false,
   rank: 1,
   score: 0.5,
   revisions: 10,
@@ -38,7 +37,6 @@ export const coupling = (
   sharedCommits: 5,
   degree: 0.5,
   distance: 0,
-  testPair: false,
   kinds: { a: "code", b: "code" },
   crossesModule: false,
   imports: null,
@@ -53,7 +51,6 @@ export const moduleStats = (
   path,
   kind: "package",
   files: 2,
-  testOnly: false,
   commits: 10,
   localCommits: 6,
   cohesion: 0.6,

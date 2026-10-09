@@ -34,7 +34,6 @@ const coupling = (
   sharedCommits: 4,
   degree: 0.8,
   distance: 2,
-  testPair: false,
   kinds: { a: "code", b: "code" },
   crossesModule: true,
   imports,

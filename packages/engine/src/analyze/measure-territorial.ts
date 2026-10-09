@@ -4,7 +4,6 @@
 import { Effect } from "effect";
 import type { FileSystem, Path } from "effect";
 
-import { codeHeatShares } from "../entry-points/file-heat.js";
 import type { EntryLimits } from "../entry-points/limits.js";
 import { rankEntryPoints } from "../entry-points/rank-entry-points.js";
 import type { GitError } from "../git/git-errors.js";
@@ -90,7 +89,6 @@ export const measureTerritorial = (options: {
       territoryCliques: territoryCliques(
         fitted.cliques,
         new Map(fitted.territories.nodes.map((node) => [node.id, node])),
-        codeHeatShares(built.files, fitted.territories.nodes),
       ),
       entryPoints: rankEntryPoints({
         territories: fitted.territories,

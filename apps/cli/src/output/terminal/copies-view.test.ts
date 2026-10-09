@@ -12,7 +12,6 @@ const family = (overrides: Partial<Family> = {}): Family => ({
   similarity: { min: 0.6, max: 0.6 },
   sharedChanges: 5,
   changesToAll: 5,
-  testOnly: false,
   ...overrides,
 });
 
@@ -53,30 +52,6 @@ describe("copyLines", () => {
 
     expect(linesOf(families)).toHaveLength(7);
     expect(linesOf(families)[5]).toContain("f4.ts, g4.ts");
-  });
-
-  it("leaves families of test code only out of the table and counts them", () => {
-    const lines = linesOf([
-      family({ files: ["src/a.ts", "src/b.ts"] }),
-      family({ files: ["test/x.test.ts", "test/y.test.ts"], testOnly: true }),
-      family({ files: ["test/p.test.ts", "test/q.test.ts"], testOnly: true }),
-    ]);
-
-    expect(lines.slice(1)).toEqual([
-      "     2      60%       5    5  src/a.ts, src/b.ts",
-      "shared: changes that touched two or more copies; all: changes that touched every copy",
-      "2 families of test code only left out; see copyFamilies in --json",
-    ]);
-  });
-
-  it("says so when only test code has families", () => {
-    expect(
-      linesOf([
-        family({ files: ["test/x.test.ts", "test/y.test.ts"], testOnly: true }),
-      ]),
-    ).toEqual([
-      "1 family of test code only left out; see copyFamilies in --json",
-    ]);
   });
 
   it("escapes terminal control characters in paths", () => {

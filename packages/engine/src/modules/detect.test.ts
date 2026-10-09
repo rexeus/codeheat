@@ -376,22 +376,6 @@ describe("detectModules leaves small and declared modules alone", () => {
     );
   });
 
-  it("splits the only package although a package of test code alone sits beside it", () => {
-    const files = [
-      ...filesIn("app/src/billing", 15),
-      ...filesIn("app/src/auth", 15),
-      ...filesIn("test/fixtures/sample", 1),
-    ];
-
-    expect(modulesOf(files, ["app", "test/fixtures/sample"])).toStrictEqual(
-      new Set([
-        "directory:app/src/billing",
-        "directory:app/src/auth",
-        "package:test/fixtures/sample",
-      ]),
-    );
-  });
-
   it("keeps a package beside a package that has code outside test directories", () => {
     const files = [
       ...filesIn("app/src/billing", 15),

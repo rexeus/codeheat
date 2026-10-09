@@ -6,7 +6,7 @@ import { Schema } from "effect";
 import { Count, UnitInterval } from "./scalars.js";
 
 /**
- * Two ranked modules (see `Module`: enough counted changes, not test-only) that
+ * Two ranked modules (see `Module`: enough counted changes) that
  * change in the same counted changes. A change that touched a contract file
  * counts as a touch of the module the contract lives in.
  */

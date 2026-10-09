@@ -20,13 +20,12 @@ const Partner = Schema.Struct({
   probability: UnitInterval,
   /** What the partner is; a contract has no score and is listed in `Analysis.contracts`. */
   kind: FileKind,
-  testPair: Schema.Boolean,
   /** The partner belongs to a different module than the inspected file. */
   crossesModule: Schema.Boolean,
   /**
    * The pair is a distant coupling (see `Analysis.distantCouplings`): the files
-   * lie in different modules or far apart within one, neither is test code,
-   * and they are not two contract files. A distant partner is a hint that the
+   * lie in different modules or far apart within one, and they are not two
+   * contract files. A distant partner is a hint that the
    * change reaches across a design boundary.
    */
   distant: Schema.Boolean,

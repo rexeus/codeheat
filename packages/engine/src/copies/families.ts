@@ -5,7 +5,6 @@ import { countedChanges } from "../coupling/coupling.js";
 import type { History } from "../history/history.js";
 import type { CopyFamily } from "../model/copy-family.js";
 import { roundReported } from "../model/precision.js";
-import { isTestPath } from "../modules/test-path.js";
 
 /** Two coupled files whose content is alike enough to be copies. */
 export type Link = { readonly a: string; readonly b: string };
@@ -96,7 +95,6 @@ const countChanges = (
 };
 
 const byImportance = (a: CopyFamily, b: CopyFamily): number =>
-  Number(a.testOnly) - Number(b.testOnly) ||
   b.changesToAll - a.changesToAll ||
   b.sharedChanges - a.sharedChanges ||
   b.files.length - a.files.length ||
@@ -104,14 +102,12 @@ const byImportance = (a: CopyFamily, b: CopyFamily): number =>
 
 /**
  * The copy families among `links`: the connected components of the files
- * they join, families with production code before those of test code only,
- * then most fixes applied to all members, most shared changes, most members,
+ * they join, most fixes applied to all members first, then most shared changes, most members,
  * and path. A family's `similarity` range covers all
  * pairs of its members, so its minimum can lie below the threshold that
  * linked them (A is like B, B like C, A not like C). `history` is the window
  * whose counted changes (see `countedChanges`) tell how often the members
- * changed together. A family is `testOnly` when every member is test code (see
- * `isTestPath`, which a contract file never is).
+ * changed together.
  */
 export const familiesOf = (
   links: ReadonlyArray<Link>,
@@ -124,7 +120,6 @@ export const familiesOf = (
     .map((files, index) => ({
       files,
       similarity: similarityRange(files, similarityOf),
-      testOnly: files.every((file) => isTestPath(file)),
       sharedChanges: changes[index]?.shared ?? 0,
       changesToAll: changes[index]?.all ?? 0,
     }))

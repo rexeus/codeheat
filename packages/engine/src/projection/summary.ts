@@ -22,8 +22,8 @@ const TREND_WORDS: Record<Exclude<Verdict["trend"], "unknown">, string> = {
 
 /**
  * Why there is no level, given the percent of all the heat the report does
- * not list (`basis.rest.heat`). The verdict judges no loose files, buckets
- * of smaller folders, or test code, so heat there leaves too little to judge.
+ * not list (`basis.rest.heat`). The verdict judges no loose files or buckets
+ * of smaller folders, so heat there leaves too little to judge.
  */
 const UNKNOWN_WHY: Record<
   NonNullable<Verdict["reason"]>,

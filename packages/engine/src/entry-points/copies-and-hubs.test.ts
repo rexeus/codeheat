@@ -17,7 +17,6 @@ const TERRITORIES = new Map([
 const family = (overrides: Partial<CopyFamily> = {}): CopyFamily => ({
   files: ["a/x.ts", "b/x.ts"],
   similarity: { min: 0.8, max: 0.9 },
-  testOnly: false,
   sharedChanges: 10,
   changesToAll: 8,
   ...overrides,
@@ -55,10 +54,8 @@ describe("copiesEntries", () => {
     );
   });
 
-  it("leaves out a family of test code and one that changed together fewer than three times", () => {
-    expect(
-      copies([family({ testOnly: true }), family({ changesToAll: 2 })]),
-    ).toStrictEqual([]);
+  it("leaves out a family that changed together fewer than three times", () => {
+    expect(copies([family({ changesToAll: 2 })])).toStrictEqual([]);
   });
 
   it("reads the gate from the limits", () => {

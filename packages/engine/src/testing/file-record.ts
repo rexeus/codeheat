@@ -15,7 +15,6 @@ export const fileRecord = (
   linesAdded: 0,
   linesDeleted: 0,
   breadth: 0,
-  test: false,
   module: ".",
   territory,
   loc: 100,

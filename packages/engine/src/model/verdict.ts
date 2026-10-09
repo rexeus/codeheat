@@ -42,8 +42,8 @@ export const Verdict = Schema.Struct({
     Schema.Literals(["no-territories", "quiet-window", "too-little-evidence"]),
   ),
   /**
-   * The share of all the heat (`Territory.heatShare` summed, test code
-   * included) in the leaking territories, rounded to 4 decimals; 0 when none
+   * The share of all the heat (`Territory.heatShare` summed) in the leaking
+   * territories, rounded to 4 decimals; 0 when none
    * is judged.
    */
   leakShare: UnitInterval,

@@ -91,9 +91,6 @@ const partnerRow = (context: Context, partner: Partner): HTMLElement => {
   if (partner.kind === "contract") {
     meta.append(h("span", "badge", "contract"));
   }
-  if (partner.testPair) {
-    meta.append(h("span", "badge", "test pair"));
-  }
   if (partner.crossesModule) {
     meta.append(h("span", "badge cross-module", "other module"));
   }

@@ -9,7 +9,7 @@ import { Count } from "./scalars.js";
  * How long a file has been among the hottest. A window of `Analysis.series` is
  * judged on its own: a file is hot in it when it has revisions in the window
  * and its score (see `FileStats.score`, computed from the window's revisions)
- * is among the best `Thresholds.hotTopShare` of the non-test files that have
+ * is among the best `Thresholds.hotTopShare` of the files that have
  * revisions in the window, ties at the cut-off included. Only active windows
  * count (see `SeriesWindow.active`), and a file counts from the first window
  * in which it has a revision, which is all git shows of when it appeared.

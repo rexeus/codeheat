@@ -647,9 +647,6 @@ button:focus-visible {
 .outline.hidden-coupling {
   stroke: var(--hidden-coupling);
 }
-.outline.test-pair {
-  stroke-dasharray: 5 3;
-}
 .outline.cross-module {
   stroke-dasharray: 0 7;
   stroke-linecap: round;
@@ -845,23 +842,6 @@ button:focus-visible {
   min-width: 3.2ch;
   text-align: right;
   font-variant-numeric: tabular-nums;
-}
-.hotspot-note {
-  margin-bottom: 6px;
-  font-size: 12.5px;
-}
-.hotspot-toggle {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  margin: 0 0 6px;
-  color: var(--text-2);
-  font-size: 12.5px;
-  cursor: pointer;
-}
-.hotspot-toggle input {
-  margin: 0;
-  accent-color: var(--focus);
 }
 .partner-body {
   display: flex;

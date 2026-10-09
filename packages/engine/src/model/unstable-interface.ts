@@ -16,7 +16,7 @@ export const UnstableInterface = Schema.Struct({
   /** `path` of the file's module (see `Module`). */
   module: Schema.String,
   /**
-   * Files that import it directly (the fan-in), test code left out. A file
+   * Files that import it directly (the fan-in). A file
    * that reaches it only through a re-exporting barrel does not count, so a
    * public barrel shows the fan-in of its package and the files behind it
    * show their own. Only imports the analysis can resolve to universe files

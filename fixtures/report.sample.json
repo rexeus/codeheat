@@ -134,7 +134,6 @@
         "hotWindows": 5,
         "windows": 6
       },
-      "test": false,
       "territory": "t2"
     },
     {
@@ -169,7 +168,6 @@
         "hotWindows": 4,
         "windows": 6
       },
-      "test": false,
       "territory": "t2"
     },
     {
@@ -204,7 +202,6 @@
         "hotWindows": 2,
         "windows": 6
       },
-      "test": false,
       "territory": "t3"
     },
     {
@@ -235,7 +232,6 @@
         "newlyActive": false
       },
       "heat": null,
-      "test": false,
       "territory": "t5"
     },
     {
@@ -266,7 +262,6 @@
         "newlyActive": false
       },
       "heat": null,
-      "test": false,
       "territory": "t4"
     },
     {
@@ -297,7 +292,6 @@
         "newlyActive": false
       },
       "heat": null,
-      "test": false,
       "territory": "t6"
     },
     {
@@ -328,7 +322,6 @@
         "newlyActive": false
       },
       "heat": null,
-      "test": false,
       "territory": "t3"
     },
     {
@@ -358,7 +351,6 @@
         "newlyActive": false
       },
       "heat": null,
-      "test": false,
       "territory": "t4"
     },
     {
@@ -388,7 +380,6 @@
         "newlyActive": false
       },
       "heat": null,
-      "test": false,
       "territory": "t3"
     },
     {
@@ -418,7 +409,6 @@
         "newlyActive": false
       },
       "heat": null,
-      "test": false,
       "territory": "t5"
     },
     {
@@ -448,7 +438,6 @@
         "newlyActive": false
       },
       "heat": null,
-      "test": false,
       "territory": "t6"
     },
     {
@@ -478,7 +467,6 @@
         "newlyActive": false
       },
       "heat": null,
-      "test": false,
       "territory": "t5"
     },
     {
@@ -508,7 +496,6 @@
         "newlyActive": false
       },
       "heat": null,
-      "test": false,
       "territory": "t2"
     },
     {
@@ -538,7 +525,6 @@
         "newlyActive": false
       },
       "heat": null,
-      "test": false,
       "territory": "t3"
     },
     {
@@ -568,7 +554,6 @@
         "newlyActive": false
       },
       "heat": null,
-      "test": false,
       "territory": "t3"
     },
     {
@@ -598,7 +583,6 @@
         "newlyActive": false
       },
       "heat": null,
-      "test": false,
       "territory": "t6"
     },
     {
@@ -628,7 +612,6 @@
         "newlyActive": true
       },
       "heat": null,
-      "test": false,
       "territory": "t3"
     },
     {
@@ -658,7 +641,6 @@
         "newlyActive": false
       },
       "heat": null,
-      "test": false,
       "territory": "t5"
     },
     {
@@ -688,7 +670,6 @@
         "newlyActive": false
       },
       "heat": null,
-      "test": false,
       "territory": "t4"
     },
     {
@@ -719,7 +700,6 @@
         "newlyActive": false
       },
       "heat": null,
-      "test": false,
       "territory": "t2"
     },
     {
@@ -749,7 +729,6 @@
         "newlyActive": false
       },
       "heat": null,
-      "test": false,
       "territory": "t6"
     },
     {
@@ -779,7 +758,6 @@
         "newlyActive": false
       },
       "heat": null,
-      "test": false,
       "territory": "t2"
     },
     {
@@ -810,7 +788,6 @@
         "newlyActive": false
       },
       "heat": null,
-      "test": false,
       "territory": "t4"
     },
     {
@@ -840,7 +817,6 @@
         "newlyActive": true
       },
       "heat": null,
-      "test": false,
       "territory": "t2"
     },
     {
@@ -870,7 +846,6 @@
         "newlyActive": false
       },
       "heat": null,
-      "test": false,
       "territory": "t5"
     },
     {
@@ -900,7 +875,6 @@
         "newlyActive": false
       },
       "heat": null,
-      "test": false,
       "territory": "t3"
     },
     {
@@ -930,7 +904,6 @@
         "newlyActive": true
       },
       "heat": null,
-      "test": false,
       "territory": "t4"
     },
     {
@@ -960,7 +933,6 @@
         "newlyActive": false
       },
       "heat": null,
-      "test": false,
       "territory": "t5"
     },
     {
@@ -990,7 +962,6 @@
         "newlyActive": false
       },
       "heat": null,
-      "test": false,
       "territory": "t6"
     },
     {
@@ -1017,7 +988,6 @@
         "newlyActive": false
       },
       "heat": null,
-      "test": false,
       "territory": "t5"
     },
     {
@@ -1044,7 +1014,6 @@
         "newlyActive": false
       },
       "heat": null,
-      "test": false,
       "territory": "t4"
     },
     {
@@ -1071,7 +1040,6 @@
         "newlyActive": false
       },
       "heat": null,
-      "test": false,
       "territory": "t2"
     }
   ],
@@ -1256,7 +1224,6 @@
       "sharedCommits": 6,
       "degree": 0.75,
       "distance": 4,
-      "testPair": false,
       "kinds": {
         "a": "code",
         "b": "code"
@@ -1270,7 +1237,6 @@
       "sharedCommits": 24,
       "degree": 0.608,
       "distance": 0,
-      "testPair": false,
       "kinds": {
         "a": "code",
         "b": "code"
@@ -1284,7 +1250,6 @@
       "sharedCommits": 22,
       "degree": 0.5789,
       "distance": 2,
-      "testPair": false,
       "kinds": {
         "a": "contract",
         "b": "code"
@@ -1298,7 +1263,6 @@
       "sharedCommits": 9,
       "degree": 0.529,
       "distance": 5,
-      "testPair": false,
       "kinds": {
         "a": "code",
         "b": "code"
@@ -1312,7 +1276,6 @@
       "sharedCommits": 9,
       "degree": 0.419,
       "distance": 7,
-      "testPair": false,
       "kinds": {
         "a": "code",
         "b": "code"
@@ -1326,7 +1289,6 @@
       "sharedCommits": 14,
       "degree": 0.418,
       "distance": 5,
-      "testPair": false,
       "kinds": {
         "a": "code",
         "b": "code"
@@ -1340,7 +1302,6 @@
       "path": "packages/shared",
       "kind": "package",
       "files": 5,
-      "testOnly": false,
       "commits": 30,
       "localCommits": 12,
       "cohesion": 0.4,
@@ -1400,7 +1361,6 @@
       "path": "apps/cli",
       "kind": "package",
       "files": 8,
-      "testOnly": false,
       "commits": 26,
       "localCommits": 13,
       "cohesion": 0.5,
@@ -1438,7 +1398,6 @@
       "path": "packages/web",
       "kind": "package",
       "files": 7,
-      "testOnly": false,
       "commits": 58,
       "localCommits": 31,
       "cohesion": 0.5345,
@@ -1489,7 +1448,6 @@
       "path": "packages/billing",
       "kind": "package",
       "files": 9,
-      "testOnly": false,
       "commits": 74,
       "localCommits": 41,
       "cohesion": 0.5541,
@@ -1549,7 +1507,6 @@
       "path": "packages/auth",
       "kind": "package",
       "files": 7,
-      "testOnly": false,
       "commits": 44,
       "localCommits": 27,
       "cohesion": 0.6136,
@@ -1818,7 +1775,6 @@
         "min": 0.58,
         "max": 0.58
       },
-      "testOnly": false,
       "sharedChanges": 6,
       "changesToAll": 6
     }
@@ -2014,13 +1970,12 @@
         "chronicFiles": 2,
         "containment": 0.5541,
         "fixShare": 0.3108,
-        "heatShare": 0.6239,
+        "heatShare": 0.5812,
         "changes": 74,
         "distantPairs": 3,
         "hiddenPairs": 1,
         "cliques": 0,
-        "partnerShare": 0.2838,
-        "codeHeatShare": 0.5812
+        "partnerShare": 0.2838
       },
       "verdict": "The boundary does not hold, and it holds less than it used to: changes here keep reaching into other territories.",
       "designMove": "Move a boundary: bring what changes together with packages/billing into one territory, or give the part they share a home of its own; start with packages/web.",
@@ -2030,7 +1985,7 @@
           "verdict": "The boundary does not hold, and it holds less than it used to: changes here keep reaching into other territories.",
           "designMove": "Move a boundary: bring what changes together with packages/billing into one territory, or give the part they share a home of its own; start with packages/web.",
           "evidence": {
-            "heatShare": 0.6239,
+            "heatShare": 0.5812,
             "containment": 0.5541,
             "changes": 74,
             "chronicShare": 0.5321,
@@ -2038,8 +1993,7 @@
             "distantPairs": 3,
             "hiddenPairs": 1,
             "cliques": 0,
-            "partnerShare": 0.2838,
-            "codeHeatShare": 0.5812
+            "partnerShare": 0.2838
           },
           "files": [],
           "territories": ["t2"]

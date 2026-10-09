@@ -5,7 +5,6 @@ import type { History } from "../history/history.js";
 import type { Module } from "../model/module.js";
 import { roundReported } from "../model/precision.js";
 import type { ModuleRef } from "./detect.js";
-import { isTestPath } from "./test-path.js";
 
 /** Smallest leakage at which a module's interface is called out. */
 export const MIN_LEAKAGE = 0.5;
@@ -62,7 +61,7 @@ const touchedBy = (
         ...(touched.entries.get(module) ?? []),
         file,
       ]);
-    } else if (!isTestPath(file)) {
+    } else {
       touched.implementations.add(module);
     }
   }
@@ -149,13 +148,12 @@ export const measureInterfaces = (
 /**
  * Whether a module's interface leaks enough to call out: a leakage of at least
  * `MIN_LEAKAGE` over at least `MIN_IMPLEMENTATION_COMMITS` implementation
- * commits. A test-only module has no interface to judge.
+ * commits.
  */
-export const isLeakyInterface = (
-  { leakage, implementationCommits }: InterfaceChurn,
-  testOnly: boolean,
-): boolean =>
-  !testOnly &&
+export const isLeakyInterface = ({
+  leakage,
+  implementationCommits,
+}: InterfaceChurn): boolean =>
   leakage !== null &&
   leakage >= MIN_LEAKAGE &&
   implementationCommits >= MIN_IMPLEMENTATION_COMMITS;
