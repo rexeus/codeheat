@@ -5,11 +5,19 @@ import type { InspectResult, Analysis } from "@codeheat/engine";
 import { escapeForTerminal } from "../escape.js";
 import { percent } from "./format.js";
 
-const isTerritory = (kind: string): boolean => kind !== "other";
+/** Loose files are an area from this share of all the heat on, as the engine judges them. */
+const MIN_VISIBLE_HEAT = 0.01;
+
+const isArea = ({
+  kind,
+  heatShare,
+}: Analysis["territories"]["nodes"][number]): boolean =>
+  kind === "files" ? heatShare >= MIN_VISIBLE_HEAT : kind !== "other";
 
 /**
  * One line naming the areas, the territories at the recommended detail: how
- * many (buckets of smaller folders are not counted), and which detail of how
+ * many (buckets of smaller folders and loose files of under 1% of the heat
+ * are not counted), and which detail of how
  * many that is. Nothing when the report has no territories.
  */
 export const territoryLines = ({
@@ -21,10 +29,11 @@ export const territoryLines = ({
   if (detail === undefined) {
     return [];
   }
-  const kinds = new Map(territories.nodes.map(({ id, kind }) => [id, kind]));
-  const count = detail.ids.filter((id) =>
-    isTerritory(kinds.get(id) ?? ""),
-  ).length;
+  const byId = new Map(territories.nodes.map((node) => [node.id, node]));
+  const count = detail.ids.filter((id) => {
+    const node = byId.get(id);
+    return node !== undefined && isArea(node);
+  }).length;
   return [
     `Areas: ${count} at the recommended detail (${territories.recommended} of ${territories.details.length}); --json has every detail.`,
   ];

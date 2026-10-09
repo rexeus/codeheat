@@ -7,7 +7,7 @@ import { Count, Percent, Share } from "./scalars.js";
 /**
  * One area of the code: a package, a folder, sibling folders that change
  * together, or the loose files of a directory whose folders are areas of
- * their own, at the detail codeheat recommends reading. Areas do not overlap.
+ * their own (from 1% of all the heat on), at the detail codeheat recommends reading. Areas do not overlap.
  */
 export const Area = Schema.Struct({
   /**

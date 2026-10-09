@@ -6,7 +6,7 @@ import type { Analysis } from "../model/analysis.js";
 import type { Territory } from "../model/territory.js";
 import type { Area } from "../report/area.js";
 import type { Basis } from "../report/basis.js";
-import { isTerritoryKind } from "../territories/recommend.js";
+import { isRealTerritory } from "../territories/recommend.js";
 import { isJudged, standingOf } from "../verdict/judge-verdict.js";
 import type { Standing } from "../verdict/judge-verdict.js";
 import { percentOf, percentsOf, shareOf } from "./units.js";
@@ -122,7 +122,7 @@ export const areasOf = (
   const paths = new Map(territories.nodes.map(({ id, path }) => [id, path]));
   const pathOf = (id: string): string => paths.get(id) ?? id;
   const real = recommendedOf(territories)
-    .filter(({ kind }) => isTerritoryKind(kind))
+    .filter((territory) => isRealTerritory(territory))
     .map((territory) => ({
       territory,
       standing: standingOf(territory, thresholds),
@@ -151,7 +151,7 @@ export const areasOf = (
   return {
     areas: listed.map((area, index) => areaOf(area, heats[index] ?? 0, pathOf)),
     rest: {
-      areas: rest.filter(({ kind }) => isTerritoryKind(kind)).length,
+      areas: rest.filter((territory) => isRealTerritory(territory)).length,
       files: rest.reduce((sum, { files }) => sum + files, 0),
       heat: heats[listed.length] ?? 0,
       largest: largestOf(rest, heats[listed.length] ?? 0),

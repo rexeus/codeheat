@@ -5,7 +5,7 @@ import type { Analysis } from "../model/analysis.js";
 import { roundReported } from "../model/precision.js";
 import type { Territories, Territory } from "../model/territory.js";
 import type { Verdict } from "../model/verdict.js";
-import { isTerritoryKind } from "../territories/recommend.js";
+import { isRealTerritory } from "../territories/recommend.js";
 import { judgeAreaTrend } from "./area-trend.js";
 
 /** Share of all the heat the judged territories must hold for the verdict to rest on evidence. */
@@ -119,7 +119,7 @@ export const judgeVerdict = (input: {
 }): Verdict => {
   const { territories, limits } = input;
   const judged = recommendedOf(territories)
-    .filter(({ kind }) => isTerritoryKind(kind))
+    .filter((territory) => isRealTerritory(territory))
     .flatMap((territory) => {
       const standing = standingOf(territory, limits);
       return isJudged(standing) ? [{ territory, standing }] : [];

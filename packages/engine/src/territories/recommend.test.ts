@@ -26,6 +26,12 @@ const detail = (count: number, hidden?: number): ReadonlyArray<Shown> => [
   ...(hidden === undefined ? [] : [bucket(hidden)]),
 ];
 
+/** Loose files with the given share of the heat. */
+const looseFiles = (share: number): Shown => ({
+  ...territory(share),
+  kind: "files",
+});
+
 describe("recommendedOf", () => {
   it("takes the finest detail with at most 25 territories", () => {
     expect(recommendedOf([detail(5), detail(25), detail(26)])).toBe(2);
@@ -54,12 +60,19 @@ describe("recommendedOf", () => {
     expect(recommendedOf([[bucket(0.5)], detail(3, 0.05)])).toBe(2);
   });
 
-  it("compares a hidden folder with the folders opened beside it, not with loose files", () => {
-    const looseFiles: Shown = { ...territory(0.001), kind: "files" };
-
-    expect(recommendedOf([detail(5), [...detail(10, 0.05), looseFiles]])).toBe(
-      2,
+  it("counts loose files toward the 25 territories only from 1% of all heat", () => {
+    expect(
+      recommendedOf([detail(5), [...detail(25), looseFiles(0.0099)]]),
+    ).toBe(2);
+    expect(recommendedOf([detail(5), [...detail(25), looseFiles(0.01)]])).toBe(
+      1,
     );
+  });
+
+  it("compares a hidden folder with the folders opened beside it, not with loose files", () => {
+    expect(
+      recommendedOf([detail(5), [...detail(10, 0.05), looseFiles(0.02)]]),
+    ).toBe(2);
   });
 });
 

@@ -13,7 +13,7 @@ import { TerritoryFit } from "./territory-fit.js";
  * together, `path` names their directories with one brace glob over the
  * directory they share (`packages/a/{x,y}`). `files`: the loose files of a
  * directory, named `<dir>/*`, those directly in it and in folders too small to be territories,
- * when its folders are territories of their own; judged like any other.
+ * when its folders are territories of their own; judged like any other when it holds at least 1% of all the heat, and otherwise, like a bucket, no real territory.
  * `other`: a bucket of smaller folders that wait for a finer detail; never a
  * real territory. Test code is in no territory.
  */

@@ -12,7 +12,7 @@ import { growTree } from "./grow-tree.js";
 import { NO_MEASURE, measureNodes } from "./node-measures.js";
 import type { NodeMeasure } from "./node-measures.js";
 import type { TreeNode } from "./part.js";
-import { isTerritoryKind, recommendedOf, shownOf } from "./recommend.js";
+import { isRealTerritory, recommendedOf, shownOf } from "./recommend.js";
 
 export type TerritoryInput = EvidenceInput & {
   /** The directories that hold a manifest, other than the repository root. */
@@ -42,9 +42,9 @@ const NOTHING: TerritoryTree = {
   territoryOf: new Map(),
 };
 
-/** Territories (loose files included) first, then buckets. */
-const roleOf = ({ kind }: Pick<Territory, "kind">): number =>
-  isTerritoryKind(kind) ? 0 : 1;
+/** Real territories first, then buckets and loose files of little heat. */
+const roleOf = (territory: Pick<Territory, "kind" | "heatShare">): number =>
+  isRealTerritory(territory) ? 0 : 1;
 
 /**
  * What a node is called: its directory ("." for the repository root), and

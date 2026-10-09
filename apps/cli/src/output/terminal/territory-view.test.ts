@@ -20,7 +20,7 @@ const node = (id: string, kind: Territories["nodes"][number]["kind"]) => ({
 });
 
 describe("territoryLines", () => {
-  it("counts the territories at the recommended detail, loose files included, leaving buckets out", () => {
+  it("counts the areas at the recommended detail: loose files from 1% of the heat, no buckets", () => {
     const territories: Territories = {
       recommended: 2,
       details: [
@@ -32,8 +32,8 @@ describe("territoryLines", () => {
         node("a", "folder"),
         node("b", "package"),
         node("c", "group"),
-        node("d", "files"),
-        node("e", "other"),
+        { ...node("d", "files"), heatShare: 0.02 },
+        { ...node("e", "files"), heatShare: 0.005 },
         node("f", "folder"),
         node("g", "folder"),
         node("h", "folder"),

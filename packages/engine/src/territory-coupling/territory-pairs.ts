@@ -6,7 +6,7 @@ import { MIN_SHARED_COMMITS } from "../coupling/coupling.js";
 import type { ModuleCoChange } from "../distant/module-co-change.js";
 import type { TerritoryCoupling } from "../model/territory-coupling.js";
 import type { Territory } from "../model/territory.js";
-import { isTerritoryKind } from "../territories/recommend.js";
+import { isRealTerritory } from "../territories/recommend.js";
 import type { AreaCrossings } from "../territory-fit/crossing-pairs.js";
 
 /** The matrix covers this many territories, the hottest (`Thresholds.maxCoupledTerritories`). */
@@ -16,7 +16,7 @@ export const MAX_COUPLED_TERRITORIES = 24;
 const hottestIds = (areas: ReadonlyArray<Territory>): ReadonlySet<string> =>
   new Set(
     areas
-      .filter(({ kind }) => isTerritoryKind(kind))
+      .filter((territory) => isRealTerritory(territory))
       .toSorted((a, b) => b.heatShare - a.heatShare || Order.String(a.id, b.id))
       .slice(0, MAX_COUPLED_TERRITORIES)
       .map(({ id }) => id),

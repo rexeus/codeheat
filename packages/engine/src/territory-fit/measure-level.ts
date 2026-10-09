@@ -12,6 +12,7 @@ import type { Clique } from "../model/clique.js";
 import { roundReported } from "../model/precision.js";
 import type { TerritoryFit } from "../model/territory-fit.js";
 import { measureRadius } from "../spread/change-radius.js";
+import { isRealTerritory } from "../territories/recommend.js";
 import { crossingPairs } from "./crossing-pairs.js";
 import type { AreaCrossings } from "./crossing-pairs.js";
 import type { Level } from "./levels.js";
@@ -87,14 +88,14 @@ type Area = {
   readonly commits: number;
 };
 
-/** The areas of `level` as the module measures read them: buckets (`other`) are never ranked, so they carry no commits. */
+/** The areas of `level` as the module measures read them: those that are no real territory (see `isRealTerritory`) are never ranked, so they carry no commits. */
 const areasOf = (
   level: Level,
   tallies: ReadonlyMap<string, Tally>,
 ): ReadonlyArray<Area> =>
-  level.areas.map(({ id, kind }) => ({
-    path: id,
-    commits: kind === "other" ? 0 : (tallies.get(id)?.commits ?? 0),
+  level.areas.map((area) => ({
+    path: area.id,
+    commits: isRealTerritory(area) ? (tallies.get(area.id)?.commits ?? 0) : 0,
   }));
 
 /** What the measures over time say about each area: its erosion and its fixes. */

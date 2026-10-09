@@ -40,9 +40,12 @@ export const indexTerritories = ({
   return { recommended: [...visible.values()], byId, visibleOf };
 };
 
-/** A territory that is a real part of the design (loose files included), not a bucket of leftovers. */
-export const isRealTerritory = ({ kind }: Territory): boolean =>
-  kind !== "other";
+/** Loose files are a real territory from this share of all the heat on (the engine's `MIN_VISIBLE_HEAT`). */
+const MIN_VISIBLE_HEAT = 0.01;
+
+/** A territory that is a real part of the design, as the engine judges it: not a bucket of leftovers, and loose files only with at least 1% of all the heat. */
+export const isRealTerritory = ({ kind, heatShare }: Territory): boolean =>
+  kind === "files" ? heatShare >= MIN_VISIBLE_HEAT : kind !== "other";
 
 /** What an answer says when the recommended detail holds no real territory. */
 export const NO_REAL_TERRITORY =

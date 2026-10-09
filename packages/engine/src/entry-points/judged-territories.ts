@@ -2,7 +2,7 @@ import type { TerritoryFit } from "../model/territory-fit.js";
 // Owns which territories entry points judge: the real ones at the recommended
 // detail with enough changes to say anything.
 import type { Territories, Territory } from "../model/territory.js";
-import { isTerritoryKind } from "../territories/recommend.js";
+import { isRealTerritory } from "../territories/recommend.js";
 
 /** A territory with its design fit, which the entry points rank and gate on. */
 export type Judged = Territory & { readonly fit: TerritoryFit };
@@ -28,7 +28,7 @@ export const judgedTerritories = (
     const node = byId.get(id);
     return node !== undefined &&
       node.fit !== null &&
-      isTerritoryKind(node.kind) &&
+      isRealTerritory(node) &&
       node.changes >= minChanges
       ? [{ ...node, fit: node.fit }]
       : [];

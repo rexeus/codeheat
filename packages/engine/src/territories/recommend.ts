@@ -23,12 +23,17 @@ export type Shown = {
 };
 
 /**
- * Whether a territory is a real part of the design, which is judged and
- * listed: a package, a folder, a group, or the loose files of a directory;
- * never a bucket of smaller folders.
+ * Whether a territory is a real part of the design, which is judged, listed,
+ * and counted toward the territories of a detail: a package, a folder, a
+ * group, or the loose files of a directory that hold at least
+ * `MIN_VISIBLE_HEAT` of all the heat (fewer say nothing on their own); never
+ * a bucket of smaller folders.
  */
-export const isTerritoryKind = (kind: Territory["kind"]): boolean =>
-  kind !== "other";
+export const isRealTerritory = ({
+  kind,
+  heatShare,
+}: Pick<Territory, "kind" | "heatShare">): boolean =>
+  kind === "files" ? heatShare >= MIN_VISIBLE_HEAT : kind !== "other";
 
 /** The folder a file lies in below `base`, by the folder's first directory; undefined for a file directly in `base`. */
 const folderBelow = (base: string, file: string): string | undefined => {
@@ -111,8 +116,9 @@ const hidesHotterFolder = (visible: ReadonlyArray<Shown>): boolean =>
   });
 
 /**
- * The detail to read first: the finest with at most 25 territories (buckets
- * do not count) in which no bucket or node of
+ * The detail to read first: the finest with at most 25 real territories
+ * (see `isRealTerritory`: buckets and loose files of little heat do not
+ * count) in which no bucket or node of
  * loose files holds a folder hotter than the coolest territory opened beside
  * it and with at least `MIN_VISIBLE_HEAT` of all heat.
  * When every detail with few enough territories hides such a folder, the
@@ -124,8 +130,9 @@ export const recommendedOf = (
 ): number => {
   const fits = details.map(
     (visible) =>
-      visible.filter(({ kind }) => isTerritoryKind(kind)).length <=
-      RECOMMENDED_MAX_TERRITORIES,
+      visible.filter(({ kind, share }) =>
+        isRealTerritory({ kind, heatShare: share }),
+      ).length <= RECOMMENDED_MAX_TERRITORIES,
   );
   const cleanFit = details.findLastIndex(
     (visible, at) => fits[at] === true && !hidesHotterFolder(visible),
