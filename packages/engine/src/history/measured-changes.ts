@@ -19,8 +19,9 @@ export type MeasuredChanges = {
   };
   /**
    * Per file id, the counted changes (see `countedChanges`) whose commits
-   * touched the file, test code included; a file no counted change touched
-   * has none.
+   * touched the file; a commit of test code alone counts as a change of its
+   * own for the test files it touched. A file no counted change touched has
+   * none.
    */
   readonly changesOf: ReadonlyMap<number, number>;
 };
@@ -45,43 +46,57 @@ const candidateOf = (
   };
 };
 
+/** Adds one change to each of the files `ids` names, each counted once. */
+const credit = (
+  changesOf: Map<number, number>,
+  ids: Iterable<number>,
+): void => {
+  for (const id of new Set(ids)) {
+    changesOf.set(id, (changesOf.get(id) ?? 0) + 1);
+  }
+};
+
 /**
- * Groups the real commits `real` of a window into logical changes (see
- * `groupChanges`, which `merges` informs) and takes test code (`isTest` by
- * file id) out of each: a change holds and is sized by the other files only,
- * and a change of nothing but test code is none. A test file still counts the
- * changes its commits belong to.
+ * Takes test code (`isTest` by file id) out of the real commits `real` of a
+ * window and groups the commits that touched other code into logical changes
+ * (see `groupChanges`, which `merges` informs): a change holds and is sized by
+ * the files that are no test code, and a commit of test code alone is part of
+ * no change, so it neither joins nor splits one. A test file still counts the
+ * changes its commits belong to, and a commit of test code alone as one.
  */
 export const measureChanges = (
   real: ReadonlyArray<Entry>,
   isTest: ReadonlyArray<boolean>,
   merges: ReadonlyMap<string, string>,
 ): MeasuredChanges => {
+  const read = real.map((entry) => ({
+    entry,
+    candidate: candidateOf(entry, isTest),
+  }));
+  const code = read.filter(({ candidate }) => candidate.size > 0);
   const grouping = groupChanges(
-    real.map((entry) => candidateOf(entry, isTest)),
+    code.map(({ candidate }) => candidate),
     merges,
   );
   const changesOf = new Map<number, number>();
   for (const [index, change] of grouping.changes.entries()) {
     const members = isCounted(change) ? (grouping.members[index] ?? []) : [];
-    const touched = new Set(
-      members.flatMap((member) => Array.from(real[member]?.files ?? [])),
+    credit(
+      changesOf,
+      members.flatMap((member) => Array.from(code[member]?.entry.files ?? [])),
     );
-    for (const id of touched) {
-      changesOf.set(id, (changesOf.get(id) ?? 0) + 1);
+  }
+  for (const { entry, candidate } of read) {
+    if (candidate.size === 0) {
+      credit(changesOf, entry.files);
     }
   }
-  const kept = grouping.changes.flatMap((change, index) =>
-    change.size > 0
-      ? [{ change, commits: grouping.members[index]?.length ?? 0 }]
-      : [],
-  );
   return {
-    changes: kept.map(({ change }) => change),
+    changes: grouping.changes,
     logicalChanges: {
       by: grouping.by,
-      count: kept.length,
-      largest: kept.reduce((most, { commits }) => Math.max(most, commits), 0),
+      count: grouping.changes.length,
+      largest: grouping.largest,
     },
     changesOf,
   };

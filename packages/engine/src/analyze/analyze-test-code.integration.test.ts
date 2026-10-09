@@ -112,3 +112,54 @@ layer(NodeServices.layer)("analyze a window of test code", (it) => {
       }),
   );
 });
+
+/** A minute of one afternoon in the window. */
+const at = (minute: number) =>
+  `2026-05-10T12:${String(minute).padStart(2, "0")}:00Z`;
+
+/** A pull request of 20 commits of code and `tests` commits of its tests alone, squash-merged one by one with its number. */
+const pullRequest = (tests: number) =>
+  Effect.gen(function* () {
+    const repo = yield* makeTempRepository;
+    for (let index = 0; index < 20; index += 1) {
+      yield* repo.commit(
+        at(index),
+        version(["src/a.ts"], index),
+        "feat: a (#12)",
+      );
+    }
+    for (let index = 0; index < tests; index += 1) {
+      yield* repo.commit(
+        at(20 + index),
+        version(["src/a.test.ts"], index),
+        "test: a (#12)",
+      );
+    }
+    return yield* analyze(analyzeOptionsFor(repo));
+  });
+
+layer(NodeServices.layer)(
+  "analyze a pull request with commits of tests alone",
+  (it) => {
+    it.effect(
+      "keeps the pull request one change, however many of its commits touched only tests",
+      () =>
+        Effect.gen(function* () {
+          yield* setNow;
+          for (const tests of [9, 11]) {
+            const analysis = yield* pullRequest(tests);
+
+            assert.deepStrictEqual(
+              [
+                analysis.logicalChanges.count,
+                analysis.logicalChanges.largest,
+                analysis.window.realCommits,
+                analysis.files.find(({ path }) => path === "src/a.ts")?.changes,
+              ],
+              [1, 20, 20, 1],
+            );
+          }
+        }),
+    );
+  },
+);
