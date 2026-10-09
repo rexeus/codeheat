@@ -17,9 +17,8 @@ export type GrownTree = {
   readonly details: ReadonlyArray<ReadonlyArray<TreeNode>>;
 };
 
-/** A part counts as a territory of its own, unlike buckets and loose files. */
-const isTerritory = (part: Part): boolean =>
-  part.kind === "folder" || part.kind === "group";
+/** A part counts as a territory of its own, loose files included, unlike a bucket of smaller folders. */
+const isTerritory = (part: Part): boolean => part.kind !== "more";
 
 const territoriesIn = (parts: ReadonlyArray<Part>): number =>
   parts.filter((part) => isTerritory(part)).length;

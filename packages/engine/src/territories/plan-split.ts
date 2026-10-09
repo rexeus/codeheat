@@ -42,7 +42,7 @@ const cutOf = (
         big: new Map(
           part.members.map(({ cut, path, files }) => [cut ?? path, files]),
         ),
-        rest: part.rest,
+        rest: [],
         outer: [],
       }
     : cutByFolders(part.path, part.files, {
@@ -218,7 +218,7 @@ export const planSplit = (
   packages: ReadonlySet<string>,
   isRoot: boolean,
 ): Split | undefined => {
-  if (part.kind === "other" || part.files.length < 2 * MIN_CHILD) {
+  if (part.kind === "files" || part.files.length < 2 * MIN_CHILD) {
     return undefined;
   }
   const cut = cutOf(part, packages, evidence, isRoot);

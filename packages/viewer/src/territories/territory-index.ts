@@ -40,9 +40,9 @@ export const indexTerritories = ({
   return { recommended: [...visible.values()], byId, visibleOf };
 };
 
-/** A territory that is a real part of the design, not a bucket of leftovers. */
+/** A territory that is a real part of the design (loose files included), not a bucket of leftovers. */
 export const isRealTerritory = ({ kind }: Territory): boolean =>
-  kind === "package" || kind === "folder" || kind === "group";
+  kind !== "other";
 
 /** What an answer says when the recommended detail holds no real territory. */
 export const NO_REAL_TERRITORY =
@@ -108,6 +108,7 @@ const PARTS: Record<Territory["kind"], (territory: Territory) => NameParts> = {
   package: ({ path }) => splitParts(path),
   folder: ({ path }) => splitParts(path),
   group: ({ path }) => groupParts(path),
+  files: ({ path }) => splitParts(path),
   other: ({ description }) => ({ dir: "", base: bucketName(description) }),
 };
 

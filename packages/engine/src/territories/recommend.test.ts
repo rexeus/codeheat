@@ -53,6 +53,14 @@ describe("recommendedOf", () => {
   it("ignores a bucket that has no territory beside it", () => {
     expect(recommendedOf([[bucket(0.5)], detail(3, 0.05)])).toBe(2);
   });
+
+  it("compares a hidden folder with the folders opened beside it, not with loose files", () => {
+    const looseFiles: Shown = { ...territory(0.001), kind: "files" };
+
+    expect(recommendedOf([detail(5), [...detail(10, 0.05), looseFiles]])).toBe(
+      2,
+    );
+  });
 });
 
 const part = (overrides: Partial<Part>): Part => ({
@@ -61,7 +69,6 @@ const part = (overrides: Partial<Part>): Part => ({
   files: [],
   members: [],
   base: "",
-  rest: [],
   ...overrides,
 });
 
@@ -99,9 +106,9 @@ describe("shownOf", () => {
       node("t1", "folder", null, part({ path: "", cut: "", files })),
       node(
         "t2",
-        "other",
+        "files",
         0,
-        part({ kind: "other", path: "lib", base: "lib", files }),
+        part({ kind: "files", path: "lib", base: "lib", files }),
       ),
     ],
     evidence,

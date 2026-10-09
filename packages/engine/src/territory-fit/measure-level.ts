@@ -87,7 +87,7 @@ type Area = {
   readonly commits: number;
 };
 
-/** The areas of `level` as the module measures read them: `other` ones are never ranked, so they carry no commits. */
+/** The areas of `level` as the module measures read them: buckets (`other`) are never ranked, so they carry no commits. */
 const areasOf = (
   level: Level,
   tallies: ReadonlyMap<string, Tally>,
@@ -125,9 +125,8 @@ const overTime = (
 };
 
 /**
- * Measures the territories of `level` over `input`. An `other` territory
- * (loose files, a bucket of smaller folders) is measured but never ranked for
- * partners and cliques.
+ * Measures the territories of `level` over `input`. A bucket of smaller
+ * folders (`other`) is measured but never ranked for partners and cliques.
  */
 export const measureLevel = (
   level: Level,

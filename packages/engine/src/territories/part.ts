@@ -4,10 +4,10 @@
 /**
  * What a part is: a `folder` (the files below one directory), a `group` of
  * sibling folders that change together, a `more` bucket of smaller sibling
- * folders that wait for a finer detail, or `other` loose files with no folder
- * of their own.
+ * folders that wait for a finer detail, or the loose `files` of a directory,
+ * which have no folder of their own.
  */
-type PartKind = "folder" | "group" | "more" | "other";
+type PartKind = "folder" | "group" | "more" | "files";
 
 export type Part = {
   readonly kind: PartKind;
@@ -25,8 +25,6 @@ export type Part = {
   readonly members: ReadonlyArray<Part>;
   /** The directory a group or bucket sits in. */
   readonly base: string;
-  /** Loose files of a bucket: files of its directory that have no folder of their own. */
-  readonly rest: ReadonlyArray<string>;
 };
 
 /** A part and, when it splits at some detail, its children. */

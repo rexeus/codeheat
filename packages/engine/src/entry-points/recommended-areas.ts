@@ -5,8 +5,8 @@ import { levelAt } from "../territory-fit/levels.js";
 
 /**
  * The territory each file lies in at the recommended detail, for the files
- * whose territory there is a real one (a package, folder, or group: not a
- * bucket, loose files, or test-only code). `territoryOf` maps a path to its
+ * whose territory there is a real one (see `isTerritoryKind`: not a bucket of
+ * smaller folders). `territoryOf` maps a path to its
  * finest territory.
  */
 export const realAreaOfFile = (

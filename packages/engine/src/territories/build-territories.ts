@@ -23,7 +23,7 @@ export type TerritoryInput = EvidenceInput & {
 export type TerritoryDraft = Omit<Territory, "description"> & {
   /** Every file in the territory. */
   readonly members: ReadonlyArray<string>;
-  /** What an `other` node is, to put before its main files; undefined for a real territory. */
+  /** What an `other` or `files` node is, to put before its main files; undefined for any other territory. */
   readonly lead: string | undefined;
 };
 
@@ -42,7 +42,7 @@ const NOTHING: TerritoryTree = {
   territoryOf: new Map(),
 };
 
-/** Territories first, then buckets and loose files. */
+/** Territories (loose files included) first, then buckets. */
 const roleOf = ({ kind }: Pick<Territory, "kind">): number =>
   isTerritoryKind(kind) ? 0 : 1;
 
@@ -51,7 +51,7 @@ const leadOf = ({ node, kind }: FlatNode): string | undefined => {
   if (node.part.kind === "more") {
     return `${node.part.members.length} smaller folders in ${where}`;
   }
-  return kind === "other" ? `other files in ${where}` : undefined;
+  return kind === "files" ? `files in ${where}` : undefined;
 };
 
 /** Every file of each node, from the file's leaf up to the root. */

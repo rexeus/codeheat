@@ -22,8 +22,13 @@ export type Shown = {
   readonly hidden: number;
 };
 
+/**
+ * Whether a territory is a real part of the design, which is judged and
+ * listed: a package, a folder, a group, or the loose files of a directory;
+ * never a bucket of smaller folders.
+ */
 export const isTerritoryKind = (kind: Territory["kind"]): boolean =>
-  kind === "package" || kind === "folder" || kind === "group";
+  kind !== "other";
 
 /** The folder a file lies in below `base`, by the folder's first directory; undefined for a file directly in `base`. */
 const folderBelow = (base: string, file: string): string | undefined => {
@@ -76,20 +81,27 @@ export const shownOf = (
           evidence.totalHeat === 0
             ? 0
             : heatOf(evidence, node.part.files) / evidence.totalHeat,
-        hidden: kind === "other" ? hiddenShare(node.part, evidence) : 0,
+        hidden:
+          kind === "other" || kind === "files"
+            ? hiddenShare(node.part, evidence)
+            : 0,
       },
     ]),
   );
 
+/** Whether a node is a folder opened at its detail: a package, a folder, or a group, not a bucket or loose files. */
+const isOpenedFolder = ({ kind }: Shown): boolean =>
+  kind === "package" || kind === "folder" || kind === "group";
+
 /**
  * A bucket or node of loose files of the detail holds a folder that is hotter
- * than the coolest territory opened beside it and holds at least
+ * than the coolest folder opened beside it and holds at least
  * `MIN_VISIBLE_HEAT` of all heat: below that the comparison is noise.
  */
 const hidesHotterFolder = (visible: ReadonlyArray<Shown>): boolean =>
   visible.some((bucket) => {
     const siblings = visible.filter(
-      (node) => node.parent === bucket.parent && isTerritoryKind(node.kind),
+      (node) => node.parent === bucket.parent && isOpenedFolder(node),
     );
     return (
       siblings.length > 0 &&
@@ -100,7 +112,7 @@ const hidesHotterFolder = (visible: ReadonlyArray<Shown>): boolean =>
 
 /**
  * The detail to read first: the finest with at most 25 territories (buckets
- * and loose files do not count) in which no bucket or node of
+ * do not count) in which no bucket or node of
  * loose files holds a folder hotter than the coolest territory opened beside
  * it and with at least `MIN_VISIBLE_HEAT` of all heat.
  * When every detail with few enough territories hides such a folder, the

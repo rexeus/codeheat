@@ -5,15 +5,19 @@ import { Schema } from "effect";
 import { Count, Percent, Share } from "./scalars.js";
 
 /**
- * One area of the code: a package, a folder, or sibling folders that change
- * together, at the detail codeheat recommends reading. Areas do not overlap.
+ * One area of the code: a package, a folder, sibling folders that change
+ * together, or the loose files of a directory whose folders are areas of
+ * their own, at the detail codeheat recommends reading. Areas do not overlap.
  */
 export const Area = Schema.Struct({
   /**
    * Repository-relative POSIX directory; "." for the whole repository. Sibling
    * folders that change together are one brace glob over the directory they
-   * share (`packages/a/{x,y}`, `{apps,lib}` at the root). Every area name the
-   * report uses elsewhere is the `path` of a listed area.
+   * share (`packages/a/{x,y}`, `{apps,lib}` at the root). The loose files of
+   * a directory are named after it (`packages/core/src` for the files
+   * directly in it, "." for those at the repository root), and their
+   * `description` starts with `files in`. Every area name the report uses
+   * elsewhere is the `path` of a listed area.
    */
   path: Schema.String,
   /**

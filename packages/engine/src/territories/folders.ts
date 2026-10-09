@@ -145,7 +145,6 @@ export const folderPart = (
   files,
   members: [],
   base: "",
-  rest: [],
 });
 
 /**

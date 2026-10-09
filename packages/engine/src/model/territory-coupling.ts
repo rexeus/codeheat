@@ -8,7 +8,7 @@ import { Count, UnitInterval } from "./scalars.js";
 
 /**
  * Two of the `Thresholds.maxCoupledTerritories` (24) hottest real territories
- * (package, folder, or group; never `other`) at
+ * (package, folder, group, or loose files; never `other`) at
  * `Territories.recommended` that change in the same counted changes: the data of
  * a territory matrix. A change touches a territory when it touched any of its
  * files (the rule of `TerritoryFit`, counted by the same code as

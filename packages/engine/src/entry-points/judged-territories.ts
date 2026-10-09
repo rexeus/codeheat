@@ -15,7 +15,7 @@ export const isChronic = (
 
 /**
  * The territories visible at the recommended detail that are packages,
- * folders, or groups (never a bucket or loose files), have a fit, and at least
+ * folders, groups, or loose files (never a bucket), have a fit, and at least
  * `minChanges` counted changes, in the order of the detail.
  */
 export const judgedTerritories = (

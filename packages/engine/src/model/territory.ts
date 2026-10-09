@@ -11,12 +11,19 @@ import { TerritoryFit } from "./territory-fit.js";
  * (`package.json`, `go.mod`, `Cargo.toml`, …). `folder`: any other directory.
  * `group`: sibling folders that keep changing in the same changes and stay
  * together, `path` names their directories with one brace glob over the
- * directory they share (`packages/a/{x,y}`). `other`: files that
- * belong to no territory of their own, either the loose files of a directory
- * or a bucket of smaller folders that wait for a finer detail; never a real
- * territory. Test code is in no territory.
+ * directory they share (`packages/a/{x,y}`). `files`: the loose files of a
+ * directory, those directly in it and in folders too small to be territories,
+ * when its folders are territories of their own; judged like any other.
+ * `other`: a bucket of smaller folders that wait for a finer detail; never a
+ * real territory. Test code is in no territory.
  */
-const TerritoryKind = Schema.Literals(["package", "folder", "group", "other"]);
+const TerritoryKind = Schema.Literals([
+  "package",
+  "folder",
+  "group",
+  "files",
+  "other",
+]);
 
 /** One area of the code, a node of the territory tree. */
 export const Territory = Schema.Struct({
@@ -28,9 +35,9 @@ export const Territory = Schema.Struct({
    * (`packages/a/{x,y}`, `{apps,lib}` at the root, `packages/{a/src,b}` when
    * one branches deeper; `\`, `,`, `{`, and `}` in a member's name are
    * escaped with a backslash, and the glob is the braces that close the
-   * path). An `other` node of loose files names the directory
-   * they are in, a bucket the directory its folders are in; its `parent` and `kind` tell it
-   * from the territory of that directory.
+   * path). A `files` node names the directory its loose files are in, a
+   * bucket (`other`) the directory its folders are in; its `parent` and `kind`
+   * tell it from the territory of that directory.
    */
   path: Schema.String,
   kind: TerritoryKind,
@@ -53,8 +60,9 @@ export const Territory = Schema.Struct({
    * characters): the `description` of the territory's manifest, else the first
    * sentence of its README that describes (not an instruction such as "See
    * x.ts for an example.", and none that names a file path), else
-   * `main files: a, b, c` naming its most changed files. A territory of kind `other` says what it is
-   * (`12 smaller folders in packages`) before its main files.
+   * `main files: a, b, c` naming its most changed files. A territory of kind `other` or `files` says what it
+   * is (`12 smaller folders in packages`, `files in packages/core`) before its
+   * main files.
    */
   description: Schema.String,
   /**
@@ -90,14 +98,16 @@ const TerritoryDetail = Schema.Struct({
  * too big or when its folders change independently; folders that change
  * together stay together. The first cut follows the top-level folders, and a package's
  * directory is never skipped over, so a package is a territory of its own as
- * soon as its folder is cut; at most 8 children open at once, the rest wait in
- * an `other` bucket. `modules` is unchanged and independent of it.
+ * soon as its folder is cut; at most 8 folders, groups, and a bucket open at
+ * once, the rest wait in an `other` bucket, and the loose files of the
+ * directory are a `files` territory beside them. `modules` is unchanged and
+ * independent of it.
  */
 export const Territories = Schema.Struct({
   /**
    * The `level` to read first: the finest detail with at most 25 territories
    * (`other` nodes do not count) in which no bucket or node of
-   * loose files holds a folder that is hotter than the coolest territory opened
+   * loose files holds a folder that is hotter than the coolest folder opened
    * beside it and holds at least 1% of all heat (below that the comparison is
    * noise); a folder with too few files to be a territory counts like any other
    * when it holds that much, and is a territory of its own then. When every

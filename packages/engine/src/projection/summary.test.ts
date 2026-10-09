@@ -83,7 +83,7 @@ describe("summaryOf on thin evidence", () => {
     ],
     [
       "too-little-evidence",
-      "too little of the change effort sits in areas codeheat can judge; 53.7% is in loose files and other unlisted areas (see basis.rest).",
+      "too little of the change effort sits in areas codeheat can judge; 53.7% is in unlisted areas and buckets of smaller folders (see basis.rest).",
     ],
   ] as const)("says why there is no level (%s)", (reason, why) => {
     expect(

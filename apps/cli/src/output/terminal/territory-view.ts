@@ -5,13 +5,12 @@ import type { InspectResult, Analysis } from "@codeheat/engine";
 import { escapeForTerminal } from "../escape.js";
 import { percent } from "./format.js";
 
-const isTerritory = (kind: string): boolean =>
-  kind === "package" || kind === "folder" || kind === "group";
+const isTerritory = (kind: string): boolean => kind !== "other";
 
 /**
  * One line naming the areas, the territories at the recommended detail: how
- * many (buckets of smaller folders and loose files are not counted), and which detail of how many that is. Nothing when the report has
- * no territories.
+ * many (buckets of smaller folders are not counted), and which detail of how
+ * many that is. Nothing when the report has no territories.
  */
 export const territoryLines = ({
   territories,

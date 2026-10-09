@@ -5,6 +5,7 @@ import type { Analysis } from "../model/analysis.js";
 import { roundReported } from "../model/precision.js";
 import type { Territories, Territory } from "../model/territory.js";
 import type { Verdict } from "../model/verdict.js";
+import { isTerritoryKind } from "../territories/recommend.js";
 import { judgeAreaTrend } from "./area-trend.js";
 
 /** Share of all the heat the judged territories must hold for the verdict to rest on evidence. */
@@ -27,9 +28,6 @@ type VerdictLimits = Pick<
 >;
 
 type Level = Verdict["level"];
-
-const isRealTerritory = ({ kind }: Territory): boolean =>
-  kind === "package" || kind === "folder" || kind === "group";
 
 /**
  * Whether a real territory leaks or holds, or why it cannot be judged.
@@ -121,7 +119,7 @@ export const judgeVerdict = (input: {
 }): Verdict => {
   const { territories, limits } = input;
   const judged = recommendedOf(territories)
-    .filter((territory) => isRealTerritory(territory))
+    .filter(({ kind }) => isTerritoryKind(kind))
     .flatMap((territory) => {
       const standing = standingOf(territory, limits);
       return isJudged(standing) ? [{ territory, standing }] : [];

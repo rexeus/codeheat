@@ -15,7 +15,7 @@ export type HotFile = {
   readonly file: FileStats;
   /** The file's share of all the heat. */
   readonly share: number;
-  /** `id` of the real territory at the recommended detail that holds the file; null for a file in a bucket or loose files. */
+  /** `id` of the real territory at the recommended detail that holds the file; null for a file in a bucket of smaller folders. */
   readonly area: string | null;
 };
 

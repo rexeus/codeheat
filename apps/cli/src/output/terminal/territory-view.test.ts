@@ -20,7 +20,7 @@ const node = (id: string, kind: Territories["nodes"][number]["kind"]) => ({
 });
 
 describe("territoryLines", () => {
-  it("counts the territories at the recommended detail, leaving buckets and loose files out", () => {
+  it("counts the territories at the recommended detail, loose files included, leaving buckets out", () => {
     const territories: Territories = {
       recommended: 2,
       details: [
@@ -32,7 +32,7 @@ describe("territoryLines", () => {
         node("a", "folder"),
         node("b", "package"),
         node("c", "group"),
-        node("d", "other"),
+        node("d", "files"),
         node("e", "other"),
         node("f", "folder"),
         node("g", "folder"),
@@ -41,7 +41,7 @@ describe("territoryLines", () => {
     };
 
     expect(territoryLines({ territories })).toStrictEqual([
-      "Areas: 3 at the recommended detail (2 of 3); --json has every detail.",
+      "Areas: 4 at the recommended detail (2 of 3); --json has every detail.",
     ]);
   });
 

@@ -48,7 +48,7 @@ export const Answer = Schema.Struct({
    * files to judge. `quiet-window`: the window has no real commit, only
    * mechanical ones or none. `too-little-evidence`: the judged areas hold
    * less than `basis.thresholds.judgedHeatNeeded` percent of the heat; the
-   * rest sits in areas too quiet to judge, or in loose files and other parts
+   * rest sits in areas too quiet to judge, or in buckets of smaller folders
    * that are no areas (see `basis.rest`).
    */
   reason: Schema.optionalKey(
