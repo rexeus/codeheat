@@ -102,7 +102,6 @@ export const territoryNode = (
   parent: null,
   children: [],
   files: 10,
-  testFiles: 0,
   changes: 20,
   heatShare: 0.1,
   description: `main files: ${path}`,

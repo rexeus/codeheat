@@ -14,18 +14,9 @@ import { TerritoryFit } from "./territory-fit.js";
  * directory they share (`packages/a/{x,y}`). `other`: files that
  * belong to no territory of their own, either the loose files of a directory
  * or a bucket of smaller folders that wait for a finer detail; never a real
- * territory. `tests`: test code shown apart from the code: test code that
- * belongs to no code, or that belongs to code split into several territories
- * (a `tests` child of the territory that holds them all); test code that pairs
- * with code, or belongs to code in one territory, counts for that territory.
+ * territory. Test code is in no territory.
  */
-const TerritoryKind = Schema.Literals([
-  "package",
-  "folder",
-  "group",
-  "other",
-  "tests",
-]);
+const TerritoryKind = Schema.Literals(["package", "folder", "group", "other"]);
 
 /** One area of the code, a node of the territory tree. */
 export const Territory = Schema.Struct({
@@ -45,22 +36,16 @@ export const Territory = Schema.Struct({
   kind: TerritoryKind,
   /** `id` of the territory this one splits from; null for the root. */
   parent: Schema.NullOr(Schema.String),
-  /** `id`s of the territories it splits into, real territories first, then `tests`, then `other`; empty when it does not split. */
+  /** `id`s of the territories it splits into, real territories first, then `other`; empty when it does not split. */
   children: Schema.Array(Schema.String),
-  /** Code files in the territory, test code that belongs to its code included. */
+  /** Code files in the territory (test code is in none). */
   files: Count,
-  /** Of those, files that are test code (see `FileStats.test`). */
-  testFiles: Count,
-  /**
-   * Counted changes (see `Analysis.logicalChanges`) that touched any file of the
-   * territory, test code included.
-   */
+  /** Counted changes (see `Analysis.logicalChanges`) that touched any file of the territory. */
   changes: Count,
   /**
    * Share of all the heat in this territory, rounded to 4 decimals: the heat
    * of a file is `FileStats.changes × (loc + complexity.total)`, over the same
-   * counted changes as `changes`. Test code counts for the territory of the
-   * code it tests.
+   * counted changes as `changes`.
    */
   heatShare: UnitInterval,
   /**
@@ -68,8 +53,8 @@ export const Territory = Schema.Struct({
    * characters): the `description` of the territory's manifest, else the first
    * sentence of its README that describes (not an instruction such as "See
    * x.ts for an example.", and none that names a file path), else
-   * `main files: a, b, c` naming its most changed files. A territory of kind `other` or `tests` says what it is
-   * (`12 smaller folders in packages`, `test code`) before its main files.
+   * `main files: a, b, c` naming its most changed files. A territory of kind `other` says what it is
+   * (`12 smaller folders in packages`) before its main files.
    */
   description: Schema.String,
   /**
@@ -94,7 +79,7 @@ const TerritoryDetail = Schema.Struct({
   /**
    * `id`s of the territories at this detail; together they hold every file
    * once. Real territories come first, the one with the most heat first, then
-   * `tests`, then `other`.
+   * `other`.
    */
   ids: Schema.Array(Schema.String),
 });
@@ -111,7 +96,7 @@ const TerritoryDetail = Schema.Struct({
 export const Territories = Schema.Struct({
   /**
    * The `level` to read first: the finest detail with at most 25 territories
-   * (`other` and `tests` nodes do not count) in which no bucket or node of
+   * (`other` nodes do not count) in which no bucket or node of
    * loose files holds a folder that is hotter than the coolest territory opened
    * beside it and holds at least 1% of all heat (below that the comparison is
    * noise); a folder with too few files to be a territory counts like any other

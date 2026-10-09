@@ -76,8 +76,8 @@ export type MeasuredLevel = {
   readonly crossings: AreaCrossings;
   /**
    * Per window of the series, oldest first, the areas each of its counted
-   * changes touched (see `touchedAreas`; test-only areas count for nothing):
-   * what the trends of the areas are read from.
+   * changes touched (see `touchedAreas`): what the trends of the areas are
+   * read from.
    */
   readonly windows: ReadonlyArray<ReadonlyArray<ReadonlySet<string>>>;
 };
@@ -95,12 +95,9 @@ const areasOf = (
 ): ReadonlyArray<Area> =>
   level.areas.map(({ id, kind }) => ({
     path: id,
-    testOnly: kind === "tests",
+    testOnly: false,
     commits: kind === "other" ? 0 : (tallies.get(id)?.commits ?? 0),
   }));
-
-const testOnlyIds = (areas: ReadonlyArray<Area>): ReadonlySet<string> =>
-  new Set(areas.filter((area) => area.testOnly).map((area) => area.path));
 
 /** What the measures over time say about each area: its erosion and its fixes. */
 const overTime = (
@@ -109,9 +106,8 @@ const overTime = (
   input: LevelInput,
   touched: ReadonlyArray<ReadonlySet<string>>,
 ) => {
-  const testOnly = testOnlyIds(areas);
   const windows = input.series.map(({ history }) =>
-    touchedAreas(history, level.areaOfFile, testOnly),
+    touchedAreas(history, level.areaOfFile),
   );
   const fixes = measureFixes(
     countedChanges(input.history.changes),
@@ -131,18 +127,15 @@ const overTime = (
 };
 
 /**
- * Measures the territories of `level` over `input`. Test-only territories
- * take no part in any change; an `other` territory (loose files, a bucket of
- * smaller folders) is measured but never ranked for partners and cliques.
+ * Measures the territories of `level` over `input`. An `other` territory
+ * (loose files, a bucket of smaller folders) is measured but never ranked for
+ * partners and cliques.
  */
 export const measureLevel = (
   level: Level,
   input: LevelInput,
 ): MeasuredLevel => {
-  const testOnly = new Set(
-    level.areas.filter(({ kind }) => kind === "tests").map(({ id }) => id),
-  );
-  const touched = touchedAreas(input.history, level.areaOfFile, testOnly);
+  const touched = touchedAreas(input.history, level.areaOfFile);
   const tallies = tally(touched);
   const areas = areasOf(level, tallies);
   const radii = new Map(
@@ -152,18 +145,16 @@ export const measureLevel = (
   const coChange = moduleCoChange(touched, areas, input.minChanges);
   const { cliques } = findCliques(coChange, touched);
   const partners = strongestPartners(coChange);
-  const crossings = crossingPairs(input.couplings, level.areaOfFile, testOnly);
+  const crossings = crossingPairs(input.couplings, level.areaOfFile);
   const fits = new Map(
-    areas.map(({ path, testOnly: onlyTests }): [string, LevelFit] => {
+    areas.map(({ path }): [string, LevelFit] => {
       const own = tallies.get(path);
       return [
         path,
         {
           detail: level.detail,
           containment:
-            own === undefined || onlyTests
-              ? null
-              : roundReported(own.local / own.commits),
+            own === undefined ? null : roundReported(own.local / own.commits),
           radius: radii.get(path)?.radius ?? null,
           partner: partners.get(path) ?? null,
           distantPairs: crossings.ofArea.get(path)?.pairs ?? 0,

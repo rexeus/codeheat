@@ -24,7 +24,7 @@ const TEST_DIRECTORY_NAMES = new Set([
 ]);
 
 /** Whether a directory name is one of the test directories `isTestPath` knows. */
-export const isTestDirectoryName = (name: string): boolean =>
+const isTestDirectoryName = (name: string): boolean =>
   TEST_DIRECTORY_NAMES.has(name);
 
 /**

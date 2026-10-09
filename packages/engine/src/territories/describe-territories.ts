@@ -180,8 +180,8 @@ const describe = (
 /**
  * Gives each territory its description. A package or folder takes the
  * `description` of its manifest, else the first sentence of its README, else
- * names its most changed files; a group, loose files, a bucket, and test-only
- * code say what they are and name their most changed files. `tracked` lists
+ * names its most changed files; a group, loose files, and a bucket say what
+ * they are and name their most changed files. `tracked` lists
  * the regular files git tracks, from which the manifests and READMEs are found.
  */
 export const describeTerritories = (

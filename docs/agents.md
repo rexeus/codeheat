@@ -117,7 +117,7 @@ The files of a repository are grouped into modules: workspace packages (a direct
     "recommended": 2,
     "details": [
       { "level": 1, "ids": ["t2", "t3"] },
-      { "level": 2, "ids": ["t4", "t3", "t5", "t6"] }
+      { "level": 2, "ids": ["t4", "t3", "t5"] }
     ],
     "nodes": [
       {
@@ -126,8 +126,7 @@ The files of a repository are grouped into modules: workspace packages (a direct
         "kind": "folder",
         "parent": null,
         "children": ["t2", "t3"],
-        "files": 52,
-        "testFiles": 14,
+        "files": 38,
         "changes": 120,
         "heatShare": 1,
         "description": "The shop: billing and a web app.",
@@ -139,11 +138,10 @@ The files of a repository are grouped into modules: workspace packages (a direct
         "path": "packages/billing",
         "kind": "package",
         "parent": "t1",
-        "children": ["t4", "t5", "t6"],
-        "files": 38,
-        "testFiles": 9,
+        "children": ["t4", "t5"],
+        "files": 29,
         "changes": 74,
-        "heatShare": 0.7113,
+        "heatShare": 0.63,
         "description": "Invoices and tax for the shop.",
         "splitReason": "invoice and tax change independently: 81% of the 74 changes touching it stay inside one part",
         "fit": {
@@ -171,10 +169,9 @@ The files of a repository are grouped into modules: workspace packages (a direct
         "kind": "package",
         "parent": "t1",
         "children": [],
-        "files": 14,
-        "testFiles": 5,
+        "files": 9,
         "changes": 46,
-        "heatShare": 0.2887,
+        "heatShare": 0.37,
         "description": "The web app: routes, hooks, and components.",
         "splitReason": null
       },
@@ -184,8 +181,7 @@ The files of a repository are grouped into modules: workspace packages (a direct
         "kind": "folder",
         "parent": "t2",
         "children": [],
-        "files": 17,
-        "testFiles": 2,
+        "files": 15,
         "changes": 41,
         "heatShare": 0.41,
         "description": "main files: invoice, line-item, totals",
@@ -197,24 +193,10 @@ The files of a repository are grouped into modules: workspace packages (a direct
         "kind": "folder",
         "parent": "t2",
         "children": [],
-        "files": 16,
-        "testFiles": 2,
+        "files": 14,
         "changes": 24,
         "heatShare": 0.22,
         "description": "main files: tax, rates, rounding",
-        "splitReason": null
-      },
-      {
-        "id": "t6",
-        "path": "packages/billing/test",
-        "kind": "tests",
-        "parent": "t2",
-        "children": [],
-        "files": 5,
-        "testFiles": 5,
-        "changes": 12,
-        "heatShare": 0.0813,
-        "description": "test code; main files: setup, fixtures, helpers",
         "splitReason": null
       }
     ]
@@ -224,11 +206,11 @@ The files of a repository are grouped into modules: workspace packages (a direct
 
 - Read `details[recommended - 1].ids` first: the finest detail with at most 25 territories in which no bucket hides a folder that is hotter than the territories opened beside it and holds at least 1% of all heat (when every such detail does, the finest of them, and the `other` node's `description` names the bucket). Each id names a node in `nodes`; `path`, `description`, and `heatShare` tell you what it is and how much of the repository's change happens there. `details` goes from 1 (coarse) to at most 6 (fine), and every file is in exactly one territory of a detail.
 - Every file in `files` has a `territory`: the id of the finest territory it belongs to. Walk `parent` up to the id listed at the detail you want; the root (`parent` null; `path` is `"."`, or the package when one package holds every file) is the whole repository. `inspect` repeats the id; it names a node of the `analyze` report.
-- `kind` is `package` (a directory with a manifest), `folder`, `group` (`path` names the sibling folders with one brace glob, `packages/a/{x,y}`: they keep changing in the same changes, so read them as one), `tests` (test code that belongs to no code, listed after the code), or `other`. A `tests` node is also the home of the tests of code that is split into several territories, a child of the territory that holds them all (`t6` above). An `other` node is never a real territory: it holds the files directly in a directory, or a bucket of smaller folders (`description` says how many) that a finer detail opens.
+- `kind` is `package` (a directory with a manifest), `folder`, `group` (`path` names the sibling folders with one brace glob, `packages/a/{x,y}`: they keep changing in the same changes, so read them as one), or `other`. An `other` node is never a real territory: it holds the files directly in a directory, or a bucket of smaller folders (`description` says how many) that a finer detail opens.
 - `description` is one line that is safe to print: the manifest's `description`, else the first sentence of the README that describes (a sentence that instructs, such as "See x.ts for an example.", or names a file path is skipped for the next one), else `main files: a, b, c`, the most changed files. A README sentence is the author's words, so read it as a hint.
 - `splitReason` says why a territory splits: too big (its parts still change together, so do not treat the parts as independent), or its folders change independently (a change usually stays in one of them). Null when it does not split.
-- `fit` says how well the territory holds up to the way the code changes, per territory and measured once: `containment` is the share of the changes touching it that touch no other territory (low means its boundary does not hold), `radius` the median number of territories such a change touches, `partner` the territory its changes most often reach into (with the shared changes and their share of this territory's), `distantPairs` and `hiddenPairs` the coupled file pairs that cross its boundary (and of those, the ones no import links), `cliques` the groups of three or more territories it changes with as one unit, `erosion` how containment moved over the series (same shape and verdicts as `Module.erosion`), `chronicFiles`, `acuteFiles`, and `chronicShare` how much of its heat sits in long-lived hotspots, and `fixDensity` the fixes among its changes. Boundary measures (`radius`, `partner`, `cliques`, the crossing of `distantPairs`) are taken against the territories at `fit.detail`, the detail that shows the territory closest to `recommended`; a partner id is a territory of that detail. `fit` is null for the root and for a node no detail shows; a `tests` territory takes no part (test code is no spread).
-- Test code is counted in the territory of the code it tests, in `files`, `testFiles`, `changes`, and `heatShare`; the children of a split territory open hottest first, and at the recommended detail no bucket hides a folder of at least 1% of all heat that is hotter than a territory opened beside it, unless every detail with at most 25 territories does.
+- `fit` says how well the territory holds up to the way the code changes, per territory and measured once: `containment` is the share of the changes touching it that touch no other territory (low means its boundary does not hold), `radius` the median number of territories such a change touches, `partner` the territory its changes most often reach into (with the shared changes and their share of this territory's), `distantPairs` and `hiddenPairs` the coupled file pairs that cross its boundary (and of those, the ones no import links), `cliques` the groups of three or more territories it changes with as one unit, `erosion` how containment moved over the series (same shape and verdicts as `Module.erosion`), `chronicFiles`, `acuteFiles`, and `chronicShare` how much of its heat sits in long-lived hotspots, and `fixDensity` the fixes among its changes. Boundary measures (`radius`, `partner`, `cliques`, the crossing of `distantPairs`) are taken against the territories at `fit.detail`, the detail that shows the territory closest to `recommended`; a partner id is a territory of that detail. `fit` is null for the root and for a node no detail shows.
+- Test code is in no territory and counts in no `files`, `changes`, or `heatShare` (see `testCode`); the children of a split territory open hottest first, and at the recommended detail no bucket hides a folder of at least 1% of all heat that is hotter than a territory opened beside it, unless every detail with at most 25 territories does.
 - `territoryCoupling` says which territories change in the same changes, at the recommended detail only, among the `thresholds.maxCoupledTerritories` (24) hottest real territories (`package`, `folder`, `group`): `{ "a": "t3", "b": "t5", "sharedChanges": 12, "distantPairs": 2, "hiddenPairs": 1 }`. `a` and `b` are territory ids (`a` sorts first, each pair is listed once, the strongest first), `sharedChanges` the counted changes that touched both (counted by the code behind `fit.partner`, so the `partner` of a territory among those hottest is among its pairs, with the same count, unless the partner is not one of them: the recommended detail can show more territories), `distantPairs` the coupled file pairs between the two, and `hiddenPairs` of those the ones no import links. Only pairs that share at least `thresholds.minSharedCommits` changes between territories with at least `thresholds.minModuleCommits` changes each are listed; a missing pair means "not enough evidence of change together", not "independent". `territoryCliques` lists the groups of three or more territories at the recommended detail that change as one unit (the rule of a clique, see "Reading distant coupling and scaling signals", over territories): `territories` (ids, sorted), `sharedChanges` (changes that touched every member), `weakestShare`, `heatShare`, and `codeHeatShare`, the numbers an entry point of kind `clique` is scored on. Both are in `analyze --json` only and `--limit` does not cut them. v2 will move them under `coupling`.
 - `--limit` does not cut `territories`: the tree is complete in every report.
 - `modules` is unchanged and not a view of the territories; cohesion, partners, and the other module measures still describe modules.

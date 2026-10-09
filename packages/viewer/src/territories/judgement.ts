@@ -27,9 +27,6 @@ const whyUnjudged = (
   territory: Territory,
   { minModuleCommits }: Analysis["thresholds"],
 ): Standing => {
-  if (territory.kind === "tests") {
-    return unjudged("test code");
-  }
   if (territory.kind === "other") {
     return unjudged("leftover files");
   }

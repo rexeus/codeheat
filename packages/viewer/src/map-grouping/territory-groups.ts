@@ -24,8 +24,7 @@ export const visibleAt = (
 
 /**
  * The files grouped by the territory that holds them at `level`, in the
- * report's order (real territories hottest first, then test code, then
- * buckets); a territory without a listed file is left out. Each file names its
+ * report's order (real territories hottest first, then buckets); a territory without a listed file is left out. Each file names its
  * finest territory; this climbs to the one visible at `level`.
  */
 export const groupFilesAt = (
@@ -86,6 +85,6 @@ export const detailChoices = (territories: Territories): DetailChoice[] => {
   }));
 };
 
-/** The name a group is drawn under: the territory's path, or what a bucket or test code is. */
+/** The name a group is drawn under: the territory's path, or what a bucket is. */
 export const groupName = ({ territory }: Group): string =>
   territoryName(territory);

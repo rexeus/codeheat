@@ -40,13 +40,13 @@ export const indexTerritories = ({
   return { recommended: [...visible.values()], byId, visibleOf };
 };
 
-/** A territory that is a real part of the design, not a bucket of leftovers or test code. */
+/** A territory that is a real part of the design, not a bucket of leftovers. */
 export const isRealTerritory = ({ kind }: Territory): boolean =>
   kind === "package" || kind === "folder" || kind === "group";
 
 /** What an answer says when the recommended detail holds no real territory. */
 export const NO_REAL_TERRITORY =
-  "No real territory: only test code or leftover files changed.";
+  "No real territory: only leftover files changed.";
 
 /** The text before the first `; main files:` of a description, which says what a bucket is. */
 const bucketName = (description: string): string => {
@@ -108,7 +108,6 @@ const PARTS: Record<Territory["kind"], (territory: Territory) => NameParts> = {
   package: ({ path }) => splitParts(path),
   folder: ({ path }) => splitParts(path),
   group: ({ path }) => groupParts(path),
-  tests: ({ path }) => ({ dir: "", base: `tests in ${path}` }),
   other: ({ description }) => ({ dir: "", base: bucketName(description) }),
 };
 
@@ -116,7 +115,7 @@ const PARTS: Record<Territory["kind"], (territory: Territory) => NameParts> = {
 export const territoryNameParts = (territory: Territory): NameParts =>
   PARTS[territory.kind](territory);
 
-/** What to call a territory: its path (a group names its shared folder once), or for leftovers and test code, what they are. */
+/** What to call a territory: its path (a group names its shared folder once), or for leftovers, what they are. */
 export const territoryName = (territory: Territory): string => {
   const { dir, base } = territoryNameParts(territory);
   return `${dir}${base}`;

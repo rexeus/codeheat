@@ -100,11 +100,10 @@ describe("judgeVerdict level", () => {
     expect(verdict.level).toBe("holds");
   });
 
-  it("judges only real territories: buckets and test code leave it out", () => {
+  it("judges only real territories: buckets leave it out", () => {
     const verdict = judge([
-      { id: "t1", heat: 0.6, containment: 0.9 },
+      { id: "t1", heat: 0.7, containment: 0.9 },
       { id: "t2", heat: 0.3, containment: 0.1, kind: "other" },
-      { id: "t3", heat: 0.1, containment: null, kind: "tests" },
     ]);
 
     expect(verdict).toMatchObject({ level: "holds", judged: ["t1"] });

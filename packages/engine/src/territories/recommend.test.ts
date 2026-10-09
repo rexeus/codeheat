@@ -89,12 +89,6 @@ const evidence: Evidence = {
     ["lib/small/x.ts", 100],
     ["lib/small/y.ts", 100],
   ]),
-  // 100 of test code placed in `lib/small`, 500 more placed in `lib` itself: each directory counts what is placed at or below it.
-  placed: new Map([
-    ["lib/small", 100],
-    ["lib", 600],
-    ["", 600],
-  ]),
   totalHeat: 1000,
 };
 
@@ -114,50 +108,16 @@ describe("shownOf", () => {
   );
 
   it("reads the hottest folder a node of loose files holds, one with too few files to be a territory included", () => {
-    expect(shown.get("t2")?.hidden).toBeCloseTo(0.3, 10);
+    expect(shown.get("t2")?.hidden).toBeCloseTo(0.2, 10);
   });
 
-  it("counts test code placed at or below a folder for it, and test code placed above it for none of its folders", () => {
+  it("reads the share of all heat a node holds", () => {
     expect(shown.get("t1")).toStrictEqual({
       kind: "folder",
       parent: null,
-      share: 0.801,
+      share: 0.201,
       hidden: 0,
     });
     expect(shown.get("t2")?.share).toBeCloseTo(0.201, 10);
-  });
-});
-
-describe("shownOf for a folder cut from a directory above its path", () => {
-  it("counts test code placed between the directory it was cut from and the one its path was cut down to", () => {
-    const tested: Evidence = {
-      ...evidence,
-      heat: new Map([["big/server/src/app/x/f.ts", 10]]),
-      // 500 of test code placed in `big/server/src`, between `big` and `big/server/src/app`
-      placed: new Map([
-        ["big/server/src", 500],
-        ["big/server", 500],
-        ["big", 500],
-        ["", 500],
-      ]),
-    };
-
-    const shown = shownOf(
-      [
-        node(
-          "t1",
-          "folder",
-          null,
-          part({
-            path: "big/server/src/app",
-            cut: "big",
-            files: ["big/server/src/app/x/f.ts"],
-          }),
-        ),
-      ],
-      tested,
-    );
-
-    expect(shown.get("t1")?.share).toBeCloseTo(0.51, 10);
   });
 });

@@ -34,7 +34,7 @@ const PARTS: PartSpec[] = [
     standing: "holds",
   },
   { id: "t4", path: "apps/docs", heat: 0.15, containment: 0.5, changes: 2 },
-  { id: "t5", path: "test", heat: 0.15, containment: null, kind: "tests" },
+  { id: "t5", path: "src", heat: 0.15, containment: null, kind: "other" },
 ];
 
 describe("concentrationOf", () => {
@@ -88,15 +88,14 @@ describe("concentrationOf without an answer", () => {
     });
   });
 
-  it("says only test code or leftover files changed when no territory is real", () => {
-    const testsOnly = reportWithParts([
-      { id: "t1", path: "test", heat: 0.7, containment: null, kind: "tests" },
-      { id: "t2", path: ".", heat: 0.3, containment: 0.5, kind: "other" },
+  it("says only leftover files changed when no territory is real", () => {
+    const leftoversOnly = reportWithParts([
+      { id: "t1", path: ".", heat: 1, containment: 0.5, kind: "other" },
     ]);
 
-    expect(concentration(testsOnly)).toEqual({
+    expect(concentration(leftoversOnly)).toEqual({
       kind: "none",
-      note: "No real territory: only test code or leftover files changed.",
+      note: "No real territory: only leftover files changed.",
     });
   });
 

@@ -82,7 +82,7 @@ const restNote = (rows: readonly HeatRow[], elsewhere: number): string => {
             : `${plural(hidden.length, "territory", "territories")} without change effort ${hidden.length === 1 ? "is" : "are"} not listed`,
         ]),
     ...(elsewhere >= 0.005
-      ? [`test code and leftover files hold ${formatShare(elsewhere)}`]
+      ? [`leftover files hold ${formatShare(elsewhere)}`]
       : []),
   ];
   const text = parts.join("; ");
@@ -120,7 +120,7 @@ const bodyOf = (
     chart: {
       title: "Heat by territory",
       intro:
-        "Each territory's share of all the change effort, test code included, hottest first. Select one to show its files in the map.",
+        "Each territory's share of all the change effort, hottest first. Select one to show its files in the map.",
       content: [
         chartRows(
           rows

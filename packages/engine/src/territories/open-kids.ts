@@ -71,19 +71,15 @@ const leftover = ({ cut }: Cut, restInBucket: boolean): ReadonlyArray<Part> => [
   ...cut.outer.map(({ directory, files }) => looseFiles(directory, files)),
 ];
 
-/** Territories first, then test-only code, then buckets and loose files. */
-const roleOf = ({ kind }: Part): number => {
-  if (kind === "folder" || kind === "group") {
-    return 0;
-  }
-  return kind === "tests" ? 1 : 2;
-};
+/** Territories first, then buckets and loose files. */
+const roleOf = ({ kind }: Part): number =>
+  kind === "folder" || kind === "group" ? 0 : 1;
 
 /**
  * The parts that open now: the `weigh`tiest `FANOUT - 1` groups of folders
  * (all of them when there are at most `FANOUT`), and what waits: a bucket of
- * the rest, or else the loose files. Territories come first, then test-only
- * code, then the bucket.
+ * the rest, or else the loose files. Territories come first, then the bucket
+ * and the loose files.
  */
 export const openKids = (
   groups: ReadonlyArray<Together>,

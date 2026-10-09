@@ -4,23 +4,22 @@
 /**
  * What a part is: a `folder` (the files below one directory), a `group` of
  * sibling folders that change together, a `more` bucket of smaller sibling
- * folders that wait for a finer detail, `other` loose files with no folder
- * of their own, or `tests` (a folder of test code that belongs to no code).
+ * folders that wait for a finer detail, or `other` loose files with no folder
+ * of their own.
  */
-type PartKind = "folder" | "group" | "more" | "other" | "tests";
+type PartKind = "folder" | "group" | "more" | "other";
 
 export type Part = {
   readonly kind: PartKind;
   /** The directory of a folder or of loose files, "" for the repository root; the brace glob of the member directories for a group (see `groupPath`). */
   readonly path: string;
   /**
-   * The directory a folder or a tests part was cut out as, before `path` was
-   * cut down to where its files branch (the key of its cut, "" for the root):
-   * the one directory its heat is measured from. A group, a bucket, and loose
-   * files have none: they are measured from their members (see `directoriesOf`).
+   * The directory a folder was cut out as, before `path` was cut down to
+   * where its files branch (the key of its cut, "" for the root). A group, a
+   * bucket, and loose files have none.
    */
   readonly cut?: string;
-  /** The files that shape the tree: code files, and test code that belongs to no code. */
+  /** The files that shape the tree: the code files, test code left out. */
   readonly files: ReadonlyArray<string>;
   /** The folders a group or a bucket is made of. */
   readonly members: ReadonlyArray<Part>;
@@ -63,42 +62,18 @@ export type Evidence = {
   readonly minChanges: number;
   /** Files above which a part is too big to stay one territory, if it changes enough. */
   readonly sizeBound: number;
-  /** Per file that shapes the tree, its heat (`changes × (loc + complexity)`) and that of the test code paired with it. */
+  /** Per file that shapes the tree, its heat (`changes × (loc + complexity)`). */
   readonly heat: ReadonlyMap<string, number>;
-  /**
-   * The heat of the test code placed in a directory at or below each directory
-   * (see `attachTests`): a home's heat counts for the home and for every
-   * directory above it, the root included. Test code ends up in the territory of
-   * the code below its directory, so a folder counts it only when that
-   * directory is at or below the folder.
-   */
-  readonly placed: ReadonlyMap<string, number>;
-  /** The heat of every code file, test code that is paired with none included. */
+  /** The heat of every file that shapes the tree. */
   readonly totalHeat: number;
 };
 
-/**
- * The heat of a part that holds `files` and was cut from `directories` (none
- * of them within another): that of the files and of the test code paired with
- * them, and that of the test code placed in a directory at or below one of
- * `directories`. Test code placed in a directory above them lands in a
- * territory that holds more than the part, so it heats none of its parts.
- */
+/** The heat of a part that holds `files`. */
 export const heatOf = (
   evidence: Evidence,
   files: ReadonlyArray<string>,
-  directories: ReadonlyArray<string>,
 ): number =>
-  files.reduce((sum, file) => sum + (evidence.heat.get(file) ?? 0), 0) +
-  directories.reduce((sum, at) => sum + (evidence.placed.get(at) ?? 0), 0);
-
-/** The directories a part was cut from: those of its members, else its own; none for loose files. */
-export const directoriesOf = (part: Part): ReadonlyArray<string> => {
-  if (part.members.length > 0) {
-    return part.members.flatMap(({ cut }) => cut ?? []);
-  }
-  return part.cut === undefined ? [] : [part.cut];
-};
+  files.reduce((sum, file) => sum + (evidence.heat.get(file) ?? 0), 0);
 
 /** The indices of the changes that touched any of `files`. */
 export const changesTouching = (
@@ -114,11 +89,10 @@ export const changesTouching = (
   return touching;
 };
 
-/** Whether the folder `directory` with `files` holds at least `MIN_VISIBLE_HEAT` of all heat. */
+/** Whether a folder with `files` holds at least `MIN_VISIBLE_HEAT` of all heat. */
 export const isHotFolder = (
   evidence: Evidence,
-  directory: string,
   files: ReadonlyArray<string>,
 ): boolean =>
   evidence.totalHeat > 0 &&
-  heatOf(evidence, files, [directory]) / evidence.totalHeat >= MIN_VISIBLE_HEAT;
+  heatOf(evidence, files) / evidence.totalHeat >= MIN_VISIBLE_HEAT;

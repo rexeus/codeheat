@@ -82,7 +82,7 @@ const areaOf = (
   return {
     path: territory.path,
     description: territory.description,
-    files: territory.files - territory.testFiles,
+    files: territory.files,
     changes: territory.changes,
     heat,
     stays: staysOf(territory, standing),
@@ -108,7 +108,7 @@ const areaOf = (
  * partner a listed area leaks into, or is one of `named` (ids of territories
  * the report names elsewhere), so that every area name the report uses is
  * listed. The rest holds every other territory of the detail, buckets of
- * smaller folders, loose files, and test-only code included; its `areas`
+ * smaller folders and loose files included; its `areas`
  * counts the real ones. The detail splits all the heat, so the heat of the
  * listed areas and of the rest adds up to exactly 100, or is 0 without any
  * heat (see `percentsOf`).
@@ -151,10 +151,7 @@ export const areasOf = (
     areas: listed.map((area, index) => areaOf(area, heats[index] ?? 0, pathOf)),
     rest: {
       areas: rest.filter(({ kind }) => isTerritoryKind(kind)).length,
-      files: rest.reduce(
-        (sum, { files, testFiles }) => sum + files - testFiles,
-        0,
-      ),
+      files: rest.reduce((sum, { files }) => sum + files, 0),
       heat: heats[listed.length] ?? 0,
       largest: largestOf(rest, heats[listed.length] ?? 0),
     },

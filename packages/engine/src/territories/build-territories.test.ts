@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 
-import { isTestPath } from "../modules/test-path.js";
 import { buildTerritories } from "./build-territories.js";
 import type { TerritoryTree } from "./build-territories.js";
 import type { TerritoryFile } from "./node-measures.js";
@@ -10,7 +9,6 @@ const file = (path: string, changes = 0): TerritoryFile => ({
   loc: 10,
   complexity: { total: 5 },
   changes,
-  test: isTestPath(path),
 });
 
 /** `count` code files directly in `folder`: `<folder>/f1.ts`, `<folder>/f2.ts`, … */
@@ -267,63 +265,6 @@ describe("hot folders", () => {
     expect(idsAt(tree, 1).map((id) => nodeOf(tree, id).path)[0]).toBe("hot");
     expect(recommended).toContain("hot");
     expect(nodeOf(tree, idsAt(tree, 1).at(-1) ?? "").kind).toBe("other");
-  });
-});
-
-describe("hot folders and the tests that belong to them", () => {
-  it("counts the tests placed beside a folder's code for the heat that opens it", () => {
-    const cold = Array.from({ length: 11 }, (_, index) => `c${index + 1}`);
-    const tree = buildTerritories({
-      files: [
-        ...cold.flatMap((folder) =>
-          filesIn(`${folder}/src`, 20).map((path) => file(path, 1)),
-        ),
-        ...filesIn("hot/src", 4).map((path) => file(path, 1)),
-        ...filesIn("hot/test/helpers", 3).map((path) =>
-          Object.assign(file(path, 50), { loc: 1000 }),
-        ),
-      ],
-      changes: [
-        ...changed(6, "hot/src/f1.ts"),
-        ...cold.flatMap((folder) => changed(6, `${folder}/src/f1.ts`)),
-      ],
-      packages: new Set(),
-      minChanges: 5,
-    });
-
-    expect(idsAt(tree, 1).map((id) => nodeOf(tree, id).path)[0]).toBe(
-      "hot/src",
-    );
-  });
-});
-
-describe("tests placed above a folder", () => {
-  it("do not heat the cold folders beside a hot one", () => {
-    const cold = Array.from({ length: 8 }, (_, index) => `c${index + 1}`);
-    const tree = buildTerritories({
-      files: [
-        ...cold.flatMap((folder) =>
-          filesIn(`pkg/src/${folder}`, 30).map((path) => file(path, 1)),
-        ),
-        ...filesIn("pkg/src/hot", 3).map((path) =>
-          Object.assign(file(path, 10), { loc: 100 }),
-        ),
-        ...[1, 2, 3, 4, 5].map((index) =>
-          Object.assign(file(`pkg/test/t${index}.spec.ts`, 50), { loc: 1000 }),
-        ),
-      ],
-      changes: [
-        ...changed(10, "pkg/src/hot/f1.ts"),
-        ...cold.flatMap((folder) => changed(6, `pkg/src/${folder}/f1.ts`)),
-      ],
-      packages: new Set(),
-      minChanges: 5,
-    });
-
-    const open = (level: number) =>
-      idsAt(tree, level).map((id) => nodeOf(tree, id).path);
-    expect(open(1)).toContain("pkg/src/hot");
-    expect(open(tree.recommended)).toContain("pkg/src/hot");
   });
 });
 

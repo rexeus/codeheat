@@ -57,7 +57,6 @@ describe("standingOf", () => {
   });
 
   it.each([
-    ["test code", { kind: "tests" }],
     ["leftover files", { kind: "other" }],
     ["too few changes", { changes: 4 }],
   ] as const)("says why it does not judge %s", (reason, overrides) => {

@@ -47,18 +47,17 @@ const stemOf = (path: string): string => {
 
 /**
  * `main files: a, b, c`: the stems of the three most changed files among
- * `members` (test code only when there is nothing else), most changes first,
- * then the larger file, then path. Empty without files.
+ * `members`, most changes first, then the larger file, then path. Empty
+ * without files.
  */
 export const mainFiles = (
   members: ReadonlyArray<string>,
   files: ReadonlyMap<string, TerritoryFile>,
 ): string => {
-  const known = members.flatMap((path) => files.get(path) ?? []);
-  const code = known.filter((file) => !file.test);
   const stems = [
     ...new Set(
-      (code.length > 0 ? code : known)
+      members
+        .flatMap((path) => files.get(path) ?? [])
         .toSorted(
           (a, b) =>
             b.changes - a.changes ||

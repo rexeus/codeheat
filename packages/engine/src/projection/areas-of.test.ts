@@ -12,7 +12,6 @@ type PartSpec = {
   readonly kind?: Territory["kind"];
   readonly changes?: number;
   readonly files?: number;
-  readonly testFiles?: number;
   readonly fit?: Partial<NonNullable<Territory["fit"]>>;
 };
 
@@ -27,7 +26,6 @@ const territoriesOf = (parts: ReadonlyArray<PartSpec>): Territories => ({
       path: `src/${part.id}`,
       changes: part.changes ?? 20,
       files: part.files ?? 4,
-      testFiles: part.testFiles ?? 0,
       heatShare: part.heat,
       fit: fitRecord(part.fit),
     })),
@@ -115,8 +113,7 @@ describe("areasOf area", () => {
       {
         id: "a",
         heat: 1,
-        files: 9,
-        testFiles: 4,
+        files: 5,
         fit: { containment: 0.8333 },
       },
     ]).areas;

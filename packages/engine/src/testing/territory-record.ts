@@ -14,7 +14,6 @@ export const territoryRecord = (
   parent,
   children,
   files: 1,
-  testFiles: 0,
   changes: 0,
   heatShare: 0,
   description: id,

@@ -105,18 +105,6 @@ const mirrors = (test: string, source: string): boolean =>
   mirroredStems(test).includes(stemOf(source));
 
 /**
- * The stems (path without extension) of the files a test may test, by the
- * rules of `isTestPair`: the test's own stem without its suffix, and where a
- * mirrored test directory puts it. Empty when the path has no test suffix or
- * lies below a fixtures directory. Whether a source with such a stem exists is
- * for the caller to look up.
- */
-export const testedStems = (test: string): ReadonlyArray<string> => {
-  const name = withoutTestSuffix(stemOf(test));
-  return name === undefined ? [] : [name, ...mirroredStems(test)];
-};
-
-/**
  * One path is the other's test: both lie in one directory and one stem is the
  * other's plus `.test`, `.spec`, `_test`, or `_spec`; or the test lies below a
  * mirrored test directory (`test`, `tests`, `__tests__`, `spec`, `specs`,

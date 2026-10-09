@@ -6,18 +6,14 @@ import type { History } from "../history/history.js";
 /**
  * For each counted change (see `countedChanges`) of `history`, in order, the
  * distinct areas its files lie in (`areaOfFile` maps a path to its area). A
- * file with no area (a contract) and an area in `ignored` (test-only code,
- * which is no spread) count for nothing, so a change may touch none.
+ * file with no area (a contract) counts for nothing, so a change may touch
+ * none.
  */
 export const touchedAreas = (
   { changes, paths }: Pick<History, "changes" | "paths">,
   areaOfFile: ReadonlyMap<string, string>,
-  ignored: ReadonlySet<string>,
 ): ReadonlyArray<ReadonlySet<string>> => {
-  const areaOfId = paths.map((path) => {
-    const area = areaOfFile.get(path);
-    return area === undefined || ignored.has(area) ? undefined : area;
-  });
+  const areaOfId = paths.map((path) => areaOfFile.get(path));
   return countedChanges(changes).map((change) => {
     const touched = new Set<string>();
     for (const id of change.files) {

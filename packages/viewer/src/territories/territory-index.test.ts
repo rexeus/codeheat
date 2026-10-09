@@ -102,10 +102,7 @@ describe("territoryName", () => {
     });
   });
 
-  it("says what test code and a bucket are", () => {
-    expect(
-      territoryName(territoryNode("a", "apps/cli", { kind: "tests" })),
-    ).toBe("tests in apps/cli");
+  it("says what a bucket is", () => {
     expect(
       territoryName(
         territoryNode("b", "packages", {
