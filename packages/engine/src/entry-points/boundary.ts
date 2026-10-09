@@ -24,11 +24,11 @@ const CHRONIC_BOOST = 1.5;
  * `minSharedCommits` changes with it (the partner is null below that, and for
  * a territory under `minModuleCommits` changes, which is never judged).
  */
-const leaks = ({ fit, codeHeatShare }: Judged, limits: EntryLimits): boolean =>
+const leaks = ({ fit, heatShare }: Judged, limits: EntryLimits): boolean =>
   fit.partner !== null &&
   fit.containment !== null &&
   fit.containment <= limits.maxEntryContainment &&
-  codeHeatShare >= limits.minEntryHeatShare;
+  heatShare >= limits.minEntryHeatShare;
 
 /** The territory's boundary as an entry of its own, with where it leaks to; none when it holds or has no leak target. */
 const leakOf = (
@@ -36,7 +36,7 @@ const leakOf = (
   pathOf: ReadonlyMap<string, string>,
   limits: EntryLimits,
 ): ReadonlyArray<Leak> => {
-  const { fit, heatShare, codeHeatShare } = territory;
+  const { fit, heatShare } = territory;
   if (!leaks(territory, limits) || fit.partner === null) {
     return [];
   }
@@ -48,14 +48,13 @@ const leakOf = (
       candidate: {
         kind: "boundary",
         score:
-          codeHeatShare *
+          heatShare *
           (1 - containment) *
           (isChronic(fit, limits.minEntryChronicShare) ? CHRONIC_BOOST : 1) *
           (1 + (fit.fixDensity?.share ?? 0)),
         territories: [territory.id],
         files: [],
         evidence: evidenceOf({
-          codeHeatShare,
           heatShare,
           containment,
           changes: territory.changes,
@@ -79,15 +78,12 @@ const leakOf = (
 /**
  * The territories whose boundary does not hold: at most
  * `limits.maxEntryContainment` of their changes stay inside, they hold at
- * least `limits.minEntryHeatShare` of the production code's heat, and some
+ * least `limits.minEntryHeatShare` of all the heat, and some
  * other territory shares changes with them (see `leaks`): a verdict on a
  * boundary needs evidence of where it leaks to. The score is
- * `codeHeatShare × (1 − containment) × (chronic ? 1.5 : 1) × (1 + fix share)`:
+ * `heatShare × (1 − containment) × (chronic ? 1.5 : 1) × (1 + fix share)`:
  * the design's heat that leaks, more when it is the long-lived kind and when it
- * is spent on fixes. The base is the production code's heat (`Judged.codeHeatShare`):
- * tests are change effort but not design, so a territory made of test code
- * does not rank; `Territory.heatShare`, which counts them, stays in the
- * evidence. A territory is chronic when most of its code's heat is in chronic
+ * is spent on fixes. A territory is chronic when most of its code's heat is in chronic
  * hotspots (see `isChronic`); the fix share is 0 where subjects do not tell.
  *
  * Two such territories that are each other's partner are one story, told

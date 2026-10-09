@@ -4,11 +4,7 @@ import type { Coupling } from "../model/analysis.js";
 import { propagationCost } from "./propagation-cost.js";
 import type { ReachFile } from "./propagation-cost.js";
 
-const file = (path: string, changes = 5, test = false): ReachFile => ({
-  path,
-  changes,
-  test,
-});
+const file = (path: string, changes = 5): ReachFile => ({ path, changes });
 
 const files = (...paths: ReadonlyArray<string>): ReadonlyArray<ReachFile> =>
   paths.map((path) => file(path));
@@ -19,7 +15,6 @@ const coupling = (a: string, b: string): Coupling => ({
   sharedCommits: 4,
   degree: 0.8,
   distance: 0,
-  testPair: false,
   kinds: { a: "code", b: "code" },
   crossesModule: false,
   imports: null,
@@ -94,17 +89,9 @@ describe("propagationCost files", () => {
     });
   });
 
-  it("leaves out test code and files with too few changes", () => {
-    const all = [
-      ...files("a", "b", "c"),
-      file("a.test", 9, true),
-      file("rare", 2),
-    ];
-    const couplings = [
-      ...cliqueOf("a", "b", "c"),
-      coupling("a", "a.test"),
-      coupling("c", "rare"),
-    ];
+  it("leaves out files with too few changes", () => {
+    const all = [...files("a", "b", "c"), file("rare", 2)];
+    const couplings = [...cliqueOf("a", "b", "c"), coupling("c", "rare")];
 
     expect(propagationCost(all, couplings)).toStrictEqual({
       cost: 1,
@@ -115,6 +102,5 @@ describe("propagationCost files", () => {
   it("is null without two files that could be coupled", () => {
     expect(propagationCost([], [])).toBeNull();
     expect(propagationCost([file("a"), file("b", 2)], [])).toBeNull();
-    expect(propagationCost([file("a"), file("t", 5, true)], [])).toBeNull();
   });
 });

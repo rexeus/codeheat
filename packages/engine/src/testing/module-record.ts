@@ -1,16 +1,11 @@
 // Tests only: a measured module record with every field at its neutral value.
 import type { Module } from "../model/module.js";
 
-/** A module with `commits` counted commits that is not test-only unless said; everything else is neutral. */
-export const moduleRecord = (
-  path: string,
-  commits: number,
-  testOnly = false,
-): Module => ({
+/** A module with `commits` counted commits; everything else is neutral. */
+export const moduleRecord = (path: string, commits: number): Module => ({
   path,
   kind: "package",
   files: 4,
-  testOnly,
   commits,
   localCommits: 0,
   cohesion: 0,

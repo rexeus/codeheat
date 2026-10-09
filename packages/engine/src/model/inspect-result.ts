@@ -20,13 +20,12 @@ const Partner = Schema.Struct({
   probability: UnitInterval,
   /** What the partner is; a contract has no score and is listed in `Analysis.contracts`. */
   kind: FileKind,
-  testPair: Schema.Boolean,
   /** The partner belongs to a different module than the inspected file. */
   crossesModule: Schema.Boolean,
   /**
    * The pair is a distant coupling (see `Analysis.distantCouplings`): the files
-   * lie in different modules or far apart within one, neither is test code,
-   * and they are not two contract files. A distant partner is a hint that the
+   * lie in different modules or far apart within one, and they are not two
+   * contract files. A distant partner is a hint that the
    * change reaches across a design boundary.
    */
   distant: Schema.Boolean,
@@ -73,9 +72,8 @@ export const InspectResult = Schema.Struct({
   modules: Schema.Array(Module),
   /**
    * The territories of the matched files (`FileStats.territory`, the finest one
-   * of each), for each of them that is a `tests` territory (test code has no
-   * fit) its ancestors up to the nearest one with a fit, and the partners of
-   * their fit (`TerritoryFit.partner`), as they stand in
+   * of each) and the partners of their fit (`TerritoryFit.partner`), as they
+   * stand in
    * `Analysis.territories`, in report order: how well the file's area holds up
    * to the way the code changes, for the files that are in no entry point too.
    * The territories that the entry points of the matched files and their
@@ -88,7 +86,15 @@ export const InspectResult = Schema.Struct({
    * the contract among its partners.
    */
   contractFiles: Schema.Array(Schema.String),
-  /** Requested paths or globs that matched no universe file; one that matched only contract files is not listed here. */
+  /**
+   * Test code the patterns matched (see `Analysis.testCode`), sorted by path,
+   * with the counted changes that touched each. Test code is not judged: it
+   * has no rank, heat, partners, or territory, and no entry in `matches`.
+   */
+  testCode: Schema.Array(
+    Schema.Struct({ path: Schema.String, changes: Count }),
+  ),
+  /** Requested paths or globs that matched no universe file; one that matched only contract files or test code is not listed here. */
   unmatched: Schema.Array(Schema.String),
 });
 export type InspectResult = typeof InspectResult.Type;

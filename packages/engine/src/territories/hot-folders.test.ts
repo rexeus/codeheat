@@ -11,7 +11,6 @@ const heated = (path: string, heat: number) => ({
   loc: heat - 5,
   complexity: { total: 5 },
   changes: 1,
-  test: false,
 });
 
 /**
@@ -53,7 +52,7 @@ describe("a folder of fewer than three files", () => {
     expect(kindsAt(treeWith([49, 50]))).toStrictEqual([
       ["a", "folder"],
       ["b", "folder"],
-      [".", "other"],
+      ["*", "files"],
     ]);
   });
 });

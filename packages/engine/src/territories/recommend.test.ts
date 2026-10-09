@@ -26,6 +26,12 @@ const detail = (count: number, hidden?: number): ReadonlyArray<Shown> => [
   ...(hidden === undefined ? [] : [bucket(hidden)]),
 ];
 
+/** Loose files with the given share of the heat. */
+const looseFiles = (share: number): Shown => ({
+  ...territory(share),
+  kind: "files",
+});
+
 describe("recommendedOf", () => {
   it("takes the finest detail with at most 25 territories", () => {
     expect(recommendedOf([detail(5), detail(25), detail(26)])).toBe(2);
@@ -53,6 +59,21 @@ describe("recommendedOf", () => {
   it("ignores a bucket that has no territory beside it", () => {
     expect(recommendedOf([[bucket(0.5)], detail(3, 0.05)])).toBe(2);
   });
+
+  it("counts loose files toward the 25 territories only from 1% of all heat", () => {
+    expect(
+      recommendedOf([detail(5), [...detail(25), looseFiles(0.0099)]]),
+    ).toBe(2);
+    expect(recommendedOf([detail(5), [...detail(25), looseFiles(0.01)]])).toBe(
+      1,
+    );
+  });
+
+  it("compares a hidden folder with the folders opened beside it, not with loose files", () => {
+    expect(
+      recommendedOf([detail(5), [...detail(10, 0.05), looseFiles(0.02)]]),
+    ).toBe(2);
+  });
 });
 
 const part = (overrides: Partial<Part>): Part => ({
@@ -61,7 +82,6 @@ const part = (overrides: Partial<Part>): Part => ({
   files: [],
   members: [],
   base: "",
-  rest: [],
   ...overrides,
 });
 
@@ -89,12 +109,6 @@ const evidence: Evidence = {
     ["lib/small/x.ts", 100],
     ["lib/small/y.ts", 100],
   ]),
-  // 100 of test code placed in `lib/small`, 500 more placed in `lib` itself: each directory counts what is placed at or below it.
-  placed: new Map([
-    ["lib/small", 100],
-    ["lib", 600],
-    ["", 600],
-  ]),
   totalHeat: 1000,
 };
 
@@ -105,59 +119,25 @@ describe("shownOf", () => {
       node("t1", "folder", null, part({ path: "", cut: "", files })),
       node(
         "t2",
-        "other",
+        "files",
         0,
-        part({ kind: "other", path: "lib", base: "lib", files }),
+        part({ kind: "files", path: "lib", base: "lib", files }),
       ),
     ],
     evidence,
   );
 
   it("reads the hottest folder a node of loose files holds, one with too few files to be a territory included", () => {
-    expect(shown.get("t2")?.hidden).toBeCloseTo(0.3, 10);
+    expect(shown.get("t2")?.hidden).toBeCloseTo(0.2, 10);
   });
 
-  it("counts test code placed at or below a folder for it, and test code placed above it for none of its folders", () => {
+  it("reads the share of all heat a node holds", () => {
     expect(shown.get("t1")).toStrictEqual({
       kind: "folder",
       parent: null,
-      share: 0.801,
+      share: 0.201,
       hidden: 0,
     });
     expect(shown.get("t2")?.share).toBeCloseTo(0.201, 10);
-  });
-});
-
-describe("shownOf for a folder cut from a directory above its path", () => {
-  it("counts test code placed between the directory it was cut from and the one its path was cut down to", () => {
-    const tested: Evidence = {
-      ...evidence,
-      heat: new Map([["big/server/src/app/x/f.ts", 10]]),
-      // 500 of test code placed in `big/server/src`, between `big` and `big/server/src/app`
-      placed: new Map([
-        ["big/server/src", 500],
-        ["big/server", 500],
-        ["big", 500],
-        ["", 500],
-      ]),
-    };
-
-    const shown = shownOf(
-      [
-        node(
-          "t1",
-          "folder",
-          null,
-          part({
-            path: "big/server/src/app",
-            cut: "big",
-            files: ["big/server/src/app/x/f.ts"],
-          }),
-        ),
-      ],
-      tested,
-    );
-
-    expect(shown.get("t1")?.share).toBeCloseTo(0.51, 10);
   });
 });

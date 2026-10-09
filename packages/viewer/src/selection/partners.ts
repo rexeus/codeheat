@@ -6,7 +6,6 @@ export type Partner = {
   readonly sharedCommits: number;
   readonly degree: number;
   readonly distance: number;
-  readonly testPair: boolean;
   /** A contract (interface definition or schema) has no tile: it is not in `files`. */
   readonly kind: "code" | "contract";
   /** The partner lives in another module. */
@@ -17,7 +16,7 @@ export type Partner = {
    * hidden coupling; null when unknown.
    */
   readonly imports: "file→partner" | "partner→file" | "both" | "none" | null;
-  /** Hidden coupling: no import links the files. A file's test is never hidden, since it is expected to be coupled. */
+  /** Hidden coupling: no import links the files. */
   readonly hidden: boolean;
 };
 
@@ -47,7 +46,7 @@ export const indexPartners = (couplings: readonly Coupling[]): PartnerIndex => {
     }
   };
   for (const { a, b, imports, kinds, ...measures } of couplings) {
-    const hidden = imports === "none" && !measures.testPair;
+    const hidden = imports === "none";
     add(a, {
       path: b,
       kind: kinds.b,

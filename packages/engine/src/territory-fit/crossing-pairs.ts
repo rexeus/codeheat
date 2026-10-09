@@ -27,16 +27,14 @@ const add = (tally: Tally | undefined, hidden: boolean): Tally => {
 };
 
 /**
- * The coupled pairs (see `isJudgeablePair`: no test code, no two contract
- * files) of which one file lies in one area and the other in a different one,
- * counted for each of the two areas and for the pair of areas; `areaOfFile`
- * maps a path to its area. Pairs with a file that has no area, or in an area
- * of `ignored`, count for none.
+ * The coupled pairs (see `isJudgeablePair`: no two contract files) of which
+ * one file lies in one area and the other in a different one, counted for
+ * each of the two areas and for the pair of areas; `areaOfFile` maps a path
+ * to its area. Pairs with a file that has no area count for none.
  */
 export const crossingPairs = (
   couplings: ReadonlyArray<Coupling>,
   areaOfFile: ReadonlyMap<string, string>,
-  ignored: ReadonlySet<string>,
 ): AreaCrossings => {
   const ofArea = new Map<string, Tally>();
   const ofPair = new Map<string, Map<string, Tally>>();
@@ -47,8 +45,6 @@ export const crossingPairs = (
       a === undefined ||
       b === undefined ||
       a === b ||
-      ignored.has(a) ||
-      ignored.has(b) ||
       !isJudgeablePair(coupling)
     ) {
       continue;

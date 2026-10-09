@@ -87,42 +87,6 @@ describe("rankFiles hub candidates", () => {
       "changed in 10 commits (#1 of 20)",
     ]);
   });
-
-  it("neither ranks nor names a test file, however wide", () => {
-    // the test file would take breadth rank 1 and push hub.ts out of the top 5%
-    const files = [
-      wide("hub.test.ts", 5, 30),
-      wide("hub.ts", 5, 10),
-      ...narrowFiles(18),
-    ];
-
-    expect(reasonsOf(files, "hub.test.ts")).toStrictEqual([
-      "changed in 5 commits (#1 of 20)",
-    ]);
-    expect(reasonsOf(files, "hub.ts")?.at(-1)).toBe(
-      "changes together with 10 different files",
-    );
-  });
-
-  it("neither ranks nor names test code below a test directory, however wide", () => {
-    // step files, mocks and fixtures are test code by their directory alone
-    const files = [
-      wide("test/steps/checkout.ts", 5, 30),
-      wide("src/__tests__/mock.ts", 5, 30),
-      wide("hub.ts", 5, 10),
-      ...narrowFiles(17),
-    ];
-
-    expect(reasonsOf(files, "test/steps/checkout.ts")).toStrictEqual([
-      "changed in 5 commits (#1 of 20)",
-    ]);
-    expect(reasonsOf(files, "src/__tests__/mock.ts")).toStrictEqual([
-      "changed in 5 commits (#1 of 20)",
-    ]);
-    expect(reasonsOf(files, "hub.ts")?.at(-1)).toBe(
-      "changes together with 10 different files",
-    );
-  });
 });
 
 describe("rankFiles hub ties", () => {

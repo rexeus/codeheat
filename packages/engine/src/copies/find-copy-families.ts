@@ -43,8 +43,7 @@ export const findCopyFamilies = (
   FileSystem.FileSystem | Path.Path
 > =>
   Effect.gen(function* () {
-    const candidates = couplings.filter(({ testPair }) => !testPair);
-    const files = [...new Set(candidates.flatMap(({ a, b }) => [a, b]))];
+    const files = [...new Set(couplings.flatMap(({ a, b }) => [a, b]))];
     const shingles = new Map(
       yield* Effect.forEach(
         files,
@@ -63,7 +62,7 @@ export const findCopyFamilies = (
         ? 0
         : jaccard(shinglesA, shinglesB);
     };
-    const links = candidates.filter(
+    const links = couplings.filter(
       ({ a, b }): boolean => similarityOf(a, b) >= MIN_COPY_SIMILARITY,
     );
     return familiesOf(links, history, similarityOf);

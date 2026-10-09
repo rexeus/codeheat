@@ -29,7 +29,6 @@ const coupling = (
   b,
   sharedCommits: 10,
   distance: 2,
-  testPair: false,
   kinds: { a: "code", b: "code" },
   crossesModule: MODULES.get(a)?.path !== MODULES.get(b)?.path,
   imports: null,
@@ -162,21 +161,6 @@ describe("distantCouplings hidden coupling, exclusions, and ranking", () => {
         pair("packages/compiler/src/w.ts", "a→b"),
       ]).map(({ score }) => score),
     ).toEqual([1.551, 1.034, 1.034]);
-  });
-
-  it("leaves out every pair with a test-code file, recognized as a test pair or not", () => {
-    expect(
-      scoresOf([
-        coupling("packages/core/src/a.ts", "packages/core/test/a.test.ts", {
-          degree: 0.9,
-          distance: 3,
-          testPair: true,
-        }),
-        coupling("packages/compiler/src/x.ts", "packages/core/test/a.test.ts", {
-          degree: 0.9,
-        }),
-      ]),
-    ).toEqual([]);
   });
 
   it("keeps a contract coupled to code, though it lies in a spec directory, and drops a pair of two contracts", () => {

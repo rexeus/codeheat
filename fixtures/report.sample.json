@@ -93,9 +93,10 @@
     "minEntryScore": 0.005
   },
   "totals": {
-    "files": 36,
+    "files": 32,
+    "testCode": 4,
     "contracts": 2,
-    "couplings": 9,
+    "couplings": 6,
     "modules": 5,
     "generated": 4
   },
@@ -117,8 +118,8 @@
         "max": 9
       },
       "reasons": [
-        "changed in 48 commits (#1 of 36)",
-        "indentation complexity 1900 (#2 of 36)",
+        "changed in 48 commits (#1 of 32)",
+        "indentation complexity 1900 (#2 of 32)",
         "co-changes with packages/billing/src/tax.ts in 50% of its changes",
         "changes together with 14 different files"
       ],
@@ -133,7 +134,6 @@
         "hotWindows": 5,
         "windows": 6
       },
-      "test": false,
       "territory": "t2"
     },
     {
@@ -153,8 +153,8 @@
         "max": 6
       },
       "reasons": [
-        "changed in 31 commits (#3 of 36)",
-        "indentation complexity 1100 (#4 of 36)",
+        "changed in 31 commits (#3 of 32)",
+        "indentation complexity 1100 (#4 of 32)",
         "co-changes with packages/billing/src/invoice.ts in 77% of its changes"
       ],
       "trend": {
@@ -168,42 +168,11 @@
         "hotWindows": 4,
         "windows": 6
       },
-      "test": false,
-      "territory": "t2"
-    },
-    {
-      "path": "packages/billing/src/invoice.test.ts",
-      "rank": 3,
-      "score": 0.7811,
-      "revisions": 36,
-      "changes": 36,
-      "linesAdded": 324,
-      "linesDeleted": 108,
-      "breadth": 5,
-      "module": "packages/billing",
-      "loc": 270,
-      "complexity": {
-        "total": 700,
-        "mean": 2.59,
-        "max": 4
-      },
-      "reasons": [
-        "changed in 36 commits (#2 of 36)",
-        "indentation complexity 700 (#6 of 36)"
-      ],
-      "trend": {
-        "previousScore": 0.7311,
-        "previousRevisions": 34,
-        "scoreDelta": 0.05,
-        "newlyActive": false
-      },
-      "heat": null,
-      "test": true,
       "territory": "t2"
     },
     {
       "path": "packages/web/src/routes/invoices.tsx",
-      "rank": 4,
+      "rank": 3,
       "score": 0.7092,
       "revisions": 19,
       "changes": 19,
@@ -218,8 +187,8 @@
         "max": 7
       },
       "reasons": [
-        "changed in 19 commits (#7 of 36)",
-        "indentation complexity 1300 (#3 of 36)",
+        "changed in 19 commits (#7 of 32)",
+        "indentation complexity 1300 (#3 of 32)",
         "changes with packages/billing/src/invoice.ts in 74% of its changes without an import between them"
       ],
       "trend": {
@@ -233,12 +202,11 @@
         "hotWindows": 2,
         "windows": 6
       },
-      "test": false,
       "territory": "t3"
     },
     {
       "path": "apps/cli/src/commands/analyze.ts",
-      "rank": 5,
+      "rank": 4,
       "score": 0.7032,
       "revisions": 26,
       "changes": 26,
@@ -253,8 +221,8 @@
         "max": 4
       },
       "reasons": [
-        "changed in 26 commits (#4 of 36)",
-        "indentation complexity 640 (#7 of 36)",
+        "changed in 26 commits (#4 of 32)",
+        "indentation complexity 640 (#7 of 32)",
         "co-changes with packages/shared/src/config.ts in 35% of its changes"
       ],
       "trend": {
@@ -264,12 +232,11 @@
         "newlyActive": false
       },
       "heat": null,
-      "test": false,
       "territory": "t5"
     },
     {
       "path": "packages/auth/src/session.ts",
-      "rank": 6,
+      "rank": 5,
       "score": 0.6946,
       "revisions": 22,
       "changes": 22,
@@ -284,8 +251,8 @@
         "max": 5
       },
       "reasons": [
-        "changed in 22 commits (#5 of 36)",
-        "indentation complexity 820 (#5 of 36)",
+        "changed in 22 commits (#5 of 32)",
+        "indentation complexity 820 (#5 of 32)",
         "co-changes with packages/web/src/hooks/use-session.ts in 41% of its changes"
       ],
       "trend": {
@@ -295,42 +262,11 @@
         "newlyActive": false
       },
       "heat": null,
-      "test": false,
       "territory": "t4"
     },
     {
-      "path": "packages/billing/src/tax.test.ts",
-      "rank": 7,
-      "score": 0.6255,
-      "revisions": 22,
-      "changes": 22,
-      "linesAdded": 198,
-      "linesDeleted": 330,
-      "breadth": 5,
-      "module": "packages/billing",
-      "loc": 193,
-      "complexity": {
-        "total": 420,
-        "mean": 2.18,
-        "max": 3
-      },
-      "reasons": [
-        "changed in 22 commits (#6 of 36)",
-        "indentation complexity 420 (#15 of 36)"
-      ],
-      "trend": {
-        "previousScore": 0.7055,
-        "previousRevisions": 25,
-        "scoreDelta": -0.08,
-        "newlyActive": false
-      },
-      "heat": null,
-      "test": true,
-      "territory": "t2"
-    },
-    {
       "path": "packages/shared/src/config.ts",
-      "rank": 8,
+      "rank": 6,
       "score": 0.5445,
       "revisions": 17,
       "changes": 17,
@@ -345,8 +281,8 @@
         "max": 3
       },
       "reasons": [
-        "changed in 17 commits (#8 of 36)",
-        "indentation complexity 300 (#22 of 36)",
+        "changed in 17 commits (#8 of 32)",
+        "indentation complexity 300 (#22 of 32)",
         "co-changes with apps/cli/src/commands/analyze.ts in 53% of its changes"
       ],
       "trend": {
@@ -356,42 +292,11 @@
         "newlyActive": false
       },
       "heat": null,
-      "test": false,
       "territory": "t6"
     },
     {
-      "path": "packages/auth/src/session.test.ts",
-      "rank": 9,
-      "score": 0.5313,
-      "revisions": 14,
-      "changes": 14,
-      "linesAdded": 434,
-      "linesDeleted": 210,
-      "breadth": 5,
-      "module": "packages/auth",
-      "loc": 186,
-      "complexity": {
-        "total": 380,
-        "mean": 2.04,
-        "max": 3
-      },
-      "reasons": [
-        "changed in 14 commits (#9 of 36)",
-        "indentation complexity 380 (#18 of 36)"
-      ],
-      "trend": {
-        "previousScore": 0.6813,
-        "previousRevisions": 18,
-        "scoreDelta": -0.15,
-        "newlyActive": false
-      },
-      "heat": null,
-      "test": true,
-      "territory": "t4"
-    },
-    {
       "path": "packages/web/src/hooks/use-session.ts",
-      "rank": 10,
+      "rank": 7,
       "score": 0.4303,
       "revisions": 12,
       "changes": 12,
@@ -406,8 +311,8 @@
         "max": 2
       },
       "reasons": [
-        "changed in 12 commits (#10 of 36)",
-        "indentation complexity 160 (#30 of 36)",
+        "changed in 12 commits (#10 of 32)",
+        "indentation complexity 160 (#30 of 32)",
         "co-changes with packages/auth/src/session.ts in 75% of its changes"
       ],
       "trend": {
@@ -417,12 +322,11 @@
         "newlyActive": false
       },
       "heat": null,
-      "test": false,
       "territory": "t3"
     },
     {
       "path": "packages/auth/src/tokens.ts",
-      "rank": 11,
+      "rank": 8,
       "score": 0.4237,
       "revisions": 7,
       "changes": 7,
@@ -437,8 +341,8 @@
         "max": 3
       },
       "reasons": [
-        "changed in 7 commits (#15 of 36)",
-        "indentation complexity 478 (#12 of 36)"
+        "changed in 7 commits (#15 of 32)",
+        "indentation complexity 478 (#12 of 32)"
       ],
       "trend": {
         "previousScore": 0.1137,
@@ -447,12 +351,11 @@
         "newlyActive": false
       },
       "heat": null,
-      "test": false,
       "territory": "t4"
     },
     {
       "path": "packages/web/src/components/table.tsx",
-      "rank": 12,
+      "rank": 9,
       "score": 0.4163,
       "revisions": 9,
       "changes": 9,
@@ -467,8 +370,8 @@
         "max": 2
       },
       "reasons": [
-        "changed in 9 commits (#12 of 36)",
-        "indentation complexity 238 (#26 of 36)"
+        "changed in 9 commits (#12 of 32)",
+        "indentation complexity 238 (#26 of 32)"
       ],
       "trend": {
         "previousScore": 0.5363,
@@ -477,12 +380,11 @@
         "newlyActive": false
       },
       "heat": null,
-      "test": false,
       "territory": "t3"
     },
     {
       "path": "apps/cli/src/commands/inspect.ts",
-      "rank": 13,
+      "rank": 10,
       "score": 0.4143,
       "revisions": 7,
       "changes": 7,
@@ -497,8 +399,8 @@
         "max": 3
       },
       "reasons": [
-        "changed in 7 commits (#13 of 36)",
-        "indentation complexity 417 (#16 of 36)"
+        "changed in 7 commits (#13 of 32)",
+        "indentation complexity 417 (#16 of 32)"
       ],
       "trend": {
         "previousScore": 0.3643,
@@ -507,12 +409,11 @@
         "newlyActive": false
       },
       "heat": null,
-      "test": false,
       "territory": "t5"
     },
     {
       "path": "packages/shared/src/index.ts",
-      "rank": 14,
+      "rank": 11,
       "score": 0.3996,
       "revisions": 6,
       "changes": 6,
@@ -527,8 +428,8 @@
         "max": 4
       },
       "reasons": [
-        "changed in 6 commits (#18 of 36)",
-        "indentation complexity 502 (#8 of 36)"
+        "changed in 6 commits (#18 of 32)",
+        "indentation complexity 502 (#8 of 32)"
       ],
       "trend": {
         "previousScore": 0.5996,
@@ -537,12 +438,11 @@
         "newlyActive": false
       },
       "heat": null,
-      "test": false,
       "territory": "t6"
     },
     {
       "path": "apps/cli/src/output/terminal.ts",
-      "rank": 15,
+      "rank": 12,
       "score": 0.3777,
       "revisions": 6,
       "changes": 6,
@@ -557,8 +457,8 @@
         "max": 3
       },
       "reasons": [
-        "changed in 6 commits (#17 of 36)",
-        "indentation complexity 357 (#19 of 36)"
+        "changed in 6 commits (#17 of 32)",
+        "indentation complexity 357 (#19 of 32)"
       ],
       "trend": {
         "previousScore": 0.2377,
@@ -567,12 +467,11 @@
         "newlyActive": false
       },
       "heat": null,
-      "test": false,
       "territory": "t5"
     },
     {
       "path": "packages/billing/src/discounts.ts",
-      "rank": 16,
+      "rank": 13,
       "score": 0.3671,
       "revisions": 5,
       "changes": 5,
@@ -587,8 +486,8 @@
         "max": 3
       },
       "reasons": [
-        "changed in 5 commits (#20 of 36)",
-        "indentation complexity 495 (#11 of 36)"
+        "changed in 5 commits (#20 of 32)",
+        "indentation complexity 495 (#11 of 32)"
       ],
       "trend": {
         "previousScore": 0.3671,
@@ -597,12 +496,11 @@
         "newlyActive": false
       },
       "heat": null,
-      "test": false,
       "territory": "t2"
     },
     {
       "path": "packages/web/src/routes/login.tsx",
-      "rank": 17,
+      "rank": 14,
       "score": 0.336,
       "revisions": 5,
       "changes": 5,
@@ -617,8 +515,8 @@
         "max": 3
       },
       "reasons": [
-        "changed in 5 commits (#21 of 36)",
-        "indentation complexity 292 (#23 of 36)"
+        "changed in 5 commits (#21 of 32)",
+        "indentation complexity 292 (#23 of 32)"
       ],
       "trend": {
         "previousScore": 0.416,
@@ -627,42 +525,11 @@
         "newlyActive": false
       },
       "heat": null,
-      "test": false,
       "territory": "t3"
     },
     {
-      "path": "apps/cli/src/commands/analyze.test.ts",
-      "rank": 18,
-      "score": 0.3304,
-      "revisions": 4,
-      "changes": 4,
-      "linesAdded": 32,
-      "linesDeleted": 36,
-      "breadth": 1,
-      "module": "apps/cli",
-      "loc": 207,
-      "complexity": {
-        "total": 501,
-        "mean": 2.42,
-        "max": 4
-      },
-      "reasons": [
-        "changed in 4 commits (#22 of 36)",
-        "indentation complexity 501 (#9 of 36)"
-      ],
-      "trend": {
-        "previousScore": 0.1104,
-        "previousRevisions": 1,
-        "scoreDelta": 0.22,
-        "newlyActive": false
-      },
-      "heat": null,
-      "test": true,
-      "territory": "t5"
-    },
-    {
       "path": "packages/web/src/app.tsx",
-      "rank": 19,
+      "rank": 15,
       "score": 0.3271,
       "revisions": 4,
       "changes": 4,
@@ -677,8 +544,8 @@
         "max": 3
       },
       "reasons": [
-        "changed in 4 commits (#24 of 36)",
-        "indentation complexity 471 (#13 of 36)"
+        "changed in 4 commits (#24 of 32)",
+        "indentation complexity 471 (#13 of 32)"
       ],
       "trend": {
         "previousScore": 0.4771,
@@ -687,12 +554,11 @@
         "newlyActive": false
       },
       "heat": null,
-      "test": false,
       "territory": "t3"
     },
     {
       "path": "packages/shared/src/logger.ts",
-      "rank": 20,
+      "rank": 16,
       "score": 0.3248,
       "revisions": 6,
       "changes": 6,
@@ -707,8 +573,8 @@
         "max": 2
       },
       "reasons": [
-        "changed in 6 commits (#19 of 36)",
-        "indentation complexity 156 (#31 of 36)"
+        "changed in 6 commits (#19 of 32)",
+        "indentation complexity 156 (#31 of 32)"
       ],
       "trend": {
         "previousScore": 0.3048,
@@ -717,12 +583,11 @@
         "newlyActive": false
       },
       "heat": null,
-      "test": false,
       "territory": "t6"
     },
     {
       "path": "packages/web/src/styles.css",
-      "rank": 21,
+      "rank": 17,
       "score": 0.2783,
       "revisions": 3,
       "changes": 3,
@@ -737,8 +602,8 @@
         "max": 3
       },
       "reasons": [
-        "changed in 3 commits (#28 of 36)",
-        "indentation complexity 437 (#14 of 36)"
+        "changed in 3 commits (#28 of 32)",
+        "indentation complexity 437 (#14 of 32)"
       ],
       "trend": {
         "previousScore": 0,
@@ -747,12 +612,11 @@
         "newlyActive": true
       },
       "heat": null,
-      "test": false,
       "territory": "t3"
     },
     {
       "path": "apps/cli/src/output/html.ts",
-      "rank": 22,
+      "rank": 18,
       "score": 0.2701,
       "revisions": 6,
       "changes": 6,
@@ -767,8 +631,8 @@
         "max": 2
       },
       "reasons": [
-        "changed in 6 commits (#16 of 36)",
-        "indentation complexity 66 (#34 of 36)"
+        "changed in 6 commits (#16 of 32)",
+        "indentation complexity 66 (#34 of 32)"
       ],
       "trend": {
         "previousScore": 0.3901,
@@ -777,12 +641,11 @@
         "newlyActive": false
       },
       "heat": null,
-      "test": false,
       "territory": "t5"
     },
     {
       "path": "packages/auth/src/oauth/github.ts",
-      "rank": 23,
+      "rank": 19,
       "score": 0.2614,
       "revisions": 4,
       "changes": 4,
@@ -797,8 +660,8 @@
         "max": 2
       },
       "reasons": [
-        "changed in 4 commits (#23 of 36)",
-        "indentation complexity 136 (#32 of 36)"
+        "changed in 4 commits (#23 of 32)",
+        "indentation complexity 136 (#32 of 32)"
       ],
       "trend": {
         "previousScore": 0.2114,
@@ -807,12 +670,11 @@
         "newlyActive": false
       },
       "heat": null,
-      "test": false,
       "territory": "t4"
     },
     {
       "path": "packages/billing/src/index.ts",
-      "rank": 24,
+      "rank": 20,
       "score": 0.261,
       "revisions": 9,
       "changes": 9,
@@ -827,8 +689,8 @@
         "max": 2
       },
       "reasons": [
-        "changed in 9 commits (#11 of 36)",
-        "indentation complexity 30 (#35 of 36)",
+        "changed in 9 commits (#11 of 32)",
+        "indentation complexity 30 (#35 of 32)",
         "changes with packages/auth/src/index.ts in 67% of its changes without an import between them"
       ],
       "trend": {
@@ -838,12 +700,11 @@
         "newlyActive": false
       },
       "heat": null,
-      "test": false,
       "territory": "t2"
     },
     {
       "path": "packages/shared/src/money.ts",
-      "rank": 25,
+      "rank": 21,
       "score": 0.253,
       "revisions": 3,
       "changes": 3,
@@ -858,8 +719,8 @@
         "max": 3
       },
       "reasons": [
-        "changed in 3 commits (#27 of 36)",
-        "indentation complexity 251 (#24 of 36)"
+        "changed in 3 commits (#27 of 32)",
+        "indentation complexity 251 (#24 of 32)"
       ],
       "trend": {
         "previousScore": 0.113,
@@ -868,12 +729,11 @@
         "newlyActive": false
       },
       "heat": null,
-      "test": false,
       "territory": "t6"
     },
     {
       "path": "packages/billing/src/currency.ts",
-      "rank": 26,
+      "rank": 22,
       "score": 0.2443,
       "revisions": 3,
       "changes": 3,
@@ -888,8 +748,8 @@
         "max": 2
       },
       "reasons": [
-        "changed in 3 commits (#25 of 36)",
-        "indentation complexity 207 (#29 of 36)"
+        "changed in 3 commits (#25 of 32)",
+        "indentation complexity 207 (#29 of 32)"
       ],
       "trend": {
         "previousScore": 0.2443,
@@ -898,12 +758,11 @@
         "newlyActive": false
       },
       "heat": null,
-      "test": false,
       "territory": "t2"
     },
     {
       "path": "packages/auth/src/index.ts",
-      "rank": 27,
+      "rank": 23,
       "score": 0.221,
       "revisions": 7,
       "changes": 7,
@@ -918,8 +777,8 @@
         "max": 2
       },
       "reasons": [
-        "changed in 7 commits (#14 of 36)",
-        "indentation complexity 24 (#36 of 36)",
+        "changed in 7 commits (#14 of 32)",
+        "indentation complexity 24 (#36 of 32)",
         "changes with packages/billing/src/index.ts in 86% of its changes without an import between them"
       ],
       "trend": {
@@ -929,12 +788,11 @@
         "newlyActive": false
       },
       "heat": null,
-      "test": false,
       "territory": "t4"
     },
     {
       "path": "packages/billing/src/legacy/export-csv.ts",
-      "rank": 28,
+      "rank": 24,
       "score": 0.2179,
       "revisions": 3,
       "changes": 3,
@@ -949,8 +807,8 @@
         "max": 2
       },
       "reasons": [
-        "changed in 3 commits (#26 of 36)",
-        "indentation complexity 116 (#33 of 36)"
+        "changed in 3 commits (#26 of 32)",
+        "indentation complexity 116 (#33 of 32)"
       ],
       "trend": {
         "previousScore": 0,
@@ -959,12 +817,11 @@
         "newlyActive": true
       },
       "heat": null,
-      "test": false,
       "territory": "t2"
     },
     {
       "path": "apps/cli/src/cli.ts",
-      "rank": 29,
+      "rank": 25,
       "score": 0.2177,
       "revisions": 2,
       "changes": 2,
@@ -979,8 +836,8 @@
         "max": 3
       },
       "reasons": [
-        "changed in 2 commits (#29 of 36)",
-        "indentation complexity 404 (#17 of 36)"
+        "changed in 2 commits (#29 of 32)",
+        "indentation complexity 404 (#17 of 32)"
       ],
       "trend": {
         "previousScore": 0.3677,
@@ -989,12 +846,11 @@
         "newlyActive": false
       },
       "heat": null,
-      "test": false,
       "territory": "t5"
     },
     {
       "path": "packages/web/src/components/modal.tsx",
-      "rank": 30,
+      "rank": 26,
       "score": 0.2108,
       "revisions": 2,
       "changes": 2,
@@ -1009,8 +865,8 @@
         "max": 3
       },
       "reasons": [
-        "changed in 2 commits (#32 of 36)",
-        "indentation complexity 333 (#20 of 36)"
+        "changed in 2 commits (#32 of 32)",
+        "indentation complexity 333 (#20 of 32)"
       ],
       "trend": {
         "previousScore": 0.1908,
@@ -1019,12 +875,11 @@
         "newlyActive": false
       },
       "heat": null,
-      "test": false,
       "territory": "t3"
     },
     {
       "path": "packages/auth/src/permissions.ts",
-      "rank": 31,
+      "rank": 27,
       "score": 0.2093,
       "revisions": 2,
       "changes": 2,
@@ -1039,8 +894,8 @@
         "max": 3
       },
       "reasons": [
-        "changed in 2 commits (#31 of 36)",
-        "indentation complexity 320 (#21 of 36)"
+        "changed in 2 commits (#31 of 32)",
+        "indentation complexity 320 (#21 of 32)"
       ],
       "trend": {
         "previousScore": 0,
@@ -1049,12 +904,11 @@
         "newlyActive": true
       },
       "heat": null,
-      "test": false,
       "territory": "t4"
     },
     {
       "path": "apps/cli/src/output/json.ts",
-      "rank": 32,
+      "rank": 28,
       "score": 0.1969,
       "revisions": 2,
       "changes": 2,
@@ -1069,8 +923,8 @@
         "max": 2
       },
       "reasons": [
-        "changed in 2 commits (#30 of 36)",
-        "indentation complexity 227 (#27 of 36)"
+        "changed in 2 commits (#30 of 32)",
+        "indentation complexity 227 (#27 of 32)"
       ],
       "trend": {
         "previousScore": 0.3169,
@@ -1079,12 +933,11 @@
         "newlyActive": false
       },
       "heat": null,
-      "test": false,
       "territory": "t5"
     },
     {
       "path": "packages/shared/src/dates.ts",
-      "rank": 33,
+      "rank": 29,
       "score": 0.1257,
       "revisions": 1,
       "changes": 1,
@@ -1099,8 +952,8 @@
         "max": 2
       },
       "reasons": [
-        "changed in 1 commits (#33 of 36)",
-        "indentation complexity 242 (#25 of 36)"
+        "changed in 1 commits (#33 of 32)",
+        "indentation complexity 242 (#25 of 32)"
       ],
       "trend": {
         "previousScore": 0.0757,
@@ -1109,12 +962,11 @@
         "newlyActive": false
       },
       "heat": null,
-      "test": false,
       "territory": "t6"
     },
     {
       "path": "apps/cli/src/bin.ts",
-      "rank": 34,
+      "rank": 30,
       "score": 0,
       "revisions": 0,
       "changes": 0,
@@ -1136,12 +988,11 @@
         "newlyActive": false
       },
       "heat": null,
-      "test": false,
       "territory": "t5"
     },
     {
       "path": "packages/auth/src/oauth/google.ts",
-      "rank": 35,
+      "rank": 31,
       "score": 0,
       "revisions": 0,
       "changes": 0,
@@ -1163,12 +1014,11 @@
         "newlyActive": false
       },
       "heat": null,
-      "test": false,
       "territory": "t4"
     },
     {
       "path": "packages/billing/src/legacy/import-sap.ts",
-      "rank": 36,
+      "rank": 32,
       "score": 0,
       "revisions": 0,
       "changes": 0,
@@ -1190,8 +1040,25 @@
         "newlyActive": false
       },
       "heat": null,
-      "test": false,
       "territory": "t2"
+    }
+  ],
+  "testCode": [
+    {
+      "path": "apps/cli/src/commands/analyze.test.ts",
+      "changes": 4
+    },
+    {
+      "path": "packages/auth/src/session.test.ts",
+      "changes": 14
+    },
+    {
+      "path": "packages/billing/src/invoice.test.ts",
+      "changes": 36
+    },
+    {
+      "path": "packages/billing/src/tax.test.ts",
+      "changes": 22
     }
   ],
   "contracts": [
@@ -1357,7 +1224,6 @@
       "sharedCommits": 6,
       "degree": 0.75,
       "distance": 4,
-      "testPair": false,
       "kinds": {
         "a": "code",
         "b": "code"
@@ -1367,53 +1233,10 @@
     },
     {
       "a": "packages/billing/src/invoice.ts",
-      "b": "packages/billing/src/invoice.test.ts",
-      "sharedCommits": 31,
-      "degree": 0.738,
-      "distance": 0,
-      "testPair": true,
-      "kinds": {
-        "a": "code",
-        "b": "code"
-      },
-      "crossesModule": false,
-      "imports": "b→a"
-    },
-    {
-      "a": "packages/billing/src/tax.ts",
-      "b": "packages/billing/src/tax.test.ts",
-      "sharedCommits": 18,
-      "degree": 0.679,
-      "distance": 0,
-      "testPair": true,
-      "kinds": {
-        "a": "code",
-        "b": "code"
-      },
-      "crossesModule": false,
-      "imports": "b→a"
-    },
-    {
-      "a": "packages/auth/src/session.ts",
-      "b": "packages/auth/src/session.test.ts",
-      "sharedCommits": 12,
-      "degree": 0.667,
-      "distance": 0,
-      "testPair": true,
-      "kinds": {
-        "a": "code",
-        "b": "code"
-      },
-      "crossesModule": false,
-      "imports": "b→a"
-    },
-    {
-      "a": "packages/billing/src/invoice.ts",
       "b": "packages/billing/src/tax.ts",
       "sharedCommits": 24,
       "degree": 0.608,
       "distance": 0,
-      "testPair": false,
       "kinds": {
         "a": "code",
         "b": "code"
@@ -1427,7 +1250,6 @@
       "sharedCommits": 22,
       "degree": 0.5789,
       "distance": 2,
-      "testPair": false,
       "kinds": {
         "a": "contract",
         "b": "code"
@@ -1441,7 +1263,6 @@
       "sharedCommits": 9,
       "degree": 0.529,
       "distance": 5,
-      "testPair": false,
       "kinds": {
         "a": "code",
         "b": "code"
@@ -1455,7 +1276,6 @@
       "sharedCommits": 9,
       "degree": 0.419,
       "distance": 7,
-      "testPair": false,
       "kinds": {
         "a": "code",
         "b": "code"
@@ -1469,7 +1289,6 @@
       "sharedCommits": 14,
       "degree": 0.418,
       "distance": 5,
-      "testPair": false,
       "kinds": {
         "a": "code",
         "b": "code"
@@ -1483,7 +1302,6 @@
       "path": "packages/shared",
       "kind": "package",
       "files": 5,
-      "testOnly": false,
       "commits": 30,
       "localCommits": 12,
       "cohesion": 0.4,
@@ -1543,7 +1361,6 @@
       "path": "apps/cli",
       "kind": "package",
       "files": 8,
-      "testOnly": false,
       "commits": 26,
       "localCommits": 13,
       "cohesion": 0.5,
@@ -1581,7 +1398,6 @@
       "path": "packages/web",
       "kind": "package",
       "files": 7,
-      "testOnly": false,
       "commits": 58,
       "localCommits": 31,
       "cohesion": 0.5345,
@@ -1632,7 +1448,6 @@
       "path": "packages/billing",
       "kind": "package",
       "files": 9,
-      "testOnly": false,
       "commits": 74,
       "localCommits": 41,
       "cohesion": 0.5541,
@@ -1692,7 +1507,6 @@
       "path": "packages/auth",
       "kind": "package",
       "files": 7,
-      "testOnly": false,
       "commits": 44,
       "localCommits": 27,
       "cohesion": 0.6136,
@@ -1751,8 +1565,7 @@
         "kind": "folder",
         "parent": null,
         "children": ["t2", "t3", "t4", "t5", "t6"],
-        "files": 36,
-        "testFiles": 4,
+        "files": 32,
         "changes": 178,
         "heatShare": 1,
         "description": "The shop: billing, web app, auth, and a command line tool.",
@@ -1765,8 +1578,7 @@
         "kind": "package",
         "parent": "t1",
         "children": [],
-        "files": 9,
-        "testFiles": 2,
+        "files": 7,
         "changes": 74,
         "heatShare": 0.6239,
         "description": "Invoices, tax, and discounts for the shop.",
@@ -1809,7 +1621,6 @@
         "parent": "t1",
         "children": [],
         "files": 7,
-        "testFiles": 0,
         "changes": 58,
         "heatShare": 0.1298,
         "description": "The web app: routes, hooks, and components.",
@@ -1851,8 +1662,7 @@
         "kind": "package",
         "parent": "t1",
         "children": [],
-        "files": 7,
-        "testFiles": 1,
+        "files": 6,
         "changes": 44,
         "heatShare": 0.1058,
         "description": "Sessions, tokens, and sign-in with GitHub and Google.",
@@ -1886,8 +1696,7 @@
         "kind": "package",
         "parent": "t1",
         "children": [],
-        "files": 8,
-        "testFiles": 1,
+        "files": 7,
         "changes": 26,
         "heatShare": 0.1014,
         "description": "main files: analyze, inspect, terminal",
@@ -1922,7 +1731,6 @@
         "parent": "t1",
         "children": [],
         "files": 5,
-        "testFiles": 0,
         "changes": 30,
         "heatShare": 0.0391,
         "description": "main files: config, logger, index",
@@ -1967,7 +1775,6 @@
         "min": 0.58,
         "max": 0.58
       },
-      "testOnly": false,
       "sharedChanges": 6,
       "changesToAll": 6
     }
@@ -2163,13 +1970,12 @@
         "chronicFiles": 2,
         "containment": 0.5541,
         "fixShare": 0.3108,
-        "heatShare": 0.6239,
+        "heatShare": 0.5812,
         "changes": 74,
         "distantPairs": 3,
         "hiddenPairs": 1,
         "cliques": 0,
-        "partnerShare": 0.2838,
-        "codeHeatShare": 0.5812
+        "partnerShare": 0.2838
       },
       "verdict": "The boundary does not hold, and it holds less than it used to: changes here keep reaching into other territories.",
       "designMove": "Move a boundary: bring what changes together with packages/billing into one territory, or give the part they share a home of its own; start with packages/web.",
@@ -2179,7 +1985,7 @@
           "verdict": "The boundary does not hold, and it holds less than it used to: changes here keep reaching into other territories.",
           "designMove": "Move a boundary: bring what changes together with packages/billing into one territory, or give the part they share a home of its own; start with packages/web.",
           "evidence": {
-            "heatShare": 0.6239,
+            "heatShare": 0.5812,
             "containment": 0.5541,
             "changes": 74,
             "chronicShare": 0.5321,
@@ -2187,8 +1993,7 @@
             "distantPairs": 3,
             "hiddenPairs": 1,
             "cliques": 0,
-            "partnerShare": 0.2838,
-            "codeHeatShare": 0.5812
+            "partnerShare": 0.2838
           },
           "files": [],
           "territories": ["t2"]

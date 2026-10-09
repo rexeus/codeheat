@@ -7,7 +7,6 @@ import type { Coupling } from "../model/analysis.js";
 import type { DistantCoupling } from "../model/distant-coupling.js";
 import { roundReported } from "../model/precision.js";
 import type { ModuleRef } from "../modules/detect.js";
-import { isTestPath } from "../modules/test-path.js";
 
 /** The report keeps this many distant couplings, best first; `--limit` cuts further. */
 const MAX_DISTANT_COUPLINGS = 50;
@@ -25,14 +24,11 @@ const HIDDEN_BOOST = 1.5;
 const FULL_EVIDENCE_COMMITS = 10;
 
 /**
- * Whether a coupled pair can be a design statement at all: it involves no
- * test-code file (a test belongs next to the code it checks, and a step file
- * or helper next to nothing in particular), and is no pair of two contract
- * files (the files of one API definition change together by design).
+ * Whether a coupled pair can be a design statement at all: it is no pair of
+ * two contract files (the files of one API definition change together by
+ * design).
  */
 export const isJudgeablePair = (coupling: Coupling): boolean =>
-  !isTestPath(coupling.a) &&
-  !isTestPath(coupling.b) &&
   !(coupling.kinds.a === "contract" && coupling.kinds.b === "contract");
 
 /**

@@ -49,7 +49,6 @@ describe("findCouplings", () => {
       b: "src/b.ts",
       sharedCommits: 4,
       distance: 0,
-      testPair: false,
     });
     // 4 shared commits / mean(8, 4) changes = 0.66667
     expect(couplings[0]?.degree).toBe(0.6667);
@@ -139,25 +138,6 @@ describe("findCouplings commit size", () => {
 });
 
 describe("findCouplings pair facts", () => {
-  it("marks a file and its test as a test pair", () => {
-    const commits = repeat(3, ["src/a.ts", "src/a.test.ts", "src/b.ts"]);
-    const changes = new Map([
-      ["src/a.ts", 3],
-      ["src/a.test.ts", 3],
-      ["src/b.ts", 3],
-    ]);
-
-    const { couplings } = findCouplings(commits, changes);
-
-    expect(
-      couplings.map(({ a, b, testPair }) => [a, b, testPair]),
-    ).toStrictEqual([
-      ["src/a.test.ts", "src/a.ts", true],
-      ["src/a.test.ts", "src/b.ts", false],
-      ["src/a.ts", "src/b.ts", false],
-    ]);
-  });
-
   it("sorts pairs by degree and then by shared commits", () => {
     const commits = [
       ...repeat(3, ["a.ts", "b.ts"]),

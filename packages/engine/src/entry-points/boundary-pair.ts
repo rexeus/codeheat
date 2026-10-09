@@ -44,7 +44,7 @@ const localChanges = ({ fit, changes }: Judged): number =>
 /**
  * The numbers of the two territories together, under the names of a single
  * boundary, each counting a change or a file pair once:
- * - `codeHeatShare` and `heatShare` add (the territories do not overlap);
+ * - `heatShare` adds (the territories do not overlap);
  * - `changes` counts the changes that touched either (the two territories'
  *   changes less those both touched, which `sharedChanges` counts);
  * - `containment` is the share of those changes that stayed inside one of the
@@ -52,7 +52,7 @@ const localChanges = ({ fit, changes }: Judged): number =>
  *   that stayed inside either, over `changes`;
  * - `partnerShare` is the share of those changes that touched both;
  * - `chronicShare` is the share of the pair's production heat that lies in
- *   chronic hotspots, each territory's weighted by its `codeHeatShare`;
+ *   chronic hotspots, each territory's weighted by its `heatShare`;
  * - `fixShare` is each territory's share of fixes weighted by its changes (a
  *   change that touched both counts for each; the fixes among those are not
  *   known), or that of the one that has it;
@@ -72,15 +72,14 @@ const togetherEvidence = (
     fit.fixDensity === null ? [] : ([[fit.fixDensity.share, weight]] as const),
   );
   return evidenceOf({
-    codeHeatShare: a.codeHeatShare + b.codeHeatShare,
     heatShare: a.heatShare + b.heatShare,
     containment:
       changes === 0 ? 0 : (localChanges(a) + localChanges(b)) / changes,
     changes,
     sharedChanges,
     chronicShare: weightedMean([
-      [a.fit.chronicShare, a.codeHeatShare],
-      [b.fit.chronicShare, b.codeHeatShare],
+      [a.fit.chronicShare, a.heatShare],
+      [b.fit.chronicShare, b.heatShare],
     ]),
     fixShare: fixed.length === 0 ? undefined : weightedMean(fixed),
     distantPairs: a.fit.distantPairs + b.fit.distantPairs - between.pairs,

@@ -8,13 +8,10 @@ export type TerritoryFile = {
   readonly complexity: { readonly total: number };
   /** Logical changes of the window that touched the file (see `FileStats.changes`). */
   readonly changes: number;
-  /** The file is test code (see `FileStats.test`). */
-  readonly test: boolean;
 };
 
 export type NodeMeasure = {
   readonly files: number;
-  readonly testFiles: number;
   /** Counted changes that touched any file of the node. */
   readonly changes: number;
   /** The sum of the heat of its files: `changes × (loc + complexity)`. */
@@ -55,7 +52,6 @@ const nodesHolding = (
 /** A node no file belongs to. */
 export const NO_MEASURE: NodeMeasure = {
   files: 0,
-  testFiles: 0,
   changes: 0,
   heat: 0,
 };
@@ -91,7 +87,6 @@ export const measureNodes = (
   for (const file of files) {
     update(measures, nodesHolding([file.path], leafOf, parents), (measure) => {
       measure.files += 1;
-      measure.testFiles += file.test ? 1 : 0;
       measure.heat += file.changes * (file.loc + file.complexity.total);
     });
   }

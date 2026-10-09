@@ -23,9 +23,9 @@ const TerritoryPartner = Schema.Struct({
  * `Module.erosion`, `Module.fixDensity`, `Analysis.cliques`,
  * `Analysis.distantCouplings`) over the territories visible at `detail`, so
  * that every territory is measured once and every detail refers to the
- * result. A change touches a territory when it touched any of its files; test
- * code counts for the territory it belongs to, `tests` territories take no
- * part, and contract files, which belong to no territory, are ignored.
+ * result. A change touches a territory when it touched any of its files;
+ * contract files, which belong to no territory, are ignored, and test code is
+ * part of no change.
  */
 export const TerritoryFit = Schema.Struct({
   /**
@@ -40,9 +40,8 @@ export const TerritoryFit = Schema.Struct({
   /**
    * The share of the changes that touched the territory and touched no other
    * territory of `detail` (`Module.cohesion` for territories), rounded to 4
-   * decimals; null when no counted change touched it and for `tests`
-   * territories. Low means its boundary does not hold: changes keep reaching
-   * out.
+   * decimals; null when no counted change touched it. Low means its boundary
+   * does not hold: changes keep reaching out.
    */
   containment: Schema.NullOr(UnitInterval),
   /**
@@ -60,9 +59,8 @@ export const TerritoryFit = Schema.Struct({
   partner: Schema.NullOr(TerritoryPartner),
   /**
    * Coupled pairs of files (`Analysis.couplings`) of which one file is in this
-   * territory and the other in another territory of `detail`, neither
-   * test code, not two contract files: changes that cross the boundary
-   * file by file.
+   * territory and the other in another territory of `detail`, not two
+   * contract files: changes that cross the boundary file by file.
    */
   distantPairs: Count,
   /** Of those, the pairs no import links (`Coupling.imports` is `none`): coupling the code does not show. */
@@ -76,7 +74,7 @@ export const TerritoryFit = Schema.Struct({
   /**
    * How the territory's containment moved over `Analysis.series` (see
    * `ModuleErosion`, which reads `containment` where it says cohesion); null
-   * for a `tests` territory and without evidence in enough windows.
+   * without evidence in enough windows.
    */
   erosion: Schema.NullOr(ModuleErosion),
   /** Files of the territory that are chronic hotspots (`FileStats.heat`). */
@@ -84,8 +82,7 @@ export const TerritoryFit = Schema.Struct({
   /** Files of the territory that are acute hotspots. */
   acuteFiles: Count,
   /**
-   * The share of the heat of the territory's code (test code left out; the
-   * heat of a file is `FileStats.changes × (loc + complexity.total)`) that
+   * The share of the heat of the territory's code (the heat of a file is `FileStats.changes × (loc + complexity.total)`) that
    * lies in its chronic hotspots, rounded to 4 decimals: how much of the work
    * here is the long-lived, not the passing kind.
    */

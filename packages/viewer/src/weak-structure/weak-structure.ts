@@ -67,7 +67,7 @@ export const weakStructureOf = (
   if (leaks === null) {
     return {
       kind: "none",
-      note: `No territory has enough changes to judge: it takes ${report.thresholds.minModuleCommits} counted changes and a partner to leak to, and test code is not judged.`,
+      note: `No territory has enough changes to judge: it takes ${report.thresholds.minModuleCommits} counted changes and a partner to leak to.`,
     };
   }
   const nameOf = distinctNameParts(index.recommended);

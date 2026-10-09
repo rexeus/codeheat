@@ -5,7 +5,7 @@ import type { Report } from "../report/report.js";
 import { answerOf } from "./answer-of.js";
 import { areasOf } from "./areas-of.js";
 import { basisOf } from "./basis-of.js";
-import { hotspotsOf, hottestFiles } from "./hotspots-of.js";
+import { hotspotsOf, hotFilesOf } from "./hotspots-of.js";
 import { dayOf } from "./units.js";
 
 /** The window of `analysis` in days, with the changes the numbers count. */
@@ -23,7 +23,7 @@ const windowOf = ({ window }: Pick<Analysis, "window">): Report["window"] => ({
  * area the report names is a listed area.
  */
 export const reportOf = (analysis: Analysis): Report => {
-  const hottest = hottestFiles(analysis);
+  const hottest = hotFilesOf(analysis);
   const { areas, rest } = areasOf(
     analysis,
     new Set(hottest.flatMap(({ area }) => area ?? [])),

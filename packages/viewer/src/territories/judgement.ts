@@ -1,5 +1,6 @@
 import type { Analysis } from "@codeheat/engine";
 
+import { isRealTerritory } from "./territory-index.js";
 import type { Territory } from "./territory-index.js";
 
 /**
@@ -27,10 +28,7 @@ const whyUnjudged = (
   territory: Territory,
   { minModuleCommits }: Analysis["thresholds"],
 ): Standing => {
-  if (territory.kind === "tests") {
-    return unjudged("test code");
-  }
-  if (territory.kind === "other") {
+  if (!isRealTerritory(territory)) {
     return unjudged("leftover files");
   }
   if ((territory.fit?.containment ?? null) === null) {

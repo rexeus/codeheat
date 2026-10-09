@@ -49,7 +49,7 @@ export const distantSection = (
     ? []
     : [
         style.bold(
-          `Distant coupling (in different modules, or at least ${report.thresholds.minLocalDistance} directories apart within one module; tests excluded)`,
+          `Distant coupling (in different modules, or at least ${report.thresholds.minLocalDistance} directories apart within one module)`,
         ),
         ...distantTable(report, style),
         "",
@@ -89,7 +89,7 @@ export const cliqueSection = (
   ];
 };
 
-/** The five strongest couplings that are neither test pairs nor pairs of two contract files, with the co-change probability in both directions. */
+/** The five strongest couplings that are no pair of two contract files, with the co-change probability in both directions. */
 export const couplingLines = (
   couplings: ReadonlyArray<Coupling>,
   files: ReadonlyArray<FileStats>,
@@ -119,7 +119,7 @@ export const couplingLines = (
       { header: "files", align: "left" },
     ],
     couplings
-      .filter((coupling) => !coupling.testPair && !isContractPair(coupling))
+      .filter((coupling) => !isContractPair(coupling))
       .slice(0, TOP_COUPLINGS)
       .map((coupling) => [
         plain(percent(coupling.degree)),

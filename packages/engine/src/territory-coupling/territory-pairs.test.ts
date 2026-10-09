@@ -34,7 +34,6 @@ const coupling = (
   sharedCommits: 4,
   degree: 0.8,
   distance: 2,
-  testPair: false,
   kinds: { a: "code", b: "code" },
   crossesModule: true,
   imports,
@@ -85,13 +84,12 @@ describe("territoryPairs", () => {
     ]);
   });
 
-  it("leaves out pairs below three shared changes, buckets, test code, and territories below the ranking", () => {
+  it("leaves out pairs below three shared changes, buckets, and territories below the ranking", () => {
     const pairs = pairsOf(
-      [...REAL, area("o", 0.5, "other"), area("t", 0.5, "tests")],
+      [...REAL, area("o", 0.5, "other")],
       [
         ...times(2, "a/x.ts", "b/x.ts"),
         ...times(5, "a/x.ts", "o/x.ts"),
-        ...times(5, "a/x.ts", "t/x.ts"),
         ...times(4, "a/x.ts", "d/x.ts"),
       ],
     );

@@ -62,7 +62,6 @@ layer(NodeServices.layer)("analyze contract files", (it) => {
             sharedCommits: 5,
             degree: 0.9091,
             distance: 4,
-            testPair: false,
             kinds: { a: "contract", b: "code" },
             crossesModule: true,
             imports: null,
@@ -80,6 +79,7 @@ layer(NodeServices.layer)("analyze contract files", (it) => {
         ]);
         assert.deepStrictEqual(report.totals, {
           files: 3,
+          testCode: 0,
           contracts: 1,
           couplings: 1,
           modules: 2,

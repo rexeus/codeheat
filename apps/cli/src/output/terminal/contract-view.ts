@@ -15,7 +15,7 @@ export const contractNote = (report: Analysis): string => {
     : `, ${contracts} contract ${contracts === 1 ? "file" : "files"}`;
 };
 
-/** Both files are contract files: the files of one API definition changing together, which the coupling table leaves out like test pairs. */
+/** Both files are contract files: the files of one API definition changing together, which the coupling table leaves out. */
 export const isContractPair = ({ kinds }: Coupling): boolean =>
   kinds.a === "contract" && kinds.b === "contract";
 

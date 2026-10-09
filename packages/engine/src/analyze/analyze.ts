@@ -22,7 +22,7 @@ import { withDepths } from "../modules/depth.js";
 import { judgeVerdict } from "../verdict/judge-verdict.js";
 import type { InvalidCompare, InvalidSince } from "./analysis-window.js";
 import { measureLinked } from "./measure-linked.js";
-import { readUniverse } from "./read-universe.js";
+import { pathsOf, readUniverse } from "./read-universe.js";
 import { setAsideUbiquitous } from "./set-aside-ubiquitous.js";
 import {
   comparisonOf,
@@ -94,11 +94,16 @@ const readTimeline = (
 /** The report's `totals`: how many of each list the report holds before any limit. */
 const totalsOf = ({
   files,
+  testCode,
   contracts,
   couplings,
   modules,
-}: Pick<Analysis, "files" | "contracts" | "couplings" | "modules">) => ({
+}: Pick<
+  Analysis,
+  "files" | "testCode" | "contracts" | "couplings" | "modules"
+>) => ({
   files: files.length,
+  testCode: testCode.length,
   contracts: contracts.length,
   couplings: couplings.length,
   modules: modules.length,
@@ -150,10 +155,7 @@ const analyzeRepository = (
     const timeline = yield* readTimeline(windows, {
       head: head?.commit ?? null,
       skipCommits: shallowBoundary ?? new Set(),
-      universe: new Set([
-        ...universe.files.map((file) => file.path),
-        ...universe.contracts.keys(),
-      ]),
+      universe: pathsOf(universe),
     });
     const { histories, ubiquitousFiles } = setAsideUbiquitous(
       timeline.histories,

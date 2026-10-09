@@ -41,34 +41,12 @@ const toEntry = (
 
 type Nodes = Analysis["territories"]["nodes"];
 
-/** The ancestors of the `tests` territory `id`, up to and including the nearest one with a fit; none for another kind of territory. */
-const ancestorsOfTests = (
-  byId: ReadonlyMap<string, Nodes[number]>,
-  id: string,
-): ReadonlyArray<string> => {
-  const chain: Array<string> = [];
-  let at = byId.get(id)?.kind === "tests" ? byId.get(id)?.parent : undefined;
-  while (at !== undefined && at !== null) {
-    chain.push(at);
-    at = byId.get(at)?.fit === null ? byId.get(at)?.parent : undefined;
-  }
-  return chain;
-};
-
-/**
- * The ids of the territories `ids`, for each `tests` territory among them
- * (test code has no fit of its own) its ancestors up to the nearest one with a
- * fit, and the partners of their fit.
- */
+/** The ids of the territories `ids` and the partners of their fit. */
 const focusedTerritoriesOf = (
   nodes: Nodes,
   ids: ReadonlyArray<string>,
 ): ReadonlySet<string> => {
-  const byId = new Map(nodes.map((node) => [node.id, node]));
-  const focused = new Set([
-    ...ids,
-    ...ids.flatMap((id) => ancestorsOfTests(byId, id)),
-  ]);
+  const focused = new Set(ids);
   for (const node of nodes) {
     const partner = focused.has(node.id) ? node.fit?.partner : undefined;
     if (partner !== undefined && partner !== null) {
@@ -90,10 +68,49 @@ const namedByEntryPoints = (
     return ids.flat();
   });
 
+/** The paths of `list` that `pattern` matches. */
+const matched = (
+  list: ReadonlyArray<{ readonly path: string }>,
+  pattern: string,
+): ReadonlyArray<string> => {
+  const matches = matchesAny([pattern]);
+  return list.flatMap(({ path }) => (matches(path) ? [path] : []));
+};
+
+/** The paths of the code files, contract files, and test code each pattern matches, and the patterns that matched none. */
+const matchAll = (
+  {
+    files,
+    contracts,
+    testCode,
+  }: Pick<Analysis, "files" | "contracts" | "testCode">,
+  patterns: ReadonlyArray<string>,
+) => {
+  const hits = patterns.map((pattern) => ({
+    pattern,
+    files: matched(files, pattern),
+    contracts: matched(contracts, pattern),
+    tests: matched(testCode, pattern),
+  }));
+  return {
+    focused: new Set(hits.flatMap((hit) => hit.files)),
+    contractFiles: new Set(hits.flatMap((hit) => hit.contracts)),
+    testCode: new Set(hits.flatMap((hit) => hit.tests)),
+    unmatched: hits
+      .filter(
+        (hit) =>
+          hit.files.length + hit.contracts.length + hit.tests.length === 0,
+      )
+      .map((hit) => hit.pattern),
+  };
+};
+
 /**
  * Reports the files matching `patterns`, each with its rank in the whole
  * universe, its strongest co-change partners, its copy family, and the entry
- * points it belongs to, and the modules and territories they belong to.
+ * points it belongs to, and the modules and territories they belong to; the
+ * contract files and the test code they match only by path (and test code
+ * with its changes), since neither is judged.
  *
  * `report` must be unlimited (as `analyze` returns it); a truncated report
  * would drop matches and partners.
@@ -102,23 +119,10 @@ export const inspect = (
   report: Analysis,
   patterns: ReadonlyArray<string>,
 ): InspectResult => {
-  const focused = new Set<string>();
-  const contractFiles = new Set<string>();
-  const unmatched: Array<string> = [];
-  for (const pattern of patterns) {
-    const matches = matchesAny([pattern]);
-    const hits = report.files.filter((file) => matches(file.path));
-    const contractHits = report.contracts.filter((file) => matches(file.path));
-    if (hits.length === 0 && contractHits.length === 0) {
-      unmatched.push(pattern);
-    }
-    for (const { path } of hits) {
-      focused.add(path);
-    }
-    for (const { path } of contractHits) {
-      contractFiles.add(path);
-    }
-  }
+  const { focused, contractFiles, testCode, unmatched } = matchAll(
+    report,
+    patterns,
+  );
   const coupled = groupByPath(report.couplings);
   const matches = report.files
     .filter((file) => focused.has(file.path))
@@ -152,6 +156,7 @@ export const inspect = (
       focusedTerritories.has(id),
     ),
     contractFiles: [...contractFiles].toSorted((a, b) => Order.String(a, b)),
+    testCode: report.testCode.filter(({ path }) => testCode.has(path)),
     unmatched,
   };
 };

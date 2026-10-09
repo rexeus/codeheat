@@ -3,12 +3,12 @@ import type { FileStats } from "../model/analysis.js";
 import { heatOf } from "./classify-heat.js";
 import type { HeatWindow } from "./classify-heat.js";
 
-/** The files with their `heat` set over the windows of the series; test code has none, since tests are no design. */
+/** The files with their `heat` set over the windows of the series. */
 export const withHeat = (
   files: ReadonlyArray<FileStats>,
   windows: ReadonlyArray<HeatWindow>,
 ): ReadonlyArray<FileStats> =>
   files.map((file) => ({
     ...file,
-    heat: file.test ? null : heatOf(file.path, windows),
+    heat: heatOf(file.path, windows),
   }));

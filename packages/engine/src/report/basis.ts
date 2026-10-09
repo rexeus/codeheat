@@ -42,15 +42,14 @@ const Excluded = Schema.Struct({
 const Rest = Schema.Struct({
   /** Areas that are not listed: not judged, under 1 percent of the heat, and named nowhere. */
   areas: Count,
-  /** Their production code files, with those of folders too small to be areas and loose files. */
+  /** Their code files, with those of the buckets of smaller folders. */
   files: Count,
   /** Percent of all the heat in them; with `areas[].heat`, it adds up to exactly 100 (0 without any heat). */
   heat: Percent,
   /**
-   * The unlisted part with the most heat, ties by path: the loose files of a
-   * directory (`path` is the directory), a bucket of smaller folders (the
-   * directory they are in), test code of no area, or an area; null when
-   * every part is listed. Its `heat` is at most `rest.heat`.
+   * The unlisted part with the most heat, ties by path: an area, or a bucket
+   * of smaller folders (`path` is the directory they are in); null when every
+   * part is listed. Its `heat` is at most `rest.heat`.
    */
   largest: Schema.NullOr(Schema.Struct({ path: Schema.String, heat: Percent })),
 });

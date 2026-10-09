@@ -38,17 +38,16 @@ export const hotspotEntries = (
 ): ReadonlyArray<Candidate> => {
   const chainOf = chainsOf(nodes);
   return judged.flatMap((territory): Array<Candidate> => {
-    const { fit, codeHeatShare } = territory;
+    const { fit, heatShare } = territory;
     if (
       !isChronic(fit, limits.minEntryChronicShare) ||
-      codeHeatShare < limits.minEntryHeatShare
+      heatShare < limits.minEntryHeatShare
     ) {
       return [];
     }
     const hotspots = files
       .filter(
         (file) =>
-          !file.test &&
           file.heat?.kind === "chronic" &&
           chainOf(file.territory).has(territory.id),
       )

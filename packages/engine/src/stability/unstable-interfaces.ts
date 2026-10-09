@@ -6,7 +6,6 @@ import { countedChanges } from "../coupling/coupling.js";
 import type { History } from "../history/history.js";
 import type { UnstableInterface } from "../model/unstable-interface.js";
 import type { ModuleRef } from "../modules/detect.js";
-import { isTestPath } from "../modules/test-path.js";
 
 /** Fewest dependents (see `UnstableInterface.fanIn`) that make a file an interface many rely on. */
 export const MIN_FAN_IN = 5;
@@ -42,11 +41,7 @@ const candidatesOf = (
 ): ReadonlyArray<Candidate> =>
   [...dependents].flatMap(([path, own]) => {
     const changes = changesOf(path);
-    if (
-      own.size < MIN_FAN_IN ||
-      changes < MIN_INTERFACE_CHANGES ||
-      isTestPath(path)
-    ) {
+    if (own.size < MIN_FAN_IN || changes < MIN_INTERFACE_CHANGES) {
       return [];
     }
     const medianDependentChanges = median(

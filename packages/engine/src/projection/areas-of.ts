@@ -6,7 +6,7 @@ import type { Analysis } from "../model/analysis.js";
 import type { Territory } from "../model/territory.js";
 import type { Area } from "../report/area.js";
 import type { Basis } from "../report/basis.js";
-import { isTerritoryKind } from "../territories/recommend.js";
+import { isRealTerritory } from "../territories/recommend.js";
 import { isJudged, standingOf } from "../verdict/judge-verdict.js";
 import type { Standing } from "../verdict/judge-verdict.js";
 import { percentOf, percentsOf, shareOf } from "./units.js";
@@ -82,7 +82,7 @@ const areaOf = (
   return {
     path: territory.path,
     description: territory.description,
-    files: territory.files - territory.testFiles,
+    files: territory.files,
     changes: territory.changes,
     heat,
     stays: staysOf(territory, standing),
@@ -102,13 +102,14 @@ const areaOf = (
 
 /**
  * The areas of `analysis` that report v2 lists, the most heat first, ties by
- * path, and the rest. An area is a real territory (package, folder, group)
+ * path, and the rest. An area is a real territory (package, folder, group,
+ * or the loose files of a directory)
  * at the recommended detail; it is listed when it is judged (see
  * `standingOf`), holds at least `MIN_LISTED_HEAT` of all the heat, is the
  * partner a listed area leaks into, or is one of `named` (ids of territories
  * the report names elsewhere), so that every area name the report uses is
  * listed. The rest holds every other territory of the detail, buckets of
- * smaller folders, loose files, and test-only code included; its `areas`
+ * smaller folders included; its `areas`
  * counts the real ones. The detail splits all the heat, so the heat of the
  * listed areas and of the rest adds up to exactly 100, or is 0 without any
  * heat (see `percentsOf`).
@@ -121,7 +122,7 @@ export const areasOf = (
   const paths = new Map(territories.nodes.map(({ id, path }) => [id, path]));
   const pathOf = (id: string): string => paths.get(id) ?? id;
   const real = recommendedOf(territories)
-    .filter(({ kind }) => isTerritoryKind(kind))
+    .filter((territory) => isRealTerritory(territory))
     .map((territory) => ({
       territory,
       standing: standingOf(territory, thresholds),
@@ -150,11 +151,8 @@ export const areasOf = (
   return {
     areas: listed.map((area, index) => areaOf(area, heats[index] ?? 0, pathOf)),
     rest: {
-      areas: rest.filter(({ kind }) => isTerritoryKind(kind)).length,
-      files: rest.reduce(
-        (sum, { files, testFiles }) => sum + files - testFiles,
-        0,
-      ),
+      areas: rest.filter((territory) => isRealTerritory(territory)).length,
+      files: rest.reduce((sum, { files }) => sum + files, 0),
       heat: heats[listed.length] ?? 0,
       largest: largestOf(rest, heats[listed.length] ?? 0),
     },

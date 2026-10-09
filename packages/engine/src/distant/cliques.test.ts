@@ -128,17 +128,13 @@ describe("findCliques exclusions and ranking", () => {
     expect(cliquesOf(commitsOf(9, "a", "b"))).toEqual([]);
   });
 
-  it("leaves out a module below the commit floor and a test-only module", () => {
+  it("leaves out a module below the commit floor", () => {
     const modules = [
       moduleRecord("a", 10),
       moduleRecord("b", 10),
       moduleRecord("small", 4),
-      moduleRecord("tests", 10, true),
     ];
-    const touched = [
-      ...commitsOf(4, "a", "b", "small"),
-      ...commitsOf(4, "a", "b", "tests"),
-    ];
+    const touched = commitsOf(4, "a", "b", "small");
 
     expect(
       findCliques(moduleCoChange(touched, modules, 5), touched).cliques,

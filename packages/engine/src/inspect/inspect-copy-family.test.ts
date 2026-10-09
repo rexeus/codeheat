@@ -9,7 +9,6 @@ import { inspect } from "./inspect.js";
 
 const stats = (path: string, rank: number): FileStats => ({
   path,
-  test: false,
   territory: "t1",
   module: ".",
   rank,
@@ -29,7 +28,6 @@ const stats = (path: string, rank: number): FileStats => ({
 const family = {
   files: ["lib/c.ts", "src/a.ts"],
   similarity: { min: 0.6, max: 0.6 },
-  testOnly: false,
   sharedChanges: 4,
   changesToAll: 3,
 };
@@ -57,8 +55,16 @@ const reportOf = (copyFamilies: Analysis["copyFamilies"]): Analysis => ({
   logicalChanges: { by: "commit", count: 0, largest: 0 },
   comparison: null,
   thresholds: DEFAULT_THRESHOLDS,
-  totals: { files: 3, contracts: 0, couplings: 0, modules: 0, generated: 0 },
+  totals: {
+    files: 3,
+    testCode: 0,
+    contracts: 0,
+    couplings: 0,
+    modules: 0,
+    generated: 0,
+  },
   files: [stats("src/a.ts", 1), stats("src/b.ts", 2), stats("lib/c.ts", 3)],
+  testCode: [],
   contracts: [],
   ubiquitousFiles: [],
   couplings: [],

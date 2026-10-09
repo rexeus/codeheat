@@ -50,18 +50,10 @@ export const measureSpread = (
     modules: radius.modules,
     changeRadius: radius.changeRadius,
     propagationCost: propagationCost(
-      [
-        ...measured.files.map(({ path, test }) => ({
-          path,
-          changes: counted.get(path) ?? 0,
-          test,
-        })),
-        ...measured.contracts.map(({ path }) => ({
-          path,
-          changes: counted.get(path) ?? 0,
-          test: false,
-        })),
-      ],
+      [...measured.files, ...measured.contracts].map(({ path }) => ({
+        path,
+        changes: counted.get(path) ?? 0,
+      })),
       couplings,
     ),
   };

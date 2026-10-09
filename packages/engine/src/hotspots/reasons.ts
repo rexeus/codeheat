@@ -1,6 +1,5 @@
 // Owns the explanations attached to a scored file, for humans and agents alike.
 import type { Partner } from "../coupling/partners.js";
-import { isTestPath } from "../modules/test-path.js";
 
 /** Fewest distinct co-changed files that make a file a hub. */
 export const HUB_MIN_BREADTH = 10;
@@ -12,9 +11,9 @@ export const HUB_TOP_SHARE = 0.05;
 /** Smallest co-change probability at which a partner without an import gets a reason line. */
 export const MIN_HIDDEN_PROBABILITY = 0.5;
 
-/** Only frequently changed files that are not test code (`isTestPath`) can be hubs and are ranked by breadth. */
-export const isHubCandidate = (path: string, changes: number): boolean =>
-  changes >= HUB_MIN_REVISIONS && !isTestPath(path);
+/** Only frequently changed files can be hubs and are ranked by breadth. */
+export const isHubCandidate = (changes: number): boolean =>
+  changes >= HUB_MIN_REVISIONS;
 
 export type ReasonFacts = {
   readonly revisions: number;
@@ -50,11 +49,11 @@ const isHub = (facts: ReasonFacts): boolean =>
 const percentOf = (probability: number): number =>
   Math.round(probability * 100);
 
-/** The reason for the strongest non-test partner (a contract is named as one): a hidden coupling when no import links it and it is likely enough. */
+/** The reason for the strongest partner (a contract is named as one): a hidden coupling when no import links it and it is likely enough. */
 const describePartner = (
   partners: ReadonlyArray<Partner>,
 ): ReadonlyArray<string> => {
-  const strongest = partners.find(({ testPair }) => !testPair);
+  const [strongest] = partners;
   if (strongest === undefined) {
     return [];
   }

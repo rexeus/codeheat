@@ -109,18 +109,6 @@ describe("unstableInterfaces selection", () => {
 
     expect(unstableInterfaces(dependentsOf(), history, MODULES)).toEqual([]);
   });
-
-  it("leaves out test code, however many files import it", () => {
-    const helper = "lib/test/api.helper.ts";
-
-    expect(
-      unstableInterfaces(
-        dependentsOf(USERS, helper),
-        historyOf({ [helper]: 12 }),
-        MODULES,
-      ),
-    ).toEqual([]);
-  });
 });
 
 describe("unstableInterfaces ripple", () => {

@@ -23,7 +23,6 @@ const entry = (path: string, changes: number, loc = 10): TerritoryFile => ({
   loc,
   complexity: { total: 0 },
   changes,
-  test: path.includes(".test."),
 });
 
 describe("mainFiles", () => {
@@ -33,25 +32,18 @@ describe("mainFiles", () => {
       entry("billing/tax.ts", 5, 100),
       entry("billing/discount.ts", 5, 20),
       entry("billing/index.ts", 4),
-      entry("billing/invoice.test.ts", 30),
     ].map((file) => [file.path, file]),
   );
 
-  it("names the three most changed files, tests left out, ties by size", () => {
+  it("names the three most changed files, ties by size", () => {
     expect(mainFiles([...files.keys()], files)).toBe(
       "main files: invoice, tax, discount",
     );
   });
 
   it("names the folder with a file name that says nothing on its own", () => {
-    expect(
-      mainFiles(["billing/index.ts", "billing/invoice.test.ts"], files),
-    ).toBe("main files: billing/index");
-  });
-
-  it("names tests when there is nothing else", () => {
-    expect(mainFiles(["billing/invoice.test.ts"], files)).toBe(
-      "main files: invoice.test",
+    expect(mainFiles(["billing/index.ts"], files)).toBe(
+      "main files: billing/index",
     );
   });
 

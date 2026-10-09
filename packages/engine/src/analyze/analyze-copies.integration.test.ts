@@ -72,7 +72,6 @@ layer(NodeServices.layer)("analyze copy families", (it) => {
             similarity: { min: 0.697, max: 0.697 },
             sharedChanges: 5,
             changesToAll: 4,
-            testOnly: false,
           },
         ]);
         assert.strictEqual(report.thresholds.minCopySimilarity, 0.5);
@@ -98,20 +97,16 @@ layer(NodeServices.layer)("analyze copy families and contract files", (it) => {
         const report = yield* analyze(analyzeOptionsFor(repo));
 
         assert.deepStrictEqual(
-          report.copyFamilies.map(
-            ({ files, similarity, changesToAll, testOnly }) => [
-              files,
-              similarity,
-              changesToAll,
-              testOnly,
-            ],
-          ),
+          report.copyFamilies.map(({ files, similarity, changesToAll }) => [
+            files,
+            similarity,
+            changesToAll,
+          ]),
           [
             [
               ["spec/billing.tsp", "spec/orders.tsp"],
               { min: 0.697, max: 0.697 },
               4,
-              false,
             ],
           ],
         );
@@ -148,27 +143,6 @@ layer(NodeServices.layer)("analyze copy family exclusions", (it) => {
         assert.deepStrictEqual(report.couplings, []);
         assert.deepStrictEqual(report.copyFamilies, []);
       }),
-  );
-
-  it.effect("does not call a file and its own test a family", () =>
-    Effect.gen(function* () {
-      yield* setNow;
-      const repo = yield* makeTempRepository;
-      for (let revision = 1; revision <= 4; revision += 1) {
-        yield* repo.commit(day(revision), {
-          "src/handler.ts": handler("orders", revision),
-          "src/handler.test.ts": handler("orders", revision),
-        });
-      }
-
-      const report = yield* analyze(analyzeOptionsFor(repo));
-
-      assert.deepStrictEqual(
-        report.couplings.map(({ testPair }) => testPair),
-        [true],
-      );
-      assert.deepStrictEqual(report.copyFamilies, []);
-    }),
   );
 
   it.effect("leaves out a file too small to compare", () =>

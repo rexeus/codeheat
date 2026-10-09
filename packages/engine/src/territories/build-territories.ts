@@ -3,7 +3,6 @@
 // code, the nodes visible at each detail, and the detail to read first.
 import { roundReported } from "../model/precision.js";
 import type { Territories, Territory } from "../model/territory.js";
-import { attachTests } from "./attach-tests.js";
 import { evidenceOf } from "./evidence.js";
 import type { EvidenceInput } from "./evidence.js";
 import { fileLeaves } from "./file-leaves.js";
@@ -13,7 +12,7 @@ import { growTree } from "./grow-tree.js";
 import { NO_MEASURE, measureNodes } from "./node-measures.js";
 import type { NodeMeasure } from "./node-measures.js";
 import type { TreeNode } from "./part.js";
-import { isTerritoryKind, recommendedOf, shownOf } from "./recommend.js";
+import { isRealTerritory, recommendedOf, shownOf } from "./recommend.js";
 
 export type TerritoryInput = EvidenceInput & {
   /** The directories that hold a manifest, other than the repository root. */
@@ -22,9 +21,9 @@ export type TerritoryInput = EvidenceInput & {
 
 /** A territory without its description, with what the description is made from. */
 export type TerritoryDraft = Omit<Territory, "description"> & {
-  /** Every file in the territory, test code included. */
+  /** Every file in the territory. */
   readonly members: ReadonlyArray<string>;
-  /** What an `other` or `tests` node is, to put before its main files; undefined for a real territory. */
+  /** What an `other` or `files` node is, to put before its main files; undefined for any other territory. */
   readonly lead: string | undefined;
 };
 
@@ -43,23 +42,29 @@ const NOTHING: TerritoryTree = {
   territoryOf: new Map(),
 };
 
-/** Territories first, then test-only code, then buckets and loose files. */
-const roleOf = ({ kind }: Pick<Territory, "kind">): number => {
-  if (isTerritoryKind(kind)) {
-    return 0;
+/** Real territories first, then buckets and loose files of little heat. */
+const roleOf = (territory: Pick<Territory, "kind" | "heatShare">): number =>
+  isRealTerritory(territory) ? 0 : 1;
+
+/**
+ * What a node is called: its directory ("." for the repository root), and
+ * for loose files the glob of what they hold (`packages/core/*`, `*` at the
+ * root), so that no two nodes of a detail share a name.
+ */
+const pathOf = ({ node, kind }: FlatNode): string => {
+  const { path } = node.part;
+  if (kind === "files") {
+    return path === "" ? "*" : `${path}/*`;
   }
-  return kind === "tests" ? 1 : 2;
+  return path === "" ? "." : path;
 };
 
 const leadOf = ({ node, kind }: FlatNode): string | undefined => {
   const where = node.part.path === "" ? "the repository root" : node.part.path;
-  if (kind === "tests") {
-    return "test code";
-  }
   if (node.part.kind === "more") {
     return `${node.part.members.length} smaller folders in ${where}`;
   }
-  return kind === "other" ? `other files in ${where}` : undefined;
+  return kind === "files" ? `files in ${where}` : undefined;
 };
 
 /** Every file of each node, from the file's leaf up to the root. */
@@ -92,12 +97,11 @@ const draftsOf = (
     const { node } = entry;
     return {
       id: entry.id,
-      path: node.part.path === "" ? "." : node.part.path,
+      path: pathOf(entry),
       kind: entry.kind,
       parent: entry.parent === null ? null : (flat[entry.parent]?.id ?? null),
       children: node.children.flatMap((child) => idOf.get(child) ?? []),
       files: measure.files,
-      testFiles: measure.testFiles,
       changes: measure.changes,
       heatShare: totalHeat === 0 ? 0 : roundReported(measure.heat / totalHeat),
       splitReason: node.reason ?? null,
@@ -108,7 +112,7 @@ const draftsOf = (
   });
 };
 
-/** The ids at one detail: territories with the most heat first, then test code, then the rest. */
+/** The ids at one detail: territories with the most heat first, then the rest. */
 const idsAt = (visible: ReadonlyArray<TerritoryDraft>): ReadonlyArray<string> =>
   visible
     .toSorted(
@@ -121,27 +125,22 @@ const idsAt = (visible: ReadonlyArray<TerritoryDraft>): ReadonlyArray<string> =>
     .map(({ id }) => id);
 
 /**
- * Builds the territories. The tree is grown over the code files and the test
- * code that belongs to no code; test code that pairs with a source file or sits
- * beside its code (see `attachTests`) belongs to that code's territory, and
- * counts for its files, changes, and heat. The recommended detail is the
- * finest one with at most 25 territories, buckets and test-only territories
- * not counted.
+ * Builds the territories, grown over the code files (test code is none of
+ * them). The recommended detail is the finest one with at most 25
+ * territories, buckets not counted.
  */
 export const buildTerritories = (input: TerritoryInput): TerritoryTree => {
   if (input.files.length === 0) {
     return NOTHING;
   }
-  const attachment = attachTests(input.files.map(({ path }) => path));
-  const evidence = evidenceOf(input, attachment);
+  const evidence = evidenceOf(input);
   const grown = growTree(
-    attachment.units,
+    input.files.map(({ path }) => path).toSorted(),
     evidence,
     input.packages,
-    attachment.placedIn,
   );
   const flat = flatten(grown.root, input.packages);
-  const leaves = fileLeaves(flat, attachment);
+  const leaves = fileLeaves(flat);
   const nodes = draftsOf(
     flat,
     measureNodes(

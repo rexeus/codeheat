@@ -23,17 +23,15 @@ const pointChange = (delta: number): string => {
 
 /**
  * The source files whose score rose most. Files without revisions in the
- * previous window are not warming but new (see `newlyActiveFiles`), and a test
- * file moving says little about the code. The report lists files by rank, so
- * ties keep rank order.
+ * previous window are not warming but new (see `newlyActiveFiles`). The report
+ * lists files by rank, so ties keep rank order.
  */
 const warmingFiles = (files: ReadonlyArray<FileStats>) =>
   files
     .flatMap((file) =>
       file.trend !== null &&
       !file.trend.newlyActive &&
-      file.trend.scoreDelta > 0 &&
-      !file.test
+      file.trend.scoreDelta > 0
         ? [{ file, trend: file.trend }]
         : [],
     )
@@ -43,17 +41,16 @@ const warmingFiles = (files: ReadonlyArray<FileStats>) =>
 /** The highest-ranked source files that had no revision in the previous window. */
 const newlyActiveFiles = (files: ReadonlyArray<FileStats>) =>
   files
-    .filter((file) => file.trend?.newlyActive === true && !file.test)
+    .filter((file) => file.trend?.newlyActive === true)
     .slice(0, TOP_NEWLY_ACTIVE);
 
-/** The modules whose cohesion moved most in either direction, among the ranked ones (enough commits, not test-only). */
+/** The modules whose cohesion moved most in either direction, among the ranked ones (enough commits). */
 const movingModules = (report: Analysis) =>
   report.modules
     .flatMap((module) =>
       module.trend !== null &&
       module.trend.cohesionDelta !== 0 &&
-      module.commits >= report.thresholds.minModuleCommits &&
-      !module.testOnly
+      module.commits >= report.thresholds.minModuleCommits
         ? [{ module, trend: module.trend }]
         : [],
     )

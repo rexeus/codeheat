@@ -52,15 +52,15 @@ describe("entryViewsOf a boundary", () => {
     });
   });
 
-  it("puts the production code's heat of its territory at stake", () => {
-    expect(view?.codeHeatShare).toBe(0.12);
+  it("puts the heat of its territory at stake", () => {
+    expect(view?.heatShare).toBe(0.12);
   });
 
   it("shows the boundary's numbers in plain words, most telling first", () => {
     expect(view?.stats).toEqual([
       { value: "35%", label: "of its changes stay inside" },
       { value: "79", label: "file pairs across its edge change together" },
-      { value: "10%", label: "of the change effort" },
+      { value: "12%", label: "of the change effort" },
     ]);
   });
 });
@@ -69,13 +69,13 @@ describe("entryViewsOf a boundary between two territories", () => {
   it("reads A + B, and counts each territory once", () => {
     const entry = entryPointOf(1, {
       territories: ["t1", "t2", "t1"],
-      evidence: { containment: 0.4, sharedChanges: 30, codeHeatShare: 0.55 },
+      evidence: { containment: 0.4, sharedChanges: 30, heatShare: 0.55 },
     });
 
     expect(viewsOf(withEntries(entry))[0]).toMatchObject({
       name: "core + forms",
       title: "packages/core + packages/forms",
-      codeHeatShare: 0.55,
+      heatShare: 0.55,
     });
   });
 });
@@ -134,12 +134,12 @@ describe("entryViewsOf entries about files", () => {
       name: "types.ts",
       title: "packages/forms/types.ts",
       kindLabel: "Hub",
-      codeHeatShare: 0.0211,
+      heatShare: 0.0211,
     });
     expect(couplingView).toMatchObject({
       name: "a.ts ↔ b.ts",
       kindLabel: "Hidden coupling",
-      codeHeatShare: 0.03,
+      heatShare: 0.03,
     });
   });
 
@@ -153,14 +153,14 @@ describe("entryViewsOf entries about files", () => {
 
     expect(viewsOf(withEntries(hotspot))[0]).toMatchObject({
       name: "web",
-      codeHeatShare: 0.05,
+      heatShare: 0.05,
     });
   });
 });
 
 const COMPLEXITY = { total: 50, mean: 1, max: 2 };
 
-/** One code file per territory with the heat `changes × (50 + 50)`, and a hot test file in t1. */
+/** One code file per territory with the heat `changes × (50 + 50)`. */
 const withHeat = (report: Analysis): Analysis => ({
   ...report,
   files: [
@@ -168,13 +168,6 @@ const withHeat = (report: Analysis): Analysis => ({
       territory: "t1",
       changes: 4,
       loc: 50,
-      complexity: COMPLEXITY,
-    }),
-    fileStats("packages/core/a.spec.ts", {
-      territory: "t1",
-      test: true,
-      changes: 9,
-      loc: 950,
       complexity: COMPLEXITY,
     }),
     fileStats("packages/forms/b.ts", {
@@ -199,7 +192,7 @@ const withHeat = (report: Analysis): Analysis => ({
 });
 
 describe("topEntriesCodeHeat", () => {
-  it("sums the production code's heat in the territories of the top three places, each territory once", () => {
+  it("sums the heat in the territories of the top three places, each territory once", () => {
     const report = withHeat(
       withEntries(
         entryPointOf(1, { territories: ["t1", "t2"] }),
@@ -209,7 +202,7 @@ describe("topEntriesCodeHeat", () => {
       ),
     );
 
-    // 400 + 300 + 100 of 1,000 (the test file holds none); web, the fourth place, is left out.
+    // 400 + 300 + 100 of 1,000; web, the fourth place, is left out.
     expect(topOf(report)).toBeCloseTo(0.8);
   });
 

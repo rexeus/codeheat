@@ -10,14 +10,13 @@ import type { Judged } from "./judged-territories.js";
 
 const judged = (
   id: string,
-  shares: { readonly code: number; readonly all: number },
+  heatShare: number,
   changes: number,
   fit: Partial<TerritoryFit>,
 ): Judged => ({
   ...territoryRecord(id, "package", "r"),
   path: `packages/${id}`,
-  heatShare: shares.all,
-  codeHeatShare: shares.code,
+  heatShare,
   changes,
   fit: fitRecord(fit),
 });
@@ -45,14 +44,14 @@ const refit = (territory: Judged, fit: Partial<TerritoryFit>): Judged => ({
 });
 
 /** `a` leaks into `b` and `b` into `a`, 12 changes touching both. */
-const A = judged("a", { code: 0.3, all: 0.35 }, 40, {
+const A = judged("a", 0.3, 40, {
   containment: 0.4,
   partner: { territory: "b", sharedChanges: 12, share: 0.3 },
   distantPairs: 6,
   hiddenPairs: 2,
   cliques: 1,
 });
-const B = judged("b", { code: 0.1, all: 0.12 }, 20, {
+const B = judged("b", 0.1, 20, {
   containment: 0.5,
   chronicShare: 0.6,
   partner: { territory: "a", sharedChanges: 12, share: 0.6 },
@@ -151,8 +150,7 @@ describe("boundaryEntries of two territories, evidence", () => {
     // chronic: (0 × 0.3 + 0.6 × 0.1) / 0.4; file pairs: 6 + 4 − 3 between the two once,
     // 2 + 1 − 1 without an import; cliques: three have a or b as a member
     expect(entry?.evidence).toStrictEqual({
-      codeHeatShare: 0.4,
-      heatShare: 0.47,
+      heatShare: 0.4,
       containment: 0.5417,
       changes: 48,
       sharedChanges: 12,

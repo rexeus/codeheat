@@ -26,6 +26,8 @@ export type GroupedBy = "pr" | "ticket" | "mixed" | "commit";
 /** The grouping of a window: its changes and what it rests on. */
 export type Grouping = {
   readonly changes: ReadonlyArray<LogicalChange>;
+  /** The indexes into the candidates of the commits each change is made of, in the order of `changes`. */
+  readonly members: ReadonlyArray<ReadonlyArray<number>>;
   readonly by: GroupedBy;
   /** The most commits one change holds. */
   readonly largest: number;
@@ -221,6 +223,7 @@ export const groupChanges = (
   const sets = settled.flatMap(({ changes }) => changes);
   return {
     changes: sets.map((members) => changeOf(members, candidates)),
+    members: sets,
     by: byOf(
       settled.some(({ hasPullRequest }) => hasPullRequest),
       settled.some(({ widened }) => widened),

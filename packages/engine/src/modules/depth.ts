@@ -13,7 +13,6 @@ import type { InventoryFile } from "../universe/inventory.js";
 import type { ModuleRef } from "./detect.js";
 import { isConfigFile } from "./entry-points.js";
 import { countExportedNames } from "./exported-symbols.js";
-import { isTestPath } from "./test-path.js";
 
 /** Modules read at once; each reads one file at a time. */
 const MODULE_CONCURRENCY = 16;
@@ -42,12 +41,7 @@ const implementationLinesByModule = ({
   const lines = new Map<string, number>();
   for (const { path, complexity } of files) {
     const module = modules.get(path)?.path;
-    if (
-      module !== undefined &&
-      !entries.has(path) &&
-      !isTestPath(path) &&
-      !isConfigFile(path)
-    ) {
+    if (module !== undefined && !entries.has(path) && !isConfigFile(path)) {
       lines.set(module, (lines.get(module) ?? 0) + complexity.loc);
     }
   }

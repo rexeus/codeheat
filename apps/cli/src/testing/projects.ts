@@ -117,18 +117,21 @@ export const makeInterfaceProject = Effect.map(makeGitRepository, (repo) => {
 });
 
 /**
- * `a.ts` and its test change together most often, so they are the strongest
- * coupling; `b.ts` and `c.ts` change together just as often, as a weaker pair.
+ * Two pairs that change together in four commits each: `a.ts` with `d.ts`,
+ * which sorts first, and `b.ts` with `c.ts`; `e.ts` changes once, alone.
  */
-export const makeTestPairProject = Effect.map(makeGitRepository, (repo) => {
+export const makeTwoPairProject = Effect.map(makeGitRepository, (repo) => {
   for (const day of [30, 20, 10, 5]) {
     repo.commit(day, {
       "src/a.ts": source(3, day),
-      "src/a.test.ts": source(2, day),
+      "src/d.ts": source(2, day),
+    });
+    repo.commit(day - 1, {
       "src/b.ts": source(1, day),
       "src/c.ts": source(2, day),
     });
   }
+  repo.commit(2, { "src/e.ts": source(2, 2) });
   return repo;
 });
 

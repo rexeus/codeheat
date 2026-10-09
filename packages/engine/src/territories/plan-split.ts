@@ -1,20 +1,13 @@
 // Owns the decision whether a part of the code splits into its folders, and
 // into which: too big, or its folders change independently; folders that
 // change together stay together.
-import { isTestPath } from "../modules/test-path.js";
 import { MIN_CHILD, cutByFolders } from "./folders.js";
 import type { FolderCut } from "./folders.js";
 import { keepTogether } from "./keep-together.js";
 import type { Tally, Together } from "./keep-together.js";
 import { openKids } from "./open-kids.js";
 import type { Weight } from "./open-kids.js";
-import {
-  TOO_BIG_SHARE,
-  changesTouching,
-  directoriesOf,
-  heatOf,
-  isHotFolder,
-} from "./part.js";
+import { TOO_BIG_SHARE, changesTouching, heatOf, isHotFolder } from "./part.js";
 import type { Evidence, Part } from "./part.js";
 import { reasonOf } from "./split-reason.js";
 import type { Why } from "./split-reason.js";
@@ -49,12 +42,12 @@ const cutOf = (
         big: new Map(
           part.members.map(({ cut, path, files }) => [cut ?? path, files]),
         ),
-        rest: part.rest,
+        rest: [],
         outer: [],
       }
     : cutByFolders(part.path, part.files, {
         packages,
-        isHot: (folder, files) => isHotFolder(evidence, folder, files),
+        isHot: (files) => isHotFolder(evidence, files),
         passThrough: !isRoot,
       });
 
@@ -109,9 +102,9 @@ const alone = (folders: ReadonlyArray<string>): ReadonlyArray<Together> =>
   }));
 
 /**
- * The groups the folders of `cut` form: test-only folders stay alone, a
- * group's own members are never regrouped, and a part never splits into one
- * group (undefined when it would and is not too big).
+ * The groups the folders of `cut` form: a group's own members are never
+ * regrouped, and a part never splits into one group (undefined when it would
+ * and is not too big).
  */
 const groupsOf = (
   part: Part,
@@ -119,19 +112,14 @@ const groupsOf = (
   { tally, tooBig }: Pick<Verdict, "tally" | "tooBig">,
   isRoot: boolean,
 ): ReadonlyArray<Together> | undefined => {
-  const tests = new Set(
-    [...cut.big]
-      .filter(([, files]) => files.every((file) => isTestPath(file)))
-      .map(([key]) => key),
-  );
-  const code = [...cut.big.keys()].filter((key) => !tests.has(key));
+  const code = [...cut.big.keys()];
   const together =
     part.kind === "group" ? alone(code) : keepTogether(code, tally);
   const unsplit = together.length < 2 && cut.rest.length === 0 && !isRoot;
   if (unsplit && !tooBig) {
     return undefined;
   }
-  return [...(unsplit ? alone(code) : together), ...alone([...tests])];
+  return unsplit ? alone(code) : together;
 };
 
 type Context = {
@@ -191,7 +179,7 @@ const valueOf = (
   const heat =
     evidence.totalHeat === 0
       ? 0
-      : heatOf(evidence, part.files, directoriesOf(part)) / evidence.totalHeat;
+      : heatOf(evidence, part.files) / evidence.totalHeat;
   return (
     (part.files.length / evidence.total + activity + heat) *
     (0.25 + gain) *
@@ -208,7 +196,6 @@ const weightOf = (
   heatOf(
     evidence,
     folders.flatMap((key) => cut.big.get(key) ?? []),
-    folders,
   ),
   folders.reduce((sum, key) => sum + (tally.per.get(key) ?? 0), 0),
   folders.reduce((sum, key) => sum + (cut.big.get(key)?.length ?? 0), 0),
@@ -223,8 +210,7 @@ const weightOf = (
  * `minChanges` changes and two active folders; a group is never judged by
  * this), or when it is a bucket whose folders have enough changes. Folders
  * whose changes overlap stay together (see `keepTogether`); a part never
- * splits into one group. Test code that belongs to no code is a part of its
- * own and splits no further.
+ * splits into one group.
  */
 export const planSplit = (
   part: Part,
@@ -232,11 +218,7 @@ export const planSplit = (
   packages: ReadonlySet<string>,
   isRoot: boolean,
 ): Split | undefined => {
-  if (
-    part.kind === "other" ||
-    part.kind === "tests" ||
-    part.files.length < 2 * MIN_CHILD
-  ) {
+  if (part.kind === "files" || part.files.length < 2 * MIN_CHILD) {
     return undefined;
   }
   const cut = cutOf(part, packages, evidence, isRoot);

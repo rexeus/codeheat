@@ -6,7 +6,6 @@ import { dependentsByFile, loadDependencies } from "../imports/dependencies.js";
 import { rootDependencies } from "../imports/import-graph.js";
 import type { ImportGraph } from "../imports/import-graph.js";
 import type { Module } from "../model/module.js";
-import { isTestPath } from "../modules/test-path.js";
 import { dependencyDirection } from "../stability/dependency-direction.js";
 import { unstableInterfaces } from "../stability/unstable-interfaces.js";
 import type { Universe } from "./measure.js";
@@ -27,12 +26,8 @@ export const measureStability = (
   },
 ) =>
   Effect.gen(function* () {
-    const code = universe.files
-      .map((file) => file.path)
-      .filter((path) => !isTestPath(path));
-    const known = new Map(
-      [...rootDependencies(graph)].filter(([file]) => !isTestPath(file)),
-    );
+    const code = universe.files.map((file) => file.path);
+    const known = rootDependencies(graph);
     const dependencies = yield* loadDependencies(graph.sources, code, known);
     return {
       dependencyDirection: dependencyDirection(

@@ -54,21 +54,11 @@ export const FileStats = Schema.Struct({
    * files), however rarely.
    */
   breadth: Count,
-  /**
-   * The path is test code: its name has a test suffix (`.test`, `.spec`,
-   * `_test`, `_spec`) or a directory above it is named like a test directory
-   * (`test`, `tests`, `__tests__`, `spec`, `specs`, `e2e`, `fixtures`,
-   * `__fixtures__`) or test support directory (`testing`, `test-utils`,
-   * `test-helpers`, `__mocks__`, `mocks`, `__snapshots__`). Tests are left out of the terminal's rankings of
-   * warming files; apply the same rule to `trend`.
-   */
-  test: Schema.Boolean,
   /** `path` of the file's module (see `Module`). */
   module: Schema.String,
   /**
-   * `id` of the finest territory the file belongs to (see `Territories`); test
-   * code belongs to the territory of the code it tests. Walk `parent` up to the
-   * territory listed at the detail you want. Empty only when the report has no
+   * `id` of the finest territory the file belongs to (see `Territories`). Walk
+   * `parent` up to the territory listed at the detail you want. Empty only when the report has no
    * territories.
    */
   territory: Schema.String,
@@ -84,7 +74,7 @@ export const FileStats = Schema.Struct({
   reasons: Schema.Array(Schema.String),
   /** Null without `--compare`, and when either window has no real (non-mechanical) commit touching the universe. */
   trend: Schema.NullOr(FileTrend),
-  /** How long the file has been among the hottest; null for a file that is neither a chronic nor an acute hotspot, for test code, and without `Analysis.series` (see `Heat`). */
+  /** How long the file has been among the hottest; null for a file that is neither a chronic nor an acute hotspot, and without `Analysis.series` (see `Heat`). */
   heat: Schema.NullOr(Heat),
 });
 export type FileStats = typeof FileStats.Type;
@@ -99,8 +89,6 @@ export const Coupling = Schema.Struct({
   degree: UnitInterval,
   /** Directory hops between the parent directories; 0 means same directory. */
   distance: Count,
-  /** One file is the other's test; expected coupling, never a smell. */
-  testPair: Schema.Boolean,
   /**
    * What each file is. A coupling with a contract side joins a contract to the
    * code that changes with it (or to another contract); the contract is listed
@@ -147,27 +135,12 @@ export const Analysis = Schema.Struct({
   comparison: Schema.NullOr(Comparison),
   thresholds: Thresholds,
   /** Sizes before any output limit, so truncated reports keep their context. */
-  totals: Schema.Struct({
-    /** Code files, the ones in `files`. */
-    files: Count,
-    /** Contract files, the ones in `contracts`. */
-    contracts: Count,
-    couplings: Count,
-    modules: Count,
-    /**
-     * Tracked files named like code or a contract (and not removed by
-     * `--exclude`) that the universe leaves out as generated: below a
-     * generated or vendored directory (`dist`, `build`, `vendor`,
-     * `node_modules`, `generated`, `__generated__`, `tsp-output`), minified by
-     * name (`.min.`), marked `linguist-generated` or `linguist-vendored`, or
-     * whose content is binary, minified, or larger than
-     * `Thresholds.maxFileBytes`. A file missing from the work tree or holding
-     * only whitespace is left out without counting here.
-     */
-    generated: Count,
-  }),
-  /** The hotspots: every code file, sorted by rank. Contract files are never listed here. */
+  /** The hotspots: every code file that is no test code, sorted by rank. Contract files are never listed here. */
   files: Schema.Array(FileStats),
+  /** The test code (see `isTestPath`) by path, with the counted changes whose commits touched it; no design measure counts it. */
+  testCode: Schema.Array(
+    Schema.Struct({ path: Schema.String, changes: Count }),
+  ),
   /**
    * Every contract file of the universe, most revised first, ties by path.
    * They have no score; they appear in `couplings` with `kinds`.
@@ -193,7 +166,7 @@ export const Analysis = Schema.Struct({
   couplings: Schema.Array(Coupling),
   /**
    * The ranking order, which terminal and viewer keep. First the ranked
-   * modules (`commits` ≥ `Thresholds.minModuleCommits` and not `testOnly`),
+   * modules (`commits` ≥ `Thresholds.minModuleCommits`),
    * then the other modules with counted changes, each group by `cohesion` ascending,
    * then more `commits` first, then `path`; last the modules without counted
    * changes (`cohesion` null), by `path`.
@@ -201,10 +174,8 @@ export const Analysis = Schema.Struct({
   modules: Schema.Array(Module),
   /**
    * Groups of files with largely the same content that change in the same
-   * logical changes, found among the coupled pairs (test pairs excluded) of the
-   * analysis window. Families with production code come first, then those of
-   * test code only (`testOnly`); within each, most fixes applied to all
-   * members first.
+   * logical changes, found among the coupled pairs of the analysis window,
+   * most fixes applied to all members first.
    */
   copyFamilies: Schema.Array(CopyFamily),
   /**

@@ -31,23 +31,6 @@ const measure = (commits: ReadonlyArray<ReadonlyArray<string>>) =>
   );
 
 describe("measureInterfaces", () => {
-  it("counts a commit of an entry point and test code only as interface, not implementation", () => {
-    const { byModule } = measure([
-      ["m/src/index.ts", "m/src/__tests__/api.ts"],
-      ["m/src/__tests__/api.ts", "m/src/impl.test.ts"],
-      ["m/src/impl.ts", "m/src/index.ts"],
-      ["m/src/impl.ts"],
-    ]);
-
-    // implementation: commits 3 and 4; interface: commits 1 and 3; leaked: commit 3
-    expect(byModule.get("m")).toStrictEqual({
-      entryPoints: ["m/index.ts", "m/src/index.ts"],
-      interfaceCommits: 2,
-      implementationCommits: 2,
-      leakage: 0.5,
-    });
-  });
-
   it("names only the entry points that changed in a commit that also changed the implementation", () => {
     const { leakedEntryPoints } = measure([
       ["m/src/index.ts"],
@@ -89,22 +72,19 @@ const churn = (leakage: number | null, implementationCommits: number) => ({
 
 describe("isLeakyInterface", () => {
   it("flags leakage at the threshold over enough implementation commits", () => {
-    expect(isLeakyInterface(churn(0.5, 5), false)).toBe(true);
+    expect(isLeakyInterface(churn(0.5, 5))).toBe(true);
   });
 
   it("does not flag leakage below the threshold", () => {
-    expect(isLeakyInterface(churn(0.4999, 50), false)).toBe(false);
+    expect(isLeakyInterface(churn(0.4999, 50))).toBe(false);
   });
 
   it("does not flag a high share of too few implementation commits", () => {
-    expect(isLeakyInterface(churn(1, 4), false)).toBe(false);
+    expect(isLeakyInterface(churn(1, 4))).toBe(false);
   });
 
-  it("does not flag a module without leakage data or a test-only one", () => {
-    expect([
-      isLeakyInterface(churn(null, 9), false),
-      isLeakyInterface(churn(1, 9), true),
-    ]).toStrictEqual([false, false]);
+  it("does not flag a module without leakage data", () => {
+    expect(isLeakyInterface(churn(null, 9))).toBe(false);
   });
 });
 
@@ -112,7 +92,6 @@ const module = (path: string, overrides: Partial<Module>): Module => ({
   path,
   kind: "package",
   files: 3,
-  testOnly: false,
   commits: 10,
   localCommits: 5,
   cohesion: 0.5,

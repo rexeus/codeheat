@@ -15,7 +15,7 @@ const territories = {
     territoryNode("t3", "web", { parent: "t1" }),
     territoryNode("t4", "core/src", { parent: "t2" }),
     territoryNode("t5", "core/lib", { parent: "t2" }),
-    territoryNode("t6", "tests in core", { parent: "t2", kind: "tests" }),
+    territoryNode("t6", "2 smaller folders", { parent: "t2", kind: "other" }),
     territoryNode("t7", "3 smaller folders", { parent: "t1", kind: "other" }),
   ],
 };

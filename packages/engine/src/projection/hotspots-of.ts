@@ -15,7 +15,7 @@ export type HotFile = {
   readonly file: FileStats;
   /** The file's share of all the heat. */
   readonly share: number;
-  /** `id` of the real territory at the recommended detail that holds the file; null for a file in a bucket, loose files, or test-only code. */
+  /** `id` of the real territory at the recommended detail that holds the file; null for a file in a bucket of smaller folders. */
   readonly area: string | null;
 };
 
@@ -27,11 +27,11 @@ const hottestFirst = Order.combine(
 );
 
 /**
- * The `MAX_HOTSPOTS` production files of `analysis` with the most heat, the
- * most first, ties by path; a file without heat is none. The share is one of
- * all the heat, test code included, as an area's heat is.
+ * The `MAX_HOTSPOTS` files of `analysis` with the most heat, the most first,
+ * ties by path; a file without heat is none. The share is one of all the
+ * heat, as an area's heat is.
  */
-export const hottestFiles = ({
+export const hotFilesOf = ({
   files,
   territories,
 }: Pick<Analysis, "files" | "territories">): ReadonlyArray<HotFile> => {
@@ -41,7 +41,6 @@ export const hottestFiles = ({
     new Map(files.map(({ path, territory }) => [path, territory])),
   );
   return files
-    .filter(({ test }) => !test)
     .map((file) => ({ file, heat: heatOfFile(file) }))
     .filter(({ heat }) => heat > 0)
     .toSorted(hottestFirst)

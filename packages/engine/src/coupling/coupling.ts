@@ -6,22 +6,26 @@ import type { Coupling } from "../model/analysis.js";
 import type { FileKind } from "../model/contract-file.js";
 import { roundReported } from "../model/precision.js";
 import type { ModuleRef } from "../modules/detect.js";
-import { directoryDistance, isTestPair } from "./pair.js";
+import { directoryDistance } from "./pair.js";
 
 /** Commits touching more files than this say nothing about coupling. */
 export const MAX_COMMIT_FILES = 50;
 export const MIN_SHARED_COMMITS = 3;
 export const MIN_DEGREE = 0.3;
 
+/** Whether a change is small enough to count (see `countedChanges`). */
+export const isCounted = ({ size }: Pick<LogicalChange, "size">): boolean =>
+  size <= MAX_COMMIT_FILES;
+
 /**
  * The changes that say something about coupling, modules, and interfaces:
- * those that touched at most `MAX_COMMIT_FILES` universe files, counting files
- * that are dead today (see `LogicalChange.size`).
+ * those that touched at most `MAX_COMMIT_FILES` universe files that are no
+ * test code, counting files that are dead today (see `LogicalChange.size`).
  */
 export const countedChanges = (
   changes: ReadonlyArray<LogicalChange>,
 ): ReadonlyArray<LogicalChange> =>
-  changes.filter((change) => change.size <= MAX_COMMIT_FILES);
+  changes.filter((change) => isCounted(change));
 
 const kindOf = (path: string, contracts: ReadonlySet<string>): FileKind =>
   contracts.has(path) ? "contract" : "code";
@@ -145,7 +149,6 @@ export const findCouplings = (
           sharedCommits,
           degree: roundReported(degree),
           distance: directoryDistance(a, b),
-          testPair: isTestPair(a, b),
           kinds: { a: kindOf(a, contracts), b: kindOf(b, contracts) },
           crossesModule: modules.get(a)?.path !== modules.get(b)?.path,
           imports: null,

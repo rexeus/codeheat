@@ -22,8 +22,9 @@ const TREND_WORDS: Record<Exclude<Verdict["trend"], "unknown">, string> = {
 
 /**
  * Why there is no level, given the percent of all the heat the report does
- * not list (`basis.rest.heat`). The verdict judges no loose files, buckets
- * of smaller folders, or test code, so heat there leaves too little to judge.
+ * not list (`basis.rest.heat`). The verdict judges no buckets of smaller
+ * folders and no area with too few changes, so heat there leaves too little
+ * to judge.
  */
 const UNKNOWN_WHY: Record<
   NonNullable<Verdict["reason"]>,
@@ -33,7 +34,7 @@ const UNKNOWN_WHY: Record<
   "quiet-window": () =>
     "no counted changes in this window, so there is nothing to judge.",
   "too-little-evidence": (restHeat) =>
-    `too little of the change effort sits in areas codeheat can judge; ${restHeat}% is in loose files and other unlisted areas (see basis.rest).`,
+    `too little of the change effort sits in areas codeheat can judge; ${restHeat}% is in unlisted areas and buckets of smaller folders (see basis.rest).`,
 };
 
 const counted = (count: number, one: string, many: string): string =>

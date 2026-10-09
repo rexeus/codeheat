@@ -1,6 +1,5 @@
 // Owns cutting files into folders: the child folders of a directory, with
 // chains of single subfolders counted as one step that stop at a package.
-import { isTestPath } from "../modules/test-path.js";
 import type { Part } from "./part.js";
 
 /** A child folder with fewer files than this is no territory; its files stay loose. */
@@ -19,14 +18,6 @@ export type FolderCut = {
     readonly directory: string;
     readonly files: ReadonlyArray<string>;
   }>;
-};
-
-/** The directories above a file, the repository root ("") first and the file's own directory last. */
-export const ancestorDirectories = (file: string): ReadonlyArray<string> => {
-  const parts = file.split("/").slice(0, -1);
-  return Array.from({ length: parts.length + 1 }, (_, length) =>
-    parts.slice(0, length).join("/"),
-  );
 };
 
 const below = (directory: string, file: string): string =>
@@ -65,7 +56,7 @@ const descend = (
 };
 
 /** Whether a folder with fewer than `MIN_CHILD` files is a part of its own: `isHot` says it holds enough of the heat. */
-type IsHot = (folder: string, files: ReadonlyArray<string>) => boolean;
+type IsHot = (files: ReadonlyArray<string>) => boolean;
 
 /** The files below `base` grouped by their first folder: folders with enough files or enough heat, and the loose files. */
 const groupByFolder = (
@@ -88,7 +79,7 @@ const groupByFolder = (
   }
   const big = new Map<string, ReadonlyArray<string>>();
   for (const [folder, inside] of grouped) {
-    if (inside.length >= MIN_CHILD || isHot(folder, inside)) {
+    if (inside.length >= MIN_CHILD || isHot(inside)) {
       big.set(folder, inside);
     } else {
       rest.push(...inside);
@@ -147,14 +138,13 @@ export const folderPart = (
   files: ReadonlyArray<string>,
   packages: ReadonlySet<string>,
 ): Part => ({
-  kind: files.every((file) => isTestPath(file)) ? "tests" : "folder",
+  kind: "folder",
   cut: path,
   path:
     path === "" || packages.has(path) ? path : descend(path, files, packages),
   files,
   members: [],
   base: "",
-  rest: [],
 });
 
 /**

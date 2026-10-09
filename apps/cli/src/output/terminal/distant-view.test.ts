@@ -24,13 +24,13 @@ describe("distantSection", () => {
     );
 
     expect(heading).toBe(
-      "Distant coupling (in different modules, or at least 5 directories apart within one module; tests excluded)",
+      "Distant coupling (in different modules, or at least 5 directories apart within one module)",
     );
   });
 
   it("tabulates the best ranked distant couplings, hidden ones marked", () => {
     expect(distantSection(sampleReport(), makeStyle(false))).toEqual([
-      "Distant coupling (in different modules, or at least 3 directories apart within one module; tests excluded)",
+      "Distant coupling (in different modules, or at least 3 directories apart within one module)",
       "score  degree  shared  imports  files",
       " 1.74     75%       6  hidden   packages/billing/src/index.ts <-> packages/auth/src/index.ts",
       " 1.62     42%      14  hidden   packages/billing/src/invoice.ts <-> packages/web/src/routes/invoices.tsx",

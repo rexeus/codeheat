@@ -66,7 +66,6 @@ const buildHistory = (repo: TempRepository) =>
 /** What no module of this scenario has: a public interface, leakage, depth, a trend, or erosion. */
 const unmeasured = {
   kind: "package",
-  testOnly: false,
   entryPoints: [],
   interfaceCommits: 0,
   leakage: null,

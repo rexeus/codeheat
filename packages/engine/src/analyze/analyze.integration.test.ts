@@ -196,9 +196,8 @@ layer(NodeServices.layer)("analyze coupling", (it) => {
             coupling?.b,
             coupling?.sharedCommits,
             coupling?.distance,
-            coupling?.testPair,
           ],
-          ["a.ts", "b.ts", 3, 0, false],
+          ["a.ts", "b.ts", 3, 0],
         );
         assert.strictEqual(coupling?.degree, 0.8571);
         assert.strictEqual(report.totals.couplings, 1);

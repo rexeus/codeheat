@@ -4,7 +4,6 @@ import { rootPart } from "./folders.js";
 import type { Evidence, Part, TreeNode } from "./part.js";
 import { planSplit } from "./plan-split.js";
 import type { Split } from "./plan-split.js";
-import { withTestHomes } from "./test-homes.js";
 
 /** Detail levels run from 1 (the first cut) to at most this. */
 const MAX_DETAIL = 6;
@@ -18,9 +17,8 @@ export type GrownTree = {
   readonly details: ReadonlyArray<ReadonlyArray<TreeNode>>;
 };
 
-/** A part counts as a territory of its own, unlike buckets, loose files, and test-only code. */
-const isTerritory = (part: Part): boolean =>
-  part.kind === "folder" || part.kind === "group";
+/** A part counts as a territory of its own, loose files included, unlike a bucket of smaller folders. */
+const isTerritory = (part: Part): boolean => part.kind !== "more";
 
 const territoriesIn = (parts: ReadonlyArray<Part>): number =>
   parts.filter((part) => isTerritory(part)).length;
@@ -153,7 +151,6 @@ export const growTree = (
   files: ReadonlyArray<string>,
   evidence: Evidence,
   packages: ReadonlySet<string>,
-  placedIn: ReadonlyMap<string, string>,
 ): GrownTree => {
   const top = rootPart(files, packages);
   const rootSplit = planSplit(top, evidence, packages, true);
@@ -173,7 +170,7 @@ export const growTree = (
     [top, rootSplit],
     ...kept.map(({ part, split }): [Part, Split] => [part, split]),
   ]);
-  const root = withTestHomes(nodeOf(top, splits), placedIn);
+  const root = nodeOf(top, splits);
   const { levels, depth } = levelsOf(kept, counts);
   return {
     root,

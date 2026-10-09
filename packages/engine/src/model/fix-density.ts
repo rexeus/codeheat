@@ -48,9 +48,8 @@ export const ModuleFixes = Schema.Struct({
   /** `fixes / Module.commits`, rounded to 4 decimals. */
   share: UnitInterval,
   /**
-   * Of the fixes, those that also touched another module that is not
-   * test-only: a fix that reaches across a boundary marks the boundary as
-   * fragile.
+   * Of the fixes, those that also touched another module: a fix that reaches
+   * across a boundary marks the boundary as fragile.
    */
   spanning: Count,
 });

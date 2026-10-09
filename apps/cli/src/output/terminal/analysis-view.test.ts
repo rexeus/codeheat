@@ -18,7 +18,7 @@ const section = (view: string, heading: string): ReadonlyArray<string> => {
 describe("renderAnalysis", () => {
   it("summarizes the repository, window and universe size below the answer", () => {
     expect(plainView().split("\n")[2]).toBe(
-      "acme-shop  2025-09-29 to 2026-09-29  212 commits, 36 files, 2 contract files",
+      "acme-shop  2025-09-29 to 2026-09-29  212 commits, 32 files, 2 contract files",
     );
   });
 
@@ -33,7 +33,7 @@ describe("renderAnalysis", () => {
       "  #1  ██████████ 0.97         48        1900  packages/billing/src/invoice.ts",
     );
     expect(hotspots[10]).toBe(
-      " #10  ████░░░░░░ 0.43         12         160  packages/web/src/hooks/use-session.ts",
+      " #10  ████░░░░░░ 0.41          7         417  apps/cli/src/commands/inspect.ts",
     );
   });
 
@@ -145,25 +145,6 @@ describe("renderAnalysis modules", () => {
 });
 
 describe("renderAnalysis module ranking", () => {
-  it("leaves out test-only modules", () => {
-    const report = sampleReport();
-    const tests = report.modules.slice(0, 1).map((module) =>
-      Object.assign({}, module, {
-        path: "e2e",
-        testOnly: true,
-        cohesion: 0,
-      }),
-    );
-
-    const modules = section(
-      plainView({ ...report, modules: [...tests, ...report.modules] }),
-      "Least cohesive modules",
-    );
-
-    expect(modules.filter((line) => line.includes("e2e"))).toEqual([]);
-    expect(modules).toHaveLength(6);
-  });
-
   it("keeps the order of the report instead of sorting again", () => {
     const report = sampleReport();
     const reversed = report.modules.toReversed();
@@ -350,9 +331,7 @@ describe("renderAnalysis contract files", () => {
 
     const view = plainView(crowded);
 
-    expect(view).toContain(
-      "Change coupling (test pairs and contract pairs excluded)",
-    );
+    expect(view).toContain("Change coupling (contract pairs excluded)");
     expect(view).not.toContain("api/a.tsp");
     expect(section(view, "Change coupling")).toEqual(
       section(plainView(), "Change coupling"),

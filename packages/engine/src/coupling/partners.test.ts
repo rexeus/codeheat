@@ -5,14 +5,13 @@ import { partnersOf } from "./partners.js";
 
 const coupling = (
   b: string,
-  flags: Partial<Pick<Coupling, "testPair" | "crossesModule" | "distance">>,
+  flags: Partial<Pick<Coupling, "crossesModule" | "distance">>,
 ): Coupling => ({
   a: "src/a.ts",
   b,
   sharedCommits: 5,
   degree: 0.5,
   distance: 0,
-  testPair: false,
   kinds: { a: "code", b: "code" },
   crossesModule: false,
   imports: null,
@@ -36,14 +35,5 @@ describe("partnersOf distant partners", () => {
 
   it("leaves a partner that lies near the file unmarked", () => {
     expect(distantFlags("src/deep/b.ts", { distance: 2 })).toEqual([false]);
-  });
-
-  it("leaves a file's test and any partner that is test code unmarked", () => {
-    expect(
-      distantFlags("test/a.test.ts", { crossesModule: true, testPair: true }),
-    ).toEqual([false]);
-    expect(
-      distantFlags("lib/test/login.steps.ts", { crossesModule: true }),
-    ).toEqual([false]);
   });
 });

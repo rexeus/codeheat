@@ -8,7 +8,7 @@ import { Count, UnitInterval } from "./scalars.js";
 
 /**
  * Two of the `Thresholds.maxCoupledTerritories` (24) hottest real territories
- * (package, folder, or group; never `other` or `tests`) at
+ * (package, folder, group, or loose files; never `other`) at
  * `Territories.recommended` that change in the same counted changes: the data of
  * a territory matrix. A change touches a territory when it touched any of its
  * files (the rule of `TerritoryFit`, counted by the same code as
@@ -27,7 +27,7 @@ export const TerritoryCoupling = Schema.Struct({
   b: Schema.String,
   /** Counted changes that touched both territories; at least `Thresholds.minSharedCommits`. */
   sharedChanges: Count,
-  /** Coupled file pairs (`Analysis.couplings`) of which one file lies in `a` and the other in `b`, neither test code, not two contract files (the rule of `TerritoryFit.distantPairs`). */
+  /** Coupled file pairs (`Analysis.couplings`) of which one file lies in `a` and the other in `b`, not two contract files (the rule of `TerritoryFit.distantPairs`). */
   distantPairs: Count,
   /** Of those, the pairs no import links (`Coupling.imports` is `none`). */
   hiddenPairs: Count,
@@ -54,7 +54,5 @@ export const TerritoryClique = Schema.Struct({
   weakestShare: UnitInterval,
   /** The sum of `Territory.heatShare` over the members, rounded to 4 decimals. */
   heatShare: UnitInterval,
-  /** The share of all the production code's heat (test code left out of the total and of the members) that the members hold, rounded to 4 decimals. */
-  codeHeatShare: UnitInterval,
 });
 export type TerritoryClique = typeof TerritoryClique.Type;

@@ -8,7 +8,6 @@ const code = (path: string) => ({
   loc: 10,
   complexity: { total: 5 },
   changes: 1,
-  test: false,
 });
 
 const filesIn = (folder: string, count: number): ReadonlyArray<string> =>
@@ -47,12 +46,16 @@ describe("a package with a source folder and files beside it", () => {
   it.each([1, 3, 12])(
     "splits into the folders of its source folder, its %s loose files a node of their own at the package's directory",
     (loose) => {
-      expect(kindsAt(packageWith(loose), 2)).toStrictEqual([
+      expect(
+        kindsAt(packageWith(loose), 2).toSorted(([a], [b]) =>
+          String(a).localeCompare(String(b)),
+        ),
+      ).toStrictEqual([
         ["lib", "folder", 14],
-        ["tools", "folder", 14],
+        ["pkg/*", "files", loose],
         ["pkg/src/a", "folder", 3],
         ["pkg/src/b", "folder", 3],
-        ["pkg", "other", loose],
+        ["tools", "folder", 14],
       ]);
     },
   );

@@ -5,7 +5,6 @@ import { groupByPath, partnersOf } from "../coupling/partners.js";
 import type { Complexity } from "../metrics/complexity.js";
 import type { Coupling, FileStats } from "../model/analysis.js";
 import { roundReported } from "../model/precision.js";
-import { isTestPath } from "../modules/test-path.js";
 import { describeFile, isHubCandidate } from "./reasons.js";
 
 /** What is known about one universe file before it is scored. */
@@ -57,12 +56,12 @@ const competitionRanks = (
 
 /** Ranks hub candidates by breadth; a file that is no candidate has no rank. */
 const hubRanking = (measures: ReadonlyArray<FileMeasure>) => {
-  const candidates = measures.filter((m) => isHubCandidate(m.path, m.changes));
+  const candidates = measures.filter((m) => isHubCandidate(m.changes));
   const ranks = competitionRanks(candidates.map((m) => m.breadth));
   return {
     candidates: candidates.length,
-    rankOf: ({ path, changes, breadth }: FileMeasure): number | undefined =>
-      isHubCandidate(path, changes) ? ranks.get(breadth) : undefined,
+    rankOf: ({ changes, breadth }: FileMeasure): number | undefined =>
+      isHubCandidate(changes) ? ranks.get(breadth) : undefined,
   };
 };
 
@@ -121,7 +120,6 @@ export const rankFiles = (
       const { path, revisions, complexity, breadth } = measure;
       return {
         path,
-        test: isTestPath(path),
         module: measure.module,
         // Territories come from the ranked files' own measures; `analyze` fills this in.
         territory: "",

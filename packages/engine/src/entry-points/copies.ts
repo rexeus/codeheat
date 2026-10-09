@@ -7,7 +7,7 @@ import type { EntryLimits } from "./limits.js";
 import { COPIES_MOVE, COPIES_VERDICT } from "./moves.js";
 
 /**
- * The copy families with production code (never `testOnly`) in which at least
+ * The copy families in which at least
  * `limits.minEntryChanges` changes touched every copy. The score is the share
  * of all the production code's heat that the copies hold (`heat.share`) times `lockstep`, the share of the changes that touched two or more
  * copies that touched all of them. `territoryOf` maps a path to its finest
@@ -20,7 +20,7 @@ export const copiesEntries = (
   limits: EntryLimits,
 ): ReadonlyArray<Candidate> =>
   families.flatMap((family): Array<Candidate> => {
-    if (family.testOnly || family.changesToAll < limits.minEntryChanges) {
+    if (family.changesToAll < limits.minEntryChanges) {
       return [];
     }
     const heatShare = heat.share(family.files);

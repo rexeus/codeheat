@@ -9,15 +9,14 @@ const ModuleCount = Schema.Int.check(Schema.isGreaterThanOrEqualTo(1));
 
 /**
  * How far the counted changes of the window (see `Analysis.logicalChanges`)
- * spread over the modules of `Analysis.modules`, test-only modules left out
- * (the test of a change is no spread). A place that holds only contract files
- * (see `ModulePartner.contractsOnly`) counts as a module. Changes that touched
- * no other module than test-only ones, or none at all (only files that are
- * dead today), are not measured. The numbers depend on that partition: finer
+ * spread over the modules of `Analysis.modules`. A place that holds only
+ * contract files (see `ModulePartner.contractsOnly`) counts as a module.
+ * Changes that touched no module at all (only files that are dead today) are
+ * not measured. The numbers depend on that partition: finer
  * modules give a larger radius.
  */
 export const ChangeRadius = Schema.Struct({
-  /** Counted changes that touched at least one module that is not test-only: the changes the other fields describe. Can be lower than `window.couplingCommits`. */
+  /** Counted changes that touched at least one module: the changes the other fields describe. Can be lower than `window.couplingCommits`. */
   changes: Schema.Int.check(Schema.isGreaterThanOrEqualTo(1)),
   /**
    * The modules a typical change touched: the lower median of the changes'
@@ -46,8 +45,8 @@ export const PropagationCost = Schema.Struct({
    */
   cost: UnitInterval,
   /**
-   * The files the mean runs over: code and contract files that are not test
-   * code and took part in at least `Thresholds.minSharedCommits` counted
+   * The files the mean runs over: code and contract files that took part in
+   * at least `Thresholds.minSharedCommits` counted
    * changes. At least 2. The cost shrinks as this number grows, so compare it
    * within one repository over time, not between repositories.
    */

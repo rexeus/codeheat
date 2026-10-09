@@ -39,31 +39,27 @@ const radiusOf = (counts: ReadonlyArray<number>): ChangeRadius | null => {
  * included, touched by the measured changes that touched it, null without
  * any. Medians are lower medians (see `ChangeRadius.median`).
  *
- * Every module comes back with its `radius` set. Any area with a `path` and
- * a `testOnly` flag can stand in for a module (territories do), as long as
- * `touched` names the same paths.
+ * Every module comes back with its `radius` set. Any area with a `path` can
+ * stand in for a module (territories do), as long as `touched` names the same
+ * paths.
  */
-export const measureRadius = <Area extends Pick<Module, "path" | "testOnly">>(
+export const measureRadius = <Area extends Pick<Module, "path">>(
   touched: ReadonlyArray<ReadonlySet<string>>,
   modules: ReadonlyArray<Area>,
 ): {
   readonly changeRadius: ChangeRadius | null;
   readonly modules: ReadonlyArray<Area & Pick<Module, "radius">>;
 } => {
-  const testOnly = new Set(
-    modules.filter((module) => module.testOnly).map((module) => module.path),
-  );
   const counts: Array<number> = [];
   const countsByModule = new Map<string, Array<number>>();
   for (const change of touched) {
-    const measured = [...change].filter((path) => !testOnly.has(path));
-    if (measured.length === 0) {
+    if (change.size === 0) {
       continue;
     }
-    counts.push(measured.length);
-    for (const path of measured) {
+    counts.push(change.size);
+    for (const path of change) {
       const known = countsByModule.get(path) ?? [];
-      known.push(measured.length);
+      known.push(change.size);
       countsByModule.set(path, known);
     }
   }

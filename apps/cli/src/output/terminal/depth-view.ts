@@ -19,16 +19,12 @@ const byShallowness = (a: Measured, b: Measured): number =>
   Order.String(a.path, b.path);
 
 /**
- * The five shallowest ranked modules (enough counted commits, not test-only;
- * see `Analysis.modules`) whose depth is known.
+ * The five shallowest ranked modules (enough counted commits; see
+ * `Analysis.modules`) whose depth is known.
  */
 const shallowestModules = (report: Analysis): ReadonlyArray<Measured> =>
   report.modules
-    .filter(
-      (module) =>
-        module.commits >= report.thresholds.minModuleCommits &&
-        !module.testOnly,
-    )
+    .filter((module) => module.commits >= report.thresholds.minModuleCommits)
     .flatMap(({ path, depth }) => (depth === null ? [] : [{ path, depth }]))
     .toSorted(byShallowness)
     .slice(0, TOP_MODULES);

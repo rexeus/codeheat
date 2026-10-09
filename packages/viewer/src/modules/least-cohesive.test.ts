@@ -25,15 +25,6 @@ describe("leastCohesive", () => {
     expect(paths(leastCohesive(modules, 5))).toEqual(["exact", "big"]);
   });
 
-  it("leaves out test-only modules", () => {
-    const modules = [
-      moduleStats("e2e", { cohesion: 0, testOnly: true }),
-      moduleStats("lib", { cohesion: 0.4 }),
-    ];
-
-    expect(paths(leastCohesive(modules, 5))).toEqual(["lib"]);
-  });
-
   it("never lists a module without data", () => {
     const none = moduleStats("none", { commits: 0, cohesion: null });
 

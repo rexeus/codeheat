@@ -59,12 +59,20 @@ const reportOf = (): Analysis => ({
   logicalChanges: { by: "commit", count: 0, largest: 0 },
   comparison: null,
   thresholds: DEFAULT_THRESHOLDS,
-  totals: { files: 3, contracts: 0, couplings: 0, modules: 0, generated: 0 },
+  totals: {
+    files: 3,
+    testCode: 0,
+    contracts: 0,
+    couplings: 0,
+    modules: 0,
+    generated: 0,
+  },
   files: [
     fileRecord("a/x.ts", "t2", { rank: 1 }),
     fileRecord("b/y.ts", "t3", { rank: 2 }),
     fileRecord("c/z.ts", "t4", { rank: 3 }),
   ],
+  testCode: [],
   contracts: [],
   ubiquitousFiles: [],
   couplings: [],
@@ -126,51 +134,5 @@ describe("inspect territories", () => {
       ["b/y.ts", []],
       ["c/z.ts", []],
     ]);
-  });
-});
-
-describe("inspect territories of test code", () => {
-  it("lists the territory that holds the tests territory of a matched file, which has no fit of its own", () => {
-    const report = reportOf();
-    const withTests: Analysis = {
-      ...report,
-      files: [...report.files, fileRecord("a/x.test.ts", "t5", { rank: 4 })],
-      territories: {
-        ...report.territories,
-        nodes: [
-          ...NODES,
-          Object.assign(territoryRecord("t5", "tests", "t2"), { changes: 9 }),
-        ],
-      },
-    };
-
-    const result = inspect(withTests, ["a/x.test.ts"]);
-
-    expect(result.territories.map(({ id }) => id)).toStrictEqual([
-      "t2",
-      "t3",
-      "t5",
-    ]);
-  });
-
-  it("lists the ancestors of a tests territory up to the nearest one with a fit", () => {
-    const report = reportOf();
-    const withTests: Analysis = {
-      ...report,
-      files: [...report.files, fileRecord("a/x.test.ts", "t6", { rank: 4 })],
-      territories: {
-        ...report.territories,
-        nodes: [
-          ...NODES,
-          // t5 has no fit, so the walk goes on to t2, which has one
-          Object.assign(territoryRecord("t5", "folder", "t2"), { changes: 9 }),
-          Object.assign(territoryRecord("t6", "tests", "t5"), { changes: 9 }),
-        ],
-      },
-    };
-
-    expect(
-      inspect(withTests, ["a/x.test.ts"]).territories.map(({ id }) => id),
-    ).toStrictEqual(["t2", "t3", "t5", "t6"]);
   });
 });

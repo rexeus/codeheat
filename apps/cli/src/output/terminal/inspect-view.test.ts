@@ -6,7 +6,6 @@ import { makeStyle } from "./style.js";
 
 const entry: InspectResult["matches"][number] = {
   path: "packages/billing/src/invoice.ts",
-  test: false,
   rank: 1,
   score: 0.97,
   revisions: 48,
@@ -26,11 +25,10 @@ const entry: InspectResult["matches"][number] = {
   of: 36,
   partners: [
     {
-      path: "packages/billing/src/invoice.test.ts",
+      path: "packages/billing/src/lines.ts",
       sharedCommits: 31,
       probability: 0.646,
       kind: "code" as const,
-      testPair: true,
       crossesModule: false,
       distant: false,
       imports: "both",
@@ -40,7 +38,6 @@ const entry: InspectResult["matches"][number] = {
       sharedCommits: 24,
       probability: 0.5,
       kind: "code" as const,
-      testPair: false,
       crossesModule: false,
       distant: false,
       imports: "file→partner",
@@ -50,7 +47,6 @@ const entry: InspectResult["matches"][number] = {
       sharedCommits: 12,
       probability: 0.25,
       kind: "code" as const,
-      testPair: false,
       crossesModule: true,
       distant: true,
       imports: "none",
@@ -62,7 +58,6 @@ const billing: Module = {
   path: "packages/billing",
   kind: "package",
   files: 9,
-  testOnly: false,
   commits: 74,
   localCommits: 41,
   cohesion: 0.5541,
@@ -100,6 +95,7 @@ const result = (
   modules,
   territories,
   contractFiles: [],
+  testCode: [],
   unmatched: [],
 });
 
@@ -118,7 +114,7 @@ describe("renderInspect", () => {
         "",
         "Changes together with",
         "co-change  shared  import   partner",
-        "      65%      31  both     packages/billing/src/invoice.test.ts (test)",
+        "      65%      31  both     packages/billing/src/lines.ts",
         "      50%      24  imports  packages/billing/src/tax.ts",
         "      25%      12  hidden   packages/web/src/checkout.ts (other module, distant)",
       ].join("\n"),
@@ -255,7 +251,6 @@ describe("renderInspect copy family", () => {
         similarity: { min: 0.6, max: 0.6 },
         sharedChanges: 7,
         changesToAll: 7,
-        testOnly: false,
       },
     };
 
@@ -282,39 +277,11 @@ describe("renderInspect import relations", () => {
     );
 
     expect(view).toContain(
-      "      65%      31  -            packages/billing/src/invoice.test.ts (test)",
+      "      65%      31  -            packages/billing/src/lines.ts",
     );
     expect(view).toContain(
       "      50%      24  imported by  packages/billing/src/tax.ts",
     );
-  });
-
-  it("does not call a file's test hidden, in text or in color", () => {
-    const partners = [
-      {
-        path: "tax.test.ts",
-        sharedCommits: 3,
-        probability: 0.5,
-        kind: "code" as const,
-        testPair: true,
-        crossesModule: false,
-        distant: false,
-        imports: "none" as const,
-      },
-    ];
-
-    const plainView = renderInspect(
-      result([{ ...entry, partners }]),
-      makeStyle(false),
-    );
-    const colorView = renderInspect(
-      result([{ ...entry, partners }]),
-      makeStyle(true),
-    );
-
-    expect(plainView).toContain("none    tax.test.ts (test)");
-    expect(plainView).not.toContain("hidden");
-    expect(colorView).not.toContain("\u001B[1mnone");
   });
 });
 
@@ -326,7 +293,6 @@ describe("renderInspect contract partners", () => {
         sharedCommits: 9,
         probability: 0.5,
         kind: "contract" as const,
-        testPair: false,
         crossesModule: true,
         distant: false,
         imports: null,

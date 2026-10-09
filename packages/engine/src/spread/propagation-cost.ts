@@ -13,7 +13,6 @@ export type ReachFile = {
   readonly path: string;
   /** Counted changes of the window that touched it: large changes are left out, as they are for coupling. */
   readonly changes: number;
-  readonly test: boolean;
 };
 
 /** Both endpoints of every edge among `index`, as indices into the file list. */
@@ -75,12 +74,11 @@ const reachFrom = (
  * reported `couplings` joins them, and the cost is the mean over the files of
  * the share of the other files they reach.
  *
- * The files are those of `files` that are not test code and took part in at
- * least `MIN_SHARED_COMMITS` counted changes, the fewest a file needs to be coupled at
- * all: a file with less history says nothing, and counting it would make the
- * cost a measure of how much code rarely changes. Tests are no part of the
- * design's structure, so a coupling with one never joins two files. The result is null
- * when fewer than two files qualify.
+ * The files are those of `files` that took part in at least
+ * `MIN_SHARED_COMMITS` counted changes, the fewest a file needs to be coupled
+ * at all: a file with less history says nothing, and counting it would make
+ * the cost a measure of how much code rarely changes. The result is null when
+ * fewer than two files qualify.
  */
 export const propagationCost = (
   files: Iterable<ReachFile>,
@@ -88,8 +86,8 @@ export const propagationCost = (
   depth: number = PROPAGATION_DEPTH,
 ): PropagationCost | null => {
   const index = new Map<string, number>();
-  for (const { path, changes, test } of files) {
-    if (!test && changes >= MIN_SHARED_COMMITS) {
+  for (const { path, changes } of files) {
+    if (changes >= MIN_SHARED_COMMITS) {
       index.set(path, index.size);
     }
   }

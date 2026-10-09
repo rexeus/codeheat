@@ -36,8 +36,8 @@ export type EntryView = {
   readonly name: string;
   /** The full paths behind `name`, for a tooltip. */
   readonly title: string;
-  /** The share of the production code's heat at stake (test code holds none), by its kind's evidence, 0..1. */
-  readonly codeHeatShare: number;
+  /** The share of all the heat at stake, by its kind's evidence, 0..1. */
+  readonly heatShare: number;
   readonly verdict: string;
   /** The verb phrase of the design move (`Move a boundary`); the kind's label when the move has none. */
   readonly moveLabel: string;
@@ -78,22 +78,22 @@ const territoriesOf = (
 ];
 
 /**
- * The evidence that says how much of the production code's heat an entry of
+ * The evidence that says how much of the heat an entry of
  * each kind puts at stake: its territories' for a boundary or a clique, its
  * chronic hotspots' for a hotspot, its files' for an entry about files.
  */
 const STAKES: Record<EntryKind, string> = {
-  boundary: "codeHeatShare",
-  clique: "codeHeatShare",
+  boundary: "heatShare",
+  clique: "heatShare",
   hotspot: "chronicHeatShare",
   copies: "heatShare",
   hub: "heatShare",
   coupling: "heatShare",
 };
 
-/** The heat of a file as the engine counts it; test code holds none. */
-const codeHeatOf = ({ test, changes, loc, complexity }: FileStats): number =>
-  test ? 0 : changes * (loc + complexity.total);
+/** The heat of a file as the engine counts it. */
+const heatOf = ({ changes, loc, complexity }: FileStats): number =>
+  changes * (loc + complexity.total);
 
 const sumOf = (values: readonly number[]): number =>
   values.reduce((sum, value) => sum + value, 0);
@@ -119,7 +119,7 @@ const viewOf = (
       subject === ""
         ? territories.map((each) => territoryName(each)).join(" + ")
         : entry.files.join(", "),
-    codeHeatShare: entry.evidence[STAKES[entry.kind]] ?? 0,
+    heatShare: entry.evidence[STAKES[entry.kind]] ?? 0,
     verdict: entry.verdict,
     moveLabel: move.label === "" ? KIND_LABELS[entry.kind] : move.label,
     move: move.rest,
@@ -139,8 +139,8 @@ export const entryViewsOf = (
 };
 
 /**
- * The share of the production code's heat (from the report's files, test
- * code holding none) in the territories of the top entry points, each
+ * The share of all the heat (from the report's files) in the territories of
+ * the top entry points, each
  * territory counted whole and once (an entry about files counts the
  * territories that hold them); `null` without entry points, 0 without heat.
  */
@@ -158,11 +158,11 @@ export const topEntriesCodeHeat = (
       index,
     ).map(({ id }) => id),
   );
-  const total = sumOf(report.files.map((file) => codeHeatOf(file)));
+  const total = sumOf(report.files.map((file) => heatOf(file)));
   const inTop = sumOf(
     report.files
       .filter(({ territory }) => held.has(index.visibleOf(territory)?.id ?? ""))
-      .map((file) => codeHeatOf(file)),
+      .map((file) => heatOf(file)),
   );
   return total === 0 ? 0 : inTop / total;
 };

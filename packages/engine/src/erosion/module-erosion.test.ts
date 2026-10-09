@@ -23,10 +23,9 @@ const quarter = (
 const erosionOf = (
   path: string,
   windows: ReadonlyArray<ReadonlyArray<ReadonlySet<string>>>,
-  testOnly = false,
 ) =>
   withModuleErosion(
-    [moduleRecord(path, 10, testOnly), moduleRecord("other", 10)],
+    [moduleRecord(path, 10), moduleRecord("other", 10)],
     windows,
   ).find((module) => module.path === path)?.erosion;
 
@@ -120,9 +119,8 @@ describe("withModuleErosion without evidence", () => {
     expect(erosion?.recent).toBe(false);
   });
 
-  it("is null with evidence in fewer than three windows, and for a test-only module", () => {
+  it("is null with evidence in fewer than three windows", () => {
     expect(erosionOf("a", FALLING.slice(0, 2))).toBeNull();
-    expect(erosionOf("a", FALLING, true)).toBeNull();
   });
 
   it("keeps every other field of the module", () => {

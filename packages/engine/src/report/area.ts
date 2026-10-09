@@ -5,15 +5,21 @@ import { Schema } from "effect";
 import { Count, Percent, Share } from "./scalars.js";
 
 /**
- * One area of the code: a package, a folder, or sibling folders that change
- * together, at the detail codeheat recommends reading. Areas do not overlap.
+ * One area of the code: a package, a folder, sibling folders that change
+ * together, or the loose files of a directory whose folders are areas of
+ * their own (from 1% of all the heat on), at the detail codeheat recommends reading. Areas do not overlap.
  */
 export const Area = Schema.Struct({
   /**
    * Repository-relative POSIX directory; "." for the whole repository. Sibling
    * folders that change together are one brace glob over the directory they
-   * share (`packages/a/{x,y}`, `{apps,lib}` at the root). Every area name the
-   * report uses elsewhere is the `path` of a listed area.
+   * share (`packages/a/{x,y}`, `{apps,lib}` at the root). The loose files of
+   * a directory are the glob of what they hold (`packages/core/src/*`, `*` at
+   * the repository root: the files directly in it and those of folders too
+   * small to be areas), and their `description` starts with `files in`. No
+   * two areas, and no area and the largest part of `basis.rest`, share a
+   * path. Every area name the report uses elsewhere is the `path` of a listed
+   * area.
    */
   path: Schema.String,
   /**
@@ -22,12 +28,12 @@ export const Area = Schema.Struct({
    * `main files: a, b, c`.
    */
   description: Schema.String,
-  /** Production code files in the area; test code is left out. */
+  /** Code files in the area (test code is in no area). */
   files: Count,
-  /** Changes (`window.changes`) that touched any file of the area, its test code included. */
+  /** Changes (`window.changes`) that touched any file of the area. */
   changes: Count,
   /**
-   * Percent of all the heat that sits in the area, its test code included.
+   * Percent of all the heat that sits in the area.
    * The heat of a file is its changes × (lines + complexity).
    */
   heat: Percent,

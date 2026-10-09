@@ -63,16 +63,7 @@ const VARIED = analysisRecord({
     details: [
       {
         level: 1,
-        ids: [
-          "hot",
-          "lone",
-          "holds",
-          "quiet",
-          "cold",
-          "small",
-          "rest",
-          "tests",
-        ],
+        ids: ["hot", "lone", "holds", "quiet", "cold", "small", "rest"],
       },
     ],
     nodes: [
@@ -83,20 +74,13 @@ const VARIED = analysisRecord({
       area("quiet", 0.0055, { containment: 1 }, { changes: 2 }),
       area("cold", 0.0033, { containment: 0.8 }, { changes: 3 }),
       area("small", 0.0044, { containment: 0.9 }, { changes: 4 }),
-      { ...area("rest", 0.1789, {}), kind: "other", path: "src" },
-      {
-        ...area("tests", 0.0179, {}),
-        kind: "tests",
-        path: "test",
-        testFiles: 1,
-      },
+      { ...area("rest", 0.1968, {}), kind: "other", path: "src" },
     ],
   },
   files: [
     fileRecord("src/quiet/engine.ts", "quiet", { changes: 30, loc: 900 }),
     fileRecord("src/hot/a.ts", "hot", { changes: 9 }),
     fileRecord("src/loose.ts", "rest", { changes: 8 }),
-    fileRecord("test/a.test.ts", "tests", { changes: 40, test: true }),
   ],
 });
 
@@ -161,7 +145,7 @@ describe("reportOf", () => {
       areas: 1,
       files: 2,
       heat: 20.1,
-      largest: { path: "src", heat: 17.9 },
+      largest: { path: "src", heat: 19.7 },
     });
   });
 });

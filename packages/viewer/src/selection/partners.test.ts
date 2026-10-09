@@ -4,9 +4,8 @@ import { coupling } from "../testing/reports.js";
 import { indexPartners } from "./partners.js";
 
 const couplings = [
-  coupling("src/tax.ts", "src/tax.test.ts", {
+  coupling("src/tax.ts", "src/rates.ts", {
     degree: 0.9,
-    testPair: true,
     sharedCommits: 20,
   }),
   coupling("src/tax.ts", "web/checkout.ts", {
@@ -27,18 +26,17 @@ describe("indexPartners", () => {
     expect(
       index.get("src/tax.ts")?.map(({ path, degree }) => [path, degree]),
     ).toEqual([
-      ["src/tax.test.ts", 0.9],
+      ["src/rates.ts", 0.9],
       ["web/cart.ts", 0.6],
       ["web/checkout.ts", 0.4],
     ]);
   });
 
   it("carries the measures of the coupling to each partner", () => {
-    expect(index.get("src/tax.test.ts")).toEqual([
+    expect(index.get("src/rates.ts")).toEqual([
       {
         path: "src/tax.ts",
         degree: 0.9,
-        testPair: true,
         kind: "code",
         sharedCommits: 20,
         distance: 0,
@@ -49,13 +47,10 @@ describe("indexPartners", () => {
     ]);
   });
 
-  it("marks a partner without an import as hidden, but never a test pair", () => {
+  it("marks a partner without an import as hidden", () => {
     const marked = indexPartners([
       coupling("src/a.ts", "src/b.ts", { imports: "none" }),
-      coupling("src/c.ts", "src/c.test.ts", {
-        imports: "none",
-        testPair: true,
-      }),
+      coupling("src/c.ts", "src/d.ts", { imports: "a→b" }),
     ]);
 
     expect(marked.get("src/a.ts")?.[0]?.hidden).toBe(true);

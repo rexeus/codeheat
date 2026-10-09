@@ -40,13 +40,16 @@ export const indexTerritories = ({
   return { recommended: [...visible.values()], byId, visibleOf };
 };
 
-/** A territory that is a real part of the design, not a bucket of leftovers or test code. */
-export const isRealTerritory = ({ kind }: Territory): boolean =>
-  kind === "package" || kind === "folder" || kind === "group";
+/** Loose files are a real territory from this share of all the heat on (the engine's `MIN_VISIBLE_HEAT`). */
+const MIN_VISIBLE_HEAT = 0.01;
+
+/** A territory that is a real part of the design, as the engine judges it: not a bucket of leftovers, and loose files only with at least 1% of all the heat. */
+export const isRealTerritory = ({ kind, heatShare }: Territory): boolean =>
+  kind === "files" ? heatShare >= MIN_VISIBLE_HEAT : kind !== "other";
 
 /** What an answer says when the recommended detail holds no real territory. */
 export const NO_REAL_TERRITORY =
-  "No real territory: only test code or leftover files changed.";
+  "No real territory: only leftover files changed.";
 
 /** The text before the first `; main files:` of a description, which says what a bucket is. */
 const bucketName = (description: string): string => {
@@ -63,6 +66,15 @@ const parentOf = (path: string): string =>
 const splitParts = (path: string): NameParts => {
   const dir = parentOf(path);
   return { dir, base: path.slice(dir.length) };
+};
+
+/** Loose files are the glob of their directory (`packages/a/src/*`): its parent is dimmed, `src/*` tells them apart. */
+const looseParts = (path: string): NameParts => {
+  const directory = path.slice(0, -"/*".length);
+  const dir = parentOf(directory);
+  return path === "*"
+    ? { dir: "", base: "*" }
+    : { dir, base: path.slice(dir.length) };
 };
 
 /** Whether the character at `index` follows an odd number of backslashes, which escape it. */
@@ -108,7 +120,7 @@ const PARTS: Record<Territory["kind"], (territory: Territory) => NameParts> = {
   package: ({ path }) => splitParts(path),
   folder: ({ path }) => splitParts(path),
   group: ({ path }) => groupParts(path),
-  tests: ({ path }) => ({ dir: "", base: `tests in ${path}` }),
+  files: ({ path }) => looseParts(path),
   other: ({ description }) => ({ dir: "", base: bucketName(description) }),
 };
 
@@ -116,7 +128,7 @@ const PARTS: Record<Territory["kind"], (territory: Territory) => NameParts> = {
 export const territoryNameParts = (territory: Territory): NameParts =>
   PARTS[territory.kind](territory);
 
-/** What to call a territory: its path (a group names its shared folder once), or for leftovers and test code, what they are. */
+/** What to call a territory: its path (a group names its shared folder once), or for leftovers, what they are. */
 export const territoryName = (territory: Territory): string => {
   const { dir, base } = territoryNameParts(territory);
   return `${dir}${base}`;

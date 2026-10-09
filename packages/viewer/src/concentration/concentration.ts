@@ -33,7 +33,7 @@ export type Concentration =
       readonly topShare: number;
       /** Every real territory at the recommended detail, hottest first. */
       readonly rows: readonly HeatRow[];
-      /** The share of the heat outside them: test code and leftover files. */
+      /** The share of the heat outside them: leftover files. */
       readonly elsewhere: number;
     };
 

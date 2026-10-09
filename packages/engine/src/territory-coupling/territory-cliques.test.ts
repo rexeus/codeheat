@@ -18,13 +18,6 @@ const byId = new Map(
   ].map((node) => [node.id, node]),
 );
 
-const CODE_HEAT = new Map([
-  ["a", 0.25],
-  ["b", 0.15],
-  ["c", 0.1],
-  ["d", 0.05],
-]);
-
 const clique = (
   modules: ReadonlyArray<string>,
   sharedCommits: number,
@@ -37,7 +30,6 @@ describe("territoryCliques", () => {
       territoryCliques(
         [clique(["a", "b", "c"], 12, 0.5), clique(["b", "c", "d"], 4, 0.3)],
         byId,
-        CODE_HEAT,
       ),
     ).toStrictEqual([
       {
@@ -45,19 +37,17 @@ describe("territoryCliques", () => {
         sharedChanges: 12,
         weakestShare: 0.5,
         heatShare: 0.6,
-        codeHeatShare: 0.5,
       },
       {
         territories: ["b", "c", "d"],
         sharedChanges: 4,
         weakestShare: 0.3,
         heatShare: 0.35,
-        codeHeatShare: 0.3,
       },
     ]);
   });
 
   it("lists nothing without cliques", () => {
-    expect(territoryCliques([], byId, CODE_HEAT)).toStrictEqual([]);
+    expect(territoryCliques([], byId)).toStrictEqual([]);
   });
 });

@@ -17,7 +17,7 @@ export const DependencyDirection = Schema.Struct({
   from: Schema.String,
   /** `path` of the module they import. */
   to: Schema.String,
-  /** Files of `from`, test code left out, that import at least one file of `to`. */
+  /** Files of `from` that import at least one file of `to`. */
   importingFiles: Count,
   /**
    * Counted changes in which a file of `from` changed together with a file of

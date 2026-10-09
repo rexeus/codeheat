@@ -7,10 +7,7 @@ import {
   makeTempDirectory,
 } from "../testing/git-repository.js";
 import { journey } from "../testing/journey-harness.js";
-import {
-  makeCoupledProject,
-  makeTestPairProject,
-} from "../testing/projects.js";
+import { makeCoupledProject, makeTwoPairProject } from "../testing/projects.js";
 
 const decode = (stdout: string) =>
   Schema.decodeUnknownEffect(Analysis)(JSON.parse(stdout));
@@ -70,6 +67,7 @@ describe("codeheat analyze against a git repository", () => {
         ]);
         expect(report.totals).toStrictEqual({
           files: 3,
+          testCode: 0,
           contracts: 0,
           couplings: 1,
           modules: 1,
@@ -181,7 +179,7 @@ describe("codeheat analyze terminal view", () => {
     "picks the terminal's couplings from the whole report, whatever --limit says",
     () =>
       Effect.gen(function* () {
-        const repo = yield* makeTestPairProject;
+        const repo = yield* makeTwoPairProject;
 
         const result = yield* journey({
           args: ["analyze", "--limit", "1"],
@@ -191,7 +189,7 @@ describe("codeheat analyze terminal view", () => {
         expect(result.stdout).toContain("src/b.ts <-> src/c.ts");
         expect(result.stdout).not.toContain("No change coupling");
         // the hotspot table is not cut to one row either
-        expect(result.stdout).toContain("src/a.test.ts");
+        expect(result.stdout).toContain("src/e.ts");
         expect(result.stdout).toContain("Least cohesive modules");
       }).pipe(Effect.scoped),
   );

@@ -1,12 +1,12 @@
 // Owns the parts a split opens: the strongest folders or groups of folders,
-// and what waits: a bucket of smaller folders, or the loose files.
+// the loose files, and what waits: a bucket of smaller folders.
 import { folderPart } from "./folders.js";
 import type { FolderCut } from "./folders.js";
 import { groupPath } from "./group-path.js";
 import type { Together } from "./keep-together.js";
 import type { Part } from "./part.js";
 
-/** At most this many children open at once; the rest wait in a "smaller folders" bucket. */
+/** At most this many folders, groups, and a bucket open at once; the rest wait in a "smaller folders" bucket. */
 const FANOUT = 8;
 
 /** What ranks a group of folders for opening: its heat, its changes, its files; compared in that order. */
@@ -35,55 +35,45 @@ const groupPart = (paths: ReadonlyArray<string>, context: Cut): Part => {
     files: members.flatMap((member) => member.files),
     members,
     base: context.cut.base,
-    rest: [],
   };
 };
 
-/** The bucket of the folders that wait, with the loose files of the directory. */
+/** The bucket of the folders that wait. */
 const bucketPart = (paths: ReadonlyArray<string>, context: Cut): Part => {
   const { cut } = context;
   const members = foldersOf(paths, context);
   return {
     kind: "more",
     path: cut.base,
-    files: [...members.flatMap((member) => member.files), ...cut.rest],
+    files: members.flatMap((member) => member.files),
     members,
     base: cut.base,
-    rest: cut.rest,
   };
 };
 
 /** The loose files of one directory, a node of their own named after it. */
 const looseFiles = (directory: string, files: ReadonlyArray<string>): Part => ({
-  kind: "other",
+  kind: "files",
   path: directory,
   files,
   members: [],
   base: directory,
-  rest: [],
 });
 
-/** The nodes of loose files: those of the directory cut (unless a bucket holds them) and those of each directory passed through, each named after its own directory. */
-const leftover = ({ cut }: Cut, restInBucket: boolean): ReadonlyArray<Part> => [
-  ...(restInBucket || cut.rest.length === 0
-    ? []
-    : [looseFiles(cut.base, cut.rest)]),
+/** The nodes of loose files: those of the directory cut and those of each directory passed through, each named after its own directory. */
+const leftover = ({ cut }: Cut): ReadonlyArray<Part> => [
+  ...(cut.rest.length === 0 ? [] : [looseFiles(cut.base, cut.rest)]),
   ...cut.outer.map(({ directory, files }) => looseFiles(directory, files)),
 ];
 
-/** Territories first, then test-only code, then buckets and loose files. */
-const roleOf = ({ kind }: Part): number => {
-  if (kind === "folder" || kind === "group") {
-    return 0;
-  }
-  return kind === "tests" ? 1 : 2;
-};
+/** Territories (loose files included) first, then the bucket. */
+const roleOf = ({ kind }: Part): number => (kind === "more" ? 1 : 0);
 
 /**
  * The parts that open now: the `weigh`tiest `FANOUT - 1` groups of folders
- * (all of them when there are at most `FANOUT`), and what waits: a bucket of
- * the rest, or else the loose files. Territories come first, then test-only
- * code, then the bucket.
+ * (all of them when there are at most `FANOUT`) and the loose files, and what
+ * waits: a bucket of the other folders. Territories and loose files come
+ * first, then the bucket.
  */
 export const openKids = (
   groups: ReadonlyArray<Together>,
@@ -107,7 +97,7 @@ export const openKids = (
   const bucket = crowded
     ? [bucketPart(ranked.slice(FANOUT - 1).flat(), context)]
     : [];
-  return [...opened, ...bucket, ...leftover(context, crowded)].toSorted(
+  return [...opened, ...bucket, ...leftover(context)].toSorted(
     (a, b) => roleOf(a) - roleOf(b),
   );
 };

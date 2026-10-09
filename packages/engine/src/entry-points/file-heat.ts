@@ -1,20 +1,16 @@
-// Owns the heat share of a set of files: how much of all the production
-// code's heat they hold.
+// Owns the heat share of a set of files: how much of all the heat they hold.
 import { heatOfFile } from "../heat/file-heat.js";
 import type { FileStats } from "../model/analysis.js";
-import type { Territory } from "../model/territory.js";
-import { chainsOf } from "./ancestry.js";
 
 /** What the entry points ask of the files' heat. */
 export type FileHeat = {
   /**
-   * The share of all the production code's heat (the heat of every file that
-   * is not test code) that the files named by `paths` hold, each counted once;
-   * a path that names no file, or a test file, holds none, and no heat at all
+   * The share of all the heat that the files named by `paths` hold, each
+   * counted once; a path that names no file holds none, and no heat at all
    * gives 0.
    */
   readonly share: (paths: Iterable<string>) => number;
-  /** The share of all the production code's heat that the files hold, each scaled by its weight. */
+  /** The share of all the heat that the files hold, each scaled by its weight. */
   readonly weighted: (
     weights: Iterable<readonly [path: string, weight: number]>,
   ) => number;
@@ -23,18 +19,15 @@ export type FileHeat = {
 };
 
 /**
- * The heat of the production code of `files` (a test file holds none, in the
- * total too), as questions about sets of paths. Every entry point scores in
- * this one unit; tests are change effort but not design.
+ * The heat of `files` (no test code: tests are no design), as questions about
+ * sets of paths. Every entry point scores in this one unit.
  */
 export const fileHeatOf = (
   files: ReadonlyArray<
-    Pick<FileStats, "path" | "test" | "changes" | "loc" | "complexity">
+    Pick<FileStats, "path" | "changes" | "loc" | "complexity">
   >,
 ): FileHeat => {
-  const heat = new Map(
-    files.map((file) => [file.path, file.test ? 0 : heatOfFile(file)]),
-  );
+  const heat = new Map(files.map((file) => [file.path, heatOfFile(file)]));
   const changes = new Map(files.map(({ path, changes: own }) => [path, own]));
   const total = [...heat.values()].reduce((sum, own) => sum + own, 0);
   const weighted = (
@@ -51,35 +44,4 @@ export const fileHeatOf = (
     weighted,
     changesOf: (path) => changes.get(path) ?? 0,
   };
-};
-
-/**
- * For every territory, the share of all the production code's heat (test code
- * left out of the territory and of the total) that its files hold, below it
- * included; `nodes` is the territory tree and each file names its finest
- * territory. Tests are change effort but not design, so this is the base the
- * entry points that judge a territory rank on.
- */
-export const codeHeatShares = (
-  files: ReadonlyArray<
-    Pick<FileStats, "territory" | "test" | "changes" | "loc" | "complexity">
-  >,
-  nodes: ReadonlyArray<Pick<Territory, "id" | "parent">>,
-): ReadonlyMap<string, number> => {
-  const chainOf = chainsOf(nodes);
-  const heat = new Map<string, number>();
-  let total = 0;
-  for (const file of files) {
-    if (file.test) {
-      continue;
-    }
-    const own = heatOfFile(file);
-    total += own;
-    for (const id of chainOf(file.territory)) {
-      heat.set(id, (heat.get(id) ?? 0) + own);
-    }
-  }
-  return new Map(
-    [...heat].map(([id, own]) => [id, total === 0 ? 0 : own / total]),
-  );
 };

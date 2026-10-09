@@ -45,7 +45,7 @@ const ModuleDepth = Schema.Struct({
    * `default` like a name.
    */
   exports: Schema.Int.check(Schema.isGreaterThanOrEqualTo(1)),
-  /** Non-blank lines of the module's files that are neither entry points, test code, nor tool configuration (`*.config.{js,ts,mjs,…}`). At least 1. */
+  /** Non-blank lines of the module's files that are neither entry points nor tool configuration (`*.config.{js,ts,mjs,…}`). At least 1. */
   implementationLines: Schema.Int.check(Schema.isGreaterThanOrEqualTo(1)),
   /**
    * `implementationLines / exports`, rounded to 4 decimals. A low value is a
@@ -62,15 +62,8 @@ export const Module = Schema.Struct({
   path: Schema.String,
   /** `package`: the directory has its own manifest (`package.json`, `go.mod`, …); `directory`: fallback grouping, also of a lone package or other module that held most of the files and was split by directory. */
   kind: Schema.Literals(["package", "directory"]),
-  /** Universe files in the module. */
+  /** Universe files in the module (test code is in no module). */
   files: Count,
-  /**
-   * Every universe file in the module is test code: it has a test suffix or
-   * lies below a directory named test, tests, __tests__, spec, specs, e2e,
-   * fixtures, __fixtures__, testing, test-utils, test-helpers, __mocks__,
-   * mocks, or __snapshots__. Test-only modules are never ranked.
-   */
-  testOnly: Schema.Boolean,
   /** Counted changes (logical changes of at most `Thresholds.maxCommitFiles` files, see `Analysis.logicalChanges`) that touched the module. */
   commits: Count,
   /** Of those, changes that touched no universe file outside the module. */
@@ -80,9 +73,8 @@ export const Module = Schema.Struct({
   /**
    * The change radius around the module: the median number of modules,
    * itself included, that the counted changes touching it touched (see
-   * `Analysis.changeRadius`; test-only modules are not counted, and a lower
-   * median keeps it a whole number). 1 means its changes usually stay inside.
-   * Null when no counted change touched it, and for a test-only module.
+   * `Analysis.changeRadius`; a lower median keeps it a whole number). 1 means
+   * its changes usually stay inside. Null when no counted change touched it.
    */
   radius: Schema.NullOr(Schema.Int.check(Schema.isGreaterThanOrEqualTo(1))),
   /** Modules it changes with, most shared changes first; at most five. */
@@ -95,7 +87,7 @@ export const Module = Schema.Struct({
   entryPoints: Schema.Array(Schema.String),
   /** Counted changes that touched an entry point. */
   interfaceCommits: Count,
-  /** Counted changes that touched a module file that is neither an entry point nor test code (see `testOnly`). */
+  /** Counted changes that touched a module file that is no entry point. */
   implementationCommits: Count,
   /**
    * Share of the `implementationCommits` that also touched an entry point,
@@ -106,7 +98,7 @@ export const Module = Schema.Struct({
   /**
    * The module's interface is called out as leaky: `leakage` is at least
    * `Thresholds.minLeakage` over at least `Thresholds.minImplementationCommits`
-   * implementation changes, and the module is not `testOnly`. `modules` is in
+   * implementation changes. `modules` is in
    * cohesion order, so look for this flag rather than for the first entries.
    */
   leakyInterface: Schema.Boolean,
@@ -119,8 +111,8 @@ export const Module = Schema.Struct({
    * followed within the module (an external package, an unresolved specifier,
    * a specifier that resolves to several files, a file of another module), or
    * two bindings of a name cannot be told apart, it exports nothing, or no file is left to
-   * count as implementation (all code sits in the entry points, in test code
-   * or in configuration files). Null is never a depth of zero.
+   * count as implementation (all code sits in the entry points or in
+   * configuration files). Null is never a depth of zero.
    */
   depth: Schema.NullOr(ModuleDepth),
   /**
@@ -131,15 +123,15 @@ export const Module = Schema.Struct({
    */
   trend: Schema.NullOr(ModuleTrend),
   /**
-   * How the module's cohesion moved over `Analysis.series`; null for a test-only
-   * module and unless the module has evidence in at least
+   * How the module's cohesion moved over `Analysis.series`; null unless the
+   * module has evidence in at least
    * `Thresholds.minTrendWindows` windows (see `ModuleErosion`).
    */
   erosion: Schema.NullOr(ModuleErosion),
   /**
    * The fixes among the counted changes that touched the module (see
-   * `FixDensity`); null unless `Analysis.fixDensity` is `known`, for a
-   * test-only module, and for one no counted change touched.
+   * `FixDensity`); null unless `Analysis.fixDensity` is `known`, and for a
+   * module no counted change touched.
    */
   fixDensity: Schema.NullOr(ModuleFixes),
 });

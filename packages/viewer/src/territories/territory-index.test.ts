@@ -102,10 +102,7 @@ describe("territoryName", () => {
     });
   });
 
-  it("says what test code and a bucket are", () => {
-    expect(
-      territoryName(territoryNode("a", "apps/cli", { kind: "tests" })),
-    ).toBe("tests in apps/cli");
+  it("says what a bucket is", () => {
     expect(
       territoryName(
         territoryNode("b", "packages", {
@@ -122,5 +119,18 @@ describe("territoryName", () => {
         }),
       ),
     ).toBe("other files in adev");
+  });
+});
+
+describe("territoryNameParts of loose files", () => {
+  it("names loose files by the glob of their directory, the parent dimmed", () => {
+    expect(
+      territoryNameParts(
+        territoryNode("a", "packages/a/src/*", { kind: "files" }),
+      ),
+    ).toEqual({ dir: "packages/a/", base: "src/*" });
+    expect(
+      territoryNameParts(territoryNode("b", "*", { kind: "files" })),
+    ).toEqual({ dir: "", base: "*" });
   });
 });

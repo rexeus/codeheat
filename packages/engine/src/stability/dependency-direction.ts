@@ -122,11 +122,10 @@ const reasonFor = (
 
 /**
  * The import edges between modules that point from a stable module to a
- * volatile one: `dependencies` says what each non-test file loads, `homes`
+ * volatile one: `dependencies` says what each file loads, `homes`
  * which module each file lives in, `measured` how often each module changed
  * (`Module.commits`), and `history` which files changed in the same changes.
- * An edge is flagged when neither module is test-only, the imported one
- * changed in at least `minModuleCommits` counted changes (fewer say nothing
+ * An edge is flagged when the imported module changed in at least `minModuleCommits` counted changes (fewer say nothing
  * about volatility), and in at least `MIN_VOLATILITY_RATIO` times as many as
  * the importing one, which may not have changed at all.
  *
@@ -147,9 +146,7 @@ export const dependencyDirection = (
   minModuleCommits: number,
 ): ReadonlyArray<DependencyDirection> => {
   const commitsOf = new Map(
-    measured
-      .filter((module) => !module.testOnly)
-      .map((module) => [module.path, module.commits]),
+    measured.map((module) => [module.path, module.commits]),
   );
   const edges = edgesOf(inputs.dependencies, inputs.homes);
   const changed = changedTogether(edges, inputs.history);

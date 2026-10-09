@@ -4,7 +4,7 @@ import type { FileStats } from "../model/analysis.js";
 import type { Territories } from "../model/territory.js";
 import { fileRecord } from "../testing/file-record.js";
 import { territoryRecord } from "../testing/territory-record.js";
-import { hotspotsOf, hottestFiles } from "./hotspots-of.js";
+import { hotspotsOf, hotFilesOf } from "./hotspots-of.js";
 
 /** The repository split into the folder `app` and a bucket of smaller folders, both at the recommended detail. */
 const TERRITORIES: Territories = {
@@ -32,15 +32,14 @@ const file = (
 
 const hotspotsFor = (files: ReadonlyArray<FileStats>) =>
   hotspotsOf(
-    hottestFiles({ files, territories: TERRITORIES }),
+    hotFilesOf({ files, territories: TERRITORIES }),
     (id) => `path of ${id}`,
   );
 
 describe("hotspotsOf", () => {
-  it("lists production files by their percent of all the heat, test code counted in the whole", () => {
+  it("lists files by their percent of all the heat", () => {
     const hotspots = hotspotsFor([
       file("src/app/b.ts", 3),
-      file("src/app/a.test.ts", 4, { test: true }),
       file("src/app/a.ts", 1, {
         loc: 80,
         complexity: { total: 20, mean: 1, max: 3 },
@@ -53,7 +52,7 @@ describe("hotspotsOf", () => {
       {
         path: "src/app/b.ts",
         area: "path of app",
-        heat: 37.5,
+        heat: 75,
         changes: 3,
         lines: 100,
         complexity: 0,
@@ -62,7 +61,7 @@ describe("hotspotsOf", () => {
       {
         path: "src/app/a.ts",
         area: "path of app",
-        heat: 12.5,
+        heat: 25,
         changes: 1,
         lines: 80,
         complexity: 20,

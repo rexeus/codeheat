@@ -126,8 +126,7 @@ export const boundaryOn = (
     evidence: {
       containment: 0.35,
       distantPairs: 79,
-      heatShare: 0.1,
-      codeHeatShare: 0.12,
+      heatShare: 0.12,
     },
     findings: [
       {
@@ -137,8 +136,7 @@ export const boundaryOn = (
         evidence: {
           containment: 0.35,
           distantPairs: 79,
-          heatShare: 0.1,
-          codeHeatShare: 0.12,
+          heatShare: 0.12,
         },
         files: [],
         territories,

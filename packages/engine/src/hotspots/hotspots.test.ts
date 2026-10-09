@@ -21,18 +21,12 @@ const measure = (
   complexity: { loc, total: complexityTotal, mean: 1.5, max: 4 },
 });
 
-const coupling = (
-  a: string,
-  b: string,
-  sharedCommits: number,
-  testPair = false,
-): Coupling => ({
+const coupling = (a: string, b: string, sharedCommits: number): Coupling => ({
   a,
   b,
   sharedCommits,
   degree: 0.5,
   distance: 0,
-  testPair,
   kinds: { a: "code", b: "code" },
   crossesModule: false,
   imports: null,
@@ -161,12 +155,12 @@ describe("rankFiles reasons", () => {
     ]);
   });
 
-  it("explains a file by its strongest co-change partner, never by its test", () => {
+  it("explains a file by its strongest co-change partner", () => {
     const byPath = new Map(
-      rankFiles(files, [
-        coupling("a.ts", "b.ts", 3),
-        coupling("a.ts", "a.test.ts", 6, true),
-      ]).map((stats) => [stats.path, stats.reasons]),
+      rankFiles(files, [coupling("a.ts", "b.ts", 3)]).map((stats) => [
+        stats.path,
+        stats.reasons,
+      ]),
     );
 
     expect(byPath.get("a.ts")?.at(-1)).toBe(
@@ -228,13 +222,7 @@ describe("rankFiles hidden coupling reason", () => {
     );
   });
 
-  it("does not call a file's test hidden", () => {
-    const testPair = { ...hidden("a.ts", "b.ts", 3), testPair: true };
-
-    expect(reasonsFor("b.ts", [testPair])?.slice(2)).toStrictEqual([]);
-  });
-
-  it("words only the strongest non-test partner, so a weaker hidden one stays a co-change", () => {
+  it("words only the strongest partner, so a weaker hidden one stays a co-change", () => {
     const reasons = reasonsFor("x.ts", [
       { ...coupling("p.ts", "x.ts", 4), imports: "a→b" },
       hidden("q.ts", "x.ts", 2),
@@ -242,37 +230,6 @@ describe("rankFiles hidden coupling reason", () => {
 
     expect(reasons?.slice(2)).toStrictEqual([
       "co-changes with p.ts in 100% of its changes",
-    ]);
-  });
-});
-
-describe("rankFiles test flag", () => {
-  it("marks files with a test suffix or below a test directory", () => {
-    const paths = [
-      "src/a.ts",
-      "src/a.test.ts",
-      "src/a_spec.rb",
-      "test/utils.ts",
-      "src/__tests__/a.ts",
-      "src/test",
-    ];
-
-    const files = rankFiles(
-      paths.map((path) => measure(path, 1, 10, 0)),
-      [],
-    );
-
-    expect(
-      files
-        .toSorted((a, b) => a.path.localeCompare(b.path))
-        .map((file) => [file.path, file.test]),
-    ).toEqual([
-      ["src/__tests__/a.ts", true],
-      ["src/a_spec.rb", true],
-      ["src/a.test.ts", true],
-      ["src/a.ts", false],
-      ["src/test", false],
-      ["test/utils.ts", true],
     ]);
   });
 });

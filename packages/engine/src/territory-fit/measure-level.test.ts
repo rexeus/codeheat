@@ -6,14 +6,13 @@ import { territoryRecord } from "../testing/territory-record.js";
 import type { Level } from "./levels.js";
 import { measureLevel } from "./measure-level.js";
 
-/** Four territories: a, b, and d are code, t is test-only, o is a bucket. */
+/** Four territories: a, b, and d are code, o is a bucket. */
 const LEVEL: Level = {
   detail: 2,
   areas: [
     territoryRecord("a", "folder", "r"),
     territoryRecord("b", "package", "r"),
     territoryRecord("d", "folder", "r"),
-    territoryRecord("t", "tests", "r"),
     territoryRecord("o", "other", "r"),
   ],
   areaOfFile: new Map([
@@ -21,7 +20,6 @@ const LEVEL: Level = {
     ["a/y.ts", "a"],
     ["b/x.ts", "b"],
     ["d/x.ts", "d"],
-    ["t/x.test.ts", "t"],
     ["o/x.ts", "o"],
   ]),
 };
@@ -51,7 +49,6 @@ const coupling = (
   sharedCommits: 4,
   degree: 0.8,
   distance: 2,
-  testPair: false,
   kinds: { a: "code", b: "code" },
   crossesModule: true,
   imports,
@@ -73,21 +70,6 @@ describe("measureLevel containment and radius", () => {
     });
     expect(fits.get("b")).toMatchObject({ containment: 0, radius: 2 });
     expect(fits.get("d")).toMatchObject({ containment: 0, radius: 3 });
-  });
-
-  it("does not let a test-only territory spread a change or count as one", () => {
-    const { fits } = measured([
-      ...times(3, "a/x.ts", "t/x.test.ts"),
-      ...times(2, "t/x.test.ts"),
-    ]);
-
-    expect(fits.get("a")).toMatchObject({ containment: 1, radius: 1 });
-    expect(fits.get("t")).toMatchObject({
-      containment: null,
-      radius: null,
-      erosion: null,
-      fixDensity: null,
-    });
   });
 
   it("leaves a territory no change touched without containment", () => {
@@ -158,7 +140,6 @@ describe("measureLevel cliques, pairs, and fixes", () => {
       ["a", 1],
       ["b", 1],
       ["d", 1],
-      ["t", 0],
       ["o", 0],
     ]);
   });
@@ -168,8 +149,7 @@ describe("measureLevel cliques, pairs, and fixes", () => {
       coupling("a/x.ts", "b/x.ts", "none"),
       coupling("a/x.ts", "d/x.ts", "a→b"),
       coupling("a/x.ts", "a/y.ts", "none"),
-      coupling("a/x.ts", "t/x.test.ts", "none"),
-      coupling("a/y.ts", "b/x.test.ts", "none"),
+      coupling("a/y.ts", "contract/x.tsp", "none"),
     ]);
 
     expect(fits.get("a")).toMatchObject({ distantPairs: 2, hiddenPairs: 1 });

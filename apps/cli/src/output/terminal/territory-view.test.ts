@@ -12,7 +12,6 @@ const node = (id: string, kind: Territories["nodes"][number]["kind"]) => ({
   parent: null,
   children: [],
   files: 3,
-  testFiles: 0,
   changes: 1,
   heatShare: 0,
   description: id,
@@ -21,7 +20,7 @@ const node = (id: string, kind: Territories["nodes"][number]["kind"]) => ({
 });
 
 describe("territoryLines", () => {
-  it("counts the territories at the recommended detail, leaving buckets, loose files, and test-only code out", () => {
+  it("counts the areas at the recommended detail: loose files from 1% of the heat, no buckets", () => {
     const territories: Territories = {
       recommended: 2,
       details: [
@@ -33,8 +32,8 @@ describe("territoryLines", () => {
         node("a", "folder"),
         node("b", "package"),
         node("c", "group"),
-        node("d", "tests"),
-        node("e", "other"),
+        { ...node("d", "files"), heatShare: 0.02 },
+        { ...node("e", "files"), heatShare: 0.005 },
         node("f", "folder"),
         node("g", "folder"),
         node("h", "folder"),
@@ -42,7 +41,7 @@ describe("territoryLines", () => {
     };
 
     expect(territoryLines({ territories })).toStrictEqual([
-      "Areas: 3 at the recommended detail (2 of 3); --json has every detail.",
+      "Areas: 4 at the recommended detail (2 of 3); --json has every detail.",
     ]);
   });
 
@@ -94,53 +93,10 @@ describe("fileTerritoryLine", () => {
   });
 });
 
-describe("fileTerritoryLine of test code", () => {
-  it("says that the file is test code of the territory it belongs to, with that territory's line, rather than that nothing was counted", () => {
-    const withTests = [
-      ...nodes,
-      {
-        ...node("t", "tests"),
-        path: "billing",
-        parent: "a",
-        changes: 150,
-        fit: null,
-      },
-    ];
-
-    expect(fileTerritoryLine(withTests, "t")).toStrictEqual([
-      "test code of billing: 150 changes",
-      "territory billing: 46% of 13 changes stay inside, most often with web (6)",
-    ]);
-  });
-
-  it("walks up to the nearest territory with a fit when the one holding the test code has none", () => {
-    const withTests = [
-      ...nodes,
-      {
-        ...node("m", "folder"),
-        path: "billing/src",
-        parent: "a",
-        changes: 50,
-        fit: null,
-      },
-      {
-        ...node("t", "tests"),
-        path: "billing/test",
-        parent: "m",
-        changes: 150,
-        fit: null,
-      },
-    ];
-
-    expect(fileTerritoryLine(withTests, "t")).toStrictEqual([
-      "test code of billing/src: 150 changes",
-      "territory billing: 46% of 13 changes stay inside, most often with web (6)",
-    ]);
-  });
-
+describe("fileTerritoryLine without a line to show", () => {
   it("says that nothing was counted for a territory no change touched", () => {
     expect(
-      fileTerritoryLine([{ ...node("t", "tests"), changes: 0 }], "t"),
+      fileTerritoryLine([{ ...node("t", "folder"), changes: 0 }], "t"),
     ).toStrictEqual(["territory t: no counted changes"]);
   });
 
