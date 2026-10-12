@@ -17,6 +17,9 @@ describe("the default exclude patterns", () => {
         [
           "a.test.ts",
           "src/a.spec.tsx",
+          "pkg/a_test.go",
+          "src/app_spec.ts",
+          "typetest/Effect.tst.ts",
           "src/__tests__/a.ts",
           "src/__mocks__/fs.ts",
           "test/setup.ts",
@@ -42,6 +45,9 @@ describe("the default exclude patterns", () => {
     ).toStrictEqual([
       ["a.test.ts", "**/*.test.*"],
       ["src/a.spec.tsx", "**/*.spec.*"],
+      ["pkg/a_test.go", "**/*_test.*"],
+      ["src/app_spec.ts", "**/*_spec.*"],
+      ["typetest/Effect.tst.ts", "**/*.tst.*"],
       ["src/__tests__/a.ts", "**/__tests__/**"],
       ["src/__mocks__/fs.ts", "**/__mocks__/**"],
       ["test/setup.ts", "**/test/**"],
@@ -66,7 +72,7 @@ describe("the default exclude patterns", () => {
 });
 
 describe("the default exclude patterns beside production code", () => {
-  it("keep production code and the test conventions of other languages", () => {
+  it("keep production code, test support folders, and contracts in a spec folder", () => {
     expect(
       patternOf(
         [
@@ -74,7 +80,7 @@ describe("the default exclude patterns beside production code", () => {
           "src/build.ts",
           "src/testing/projects.ts",
           "spec/main.tsp",
-          "src/a_test.go",
+          "src/latest.ts",
         ],
         activeExcludes([], true),
       ),
@@ -83,7 +89,7 @@ describe("the default exclude patterns beside production code", () => {
       ["src/build.ts", undefined],
       ["src/testing/projects.ts", undefined],
       ["spec/main.tsp", undefined],
-      ["src/a_test.go", undefined],
+      ["src/latest.ts", undefined],
     ]);
   });
 });

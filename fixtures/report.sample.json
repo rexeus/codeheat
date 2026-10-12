@@ -104,6 +104,21 @@
       "files": 0
     },
     {
+      "pattern": "**/*_test.*",
+      "source": "default",
+      "files": 0
+    },
+    {
+      "pattern": "**/*_spec.*",
+      "source": "default",
+      "files": 0
+    },
+    {
+      "pattern": "**/*.tst.*",
+      "source": "default",
+      "files": 0
+    },
+    {
       "pattern": "**/__tests__/**",
       "source": "default",
       "files": 0

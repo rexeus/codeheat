@@ -20,6 +20,9 @@ export type ExcludePattern = {
 const DEFAULT_EXCLUDES: ReadonlyArray<string> = [
   "**/*.test.*",
   "**/*.spec.*",
+  "**/*_test.*",
+  "**/*_spec.*",
+  "**/*.tst.*",
   "**/__tests__/**",
   "**/__mocks__/**",
   "**/test/**",
