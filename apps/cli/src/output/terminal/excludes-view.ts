@@ -29,11 +29,24 @@ const mostOf = (used: ReadonlyArray<Exclude>): string => {
   return used.length === 1 ? pattern : `most: ${pattern} ${count(most.files)}`;
 };
 
+/** What `--no-default-excludes` would keep: all the files left out, or only the defaults' share when `--exclude` took part too. */
+const keepHint = (used: ReadonlyArray<Exclude>): string => {
+  const defaults = used.filter(({ source }) => source === "default");
+  if (defaults.length === 0) {
+    return "";
+  }
+  if (defaults.length === used.length) {
+    return " --no-default-excludes keeps them.";
+  }
+  const files = defaults.reduce((sum, exclude) => sum + exclude.files, 0);
+  return ` --no-default-excludes keeps the ${count(files)} the defaults left out.`;
+};
+
 /**
  * One line on the files the exclude patterns left out (see
  * `Analysis.excludes`), with how many patterns of each source took part and
  * the one that took the most; when a default pattern took part, the flag that
- * keeps them. Nothing when no pattern left a file out.
+ * keeps what the defaults left out. Nothing when no pattern left a file out.
  */
 export const excludedLines = ({
   excludes,
@@ -43,10 +56,7 @@ export const excludedLines = ({
     return [];
   }
   const files = used.reduce((sum, exclude) => sum + exclude.files, 0);
-  const keep = used.some(({ source }) => source === "default")
-    ? " --no-default-excludes keeps them."
-    : "";
   return [
-    `Left out: ${count(files)} ${files === 1 ? "file" : "files"} by ${byPatterns(used)} (${mostOf(used)}).${keep}`,
+    `Left out: ${count(files)} ${files === 1 ? "file" : "files"} by ${byPatterns(used)} (${mostOf(used)}).${keepHint(used)}`,
   ];
 };

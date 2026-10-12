@@ -337,7 +337,7 @@ describe("renderInspect excluded files", () => {
     expect(view.split("\n").slice(1)).toStrictEqual([
       "",
       "src/a.test.ts",
-      "left out by the default pattern **/*.test.*; --no-default-excludes analyzes it",
+      "left out by the default pattern **/*.test.*; --no-default-excludes includes it unless an explicit signal (linguist, minified, binary) keeps it out",
       "",
       "gen/b.ts",
       "left out by --exclude gen/**",

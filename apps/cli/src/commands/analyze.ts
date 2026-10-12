@@ -136,7 +136,7 @@ export const analyzeCommand = Command.make(
     },
     {
       command:
-        'codeheat analyze packages/api --since 6m --exclude "**/fixtures/**" --json',
+        'codeheat analyze packages/api --since 6m --exclude "**/testing/**" --json',
       description: "One package over six months, as JSON for an agent",
     },
   ]),

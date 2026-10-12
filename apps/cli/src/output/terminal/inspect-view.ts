@@ -130,7 +130,7 @@ const excludedLines = (
 ): ReadonlyArray<string> => [
   style.bold(escapeForTerminal(path)),
   source === "default"
-    ? `left out by the default pattern ${escapeForTerminal(pattern)}; --no-default-excludes analyzes it`
+    ? `left out by the default pattern ${escapeForTerminal(pattern)}; --no-default-excludes includes it unless an explicit signal (linguist, minified, binary) keeps it out`
     : `left out by --exclude ${escapeForTerminal(pattern)}`,
 ];
 

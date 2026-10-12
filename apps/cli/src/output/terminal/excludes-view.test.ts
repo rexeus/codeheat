@@ -14,7 +14,21 @@ describe("excludedLines", () => {
         ],
       }),
     ).toStrictEqual([
-      "Left out: 3,633 files by 2 default patterns and 1 --exclude pattern (most: **/*.spec.* 2,901). --no-default-excludes keeps them.",
+      "Left out: 3,633 files by 2 default patterns and 1 --exclude pattern (most: **/*.spec.* 2,901). --no-default-excludes keeps the 3,601 the defaults left out.",
+    ]);
+  });
+
+  it("says the flag keeps them all when only default patterns left files out", () => {
+    expect(
+      excludedLines({
+        excludes: [
+          { pattern: "**/*.test.*", source: "default", files: 2 },
+          { pattern: "**/dist/**", source: "default", files: 1 },
+          { pattern: "gen/**", source: "user", files: 0 },
+        ],
+      }),
+    ).toStrictEqual([
+      "Left out: 3 files by 2 default patterns (most: **/*.test.* 2). --no-default-excludes keeps them.",
     ]);
   });
 
