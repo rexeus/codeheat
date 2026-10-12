@@ -15,7 +15,7 @@ import { TerritoryFit } from "./territory-fit.js";
  * directory, named `<dir>/*`, those directly in it and in folders too small to be territories,
  * when its folders are territories of their own; judged like any other when it holds at least 1% of all the heat, and otherwise, like a bucket, no real territory.
  * `other`: a bucket of smaller folders that wait for a finer detail; never a
- * real territory. Test code is in no territory.
+ * real territory.
  */
 const TerritoryKind = Schema.Literals([
   "package",
@@ -46,7 +46,7 @@ export const Territory = Schema.Struct({
   parent: Schema.NullOr(Schema.String),
   /** `id`s of the territories it splits into, real territories first, then `other`; empty when it does not split. */
   children: Schema.Array(Schema.String),
-  /** Code files in the territory (test code is in none). */
+  /** Code files in the territory. */
   files: Count,
   /** Counted changes (see `Analysis.logicalChanges`) that touched any file of the territory. */
   changes: Count,

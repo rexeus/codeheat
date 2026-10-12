@@ -8,6 +8,7 @@ import { FileStats } from "./analysis.js";
 import { FileKind } from "./contract-file.js";
 import { CopyFamily } from "./copy-family.js";
 import { EntryPoint } from "./entry-point.js";
+import { ExcludeSource } from "./excludes.js";
 import { Module } from "./module.js";
 import { Count, UnitInterval } from "./scalars.js";
 import { Territory } from "./territory.js";
@@ -87,14 +88,20 @@ export const InspectResult = Schema.Struct({
    */
   contractFiles: Schema.Array(Schema.String),
   /**
-   * Test code the patterns matched (see `Analysis.testCode`), sorted by path,
-   * with the counted changes that touched each. Test code is not judged: it
-   * has no rank, heat, partners, or territory, and no entry in `matches`.
+   * Tracked files the patterns matched that an exclude pattern left out (see
+   * `Analysis.excludes`), sorted by path, each with the first pattern that
+   * matches it and where that pattern comes from. An excluded file is in no
+   * measure: it has no rank, heat, partners, or territory, and no entry in
+   * `matches`.
    */
-  testCode: Schema.Array(
-    Schema.Struct({ path: Schema.String, changes: Count }),
+  excluded: Schema.Array(
+    Schema.Struct({
+      path: Schema.String,
+      pattern: Schema.String,
+      source: ExcludeSource,
+    }),
   ),
-  /** Requested paths or globs that matched no universe file; one that matched only contract files or test code is not listed here. */
+  /** Requested paths or globs that matched no universe file; one that matched only contract files or excluded files is not listed here. */
   unmatched: Schema.Array(Schema.String),
 });
 export type InspectResult = typeof InspectResult.Type;

@@ -112,14 +112,13 @@ const reportOf = (
   thresholds: DEFAULT_THRESHOLDS,
   totals: {
     files: files.length,
-    testCode: 0,
     contracts: 0,
     couplings: couplings.length,
     modules: 2,
     generated: 0,
   },
   files,
-  testCode: [],
+  excludes: [],
   contracts: [],
   ubiquitousFiles: [],
   couplings,
@@ -137,7 +136,7 @@ const universe = [
 
 describe("inspect matching", () => {
   it("reports an exact path with its rank of the whole universe", () => {
-    const result = inspect(reportOf(universe), ["src/b.ts"]);
+    const result = inspect(reportOf(universe), ["src/b.ts"], []);
 
     expect(result.matches).toHaveLength(1);
     expect(result.matches[0]).toMatchObject({
@@ -158,7 +157,7 @@ describe("inspect matching", () => {
       universe[2],
     ].filter((file) => file !== undefined);
 
-    const result = inspect(reportOf(shuffled), ["src/*.ts"]);
+    const result = inspect(reportOf(shuffled), ["src/*.ts"], []);
 
     expect(result.matches.map(({ path, rank }) => [path, rank])).toStrictEqual([
       ["src/a.ts", 1],
@@ -168,7 +167,7 @@ describe("inspect matching", () => {
   });
 
   it("matches an exact path that contains glob characters", () => {
-    const result = inspect(reportOf(universe), ["src/[id].ts"]);
+    const result = inspect(reportOf(universe), ["src/[id].ts"], []);
 
     expect(result.matches.map(({ path }) => path)).toStrictEqual([
       "src/[id].ts",
@@ -176,11 +175,11 @@ describe("inspect matching", () => {
   });
 
   it("lists a pattern that matches no universe file under unmatched", () => {
-    const result = inspect(reportOf(universe), [
-      "src/a.ts",
-      "nope/**",
-      "gone.ts",
-    ]);
+    const result = inspect(
+      reportOf(universe),
+      ["src/a.ts", "nope/**", "gone.ts"],
+      [],
+    );
 
     expect(result.matches.map(({ path }) => path)).toStrictEqual(["src/a.ts"]);
     expect(result.unmatched).toStrictEqual(["nope/**", "gone.ts"]);
@@ -196,7 +195,7 @@ describe("inspect partners", () => {
     );
     const report = reportOf([stats("hub.ts", 1, 20)], couplings);
 
-    const [entry] = inspect(report, ["hub.ts"]).matches;
+    const [entry] = inspect(report, ["hub.ts"], []).matches;
 
     // p11.ts shares 14 commits (0.7), p2.ts shares 5 (0.25); p1.ts and p0.ts fall off
     expect(entry?.partners.map(({ path }) => path)).toStrictEqual(
@@ -221,7 +220,7 @@ describe("inspect partners", () => {
       [coupling("a.ts", "b.ts", 3)],
     );
 
-    const [a] = inspect(report, ["a.ts"]).matches;
+    const [a] = inspect(report, ["a.ts"], []).matches;
 
     // 3 shared commits / 7 revisions = 0.42857
     expect(a?.partners[0]?.probability).toBe(0.4286);
@@ -235,7 +234,7 @@ describe("inspect partner marks", () => {
       [coupling("a.ts", "b.ts", 4)],
     );
 
-    const [a, b] = inspect(report, ["*.ts"]).matches;
+    const [a, b] = inspect(report, ["*.ts"], []).matches;
 
     expect(a?.partners).toStrictEqual([
       {
@@ -267,7 +266,7 @@ describe("inspect partner marks", () => {
       [coupling("lib/b.ts", "src/a.ts", 5, { crossesModule: true })],
     );
 
-    const [entry] = inspect(report, ["src/a.ts"]).matches;
+    const [entry] = inspect(report, ["src/a.ts"], []).matches;
 
     expect(entry?.partners.map(({ crossesModule }) => crossesModule)).toEqual([
       true,
@@ -280,7 +279,7 @@ const importsSeenFrom = (focus: string, relation: Coupling["imports"]) => {
     [stats("src/a.ts", 1, 10), stats("src/b.ts", 2, 10)],
     [{ ...coupling("src/a.ts", "src/b.ts", 5), imports: relation }],
   );
-  return inspect(report, [focus]).matches[0]?.partners[0]?.imports;
+  return inspect(report, [focus], []).matches[0]?.partners[0]?.imports;
 };
 
 describe("inspect import relations", () => {
@@ -303,24 +302,24 @@ describe("inspect import relations", () => {
 
 describe("inspect modules", () => {
   it("lists each module of the matched files once, in report order", () => {
-    const result = inspect(reportOf(universe), [
-      "src/b.ts",
-      "src/a.ts",
-      "lib/c.ts",
-    ]);
+    const result = inspect(
+      reportOf(universe),
+      ["src/b.ts", "src/a.ts", "lib/c.ts"],
+      [],
+    );
 
     expect(result.modules.map(({ path }) => path)).toEqual(["lib", "src"]);
     expect(result.modules[0]).toEqual(modules[0]);
   });
 
   it("leaves out the modules of files that were not matched", () => {
-    const result = inspect(reportOf(universe), ["src/*.ts"]);
+    const result = inspect(reportOf(universe), ["src/*.ts"], []);
 
     expect(result.modules.map(({ path }) => path)).toEqual(["src"]);
   });
 
   it("lists no module when nothing matched", () => {
-    expect(inspect(reportOf(universe), ["nope.ts"]).modules).toEqual([]);
+    expect(inspect(reportOf(universe), ["nope.ts"], []).modules).toEqual([]);
   });
 });
 
@@ -335,7 +334,7 @@ describe("inspect contract partners", () => {
       ],
     );
 
-    const [entry] = inspect(report, ["src/a.ts"]).matches;
+    const [entry] = inspect(report, ["src/a.ts"], []).matches;
 
     expect(entry?.partners.map(({ path, kind }) => [path, kind])).toStrictEqual(
       [["api/main.tsp", "contract"]],
@@ -357,11 +356,11 @@ const withContracts = (paths: ReadonlyArray<string>): Analysis => ({
 
 describe("inspect contract files", () => {
   it("reports a matched contract file apart, without an entry, and not as unmatched", () => {
-    const result = inspect(withContracts(["api/b.tsp", "api/a.tsp"]), [
-      "api/*.tsp",
-      "src/a.ts",
-      "nope.ts",
-    ]);
+    const result = inspect(
+      withContracts(["api/b.tsp", "api/a.tsp"]),
+      ["api/*.tsp", "src/a.ts", "nope.ts"],
+      [],
+    );
 
     expect(result.matches.map(({ path }) => path)).toEqual(["src/a.ts"]);
     expect(result.contractFiles).toEqual(["api/a.tsp", "api/b.tsp"]);

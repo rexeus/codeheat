@@ -11,32 +11,36 @@ import { measureDepths } from "../modules/depth.js";
 import { detectModules } from "../modules/detect.js";
 import { findEntryPoints } from "../modules/entry-points.js";
 import { listPackageDirectories } from "../modules/package-directories.js";
+import { activeExcludes } from "../universe/excludes.js";
+import type { ExcludeCount } from "../universe/excludes.js";
 import { inventory } from "../universe/inventory.js";
-import { isTestPath } from "../universe/test-path.js";
 import type { Universe } from "./measure.js";
 
 /**
  * The universe, the depth of the modules that have one (see
- * `measureDepths`), and how many files it leaves out as generated (see
- * `Inventory.generated`).
+ * `measureDepths`), and how many files it leaves out by each exclude pattern
+ * and as generated (see `Inventory`).
  */
 export type UniverseReading = Universe & {
   readonly depths: Effect.Success<ReturnType<typeof measureDepths>>;
+  readonly excluded: ReadonlyArray<ExcludeCount>;
   readonly generated: number;
 };
 
 /**
- * Reads the universe under `root` limited to `scope`: the files `include` and
- * `exclude` leave, with the test code among them set apart (see
- * `isTestPath`), the modules and entry points of its other code files
- * (`entry` replaces detection), where its contract files live, and the module
- * depths `adapters` can measure.
+ * Reads the universe under `root` limited to `scope`: the files `include`
+ * names and the exclude patterns leave (the default ones unless
+ * `defaultExcludes` is false, then `exclude`; see `activeExcludes`), the
+ * modules and entry points of its code files (`entry` replaces detection),
+ * where its contract files live, and the module depths `adapters` can
+ * measure.
  */
 export const readUniverse = (options: {
   readonly root: string;
   readonly scope: string;
   readonly include: ReadonlyArray<string>;
   readonly exclude: ReadonlyArray<string>;
+  readonly defaultExcludes: boolean;
   readonly entry: ReadonlyArray<string>;
   readonly adapters: ReadonlyArray<LanguageAdapter>;
 }): Effect.Effect<
@@ -50,10 +54,9 @@ export const readUniverse = (options: {
       root,
       scope,
       include: options.include,
-      exclude: options.exclude,
+      exclude: activeExcludes(options.exclude, options.defaultExcludes),
     });
-    const { contracts, generated } = inventoried;
-    const files = inventoried.files.filter(({ path }) => !isTestPath(path));
+    const { files, contracts, excluded, generated } = inventoried;
     const packageDirectories = yield* listPackageDirectories(scope);
     const modules = detectModules(
       files.map((file) => file.path),
@@ -74,22 +77,19 @@ export const readUniverse = (options: {
     });
     return {
       files,
-      testCode: inventoried.files
-        .filter(({ path }) => isTestPath(path))
-        .map(({ path }) => path),
       modules,
       contracts: contractHomes(contracts, modules),
       entryPoints,
       packages: packageDirectories,
       depths,
+      excluded,
       generated,
     };
   });
 
-/** Every path of the universe: code, test code, and contract files. */
+/** Every path of the universe: code and contract files. */
 export const pathsOf = ({
   files,
-  testCode,
   contracts,
-}: Pick<Universe, "files" | "testCode" | "contracts">): ReadonlySet<string> =>
-  new Set([...files.map(({ path }) => path), ...testCode, ...contracts.keys()]);
+}: Pick<Universe, "files" | "contracts">): ReadonlySet<string> =>
+  new Set([...files.map(({ path }) => path), ...contracts.keys()]);

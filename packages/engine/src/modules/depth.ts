@@ -31,7 +31,7 @@ type DepthOptions = {
   readonly entryPoints: ReadonlyMap<string, ReadonlyArray<string>>;
 };
 
-/** Lines of the files of each module that are neither entry points, test code, nor tool configuration. */
+/** Lines of the files of each module that are neither entry points nor tool configuration. */
 const implementationLinesByModule = ({
   files,
   modules,

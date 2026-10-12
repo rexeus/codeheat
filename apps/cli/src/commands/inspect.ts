@@ -14,7 +14,12 @@ import { warnIfShallow } from "../output/shallow-warning.js";
 import { renderInspect } from "../output/terminal/inspect-view.js";
 import { version } from "../version.js";
 import { WorkingDirectory } from "../working-directory.js";
-import { entryFlag, jsonFlag, sinceFlag } from "./shared-flags.js";
+import {
+  entryFlag,
+  jsonFlag,
+  sinceFlag,
+  universeFlags,
+} from "./shared-flags.js";
 
 export const inspectCommand = Command.make(
   "inspect",
@@ -27,23 +32,28 @@ export const inspectCommand = Command.make(
     ),
     json: jsonFlag,
     since: sinceFlag,
+    ...universeFlags,
     entry: entryFlag,
   },
-  Effect.fn(function* ({ patterns, json, since, entry }) {
+  Effect.fn(function* ({ patterns, json, since, entry, ...universe }) {
     const cwd = yield* WorkingDirectory;
     const report = yield* analyze({
       cwd,
       since,
-      include: [],
-      exclude: [],
+      ...universe,
       entry,
       adapters: yield* loadLanguageAdapters,
       toolVersion: version,
     });
     yield* warnIfShallow(report);
     yield* warnIfEntryMatchedNothing(report, entry);
-    const result = yield* inspectFrom({ cwd, report, patterns });
-    if (result.matches.length === 0 && result.testCode.length === 0) {
+    const result = yield* inspectFrom({
+      cwd,
+      report,
+      patterns,
+      include: universe.include,
+    });
+    if (result.matches.length === 0 && result.excluded.length === 0) {
       return yield* new NothingMatched({
         patterns: result.unmatched,
         contracts: result.contractFiles,

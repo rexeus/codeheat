@@ -19,6 +19,7 @@ import {
   entryFlag,
   explicitSinceFlag,
   jsonFlag,
+  universeFlags,
 } from "./shared-flags.js";
 
 const DEFAULT_LIMIT = 25;
@@ -41,16 +42,7 @@ export const analyzeCommand = Command.make(
       ),
       Flag.optional,
     ),
-    include: Flag.String("include").pipe(
-      Flag.withDescription(
-        "Glob of files to analyze instead of the language list; repeatable",
-      ),
-      Flag.atLeast(0),
-    ),
-    exclude: Flag.String("exclude").pipe(
-      Flag.withDescription("Glob of files to leave out; repeatable"),
-      Flag.atLeast(0),
-    ),
+    ...universeFlags,
     entry: entryFlag,
     html: Flag.Boolean("html").pipe(
       Flag.withDescription(
@@ -82,8 +74,7 @@ export const analyzeCommand = Command.make(
     ),
   },
   Effect.fn(function* (flags) {
-    const { path, json, since, compare, include, exclude, entry, limit } =
-      flags;
+    const { path, json, since, compare, entry, limit } = flags;
     if (Option.isSome(since) && Option.isSome(compare)) {
       return yield* new FlagsConflict({ flags: ["--compare", "--since"] });
     }
@@ -100,8 +91,9 @@ export const analyzeCommand = Command.make(
       ...target,
       since: Option.getOrElse(since, () => DEFAULT_SINCE),
       compare: Option.getOrUndefined(compare),
-      include,
-      exclude,
+      include: flags.include,
+      exclude: flags.exclude,
+      defaultExcludes: flags.defaultExcludes,
       entry,
       adapters: yield* loadLanguageAdapters,
       toolVersion: version,
@@ -144,7 +136,7 @@ export const analyzeCommand = Command.make(
     },
     {
       command:
-        'codeheat analyze packages/api --since 6m --exclude "**/*.generated.ts" --json',
+        'codeheat analyze packages/api --since 6m --exclude "**/testing/**" --json',
       description: "One package over six months, as JSON for an agent",
     },
   ]),

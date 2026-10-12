@@ -42,7 +42,7 @@ type Tally = {
 type Touched = {
   /** The entry points a commit touched, per module. */
   readonly entries: Map<string, Array<string>>;
-  /** The modules whose implementation (other files, test code excluded) it touched. */
+  /** The modules whose implementation (their other files) it touched. */
   readonly implementations: Set<string>;
 };
 
@@ -109,7 +109,7 @@ const countCommit = (
 /**
  * Counts, per module, the counted commits (see `countedChanges`)
  * that touched its entry points (`interfaceCommits`) and those that touched any
- * other file that is not test code (`implementationCommits`), and the share of
+ * other file (`implementationCommits`), and the share of
  * the latter that also touched an entry point (`leakage`). Each commit of
  * `history` lists the distinct ids of the files whose current file it touched,
  * ids being indexes into `history.paths`; `entryPoints` maps each module path to its entry-point files.

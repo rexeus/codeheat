@@ -95,7 +95,7 @@ const result = (
   modules,
   territories,
   contractFiles: [],
-  testCode: [],
+  excluded: [],
   unmatched: [],
 });
 
@@ -318,5 +318,29 @@ describe("renderInspect contract-only partners", () => {
     const view = renderInspect(result([entry], [module]), makeStyle(false));
 
     expect(view).toContain("most often with spec (contracts) (20)");
+  });
+});
+
+describe("renderInspect excluded files", () => {
+  it("names the pattern that left an excluded file out, and how to keep it", () => {
+    const view = renderInspect(
+      {
+        ...result([]),
+        excluded: [
+          { path: "src/a.test.ts", pattern: "**/*.test.*", source: "default" },
+          { path: "gen/b.ts", pattern: "gen/**", source: "user" },
+        ],
+      },
+      makeStyle(false),
+    );
+
+    expect(view.split("\n").slice(1)).toStrictEqual([
+      "",
+      "src/a.test.ts",
+      "left out by the default pattern **/*.test.*; --no-default-excludes includes it unless an explicit signal (linguist, minified, binary) keeps it out",
+      "",
+      "gen/b.ts",
+      "left out by --exclude gen/**",
+    ]);
   });
 });

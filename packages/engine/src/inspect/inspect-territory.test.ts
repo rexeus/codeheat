@@ -61,7 +61,6 @@ const reportOf = (): Analysis => ({
   thresholds: DEFAULT_THRESHOLDS,
   totals: {
     files: 3,
-    testCode: 0,
     contracts: 0,
     couplings: 0,
     modules: 0,
@@ -72,7 +71,7 @@ const reportOf = (): Analysis => ({
     fileRecord("b/y.ts", "t3", { rank: 2 }),
     fileRecord("c/z.ts", "t4", { rank: 3 }),
   ],
-  testCode: [],
+  excludes: [],
   contracts: [],
   ubiquitousFiles: [],
   couplings: [],
@@ -85,7 +84,7 @@ const reportOf = (): Analysis => ({
 
 describe("inspect territories", () => {
   it("lists the territories of the matched files and the partners of their fit, in report order", () => {
-    const result = inspect(reportOf(), ["a/x.ts"]);
+    const result = inspect(reportOf(), ["a/x.ts"], []);
 
     expect(result.territories.map(({ id }) => id)).toStrictEqual(["t2", "t3"]);
     expect(result.territories[0]?.fit?.containment).toBe(0.4);
@@ -110,19 +109,21 @@ describe("inspect territories", () => {
     const report = { ...reportOf(), entryPoints: [folded] };
 
     expect(
-      inspect(report, ["a/x.ts"]).territories.map(({ id }) => id),
+      inspect(report, ["a/x.ts"], []).territories.map(({ id }) => id),
     ).toStrictEqual(["t2", "t3", "t4"]);
   });
 
   it("lists no territory that no matched file lies in or reaches into", () => {
     expect(
-      inspect(reportOf(), ["c/z.ts"]).territories.map(({ id }) => id),
+      inspect(reportOf(), ["c/z.ts"], []).territories.map(({ id }) => id),
     ).toStrictEqual(["t4"]);
-    expect(inspect(reportOf(), ["nothing.ts"]).territories).toStrictEqual([]);
+    expect(inspect(reportOf(), ["nothing.ts"], []).territories).toStrictEqual(
+      [],
+    );
   });
 
   it("names the entry points of each matched file, and none for a file outside them", () => {
-    const result = inspect(reportOf(), ["*/*.ts"]);
+    const result = inspect(reportOf(), ["*/*.ts"], []);
 
     expect(
       result.matches.map(({ path, entryPoints }) => [

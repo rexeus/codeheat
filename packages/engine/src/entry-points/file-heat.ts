@@ -19,7 +19,7 @@ export type FileHeat = {
 };
 
 /**
- * The heat of `files` (no test code: tests are no design), as questions about
+ * The heat of `files`, as questions about
  * sets of paths. Every entry point scores in this one unit.
  */
 export const fileHeatOf = (

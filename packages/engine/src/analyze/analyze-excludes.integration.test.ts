@@ -32,7 +32,7 @@ const version = (files: ReadonlyArray<string>, value: number) =>
     ]),
   );
 
-layer(NodeServices.layer)("analyze test code", (it) => {
+layer(NodeServices.layer)("analyze with the default excludes", (it) => {
   it.effect(
     "measures a change of two code files and its tests as a change of the two code files, however many tests",
     () =>
@@ -74,19 +74,24 @@ layer(NodeServices.layer)("analyze test code", (it) => {
           CODE,
         );
         assert.deepStrictEqual(
-          analysis.testCode,
+          analysis.excludes
+            .filter(({ files }) => files > 0)
+            .map(({ pattern, files }) => [pattern, files]),
           [
-            ...TESTS.map((path) => ({ path, changes: 5 })),
-            ...BULK.map((path) => ({ path, changes: 1 })),
-          ].toSorted((a, b) => a.path.localeCompare(b.path)),
+            ["**/*.test.*", 1],
+            ["**/*.spec.*", 1],
+            ["**/__tests__/**", 1],
+            ["**/test/**", 61],
+            ["**/e2e/**", 1],
+          ],
         );
       }),
   );
 });
 
-layer(NodeServices.layer)("analyze a window of test code", (it) => {
+layer(NodeServices.layer)("analyze a window of excluded files", (it) => {
   it.effect(
-    "finds a window quiet whose commits touched nothing but test code",
+    "finds a window quiet whose commits touched nothing but excluded files",
     () =>
       Effect.gen(function* () {
         yield* setNow;
@@ -107,7 +112,7 @@ layer(NodeServices.layer)("analyze a window of test code", (it) => {
             analysis.logicalChanges.count,
             analysis.verdict.reason,
           ],
-          [2, 0, 0, "quiet-window"],
+          [0, 0, 0, "quiet-window"],
         );
       }),
   );
@@ -163,3 +168,38 @@ layer(NodeServices.layer)(
     );
   },
 );
+
+layer(NodeServices.layer)("analyze with the user's excludes alone", (it) => {
+  it.effect(
+    "measures the files the defaults would leave out and reports each pattern with its files",
+    () =>
+      Effect.gen(function* () {
+        yield* setNow;
+        const repo = yield* makeTempRepository;
+        yield* repo.commit(day(1), version([...CODE, ...TESTS], 1));
+
+        const analysis = yield* analyze(
+          analyzeOptionsFor(repo, {
+            exclude: ["e2e/**", "docs/**"],
+            defaultExcludes: false,
+          }),
+        );
+
+        assert.deepStrictEqual(
+          analysis.files.map(({ path }) => path).toSorted(),
+          [...CODE, ...TESTS]
+            .filter((path) => path !== "e2e/flow.ts")
+            .toSorted(),
+        );
+        const patterns = [
+          { pattern: "e2e/**", source: "user" as const, files: 1 },
+          { pattern: "docs/**", source: "user" as const, files: 0 },
+        ];
+        assert.deepStrictEqual(analysis.excludes, patterns);
+        assert.deepStrictEqual(
+          reportOf(analysis).basis.excluded.patterns,
+          patterns,
+        );
+      }),
+  );
+});

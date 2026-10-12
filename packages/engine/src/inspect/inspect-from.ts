@@ -4,10 +4,13 @@ import { Effect, FileSystem, Path } from "effect";
 import type { ChildProcessSpawner } from "effect/process";
 
 import type { GitError } from "../git/git-errors.js";
+import { Git } from "../git/git.js";
 import { repositoryRoot, repositoryScope } from "../git/repository.js";
 import type { Analysis } from "../model/analysis.js";
 import type { InspectResult } from "../model/inspect-result.js";
 import { isGlob } from "../universe/globs.js";
+import { namedLikeCode } from "../universe/inventory.js";
+import { listTrackedFiles } from "../universe/tracked-files.js";
 import { inspect } from "./inspect.js";
 
 type Request = { readonly original: string; readonly resolved: string };
@@ -60,7 +63,9 @@ const originalsOf = (
  * metacharacters is a repository-relative glob. Any other pattern is a path:
  * absolute, relative to `cwd`, or repository-relative when it does not start
  * with `./` or `../` and nothing exists at that place under `cwd`. `unmatched`
- * lists the patterns exactly as requested.
+ * lists the patterns exactly as requested. Excluded files are looked for among
+ * the tracked files named like code (see `namedLikeCode`) with the `include`
+ * globs `report` was analyzed with, as the universe was.
  *
  * Fails with `NotAGitRepository` when `cwd` is outside a work tree and with
  * `GitNotFound` when git is not installed.
@@ -71,6 +76,8 @@ export const inspectFrom = (options: {
   /** An unlimited report, as `analyze` returns it. */
   readonly report: Analysis;
   readonly patterns: ReadonlyArray<string>;
+  /** The `include` globs `report` was analyzed with; empty for the language and contract lists. */
+  readonly include: ReadonlyArray<string>;
 }): Effect.Effect<
   InspectResult,
   GitError,
@@ -93,9 +100,14 @@ export const inspectFrom = (options: {
         (resolved): Request => ({ original, resolved }),
       ),
     );
+    const tracked = yield* listTrackedFiles(".").pipe(
+      Effect.provide(Git.layer(root)),
+    );
+    const likeCode = namedLikeCode(options.include);
     const result = inspect(
       report,
       requests.map((request) => request.resolved),
+      tracked.filter((path) => likeCode(path)),
     );
     return { ...result, unmatched: originalsOf(requests, result.unmatched) };
   });

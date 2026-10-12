@@ -9,6 +9,7 @@ import type { Coupling, FileStats, Analysis } from "../model/analysis.js";
 import type { CopyFamily } from "../model/copy-family.js";
 import type { EntryPoint } from "../model/entry-point.js";
 import type { InspectResult } from "../model/inspect-result.js";
+import { excludingPattern } from "../universe/excludes.js";
 import { matchesAny } from "../universe/globs.js";
 
 const MAX_PARTNERS = 10;
@@ -70,36 +71,61 @@ const namedByEntryPoints = (
 
 /** The paths of `list` that `pattern` matches. */
 const matched = (
-  list: ReadonlyArray<{ readonly path: string }>,
+  list: ReadonlyArray<string>,
   pattern: string,
 ): ReadonlyArray<string> => {
   const matches = matchesAny([pattern]);
-  return list.flatMap(({ path }) => (matches(path) ? [path] : []));
+  return list.filter((path) => matches(path));
 };
 
-/** The paths of the code files, contract files, and test code each pattern matches, and the patterns that matched none. */
+const pathsOf = (list: ReadonlyArray<{ readonly path: string }>) =>
+  list.map(({ path }) => path);
+
+type Excluded = InspectResult["excluded"][number];
+
+/** The files of `paths` that a pattern of `excludes` left out, each with that pattern. */
+const excludedOf = (
+  paths: ReadonlyArray<string>,
+  excludes: Analysis["excludes"],
+): ReadonlyArray<Excluded> => {
+  const excludedBy = excludingPattern(excludes);
+  return paths.flatMap((path) => {
+    const exclude = excludedBy(path);
+    return exclude === undefined
+      ? []
+      : [{ path, pattern: exclude.pattern, source: exclude.source }];
+  });
+};
+
+/** The code, contract, and excluded files each pattern matches, and the patterns that matched none. */
 const matchAll = (
   {
     files,
     contracts,
-    testCode,
-  }: Pick<Analysis, "files" | "contracts" | "testCode">,
+    excludes,
+  }: Pick<Analysis, "files" | "contracts" | "excludes">,
   patterns: ReadonlyArray<string>,
+  tracked: ReadonlyArray<string>,
 ) => {
   const hits = patterns.map((pattern) => ({
     pattern,
-    files: matched(files, pattern),
-    contracts: matched(contracts, pattern),
-    tests: matched(testCode, pattern),
+    files: matched(pathsOf(files), pattern),
+    contracts: matched(pathsOf(contracts), pattern),
+    excluded: excludedOf(matched(tracked, pattern), excludes),
   }));
+  const excluded = new Map(
+    hits.flatMap((hit) => hit.excluded).map((file) => [file.path, file]),
+  );
   return {
     focused: new Set(hits.flatMap((hit) => hit.files)),
     contractFiles: new Set(hits.flatMap((hit) => hit.contracts)),
-    testCode: new Set(hits.flatMap((hit) => hit.tests)),
+    excluded: [...excluded.values()].toSorted((a, b) =>
+      Order.String(a.path, b.path),
+    ),
     unmatched: hits
       .filter(
         (hit) =>
-          hit.files.length + hit.contracts.length + hit.tests.length === 0,
+          hit.files.length + hit.contracts.length + hit.excluded.length === 0,
       )
       .map((hit) => hit.pattern),
   };
@@ -109,19 +135,24 @@ const matchAll = (
  * Reports the files matching `patterns`, each with its rank in the whole
  * universe, its strongest co-change partners, its copy family, and the entry
  * points it belongs to, and the modules and territories they belong to; the
- * contract files and the test code they match only by path (and test code
- * with its changes), since neither is judged.
+ * contract files they match only by path, since a contract is not judged;
+ * and the files of `tracked` they match that a pattern of `report.excludes`
+ * left out, each with the pattern.
  *
  * `report` must be unlimited (as `analyze` returns it); a truncated report
- * would drop matches and partners.
+ * would drop matches and partners. `tracked` are the repository-relative
+ * paths of the tracked files named like code, as the universe reads them (see
+ * `namedLikeCode`).
  */
 export const inspect = (
   report: Analysis,
   patterns: ReadonlyArray<string>,
+  tracked: ReadonlyArray<string>,
 ): InspectResult => {
-  const { focused, contractFiles, testCode, unmatched } = matchAll(
+  const { focused, contractFiles, excluded, unmatched } = matchAll(
     report,
     patterns,
+    tracked,
   );
   const coupled = groupByPath(report.couplings);
   const matches = report.files
@@ -156,7 +187,7 @@ export const inspect = (
       focusedTerritories.has(id),
     ),
     contractFiles: [...contractFiles].toSorted((a, b) => Order.String(a, b)),
-    testCode: report.testCode.filter(({ path }) => testCode.has(path)),
+    excluded,
     unmatched,
   };
 };

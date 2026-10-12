@@ -64,7 +64,7 @@ export const EntryPoint = Schema.Struct({
   kind: EntryPointKind,
   /**
    * What put it on the list: the share of all the heat (the heat of a file is
-   * `FileStats.changes × (loc + complexity.total)`; test code holds none) at
+   * `FileStats.changes × (loc + complexity.total)`) at
    * stake, times how strong the weakness is, in the unit of every
    * kind, so that scores of different kinds compare as the share of change
    * effort at stake (see GLOSSARY.md, "Entry point (of a report)"

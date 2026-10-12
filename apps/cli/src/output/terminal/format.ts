@@ -11,3 +11,6 @@ export const twoDecimals = (value: number): string =>
 
 /** The calendar month (`YYYY-MM`) of an ISO timestamp. */
 export const month = (timestamp: string): string => timestamp.slice(0, 7);
+
+/** A count with thousands separators, e.g. `3633` becomes `3,633`. */
+export const count = (value: number): string => value.toLocaleString("en-US");

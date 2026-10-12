@@ -27,7 +27,7 @@ const makeProject = Effect.gen(function* () {
   const path = yield* Path.Path;
   const report = yield* analyze(analyzeOptionsFor(repo));
   const inspectAt = (cwd: string, patterns: ReadonlyArray<string>) =>
-    inspectFrom({ cwd, report, patterns }).pipe(
+    inspectFrom({ cwd, report, patterns, include: [] }).pipe(
       Effect.map((result) => ({
         matched: result.matches.map((entry) => entry.path),
         unmatched: result.unmatched,

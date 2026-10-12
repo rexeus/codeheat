@@ -92,13 +92,134 @@
     "thinBelowAreas": 3,
     "minEntryScore": 0.005
   },
+  "excludes": [
+    {
+      "pattern": "**/*.test.*",
+      "source": "default",
+      "files": 4
+    },
+    {
+      "pattern": "**/*.spec.*",
+      "source": "default",
+      "files": 0
+    },
+    {
+      "pattern": "**/*_test.*",
+      "source": "default",
+      "files": 0
+    },
+    {
+      "pattern": "**/*_spec.*",
+      "source": "default",
+      "files": 0
+    },
+    {
+      "pattern": "**/*.tst.*",
+      "source": "default",
+      "files": 0
+    },
+    {
+      "pattern": "**/__tests__/**",
+      "source": "default",
+      "files": 0
+    },
+    {
+      "pattern": "**/__mocks__/**",
+      "source": "default",
+      "files": 0
+    },
+    {
+      "pattern": "**/test/**",
+      "source": "default",
+      "files": 0
+    },
+    {
+      "pattern": "**/tests/**",
+      "source": "default",
+      "files": 0
+    },
+    {
+      "pattern": "**/e2e/**",
+      "source": "default",
+      "files": 0
+    },
+    {
+      "pattern": "**/fixtures/**",
+      "source": "default",
+      "files": 0
+    },
+    {
+      "pattern": "**/__fixtures__/**",
+      "source": "default",
+      "files": 0
+    },
+    {
+      "pattern": "**/__snapshots__/**",
+      "source": "default",
+      "files": 0
+    },
+    {
+      "pattern": "**/*.gen.*",
+      "source": "default",
+      "files": 0
+    },
+    {
+      "pattern": "**/*.generated.*",
+      "source": "default",
+      "files": 0
+    },
+    {
+      "pattern": "**/*.min.*",
+      "source": "default",
+      "files": 1
+    },
+    {
+      "pattern": "**/dist/**",
+      "source": "default",
+      "files": 2
+    },
+    {
+      "pattern": "**/build/**",
+      "source": "default",
+      "files": 0
+    },
+    {
+      "pattern": "**/coverage/**",
+      "source": "default",
+      "files": 0
+    },
+    {
+      "pattern": "**/generated/**",
+      "source": "default",
+      "files": 0
+    },
+    {
+      "pattern": "**/__generated__/**",
+      "source": "default",
+      "files": 0
+    },
+    {
+      "pattern": "**/tsp-output/**",
+      "source": "default",
+      "files": 0
+    },
+    {
+      "pattern": "**/vendor/**",
+      "source": "default",
+      "files": 0
+    },
+    {
+      "pattern": "**/node_modules/**",
+      "source": "default",
+      "files": 0
+    }
+  ],
   "totals": {
     "files": 32,
-    "testCode": 4,
     "contracts": 2,
     "couplings": 6,
     "modules": 5,
-    "generated": 4
+    "generated": 1
   },
   "files": [
     {
@@ -1041,24 +1162,6 @@
       },
       "heat": null,
       "territory": "t2"
-    }
-  ],
-  "testCode": [
-    {
-      "path": "apps/cli/src/commands/analyze.test.ts",
-      "changes": 4
-    },
-    {
-      "path": "packages/auth/src/session.test.ts",
-      "changes": 14
-    },
-    {
-      "path": "packages/billing/src/invoice.test.ts",
-      "changes": 36
-    },
-    {
-      "path": "packages/billing/src/tax.test.ts",
-      "changes": 22
     }
   ],
   "contracts": [

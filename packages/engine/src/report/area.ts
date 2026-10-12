@@ -28,7 +28,7 @@ export const Area = Schema.Struct({
    * `main files: a, b, c`.
    */
   description: Schema.String,
-  /** Code files in the area (test code is in no area). */
+  /** Code files in the area. */
   files: Count,
   /** Changes (`window.changes`) that touched any file of the area. */
   changes: Count,

@@ -16,8 +16,7 @@ export type Standing =
 const unjudged = (reason: string): Standing => ({ kind: "unjudged", reason });
 
 /**
- * Why the engine did not judge `territory`. Test code and leftover files are
- * not judged. A territory with no counted change has no heat either (heat
+ * Why the engine did not judge `territory`. Leftover files are not judged. A territory with no counted change has no heat either (heat
  * rests on the counted changes); one with fewer than `minModuleCommits`
  * counted changes has too few for its share to mean anything. One without a
  * partner keeps little inside but shares changes with no other territory,

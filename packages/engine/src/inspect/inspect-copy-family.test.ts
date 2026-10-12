@@ -57,14 +57,13 @@ const reportOf = (copyFamilies: Analysis["copyFamilies"]): Analysis => ({
   thresholds: DEFAULT_THRESHOLDS,
   totals: {
     files: 3,
-    testCode: 0,
     contracts: 0,
     couplings: 0,
     modules: 0,
     generated: 0,
   },
   files: [stats("src/a.ts", 1), stats("src/b.ts", 2), stats("lib/c.ts", 3)],
-  testCode: [],
+  excludes: [],
   contracts: [],
   ubiquitousFiles: [],
   couplings: [],
@@ -75,7 +74,7 @@ const reportOf = (copyFamilies: Analysis["copyFamilies"]): Analysis => ({
 
 describe("inspect copy family", () => {
   it("names the family a matched file belongs to, and none for a file outside every family", () => {
-    const result = inspect(reportOf([family]), ["src/*.ts"]);
+    const result = inspect(reportOf([family]), ["src/*.ts"], []);
 
     expect(
       result.matches.map(({ path, copyFamily }) => [path, copyFamily]),

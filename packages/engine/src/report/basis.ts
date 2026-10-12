@@ -28,13 +28,29 @@ const Thresholds = Schema.Struct({
   thinBelowAreas: Count,
 });
 
+/** One exclude pattern the analysis applied, with the files it left out. */
+const ExcludedBy = Schema.Struct({
+  /** A repository-relative glob or exact path. */
+  pattern: Schema.String,
+  /** `default` for the default list (dropped by `--no-default-excludes`), `user` for `--exclude`. */
+  source: Schema.Literals(["default", "user"]),
+  /** Tracked files named like code that the pattern left out; a file several patterns match counts for the first. */
+  files: Count,
+});
+
 /** What the window's numbers leave out. */
 const Excluded = Schema.Struct({
   /** Commits that change no behavior: renames, whitespace, reverted pairs, duplicates, and those listed in `.git-blame-ignore-revs`. */
   mechanicalCommits: Count,
   /** Changes of more than `thresholds.maxChangeFiles` files. */
   largeChanges: Count,
-  /** Tracked files named like code that are generated, vendored, minified, binary, or too large to read. */
+  /**
+   * Every exclude pattern the analysis applied, in the order that decides
+   * which leaves a file out: the default ones, then those of `--exclude`.
+   * Excluded files are in no number of the report.
+   */
+  patterns: Schema.Array(ExcludedBy),
+  /** Tracked files named like code, and left out by no pattern, that say they are generated or vendored (`.gitattributes`), or are binary, minified, or too large to read. */
   generated: Count,
 });
 

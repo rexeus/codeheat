@@ -11,7 +11,6 @@ import { readEvidence } from "../mechanical/evidence.js";
 import { countKinds } from "../mechanical/kinds.js";
 import type { MechanicalCounts, MechanicalKind } from "../mechanical/kinds.js";
 import type { SliceRange } from "../series/slice-ranges.js";
-import { isTestPath } from "../universe/test-path.js";
 import { classifierFor } from "./classifier.js";
 import { measureChanges } from "./measured-changes.js";
 import { scanCommits } from "./scan.js";
@@ -26,8 +25,7 @@ type FileHistory = {
    * Counted changes that touched the file (see `countedChanges`): the unit a
    * coupling's shared count and a file's heat are measured in, so ratios of
    * shared counts use this and not `revisions`. A change too large to count
-   * adds none. Test code counts the changes its commits belong to, though it
-   * is no part of them.
+   * adds none.
    */
   readonly changes: number;
   readonly linesAdded: number;
@@ -41,11 +39,6 @@ type HistoryCommit = {
    * real change. A mechanical commit adds no revisions, churn, or coupling.
    */
   readonly mechanical?: MechanicalKind | undefined;
-  /**
-   * Whether it touched a file that is no test code (one dead today included):
-   * a commit of test code alone is part of no change.
-   */
-  readonly code: boolean;
 };
 
 export type History = {
@@ -56,9 +49,8 @@ export type History = {
   /**
    * The real changes among them: what coupling, cohesion, and interface churn
    * count. A change is one commit, or the commits of one pull request or
-   * ticket (see `groupChanges`), and holds only the files that are no test
-   * code (see `isTestPath`): tests are no design, so no measure sees them. A
-   * change that touched nothing but test code is none.
+   * ticket (see `groupChanges`). Excluded files are not in the universe, so
+   * no change holds or sizes them.
    */
   readonly changes: ReadonlyArray<LogicalChange>;
   /** How `commits` were grouped into `changes`. */
@@ -68,7 +60,7 @@ export type History = {
     /** The most commits one change holds. */
     readonly largest: number;
   };
-  /** Only files with at least one revision, test code included; mechanical commits give none. */
+  /** Only files with at least one revision; mechanical commits give none. */
   readonly files: ReadonlyMap<string, FileHistory>;
   /** How many of `commits` are mechanical, per kind. */
   readonly mechanical: MechanicalCounts;
@@ -84,18 +76,9 @@ export type HistoryOptions = {
   readonly universe: ReadonlySet<string>;
 };
 
-/** The commits of a window that are not mechanical and touched code other than test code: those its changes are made of. */
+/** The commits of a window that are not mechanical: those its changes are made of. */
 export const realCommitCount = ({ commits }: History): number =>
-  commits.filter(({ mechanical, code }) => mechanical === undefined && code)
-    .length;
-
-/** Whether a commit touched a file that is no test code (`isTest` by file id). */
-const touchesCode = (
-  { files, previousLives }: Entry,
-  isTest: ReadonlyArray<boolean>,
-): boolean =>
-  files.some((id) => isTest[id] !== true) ||
-  previousLives.some((id) => isTest[id] !== true);
+  commits.filter(({ mechanical }) => mechanical === undefined).length;
 
 /** Adds one commit's lines in each of its files to the activity so far. */
 const addActivity = (
@@ -118,7 +101,7 @@ const addActivity = (
  * commit stays a commit of the window but adds no revisions or lines.
  */
 const buildHistory = (
-  { paths, isTest }: IndexedPaths,
+  paths: ReadonlyArray<string>,
   entries: ReadonlyArray<Entry>,
   kinds: ReadonlyMap<string, MechanicalKind>,
   merges: ReadonlyMap<string, string>,
@@ -128,13 +111,13 @@ const buildHistory = (
   const fileHistories = new Map<number, FileHistory>();
   for (const entry of entries) {
     const mechanical = kinds.get(entry.signals.sha);
-    commits.push({ mechanical, code: touchesCode(entry, isTest) });
+    commits.push({ mechanical });
     if (mechanical === undefined) {
       real.push(entry);
       addActivity(fileHistories, entry);
     }
   }
-  const measured = measureChanges(real, isTest, merges);
+  const measured = measureChanges(real, merges);
   const files = new Map<string, FileHistory>();
   for (const [id, path] of paths.entries()) {
     const fileHistory = fileHistories.get(id);
@@ -157,19 +140,9 @@ const buildHistory = (
 
 const seconds = (iso: string): number => Math.floor(Date.parse(iso) / 1000);
 
-/** The universe paths, a file id being an index into them, and which of them are test code. */
-type IndexedPaths = {
-  readonly paths: ReadonlyArray<string>;
-  readonly isTest: ReadonlyArray<boolean>;
-};
-
 const indexPaths = (options: HistoryOptions) => {
   const paths = [...options.universe];
-  return {
-    paths,
-    isTest: paths.map((path) => isTestPath(path)),
-    fileIds: new Map(paths.map((path, id) => [path, id])),
-  };
+  return { paths, fileIds: new Map(paths.map((path, id) => [path, id])) };
 };
 
 /** One slice of the series and the time range it covers. */
@@ -221,7 +194,7 @@ export const readHistories = (
   Git
 > =>
   Effect.gen(function* () {
-    const { fileIds, ...indexed } = indexPaths(options);
+    const { paths, fileIds } = indexPaths(options);
     const scanned = yield* scanCommits({ ...options, fileIds });
     const evidence = yield* readEvidence(scanned.map(({ signals }) => signals));
     const within = (from: number, until: number) =>
@@ -241,7 +214,7 @@ export const readHistories = (
       window: ReadonlyArray<Entry>,
       { kindsOf, merges } = forWindows,
       kinds = kindsOf(window),
-    ) => buildHistory(indexed, window, kinds, merges);
+    ) => buildHistory(paths, window, kinds, merges);
     const series = sliceSeries(scanned, parts.seriesSince, options.until);
     const sameSpan =
       series.slices.length === 0 ||

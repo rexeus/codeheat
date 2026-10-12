@@ -134,13 +134,8 @@ export const Analysis = Schema.Struct({
   /** Null without `--compare`. */
   comparison: Schema.NullOr(Comparison),
   thresholds: Thresholds,
-  /** Sizes before any output limit, so truncated reports keep their context. */
-  /** The hotspots: every code file that is no test code, sorted by rank. Contract files are never listed here. */
+  /** The hotspots: every code file, sorted by rank. Contract files are never listed here. */
   files: Schema.Array(FileStats),
-  /** The test code (see `isTestPath`) by path, with the counted changes whose commits touched it; no design measure counts it. */
-  testCode: Schema.Array(
-    Schema.Struct({ path: Schema.String, changes: Count }),
-  ),
   /**
    * Every contract file of the universe, most revised first, ties by path.
    * They have no score; they appear in `couplings` with `kinds`.

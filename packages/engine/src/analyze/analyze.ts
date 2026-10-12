@@ -54,8 +54,14 @@ export type AnalyzeOptions = {
   readonly compare?: string | undefined;
   /** Globs that replace the language allow-list when non-empty. */
   readonly include: ReadonlyArray<string>;
-  /** Globs removed from the universe after `include`. */
+  /** Globs removed from the universe after `include`, besides the default ones. */
   readonly exclude: ReadonlyArray<string>;
+  /**
+   * Whether the default exclude patterns (test code, fixtures, snapshots,
+   * generated and minified files, build output, dependencies) leave files out
+   * before `exclude`; false leaves only `exclude`.
+   */
+  readonly defaultExcludes: boolean;
   /**
    * Globs of the files that make up each module's interface; when non-empty
    * they replace entry-point detection from `package.json` and conventions.
@@ -94,16 +100,11 @@ const readTimeline = (
 /** The report's `totals`: how many of each list the report holds before any limit. */
 const totalsOf = ({
   files,
-  testCode,
   contracts,
   couplings,
   modules,
-}: Pick<
-  Analysis,
-  "files" | "testCode" | "contracts" | "couplings" | "modules"
->) => ({
+}: Pick<Analysis, "files" | "contracts" | "couplings" | "modules">) => ({
   files: files.length,
-  testCode: testCode.length,
   contracts: contracts.length,
   couplings: couplings.length,
   modules: modules.length,
@@ -147,7 +148,7 @@ const analyzeRepository = (
       root,
       scope,
     );
-    const { depths, generated, ...universe } = yield* readUniverse({
+    const { depths, excluded, generated, ...universe } = yield* readUniverse({
       ...options,
       root,
       scope,
@@ -187,6 +188,7 @@ const analyzeRepository = (
       comparison: comparisonOf(windows, histories, timeline.oldestCommit),
       verdict: verdictOf({ ...measured, thresholds }, areaWindows, realCommits),
       thresholds,
+      excludes: excluded,
       totals: { ...totalsOf(measured), generated },
       ...measured,
       ubiquitousFiles,

@@ -25,8 +25,10 @@ describe("basisOf", () => {
       thinBelowAreas: 3,
     });
   });
+});
 
-  it("counts the mechanical commits of every kind, the changes too large to count, and the generated files", () => {
+describe("basisOf excluded", () => {
+  it("counts the mechanical commits of every kind, the changes too large to count, the files of each exclude pattern, and the generated files", () => {
     const base = analysisRecord();
     const rest = {
       areas: 2,
@@ -46,6 +48,10 @@ describe("basisOf", () => {
           duplicates: 5,
         },
         logicalChanges: { by: "pr", count: 97, largest: 6 },
+        excludes: [
+          { pattern: "**/*.test.*", source: "default", files: 12 },
+          { pattern: ".repos/**", source: "user", files: 0 },
+        ],
         totals: { ...base.totals, generated: 8 },
       },
       rest,
@@ -54,6 +60,10 @@ describe("basisOf", () => {
     expect(basis.excluded).toEqual({
       mechanicalCommits: 15,
       largeChanges: 7,
+      patterns: [
+        { pattern: "**/*.test.*", source: "default", files: 12 },
+        { pattern: ".repos/**", source: "user", files: 0 },
+      ],
       generated: 8,
     });
     expect(basis.rest).toBe(rest);
