@@ -47,7 +47,12 @@ export const inspectCommand = Command.make(
     });
     yield* warnIfShallow(report);
     yield* warnIfEntryMatchedNothing(report, entry);
-    const result = yield* inspectFrom({ cwd, report, patterns });
+    const result = yield* inspectFrom({
+      cwd,
+      report,
+      patterns,
+      include: universe.include,
+    });
     if (result.matches.length === 0 && result.excluded.length === 0) {
       return yield* new NothingMatched({
         patterns: result.unmatched,

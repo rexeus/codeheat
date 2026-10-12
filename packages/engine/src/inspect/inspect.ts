@@ -141,7 +141,8 @@ const matchAll = (
  *
  * `report` must be unlimited (as `analyze` returns it); a truncated report
  * would drop matches and partners. `tracked` are the repository-relative
- * paths of the tracked files.
+ * paths of the tracked files named like code, as the universe reads them (see
+ * `namedLikeCode`).
  */
 export const inspect = (
   report: Analysis,

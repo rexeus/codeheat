@@ -54,8 +54,13 @@ export type Inventory = {
 /** Files read at once; bounds open file handles. */
 const READ_CONCURRENCY = 16;
 
-/** Whether a path is named like a code or contract file the options ask for: the allow-list and the contract list, or `include` instead of both. */
-const namedLikeCode = (
+/**
+ * Whether a path is named like a code or contract file an analysis asks for:
+ * the language allow-list and the contract list, or `include` instead of both
+ * when it is non-empty. Only such files are in the universe or counted for an
+ * exclude pattern.
+ */
+export const namedLikeCode = (
   include: ReadonlyArray<string>,
 ): ((path: string) => boolean) =>
   include.length === 0
